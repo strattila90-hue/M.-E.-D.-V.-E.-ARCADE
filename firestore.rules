@@ -23,6 +23,12 @@ service cloud.firestore {
         )
       );
     }
+    // játszott körök száma: csak eggyel nőhet (vagy változatlan marad)
+    function cntOk(f) {
+      let n = request.resource.data;
+      let o = resource.data;
+      return !(f in n) || (n[f] is int && (n[f] == o.get(f, 0) + 1 || n[f] == o.get(f, 0)));
+    }
     function tsOk(f) { return !(f in request.resource.data) || request.resource.data[f] is number; }
 
     match /users/{uid} {
@@ -41,13 +47,15 @@ service cloud.firestore {
       // saját rekord és rendfokozat frissítése; nevet és szerepkört nem írhat át
       allow update: if signedIn() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-             'rank', 'harcBest', 'harcAt', 'droneBest', 'droneAt', 'gtBest', 'gtBestAt', 'gkBest', 'gkBestAt'])
+             'rank', 'harcBest', 'harcAt', 'droneBest', 'droneAt', 'gtBest', 'gtBestAt', 'gkBest', 'gkBestAt',
+             'harcN', 'droneN', 'gtN', 'gkN', 'lastPlay'])
         && validRank(request.resource.data.get('rank', ''))
         && scoreOk('harcBest', false, 100000)
         && scoreOk('droneBest', false, 100000000)
         && scoreOk('gtBest', true, 3600000)
         && scoreOk('gkBest', false, 100000000)
-        && tsOk('harcAt') && tsOk('droneAt') && tsOk('gtBestAt') && tsOk('gkBestAt');
+        && tsOk('harcAt') && tsOk('droneAt') && tsOk('gtBestAt') && tsOk('gkBestAt') && tsOk('lastPlay')
+        && cntOk('harcN') && cntOk('droneN') && cntOk('gtN') && cntOk('gkN');
 
       // admin (akinek a dokumentumában role = "admin"): javíthat, törölhet
       allow update, delete: if isAdmin();
