@@ -1,0 +1,77 @@
+rules_version = '2';
+// M.E.D.V.E. Arcade – Firestore biztonsági szabályok.
+// Bemásolandó: Firebase konzol → Firestore Database → Rules → Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin';
+    }
+    function validRank(r) { return r is string && r.size() <= 24; }
+
+    // Rekord csak javulhat (vagy maradhat), és ésszerű határok közt legyen.
+    // lower = true: a kisebb a jobb (Terep: idő ezredmásodpercben).
+    function scoreOk(f, lower, maxV) {
+      let n = request.resource.data;
+      let o = resource.data;
+      return !(f in n) || (
+        n[f] is number && n[f] > 0 && n[f] <= maxV && (
+          !(f in o) || n[f] == o[f] || (lower ? n[f] < o[f] : n[f] > o[f])
+        )
+      );
+    }
+    function tsOk(f) { return !(f in request.resource.data) || request.resource.data[f] is number; }
+
+    match /users/{uid} {
+      // a ranglistát csak bejelentkezett játékos látja
+      allow read: if signedIn();
+
+      // regisztráció: csak a saját dokumentum, csak ezekkel a mezőkkel
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'rank', 'nick', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 20
+        && validRank(request.resource.data.rank)
+        && request.resource.data.nick == request.auth.token.email.split('@')[0]
+        && request.resource.data.createdAt is number;
+
+      // saját rekord és rendfokozat frissítése; nevet és szerepkört nem írhat át
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'rank', 'harcBest', 'harcAt', 'droneBest', 'droneAt', 'gtBest', 'gtBestAt', 'gkBest', 'gkBestAt'])
+        && validRank(request.resource.data.get('rank', ''))
+        && scoreOk('harcBest', false, 100000)
+        && scoreOk('droneBest', false, 100000000)
+        && scoreOk('gtBest', true, 3600000)
+        && scoreOk('gkBest', false, 100000000)
+        && tsOk('harcAt') && tsOk('droneAt') && tsOk('gtBestAt') && tsOk('gkBestAt');
+
+      // admin (akinek a dokumentumában role = "admin"): javíthat, törölhet
+      allow update, delete: if isAdmin();
+    }
+
+    // közös chat: bárki írhat, aki be van jelentkezve; a név és a rendfokozat a saját profiljából jön
+    match /chat/{msgId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'rank', 'text', 'ts'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 300
+        && request.resource.data.name == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name
+        && request.resource.data.rank == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('rank', '')
+        && request.resource.data.ts is number
+        && request.resource.data.ts <= request.time.toMillis() + 60000
+        && request.resource.data.ts > request.time.toMillis() - 86400000;
+      // a saját üzenetét bárki törölheti, az admin bármelyiket
+      allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

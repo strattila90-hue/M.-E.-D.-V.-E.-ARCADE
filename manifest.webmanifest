@@ -1,0 +1,17 @@
+{
+  "name": "M.E.D.V.E. Arcade",
+  "short_name": "MEDVE Arcade",
+  "description": "Katonai témájú mini-játékok: M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj.",
+  "lang": "hu",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14180f",
+  "theme_color": "#1e2419",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
