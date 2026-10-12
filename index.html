@@ -889,6 +889,21 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 .lvdot{font-size:10.5px;font-weight:800;letter-spacing:.08em;color:#fff;background:#c0262f;border-radius:999px;padding:2px 8px;animation:lvp 1.6s ease-in-out infinite}@keyframes lvp{50%{opacity:.45}}
 .lvgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.lvg{display:flex;flex-direction:column;gap:3px;text-align:left;border:0;border-radius:12px;padding:10px;background:var(--surface2);color:var(--fg);cursor:pointer;min-width:0;font:inherit}
 .lvg>b{font-size:13px;margin-bottom:2px}.lvg span{display:flex;gap:6px;align-items:baseline;font-size:12.5px;min-width:0}.lvg span i{font-style:normal}.lvg span em{font-style:normal;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lvg span strong{font-variant-numeric:tabular-nums}.lvg span.me em{font-weight:800;color:var(--accent)}.lvg .lv0{opacity:.6}
+#instov{position:fixed;inset:0;z-index:220;background:rgba(10,12,8,.82);display:flex;align-items:center;justify-content:center;padding:16px}
+.inbox{background:#1e2419;color:#f3ecd4;border-radius:20px;max-width:400px;width:100%;padding:22px 20px 14px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5),inset 0 -3px 0 #c9a227;display:flex;flex-direction:column;align-items:center;gap:8px}
+.inbox .inico{width:72px;height:72px;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,.4)}.inbox h2{margin:4px 0 0;font-size:20px;color:#f3d77a;letter-spacing:.04em}
+.insub{margin:0;font-size:13.5px;opacity:.85;line-height:1.45}.inbody{width:100%;margin-top:6px}
+.inbig{width:100%;font-size:17px;padding:14px;margin:4px 0;display:block;text-decoration:none;text-align:center;background:#c9a227!important;color:#1e2419!important}
+.insteps{text-align:left;margin:4px 0;padding-left:22px;font-size:14.5px;line-height:1.5;display:flex;flex-direction:column;gap:8px}.insteps b{color:#f3d77a}
+.inshare{display:inline-block;border:1.5px solid #f3d77a;border-radius:6px;padding:0 5px;font-size:13px;line-height:1.3;color:#f3d77a}
+.inwarn{background:rgba(201,162,39,.15);border-radius:10px;padding:8px 10px;font-size:13.5px;margin:0 0 6px}.inhint{font-size:13px;opacity:.8;margin:6px 0 0}
+.incopy{display:flex;gap:6px;margin-top:8px}.incopy input{flex:1;min-width:0;font:600 12px ui-monospace,monospace;background:rgba(255,255,255,.08);color:#f3ecd4;border-color:rgba(255,255,255,.2)}
+.incopy .btn{color:#f3ecd4;background:transparent;box-shadow:inset 0 0 0 1.5px rgba(243,236,212,.45)}
+.inlater{background:none;border:0;color:#f3ecd4;opacity:.65;font-size:13.5px;padding:8px;cursor:pointer;margin-top:4px}
+.inarrow{position:fixed;left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:44px;color:#f3d77a;text-shadow:0 2px 10px rgba(0,0,0,.6);animation:inb 1s ease-in-out infinite}
+.inarrow.top{bottom:auto;top:calc(6px + env(safe-area-inset-top,0px));left:auto;right:60px;transform:rotate(180deg);animation:inbt 1s ease-in-out infinite}
+@keyframes inb{50%{transform:translate(-50%,10px)}}@keyframes inbt{0%,100%{transform:rotate(180deg) translateY(0)}50%{transform:rotate(180deg) translateY(10px)}}
+@media (prefers-reduced-motion:reduce){.inarrow,.inarrow.top{animation:none}}
 .arc-hrow{display:flex;justify-content:space-between;align-items:center;gap:8px}.arc-hero .arc-ver{font:800 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:#1e2419;background:#f3d77a;border-radius:999px;padding:5px 10px;opacity:1}
 .choff{font-size:13px;font-weight:700;background:var(--warn-bg,#fff3cd);color:var(--warn,#7a5a00);border-radius:10px;padding:8px 10px;margin:0 0 10px}
 .chbtn{margin-top:10px}.chbtn .chnew{font-style:normal;font-weight:800;background:#c0262f;color:#fff;border-radius:999px;padding:2px 8px}
@@ -918,7 +933,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='1.5.0',APP_DATE='2026.10.12.';
+const APP_VER='1.6.0',APP_DATE='2026.10.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2214,13 +2229,11 @@ function arcRender(){const m=document.getElementById('main');
   <button type="button" class="rkbtn" data-rank="harc">🏆 <b>${FB_ON&&UID?'Teljes ranglista':'Rekordjaim'}</b><span>mind a 4 játék</span></button>
   ${shareHTML()}
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
-  <div class="panel arc-p"><h3>📲 Telepítés a kezdőképernyőre</h3><p class="hint" style="margin:0 0 8px"><b>Android (Chrome):</b> ⋮ menü → <i>Alkalmazás telepítése</i>.<br><b>iPhone (Safari):</b> Megosztás gomb → <i>Főképernyőhöz adás</i>.</p><button type="button" class="btn pri" id="instNow" ${DEFER_INSTALL?'':'hidden'}>Telepítés most</button></div>
+  <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" style="margin:0">✅ Telepítve, a kezdőképernyőről indul.</p>':'<p class="hint" style="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
   <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p>`;
   setTimeout(()=>{pzhFullSet();gidFullSet()},0)}
 document.addEventListener('change',e=>{if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFER_INSTALL=e;const b=document.getElementById('instNow');if(b)b.hidden=false});
-document.addEventListener('click',async e=>{if(!(e.target.closest&&e.target.closest('#instNow'))||!DEFER_INSTALL)return;DEFER_INSTALL.prompt();try{await DEFER_INSTALL.userChoice}catch(x){}DEFER_INSTALL=null;arcRender()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
 // a rekordok kiírása a kezdőoldalon frissüljön, ha egy játék bezárul
 new MutationObserver(()=>{const h=document.getElementById('harc');if(h&&h.hidden)arcRender()}).observe(document.getElementById('harc'),{attributes:true,attributeFilter:['hidden']});
@@ -2271,14 +2284,14 @@ function qrEncode(text){
   apply(best);fmt(best);return {size:N,get:(x,y)=>M[y][x]}}
 function qrDataUrl(text,scale){const q=qrEncode(text);if(!q)return '';const B=4,S=scale||8,cv=document.createElement('canvas');cv.width=cv.height=(q.size+B*2)*S;const c=cv.getContext('2d');
   c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='#14180f';for(let y=0;y<q.size;y++)for(let x=0;x<q.size;x++)if(q.get(x,y))c.fillRect((x+B)*S,(y+B)*S,S,S);return cv.toDataURL('image/png')}
-function shareHTML(){return `<div class="panel arc-p shp"><h3>📤 Megosztás</h3><p class="hint" style="margin:0 0 10px">Mutasd meg a QR-kódot, vagy küldd el a linket a többieknek.</p>
-  <div class="shqr"><img id="shQr" src="${qrDataUrl(SHARE_URL)}" alt="QR-kód: ${esc(SHARE_URL)}" width="200" height="200"></div>
-  <div class="shlink"><input id="shUrl" readonly value="${esc(SHARE_URL)}" aria-label="Az app linkje"></div>
+function shareHTML(){return `<div class="panel arc-p shp"><h3>📤 Megosztás</h3><p class="hint" style="margin:0 0 10px">Ez a link és a QR-kód rögtön a telepítést kínálja fel – Androidon és iPhone-on is.</p>
+  <div class="shqr"><img id="shQr" src="${qrDataUrl(instShareUrl())}" alt="QR-kód: ${esc(instShareUrl())}" width="200" height="200"></div>
+  <div class="shlink"><input id="shUrl" readonly value="${esc(instShareUrl())}" aria-label="Telepítő link"></div>
   <div class="shbtn"><button type="button" class="btn pri" id="shGo">📤 Megosztás</button><button type="button" class="btn line" id="shCopy">🔗 Link másolása</button></div></div>`}
-async function shareCopy(){const i=$('#shUrl');try{await navigator.clipboard.writeText(SHARE_URL);toast('🔗 Link kimásolva')}catch(e){if(i){i.focus();i.select();try{document.execCommand('copy');toast('🔗 Link kimásolva')}catch(x){toast('Jelöld ki és másold a linket')}}}}
+async function shareCopy(){const i=$('#shUrl');try{await navigator.clipboard.writeText(instShareUrl());toast('🔗 Link kimásolva')}catch(e){if(i){i.focus();i.select();try{document.execCommand('copy');toast('🔗 Link kimásolva')}catch(x){toast('Jelöld ki és másold a linket')}}}}
 document.addEventListener('click',e=>{if(!e.target.closest)return;
   if(e.target.closest('#shCopy')){shareCopy();return}
-  if(e.target.closest('#shGo')){if(navigator.share){navigator.share({title:'M.E.D.V.E. Arcade',text:'Játssz te is! Katonai mini-játékok élő ranglistával:',url:SHARE_URL}).catch(()=>{})}else shareCopy()}});
+  if(e.target.closest('#shGo')){if(navigator.share){navigator.share({title:'M.E.D.V.E. Arcade',text:'Telepítsd te is az M.E.D.V.E. Arcade-ot – katonai mini-játékok élő ranglistával és chattel:',url:instShareUrl()}).catch(()=>{})}else shareCopy()}});
 document.addEventListener('focusin',e=>{if(e.target.id==='shUrl')e.target.select()});
 
 /* ===== chat: egy közös szoba, bárki írhat, aki be van jelentkezve ===== */
@@ -2318,6 +2331,44 @@ document.addEventListener('click',e=>{if(!e.target.closest)return;if(e.target.cl
     DB.doc('chat/'+d.dataset.chdel).delete().catch(()=>toast('Nem sikerült törölni'))}});
 addEventListener('online',()=>{chatNet();const ab=document.getElementById('authBox');if(ab&&!UID)ab.innerHTML=authInner()});
 addEventListener('offline',()=>{chatNet();const ab=document.getElementById('authBox');if(ab&&!UID)ab.innerHTML=authInner()});
+
+/* ===== telepítő: a megosztott link (?telepit) azonnal a telepítést kínálja ===== */
+const UA=navigator.userAgent||'';
+const IS_IOS=/iPhone|iPad|iPod/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const IS_ANDROID=/Android/i.test(UA);
+const IN_APP=/FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|Viber|Snapchat|TikTok|musical_ly|; wv\)|GSA\//i.test(UA);
+const IOS_SAFARI=IS_IOS&&/Safari/i.test(UA)&&!/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/i.test(UA)&&!IN_APP;
+const IS_IPAD=/iPad/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isInstalled=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+let INST_WANT=false,INST_WAIT=null;
+function instShareUrl(){return SHARE_URL.replace(/\/?$/,'/')+'?telepit'}
+function instOpen(){if(isInstalled()){toast('✅ Már telepítve van – a kezdőképernyőről indítod.');return}
+  let o=document.getElementById('instov');if(!o){o=document.createElement('div');o.id='instov';document.body.appendChild(o)}
+  o.innerHTML=`<div class="inbox" role="dialog" aria-label="Telepítés"><img class="inico" src="icon-192.png" alt="" width="72" height="72"><h2>M.E.D.V.E. Arcade</h2><p class="insub">Telepítsd alkalmazásként: saját ikon a kezdőképernyőn, teljes képernyő, net nélkül is indul.</p><div class="inbody">${instBody()}</div><button type="button" class="inlater" id="instLater">Most nem</button></div>${IOS_SAFARI?`<div class="inarrow${IS_IPAD?' top':''}" aria-hidden="true">⬇</div>`:''}`;
+  o.hidden=false;document.body.classList.add('rkon');
+  if(IS_ANDROID&&!IN_APP&&!DEFER_INSTALL){clearTimeout(INST_WAIT);INST_WAIT=setTimeout(()=>{if(!DEFER_INSTALL&&!o.hidden){const b=o.querySelector('.inbody');if(b)b.innerHTML=instAndroidManual()}},3500)}}
+function instClose(){const o=document.getElementById('instov');if(o){o.hidden=true;o.innerHTML=''}clearTimeout(INST_WAIT);if(!document.getElementById('chatov')||document.getElementById('chatov').hidden)document.body.classList.remove('rkon')}
+function instAndroidManual(){return `<ol class="insteps"><li>Koppints a böngésző <b>⋮</b> menüjére (jobb felül).</li><li>Válaszd: <b>Alkalmazás telepítése</b> vagy <b>Hozzáadás a kezdőképernyőhöz</b>.</li><li>Erősítsd meg: <b>Telepítés</b>.</li></ol>`}
+function instBody(){const url=instShareUrl();
+  if(IN_APP){if(IS_ANDROID){const host=url.replace(/^https?:\/\//,'');
+      return `<p class="inwarn">Ebből az alkalmazásból (Messenger, Viber, Facebook…) nem lehet telepíteni. Nyisd meg Chrome-ban:</p><a class="btn pri inbig" href="intent://${esc(host)}#Intent;scheme=https;package=com.android.chrome;end">🌐 Megnyitás Chrome-ban</a>${instCopy(url)}`}
+    return `<p class="inwarn">Ebből az alkalmazásból (Messenger, Viber, Facebook…) nem lehet telepíteni.</p><ol class="insteps"><li>Koppints a <b>⋯</b> vagy a <b>⤴</b> gombra.</li><li>Válaszd: <b>Megnyitás Safariban</b>.</li><li>Safariban újra feljön ez az útmutató.</li></ol>${instCopy(url)}`}
+  if(IS_IOS&&!IOS_SAFARI)return `<ol class="insteps"><li>Koppints a <b>Megosztás</b> ikonra <span class="inshare">⤴</span> a címsorban.</li><li>Görgess le: <b>Hozzáadás a főképernyőhöz</b>.</li><li>Jobb felül: <b>Hozzáadás</b>.</li></ol><p class="inhint">Ha nincs ilyen menüpont, nyisd meg a linket <b>Safariban</b>.</p>${instCopy(url)}`;
+  if(IOS_SAFARI)return `<ol class="insteps"><li>Koppints a <b>Megosztás</b> gombra <span class="inshare">⤴</span> ${IS_IPAD?'jobb felül':'lent középen'}.</li><li>Görgess le, és válaszd: <b>Főképernyőhöz adás</b> <span class="inshare">⊞</span></li><li>Jobb felül: <b>Hozzáadás</b>. Kész, az ikon a kezdőképernyőn van.</li></ol>`;
+  if(DEFER_INSTALL)return `<button type="button" class="btn pri inbig" id="instGo">📲 Telepítés most</button>`;
+  if(IS_ANDROID)return `<button type="button" class="btn pri inbig" id="instGo" disabled>⏳ Előkészítés…</button>`;
+  return `<p class="inhint">Számítógépen: a címsor jobb oldalán a <b>⊕ Telepítés</b> ikonra kattints (Chrome, Edge). Telefonon nyisd meg a linket, ott egy koppintással telepíthető.</p>`}
+function instCopy(url){return `<div class="incopy"><input id="instUrl" readonly value="${esc(url)}" aria-label="Telepítő link"><button type="button" class="btn line sm" id="instCopy">Másolás</button></div>`}
+async function instGo(){if(!DEFER_INSTALL){instOpen();return}const p=DEFER_INSTALL;DEFER_INSTALL=null;try{p.prompt();const r=await p.userChoice;if(r&&r.outcome==='accepted'){instClose();toast('✅ Telepítve! Indítsd a kezdőképernyőről.')}else{instClose()}}catch(e){instOpen()}}
+document.addEventListener('click',e=>{if(!e.target.closest)return;
+  if(e.target.closest('#instGo')){instGo();return}if(e.target.closest('#instLater')){instClose();return}
+  if(e.target.closest('#instOpen')){instOpen();return}
+  if(e.target.closest('#instCopy')){const u=instShareUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('🔗 Link kimásolva')).catch(()=>{const i=$('#instUrl');if(i){i.focus();i.select()}})}});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFER_INSTALL=e;const o=document.getElementById('instov');if(o&&!o.hidden){const b=o.querySelector('.inbody');if(b)b.innerHTML=instBody()}const b=document.getElementById('instNow');if(b)b.hidden=false});
+addEventListener('appinstalled',()=>{DEFER_INSTALL=null;instClose();toast('✅ Telepítve! Indítsd a kezdőképernyőről.')});
+// a telepítő link megnyitásakor azonnal felajánlja
+if(/[?&]telepit\b/.test(location.search)){INST_WANT=true;try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
+  if(!isInstalled())setTimeout(instOpen,350)}
 
 /* ===== fiókok + élő ranglista (Firebase) ===== */
 const FBC=window.MEDVE_FB||null;
