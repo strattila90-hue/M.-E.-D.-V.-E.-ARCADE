@@ -68,6 +68,17 @@ nav.bottom .cnt{position:absolute;top:2px;left:calc(50% + 8px);background:var(--
 .btn.line{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
 .btn.danger{background:var(--bad-bg);color:var(--bad)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.upd-panel{position:relative;overflow:hidden}
+.upd-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;border:0;background:var(--surface2);color:var(--fg);position:relative}
+.upd-btn.has-update{background:var(--accent);color:var(--accent-fg);box-shadow:0 4px 14px rgba(143,21,32,.35)}
+.upd-btn.updating{opacity:.85;pointer-events:none}
+.upd-badge{position:absolute;top:-6px;right:-6px;background:#ff4d4d;color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;min-width:18px;text-align:center}
+.upd-progress{height:6px;background:rgba(0,0,0,.12);border-radius:999px;margin-top:10px;overflow:hidden;display:none}
+.upd-progress.on{display:block}
+.upd-bar{height:100%;width:0%;background:linear-gradient(90deg,#ff6b5b,#ffd700);border-radius:999px;transition:width .25s ease}
+.upd-pct{font-size:12px;font-weight:700;text-align:center;margin-top:6px;color:var(--muted);display:none}
+.upd-pct.on{display:block}
+
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 input,select,textarea{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
 textarea{min-height:70px;resize:vertical}
@@ -2331,8 +2342,8 @@ const RK_ZONES=[
   [384400,'🌙 A HOLD! (384 400 km)']];
 const rkBest=()=>{try{return Number(localStorage.getItem('medve-rk-best')||0)}catch(e){return 0}};
 const rkM=cm=>(cm/100).toFixed(1).replace('.',',')+' m';
-function rkAlt(y){return Math.max(0,(y||0)-RK_FL)/1000} // valós = tényleges toronymagasság
-function rkAltInv(km){return km*1000+RK_FL}
+function rkAlt(y){return ((RK.alt0||0)+y)/1000}
+function rkAltInv(km){return km*1000-(RK.alt0||0)}
 const rkKm=km=>km<1?Math.round(km*1000)+' m':km<10?km.toFixed(1).replace('.',',')+' km':Math.round(km).toLocaleString('hu-HU')+' km';
 // nemzetközi standard légkör (egyszerűsítve): hőmérséklet, légsűrűség, szélerősség (futóáramlás ~10,5 km-en)
 function rkAtm(km){const T=km<11?15-6.5*km:km<20?-56.5:km<32?-56.5+(km-20):km<47?-44.5+2.8*(km-32):km<51?-2.5:km<71?-2.5-2.8*(km-51):km<86?-58.5-2*(km-71):Math.min(900,-90+(km-86)*4);
@@ -2343,7 +2354,7 @@ const rkFmt=m=>m<1000?Math.round(m)+' m':rkKm(m/1000);
 const rkGrp=m=>Math.round(m).toLocaleString('hu-HU')+' m';
 function rkZoneOf(km){let z=0;for(let i=0;i<RK_ZONES.length;i++)if(km>=RK_ZONES[i][0])z=i;return z}
 // emelkedés: a platform rakétákkal viszi a Rábát; tökéletes lerakás és új zóna = tolóerő-bónusz, nehéz torony = lassabb
-function rkClimb(dt){RK.alt0=0;RK.vz=0} // platform nem emelkedik
+function rkClimb(dt){const alt=RK.alt0||0,v=(120+.03*alt)*(1+(RK.boost||0))/(1+(RK.mass||0)/30000);RK.vz=v;RK.alt0=alt+v*dt;RK.boost=Math.max(0,(RK.boost||0)-dt*.1)}
 function rkZoneChk(){const z=rkZoneOf(rkAlt(rkTop().y));if(z>RK.zone){RK.zone=z;rkRadio(RK_ZONES[z][1]);RK.boost=Math.min(3,(RK.boost||0)+1);rkPopMsg('🚀 Új zóna – tolóerő-bónusz!','#9dff9d');if(z>=6&&!RK.space){RK.space=true;rockStart('rakodo_ej')}}}
 function rkEv(dt){const km=rkAlt(rkTop().y);if(km>1.5&&km<8){RK.evT=(RK.evT==null?6:RK.evT)-dt;if(RK.evT<=0){RK.evT=5+Math.random()*6;RK.flash=.5;RK.thd+=(Math.random()<.5?-1:1)*(3+Math.random()*3);rkPopMsg('⚡ Villám a zivatarfelhőben – leng a láda!','#fff3a0');sndThud()}}}
 function rkStage(){const h=rkHeight();return h<3?0:h<7?1:h<13?2:h<19?3:4}
@@ -2390,13 +2401,13 @@ function rkLand(f){const T=RK_T[f.k],top=rkTop(),sw=top.base?0:rkSway(top.y),tx=
     RK.cur=RK.next;RK.next=rkPick();rkHud();rkTray();return true}
   return false}
 function rkMiss(f){RK.fx.push({k:f.k,x:f.x,y:f.y,vx:(f.x-rkTop().lx>0?1:-1)*1.5,vy:f.vy,rot:0,vr:(Math.random()-.5)*6,t:0});rkBuzz();sndBoom();
-  const h=Math.round(rkHeight()*100)/100;RK.towers.push(h);rkPopMsg(`💥 Leesett! ${RK.truck}. torony: ${rkFmt(h)}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
+  const H=rkTop().y;RK.towers.push(Math.round((RK.alt0||0)+H));rkPopMsg(`💥 Leesett! ${RK.truck}. emelkedés: ${rkFmt((RK.alt0||0)+H)}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
 function rkBuzz(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=110;g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.2)}
 function rkRadioSnd(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;const n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;f.Q.value=1.5;const g=a.createGain();g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);n.connect(f).connect(g).connect(MASTER);n.start(t,0,.35);
   [1200,1600].forEach((fr,i)=>{const o=a.createOscillator(),og=a.createGain();o.frequency.value=fr;og.gain.setValueAtTime(.06,t+.32+i*.12);og.gain.exponentialRampToValueAtTime(.001,t+.42+i*.12);o.connect(og).connect(MASTER);o.start(t+.32+i*.12);o.stop(t+.45+i*.12)})}
 function rkRadio(msg){const r=$('#rkRadio');if(!r)return;r.textContent=msg;r.hidden=false;rkRadioSnd();clearTimeout(RK.rt);RK.rt=setTimeout(()=>{r.hidden=true},3500)}
 function rkPopMsg(m,col){const p=$('#rkPop');if(!p)return;p.textContent=m;p.style.color=col||'#fff';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}
-function rkHud(){const h=$('#rkH');if(h)h.textContent=rkFmt(rkHeight());const t=$('#rkTrucks');if(t)t.textContent=RK.phase==='menu'||!RK.truck?'🚛🚛🚛':'🚛'.repeat(Math.max(0,3-RK.truck+(RK.phase==='play'?1:0)))||'—'}
+function rkHud(){const h=$('#rkH');if(h)h.textContent=rkKm(rkAlt(rkTop().y));const t=$('#rkTrucks');if(t)t.textContent=RK.phase==='menu'||!RK.truck?'🚛🚛🚛':'🚛'.repeat(Math.max(0,3-RK.truck+(RK.phase==='play'?1:0)))||'—'}
 function rkTray(){const tr=$('#rkTray');if(!tr)return;
   if(RK.phase==='play'){const c=RK.cur&&RK_T[RK.cur],n=RK.next&&RK_T[RK.next];
     tr.innerHTML=`<div class="rkcur">${c?`<span class="rkic" style="background:${c.col}">${c.ic}</span><div class="rkinf"><b>${esc(c.n)}</b><small>${String(c.w).replace('.',',')} × ${String(c.h).replace('.',',')} m · ${c.m} kg · ${RK.truck}. teherautó</small><small>Torony ${rkM(Math.round(rkHeight()*100))} · össztömeg ${Math.round(RK.mass||0)} kg · drón terhelés ${Math.round(c.m/rkCap(rkAlt(rkTop().y))*100)}%</small></div>`:'<div class="rkinf"><b>Ejtés…</b></div>'}</div>
@@ -2421,14 +2432,12 @@ function rkLoop(now){RK.raf=requestAnimationFrame(rkLoop);if(RK.cv){const b=RK.c
   if(RK.phase==='play'){rkDrone(dt);if(RK.T.length){rkClimb(dt);rkZoneChk();rkEv(dt)}RK.hT-=dt;if(RK.hT<=0){RK.hT=1.5;rkHud();rkTray()}
     if(RK.fall){const f=RK.fall,g=RK.space?1.8:9.8;f.vy+=g*dt;f.y-=f.vy*dt;f.x+=f.vx*dt;f.vx*=.98;const top=rkTop();
       if(f.y<=top.y){if(rkLand({...f,y:top.y})){RK.fall=null}else if(f.y<top.y-RK_T[f.k].h*.6){RK.fall=null;rkMiss(f)}}}}
-  if(RK.phase==='swap'){RK.swap+=dt;RK.alt0=0;RK.boost=0;RK.vz=0;if(RK.swap>1.2)RK.truckX=-Math.pow(RK.swap-1.2,2)*6;
+  if(RK.phase==='swap'){RK.swap+=dt;RK.alt0*=Math.pow(.05,dt);if(RK.alt0<3)RK.alt0=0;RK.boost=0;RK.vz=0;if(RK.swap>1.2)RK.truckX=-Math.pow(RK.swap-1.2,2)*6;
     if(RK.swap>3.4){if(RK.truck>=3){rkFinish();}else{RK.alt0=0;RK.mass=0;RK.boost=0;RK.truck++;RK.T=[];RK.imb=0;RK.combo=0;RK.zone=0;RK.truckX=12;RK.phase='enter';RK.space=false;rockStart('rakodo');rockTempo(100);rkHud();rkTray()}}}
   if(RK.phase==='enter'){RK.truckX=Math.max(0,RK.truckX-dt*9);if(RK.truckX<=0){RK.phase='play';RK.cur=rkPick(1);RK.next=rkPick();RK.dx=-1.6;RK.dy=RK_FL+4.6;RK.th=0;RK.thd=0;rkTray();rkHud();rkPopMsg(`🚛 ${RK.truck}. teherautó – építs!`,'#f3d77a')}}
   for(const f of RK.fx){f.t+=dt;f.vy+=9.8*dt;f.y-=f.vy*dt;f.x+=f.vx*dt;f.rot+=f.vr*dt}RK.fx=RK.fx.filter(f=>f.t<3);if(RK.shake)RK.shake=Math.max(0,RK.shake-dt);
-  // kamera: a legfelső doboz a képernyő felső részén marad
-  const vh=RK.H/RK.s,top=rkTop(),moving=RK.phase==='enter'||(RK.phase==='swap'&&RK.swap>1);
-  const tgtY=moving?0:Math.max(0,top.y+0.6-vh*0.38);
-  RK.camY+=(tgtY-RK.camY)*Math.min(1,dt*(moving?2.0:3.0));
+  // kamera: a torony teteje kb. a képernyő 45%-ánál
+  const vh=RK.H/RK.s,top=rkTop(),moving=RK.phase==='enter'||(RK.phase==='swap'&&RK.swap>1),tgtY=moving?0:Math.max(RK.alt0>1.5?-1.6:0,top.y+1.2-vh*.42);RK.camY+=(tgtY-RK.camY)*Math.min(1,dt*(moving?2.2:2.5));
   const k=Math.min(1,Math.max(0,(RK.camY-1)/4)),tgtX=RK.camX0*(1-k)+top.lx*k;RK.camX+=(tgtX-RK.camX)*Math.min(1,dt*2);
   rkDraw()}
 function rkFinish(){RK.phase='done';RK.run=false;const best=Math.max(0,...RK.towers);
@@ -2458,19 +2467,19 @@ function rkDraw(){const c=RK.c,W=RK.W,H=RK.H,s=RK.s,dpr=RK.dpr;if(!c)return;c.se
     else if(o.k==='balloon'){c.fillStyle='#f5ecd0';c.beginPath();c.ellipse(0,-.35*s,.3*s,.4*s,0,0,7);c.fill();c.fillStyle='#333';c.fillRect(-.05*s,.1*s,.1*s,.1*s)}
     else{c.fillStyle='#cfd3d6';c.fillRect(-.4*s,-.04*s,.8*s,.08*s);c.fillStyle='#1b4f9c';c.fillRect(-.5*s,-.2*s,.3*s,.4*s);c.fillRect(.2*s,-.2*s,.3*s,.4*s)}
     c.fillStyle='rgba(243,236,212,.85)';c.font='700 10px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText({plane:'✈ utasszállító (10,7 km)',balloon:'🎈 időjárás-ballon',iss:'🛰️ ISS (408 km)',geo:'📡 geostacionárius műhold'}[o.k],0,-.55*s);c.restore()}
-  const G0=0;
+  const G0=-(RK.alt0||0);
   // talaj és bázis
   if(Y(G0)<H+40){c.fillStyle='#4a5246';for(let i=-2;i<4;i++){const x=X(-12+i*7);c.fillRect(x,Y(G0+3.2),4.5*s,3.2*s);c.fillStyle='#424a3e';c.beginPath();c.moveTo(x-.2*s,Y(G0+3.2));c.lineTo(x+2.25*s,Y(G0+4.1));c.lineTo(x+4.7*s,Y(G0+3.2));c.fill();c.fillStyle='#4a5246'}
     c.fillStyle='#3b3f33';c.fillRect(0,Y(G0),W,H);c.fillStyle='#55584a';for(let i=0;i<24;i++)c.fillRect(X(-12+i*1.2),Y(G0)+8,.6*s,3)}
-  // bal skála: tényleges magasság méterben (a dobozok valós magassága)
+  // bal skála: VALÓS tengerszint feletti magasság (a platform magassága + helyi méter)
   c.fillStyle='rgba(243,236,212,.6)';c.font='700 10px system-ui';c.textAlign='left';c.textBaseline='middle';
-  {let st=1;for(const q of[1,2,5,10,20,50,100]){st=q;if(q*s>=45)break}const lo=RK.camY-1,hi=RK.camY+gy/s+1;for(let m=Math.ceil(lo/st)*st;m<=hi;m+=st){const y=Y(m);if(y<-10||y>H+10)continue;const mj=Math.round(m/st)%5===0;c.fillRect(0,y,mj?14:8,1.5);if(mj||st>=5)c.fillText(rkGrp(m),17,y)}}
+  {let st=1;for(const q of[1,2,5,10,20,50,100]){st=q;if(q*s>=45)break}const a0=(RK.alt0||0),lo=RK.camY-1,hi=RK.camY+gy/s+1;for(let m=Math.ceil((a0+lo)/st)*st;m<=a0+hi;m+=st){const y=Y(m-a0);if(y<-10||y>H+10)continue;const mj=Math.round(m/st)%5===0;c.fillRect(0,y,mj?14:8,1.5);if(mj||st>=5)c.fillText(rkGrp(m),17,y)}}
   for(let i=1;i<RK_ZONES.length;i++){const y=tY(RK_ZONES[i][0]*1000);if(y<-10||y>H+10)continue;c.strokeStyle='rgba(255,224,138,.5)';c.setLineDash([2,6]);c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);c.fillStyle='rgba(255,224,138,.95)';c.textAlign='right';c.fillText(RK_ZONES[i][1].split(' – ')[0].replace(/\s*\(.*/,'')+' · '+rkKm(RK_ZONES[i][0]),W-6,y-8);c.textAlign='left'}
   // rekordvonal
   const rb=rkBest()?rkScoreAlt(rkBest())-(RK.alt0||0):0;if(rb>0){const y=Y(rb);if(y>-10&&y<H+10){c.strokeStyle='rgba(255,215,0,.85)';c.setLineDash([10,6]);c.lineWidth=2;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);c.lineWidth=1;c.fillStyle='#ffd700';c.textAlign='right';c.font='800 11px system-ui';c.fillText('🏆 REKORD '+rkFmt(rkScoreAlt(rkBest())),W-8,y-9)}}
   let sy=RK.shake?Math.sin(RK.shake*80)*3:0;c.save();c.translate(0,sy);
   // Rába + torony
-  const tx=RK.truckX||0;rkTruck(c,m=>X(m-RK_BC+tx),Y,s);
+  const tx=RK.truckX||0;if((RK.alt0||0)>1.5){const x0=X(-1-RK_BC+tx),dw=9.2*s;c.fillStyle='#2b3025';c.fillRect(x0,Y(0),dw,.3*s);c.fillStyle='#464d3a';c.fillRect(x0,Y(0),dw,.06*s);for(const nx of[.3,2.4,5,7.2]){const bx=X(nx-1-RK_BC+tx+1)-.0,fl=(.9+Math.min(3,(RK.vz||0)/120))*s*(.85+.15*Math.sin(RK.t*60+nx));c.fillStyle='#1d2116';c.beginPath();c.moveTo(bx-.2*s,Y(-.3));c.lineTo(bx+.2*s,Y(-.3));c.lineTo(bx+.32*s,Y(-.7));c.lineTo(bx-.32*s,Y(-.7));c.fill();const g=c.createLinearGradient(0,Y(-.7),0,Y(-.7)+fl);g.addColorStop(0,'rgba(255,250,210,.95)');g.addColorStop(.4,'rgba(255,160,50,.8)');g.addColorStop(1,'rgba(255,80,20,0)');c.fillStyle=g;c.beginPath();c.moveTo(bx-.3*s,Y(-.7));c.lineTo(bx+.3*s,Y(-.7));c.lineTo(bx,Y(-.7)+fl);c.fill()}}rkTruck(c,m=>X(m-RK_BC+tx),Y,s);
   const anim=RK.phase==='swap'?Math.min(1,RK.swap/1.2):0;
   for(const b of RK.T){const T=RK_T[b.k],sw=rkSway(b.y0+T.h*.5);let ox=0,oy=0,rot=0;if(anim&&b.y0>RK_FL+2){const k=(b.y0-RK_FL)/Math.max(1,rkHeight());rot=Math.sin(RK.swap*6)*.04*k}
     rkCrate(c,b.k,X(b.lx+sw+tx+ox)-T.w*s/2,Y(b.y0+oy),T.w*s,T.h*s,rot)}
@@ -2489,7 +2498,7 @@ function rkDraw(){const c=RK.c,W=RK.W,H=RK.H,s=RK.s,dpr=RK.dpr;if(!c)return;c.se
     rkDroneDraw(c,dxs,dys,s,tilt)}
   if(RK.fall){const f=RK.fall,T=RK_T[f.k];rkCrate(c,f.k,X(f.x)-T.w*s/2,Y(f.y),T.w*s,T.h*s,0)}
   if(RK.flash>0){c.fillStyle='rgba(255,255,255,'+Math.min(.7,RK.flash*1.6)+')';c.fillRect(0,0,W,H);RK.flash=Math.max(0,RK.flash-.025)}
-  if(RK.phase!=='menu'){const A=rkAtm(rkAlt(rkTop().y)),lam=RK.lam||0;c.save();c.textAlign='left';c.textBaseline='top';c.font='700 11px system-ui';[`${rkFmt(rkHeight())} valós magasság`,`${Math.round(A.T)} °C · ${A.p} hPa`,`légsűrűség ${Math.round(A.rho*100)}%`,`drón terhelés ${Math.round(lam*100)}%`,`torony ${rkM(Math.round(rkHeight()*100))}`].forEach((t,i)=>{const w=c.measureText(t).width+12;c.fillStyle='rgba(10,14,8,.6)';c.fillRect(44,46+i*17,w,16);c.fillStyle=i===3&&lam>.85?'#ff7b6b':'#f3ecd4';c.fillText(t,50,49+i*17)});c.restore()}
+  if(RK.phase!=='menu'){const A=rkAtm(rkAlt(rkTop().y)),lam=RK.lam||0;c.save();c.textAlign='left';c.textBaseline='top';c.font='700 11px system-ui';[`${rkKm(rkAlt(rkTop().y))} valós magasság`,`${Math.round(A.T)} °C · ${A.p} hPa`,`légsűrűség ${Math.round(A.rho*100)}%`,`drón terhelés ${Math.round(lam*100)}%`,`↑ ${Math.round(RK.vz||0)} m/s · tolóerő ×${(1+(RK.boost||0)).toFixed(1)}`].forEach((t,i)=>{const w=c.measureText(t).width+12;c.fillStyle='rgba(10,14,8,.6)';c.fillRect(44,46+i*17,w,16);c.fillStyle=i===3&&lam>.85?'#ff7b6b':'#f3ecd4';c.fillText(t,50,49+i*17)});c.restore()}
   if(RK.phase==='play'&&RK.T.length<1){c.fillStyle='rgba(243,236,212,.9)';c.font='700 14px system-ui';c.textAlign='center';c.fillText('👆 Koppints bárhol az ejtéshez',W/2,26)}}
 function rkDroneDraw(c,x,y,s,tilt){c.save();c.translate(x,y);c.rotate(tilt);const sp=RK.space,rho=Math.max(.15,Math.min(1,(RK.rho==null?1:RK.rho)*1.4)),lam=RK.lam||0,rr=(a,b,w,h,r)=>{c.beginPath();c.roundRect?c.roundRect(a,b,w,h,r):c.rect(a,b,w,h)};
   c.fillStyle='#232819';c.fillRect(-.75*s,.54*s,1.5*s,.05*s);for(const a of[-.62,.62])c.fillRect(a*s-.025*s,.3*s,.05*s,.27*s);
@@ -2558,9 +2567,15 @@ function arcRender(){const m=document.getElementById('main');
   <button type="button" class="rkbtn" data-rank="harc">🏆 <b>${FB_ON&&UID?'Teljes ranglista':'Rekordjaim'}</b><span>mind a 4 játék</span></button>
   ${shareHTML()}
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
+  <div class="panel arc-p upd-panel" id="updPanel">
+    <h3>🔄 Frissítés</h3>
+    <button type="button" class="upd-btn" id="updBtn">Frissítés ellenőrzése</button>
+    <div class="upd-progress" id="updProg"><div class="upd-bar" id="updBar"></div></div>
+    <div class="upd-pct" id="updPct"></div>
+  </div>
   <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" style="margin:0">✅ Telepítve, a kezdőképernyőről indul.</p>':'<p class="hint" style="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
   <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p>`;
-  setTimeout(()=>{pzhFullSet();gidFullSet()},0)}
+  setTimeout(()=>{pzhFullSet();gidFullSet(); if(typeof updSetUI==='function' && UPD_WAITING) updSetUI('available'); },0)}
 document.addEventListener('change',e=>{if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
@@ -2777,6 +2792,89 @@ if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.fires
   catch(e){console.warn('Firebase init hiba',e);FB_ON=false;AUTHREADY=true}}
 
 applySet();arcRender();
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* ===== Frissítés (PWA) ===== */
+let UPD_REG = null, UPD_WAITING = false;
+function updSetUI(state, pct, text){
+  const btn = document.getElementById('updBtn');
+  const prog = document.getElementById('updProg');
+  const bar = document.getElementById('updBar');
+  const pctEl = document.getElementById('updPct');
+  if(!btn) return;
+  btn.classList.remove('has-update','updating');
+  if(prog) prog.classList.remove('on');
+  if(pctEl) pctEl.classList.remove('on');
+  if(state === 'available'){
+    btn.classList.add('has-update');
+    btn.innerHTML = '✨ Új verzió elérhető <span class="upd-badge">!</span>';
+    btn.disabled = false;
+  } else if(state === 'checking'){
+    btn.classList.add('updating');
+    btn.textContent = 'Ellenőrzés…';
+    btn.disabled = true;
+  } else if(state === 'downloading'){
+    btn.classList.add('updating');
+    btn.textContent = 'Letöltés…';
+    btn.disabled = true;
+    if(prog) prog.classList.add('on');
+    if(bar) bar.style.width = (pct||0) + '%';
+    if(pctEl){ pctEl.classList.add('on'); pctEl.textContent = (pct||0) + '% · ' + (text||''); }
+  } else if(state === 'ready'){
+    btn.classList.add('has-update');
+    btn.textContent = '🔄 Frissítés telepítése';
+    btn.disabled = false;
+  } else {
+    btn.textContent = 'Frissítés ellenőrzése';
+    btn.disabled = false;
+  }
+}
+async function updCheck(){
+  if(!UPD_REG) return;
+  updSetUI('checking');
+  try{ await UPD_REG.update(); }catch(e){}
+  setTimeout(()=>{ if(!UPD_WAITING) updSetUI('idle'); }, 1200);
+}
+function updApply(){
+  if(UPD_REG && UPD_REG.waiting){
+    UPD_REG.waiting.postMessage({ type: 'SKIP_WAITING' });
+    updSetUI('downloading', 100, 'Telepítés…');
+  } else {
+    updCheck();
+  }
+}
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    UPD_REG = reg;
+    if(reg.waiting){ UPD_WAITING = true; updSetUI('available'); }
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if(!nw) return;
+      updSetUI('downloading', 0, 'Letöltés indul…');
+      nw.addEventListener('statechange', () => {
+        if(nw.state === 'installed'){
+          if(navigator.serviceWorker.controller){
+            UPD_WAITING = true;
+            updSetUI('available');
+          } else {
+            updSetUI('idle');
+          }
+        }
+      });
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(UPD_WAITING) location.reload();
+  });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data && e.data.type === 'UPDATE_PROGRESS'){
+      updSetUI('downloading', e.data.pct, e.data.text || '');
+      if(e.data.pct >= 100) setTimeout(() => { if(UPD_WAITING) updSetUI('available'); else updSetUI('idle'); }, 600);
+    }
+  });
+}
+document.addEventListener('click', e => {
+  if(e.target && e.target.id === 'updBtn'){
+    if(UPD_WAITING) updApply(); else updCheck();
+  }
+});
 </script>
 </body></html>
