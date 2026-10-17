@@ -1846,8 +1846,8 @@ const PZH_SPRITE='data:image/webp;base64,UklGRjZDAABXRUJQVlA4WAoAAAAQAAAA4QIAswA
 const DR={};
 const PK=200/475,PCX=285,PBY=178;
 const D_WHEELS=[-92,-64,-42,-20,2,24,46,68,92].map((x,i,a)=>({lx:x,r:i===0||i===a.length-1?7.5:9.5,road:i>0&&i<a.length-1}));
-function drGround(x){const t=Math.max(0,Math.min(1,(x-200)/900));const sm=t*t*(3-2*t);const amp=30+Math.min(55,Math.max(0,x)/90);
-  return 320-sm*amp*(.55*Math.sin(x/260)+.32*Math.sin(x/97+1.3)+.1*Math.sin(x/41+.7))-sm*Math.max(0,Math.sin(x/1300))*40}
+function drGround(x){const t=Math.max(0,Math.min(1,(x-200)/1600));const sm=t*t*(3-2*t);const amp=28+Math.min(50,Math.max(0,x)/140);
+  return 320-sm*amp*(.55*Math.sin(x/420)+.32*Math.sin(x/160+1.3)+.1*Math.sin(x/70+.7))-sm*Math.max(0,Math.sin(x/2100))*36}
 function drBest(){try{return Number(localStorage.getItem('medve-drone-best')||0)}catch(e){return 0}}
 function droneOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');
   el.innerHTML=`<div class="hbar"><div class="htitle">Drone<b>Run</b></div><div class="hstat"><span>Táv <b id="dDist">0</b> m</span><span>Drón <b id="dKills">0</b></span><span>Rekord <b id="dBest">${drBest()}</b></span></div><button class="hx" id="dClose" aria-label="Bezárás">✕</button></div>
@@ -2047,12 +2047,9 @@ function drExtras(dt){const T=DR.t;
   DR.sa=DR.sa.filter(r=>{if(r.d>0){r.d-=dt;if(r.d<=0&&SOUND&&AC)snare(AC.currentTime,.035);return true}const dx=r.tx-r.x,dy=r.ty-r.y,dl=Math.hypot(dx,dy);const st=1500*dt;
     if(dl<=st){for(let i=0;i<7;i++){const a=Math.PI*.6+Math.random()*1.4;DR.fx.push({x:r.tx,y:r.ty,vx:Math.cos(a)*(120+Math.random()*200)+T.vx,vy:Math.sin(a)*(120+Math.random()*200)-60,t:.18+Math.random()*.2,k:'f'})}sndPing();return false}
     r.x+=dx/dl*st;r.y+=dy/dl*st;r.tx+=T.vx*dt;r.ty+=T.vy*dt;return true});
-  // gyalogsági aknák
-  if(T.x>DR.nextMine){DR.nextMine=T.x+900+Math.random()*1700;DR.mines.push({x:T.x+700+Math.random()*500})}
-  for(const m of DR.mines){if(!m.hit&&m.x>T.x-95&&m.x<T.x+95){m.hit=1;const gy=drGround(m.x);drBoom(m.x,gy-4,false);for(let i=0;i<16;i++){const a=-Math.PI/2+(Math.random()-.5)*1.6,v=150+Math.random()*300;DR.fx.push({x:m.x,y:gy-4,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:.9,k:'s'})}
-      const lx=m.x-T.x;T.vy-=170+Math.random()*90;T.w+=(lx>0?-1:1)*(.5+Math.abs(lx)/95*.7);DR.shake=Math.max(DR.shake||0,.6);sndPop();if(SOUND&&AC)boom(AC.currentTime+.02,.6,42);try{navigator.vibrate&&navigator.vibrate(90)}catch(e){}
-      if(!DR.mineMsg){DR.mineMsg=1;toast('💥 Gyalogsági akna – a PzH páncélja kibírta!')}}}
-  DR.mines=DR.mines.filter(m=>m.x>T.x-1500)}
+  // aknák kikapcsolva
+  DR.mines=[];
+}
 function sndPing(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime+.005;const o=a.createOscillator();o.type='sine';const f=2300+Math.random()*2200;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.82,t+.25);const g=a.createGain();g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.3);snare(t,.06)}
 function drDrawExtras(c){for(const m of DR.mines){if(m.hit)continue;const gy=drGround(m.x);c.fillStyle='#3d4a22';c.beginPath();c.ellipse(m.x,gy+1,9,3.5,0,Math.PI,0);c.fill();c.fillStyle='#222';c.fillRect(m.x-1,gy-5,2,3)}
   for(const p of DR.cas){c.save();c.translate(p.x,p.y);c.rotate(p.a);if(p.k==='c'){c.fillStyle='#D4A64A';c.fillRect(-3,-1,6,2.2);c.fillStyle='#8a6a2a';c.fillRect(2,-1,1,2.2)}else{c.fillStyle='#4a4a46';c.fillRect(-1.6,-1.2,3.2,2.4)}c.restore()}
