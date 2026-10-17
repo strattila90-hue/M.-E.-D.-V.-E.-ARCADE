@@ -961,7 +961,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='1.9.0',APP_DATE='2026.10.12.';
+const APP_VER='1.9.2',APP_DATE='2026.10.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2275,24 +2275,26 @@ Object.assign(SONGS,{
 /* ===== RÁBA RAKODÓ – DRÓNTORONY: drónnal pakolt, végtelen magasra építhető láda-torony, 3 teherautóval (5. játék) ===== */
 const RK={};
 const RK_L=4.16,RK_FL=1.55,RK_BC=5.16; // plató hossz, padlómagasság, platóközép a lökhárítótól (Rába műszaki rajz)
+// valós méretek oldalnézetben (hossz × magasság, méter). Forrás: 155 mm raklap MSM gyártói adat (765×360×1038 mm, 8 db, 363 kg);
+// NATO 20 l kanna 465×175×335 mm; MRE karton 15,5"×9,1"×9,6"; víz: EUR raklap 1200 mm. A többi becsült, valószerű méret.
 const RK_T={
-  lsz:{n:'155 mm lőszer raklap',w:1.2,h:0.8,col:'#56652b',ic:'💥'},viz:{n:'Víz raklap',w:1.2,h:0.9,col:'#2b5f7d',ic:'💧'},
-  agg:{n:'Aggregátor',w:1.0,h:0.9,col:'#4d5c26',ic:'⚡'},sat:{n:'Sátorzsák',w:1.2,h:0.4,col:'#5b653c',ic:'⛺'},
-  tlt:{n:'Töltetláda',w:0.9,h:0.4,col:'#76602a',ic:'🧨'},alc:{n:'Álcaháló',w:0.9,h:0.5,col:'#3f4c28',ic:'🌿'},szl:{n:'Szerszámláda',w:0.9,h:0.45,col:'#8f3d1c',ic:'🧰'},
-  kan:{n:'Üzemanyag kannák',w:0.6,h:0.5,col:'#8a2f22',ic:'⛽'},mre:{n:'Hidegkaja doboz',w:0.6,h:0.4,col:'#8d7b48',ic:'🥫'},
-  eu:{n:'Egészségügyi láda',w:0.6,h:0.4,col:'#d9d6cb',ic:'✚'},rad:{n:'Rádióláda',w:0.6,h:0.45,col:'#41503f',ic:'📻'}};
-const RK_WIDE=['lsz','viz','agg','sat'],RK_MID=['tlt','alc','szl'],RK_NAR=['kan','mre','eu','rad'];
+  lsz:{n:'155 mm lövedék raklap (8 db)',w:0.77,h:1.04,col:'#56652b',ic:'💥'},viz:{n:'Víz raklap (EUR)',w:1.2,h:1.05,col:'#2b5f7d',ic:'💧'},
+  agg:{n:'Aggregátor',w:0.9,h:0.75,col:'#4d5c26',ic:'⚡'},sat:{n:'Sátorzsák',w:1.2,h:0.4,col:'#5b653c',ic:'⛺'},
+  tlt:{n:'Töltetláda',w:0.8,h:0.4,col:'#76602a',ic:'🧨'},alc:{n:'Álcaháló',w:0.9,h:0.5,col:'#3f4c28',ic:'🌿'},szl:{n:'Szerszámláda',w:0.7,h:0.35,col:'#8f3d1c',ic:'🧰'},
+  kan:{n:'NATO 20 l kanna',w:0.34,h:0.47,col:'#8a2f22',ic:'⛽'},mre:{n:'Hidegkaja (MRE) karton',w:0.39,h:0.24,col:'#8d7b48',ic:'🥫'},
+  eu:{n:'Egészségügyi láda',w:0.6,h:0.35,col:'#d9d6cb',ic:'✚'},rad:{n:'Rádióláda',w:0.55,h:0.4,col:'#41503f',ic:'📻'}};
+const RK_WIDE=['viz','sat','agg','alc'],RK_MID=['lsz','tlt','szl','eu','rad'],RK_NAR=['kan','mre'];
 const RK_ZONES=[[0,'🏭 Bázis'],[5,'☁️ Felhők között!'],[11,'🌌 Sztratoszféra!'],[18,'🚀 VILÁGŰR!'],[28,'🌙 A Hold felé!']];
 const rkBest=()=>{try{return Number(localStorage.getItem('medve-rk-best')||0)}catch(e){return 0}};
 const rkM=cm=>(cm/100).toFixed(1).replace('.',',')+' m';
 function rkOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk');document.body.classList.add('harcon');
-  el.innerHTML=`<div class="hbar"><div class="htitle">Rába <b>Rakodó</b></div><div class="hstat"><span>Torony <b id="rkH">0,0 m</b></span><span>Rekord <b id="rkBestV">${rkM(rkBest())}</b></span><span id="rkTrucks">🚛🚛🚛</span></div><button class="hx" id="rkClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Rába <b>Rakodó</b></div><div class="hstat"><span>Magasság <b id="rkH">1,6 m</b></span><span>Rekord <b id="rkBestV">${rkM(rkBest())}</b></span><span id="rkTrucks">🚛🚛🚛</span></div><button class="hx" id="rkClose" aria-label="Bezárás">✕</button></div>
    <div class="rkwrap" id="rkWrap"><canvas id="rkCv"></canvas><div class="rkradio" id="rkRadio" hidden></div><div class="rkpop" id="rkPop"></div></div>
    <div class="rktray" id="rkTray"></div>
    <div class="hstart" id="rkStart"><div class="rkhero">🚁📦🚛</div><h3>RÁBA RAKODÓ</h3><p>A drón hozza a ládákat a Rába platója fölé. <b>Koppints bárhol</b>, és elengedi: építs tornyot egymásra, <b>egészen a világűrig</b>! Minél magasabb, annál vadabbul mozog a drón, leng a láda és kileng a torony.</p>
     <p class="rk3">🚛🚛🚛 <b>3 teherautó</b> jön egymás után: ha leesik egy láda, az a torony kész, a Rába elhajt vele, és jön a következő.</p>
     <button type="button" class="btn pri" id="rkGo">▶ Indítás</button>
-    <details class="rkrules"><summary>Tippek</summary><ul><li>A láda akkor marad fent, ha a <b>közepe</b> az alatta lévőn van.</li><li><b>Tökéletes</b> ejtés (szinte pontosan középre): kiegyenesíti a tornyot; 3 egymás után = sorozatbónusz.</li><li>Figyeld a <b>kötélen lengő</b> ládát, ne csak a drónt!</li><li>Zónák: bázis → felhők (5 m) → sztratoszféra (11 m) → <b>világűr (18 m)</b> → Hold (28 m). A világűrben kisebb a gravitáció, lassabban esnek a ládák.</li></ul></details>
+    <details class="rkrules"><summary>Tippek</summary><ul><li>A láda akkor marad fent, ha a <b>közepe</b> az alatta lévőn van.</li><li><b>Tökéletes</b> ejtés (szinte pontosan középre): kiegyenesíti a tornyot; 3 egymás után = sorozatbónusz.</li><li>Figyeld a <b>kötélen lengő</b> ládát, ne csak a drónt!</li><li>A méterskála <b>valós</b>: a talajtól mér, a Rábával és a ládákkal arányos (fülketető 2,94 m, ponyvával 3,38 m).</li><li>Játékzónák: felhők (5 m) → sztratoszféra (11 m) → <b>világűr (18 m)</b> → Hold (28 m). A világűrben kisebb a gravitáció.</li></ul></details>
     <p class="rkmus">🎸 Zene: Grieg – A hegyi király csarnokában · Bach – d-moll toccata · Beethoven – Örömóda · Chopin – Gyászinduló (rock átirat)</p>
     <button type="button" class="btn line rkstart" data-rank="rakodo">🏆 Rekordok</button>${gBoard('rkBest',false,v=>rkM(v))}</div>
    <div class="hover" id="rkOver" hidden></div>`;
@@ -2323,19 +2325,19 @@ function rkLand(f){const T=RK_T[f.k],top=rkTop(),sw=top.base?0:rkSway(top.y),tx=
     RK.T.push({k:f.k,lx,y0:top.y,id:RK.T.length});
     if(perfect){RK.combo++;RK.imb=Math.max(0,RK.imb-.25);rkPopMsg(RK.combo>=3?`🎯 TÖKÉLETES ×${RK.combo}! Kiegyenesedett!`:'🎯 TÖKÉLETES!','#9dff9d');if(RK.combo>=3)RK.imb=0;sndPing()}
     else{RK.combo=0;if(!top.base)RK.imb=Math.min(2,RK.imb*.92+Math.abs(lx-top.lx)/Math.max(.3,top.w/2)*.18)}
-    sndThud();RK.shake=.15;const H=rkHeight();
+    sndThud();RK.shake=.15;const H=rkTop().y;
     let z=0;for(let i=0;i<RK_ZONES.length;i++)if(H>=RK_ZONES[i][0])z=i;if(z>RK.zone){RK.zone=z;rkRadio(RK_ZONES[z][1]);if(z===3&&!RK.space){RK.space=true;rockStart('rakodo_ej')}}
     if(!RK.space)rockTempo(100+Math.min(95,RK.T.length*2.6));else rockTempo(112+Math.min(70,(RK.T.length-28)*1.5));
     RK.cur=RK.next;RK.next=rkPick();rkHud();rkTray();return true}
   return false}
 function rkMiss(f){RK.fx.push({k:f.k,x:f.x,y:f.y,vx:(f.x-rkTop().lx>0?1:-1)*1.5,vy:f.vy,rot:0,vr:(Math.random()-.5)*6,t:0});rkBuzz();sndBoom();
-  const H=rkHeight();RK.towers.push(Math.round(H*100));rkPopMsg(`💥 Leesett! ${RK.truck}. torony: ${rkM(Math.round(H*100))}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
+  const H=rkTop().y;RK.towers.push(Math.round(H*100));rkPopMsg(`💥 Leesett! ${RK.truck}. torony: ${rkM(Math.round(H*100))}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
 function rkBuzz(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=110;g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.2)}
 function rkRadioSnd(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;const n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;f.Q.value=1.5;const g=a.createGain();g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);n.connect(f).connect(g).connect(MASTER);n.start(t,0,.35);
   [1200,1600].forEach((fr,i)=>{const o=a.createOscillator(),og=a.createGain();o.frequency.value=fr;og.gain.setValueAtTime(.06,t+.32+i*.12);og.gain.exponentialRampToValueAtTime(.001,t+.42+i*.12);o.connect(og).connect(MASTER);o.start(t+.32+i*.12);o.stop(t+.45+i*.12)})}
 function rkRadio(msg){const r=$('#rkRadio');if(!r)return;r.textContent=msg;r.hidden=false;rkRadioSnd();clearTimeout(RK.rt);RK.rt=setTimeout(()=>{r.hidden=true},3500)}
 function rkPopMsg(m,col){const p=$('#rkPop');if(!p)return;p.textContent=m;p.style.color=col||'#fff';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}
-function rkHud(){const h=$('#rkH');if(h)h.textContent=rkM(Math.round(rkHeight()*100));const t=$('#rkTrucks');if(t)t.textContent=RK.phase==='menu'||!RK.truck?'🚛🚛🚛':'🚛'.repeat(Math.max(0,3-RK.truck+(RK.phase==='play'?1:0)))||'—'}
+function rkHud(){const h=$('#rkH');if(h)h.textContent=rkM(Math.round(rkTop().y*100));const t=$('#rkTrucks');if(t)t.textContent=RK.phase==='menu'||!RK.truck?'🚛🚛🚛':'🚛'.repeat(Math.max(0,3-RK.truck+(RK.phase==='play'?1:0)))||'—'}
 function rkTray(){const tr=$('#rkTray');if(!tr)return;
   if(RK.phase==='play'){const c=RK.cur&&RK_T[RK.cur],n=RK.next&&RK_T[RK.next];
     tr.innerHTML=`<div class="rkcur">${c?`<span class="rkic" style="background:${c.col}">${c.ic}</span><div class="rkinf"><b>${esc(c.n)}</b><small>${String(c.w).replace('.',',')} × ${String(c.h).replace('.',',')} m · ${RK.truck}. teherautó</small></div>`:'<div class="rkinf"><b>Ejtés…</b></div>'}</div>
@@ -2379,7 +2381,7 @@ function rkFinish(){RK.phase='done';RK.run=false;const best=Math.max(0,...RK.tow
 function rkCol(a,b,t){const p=x=>[parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)],A=p(a),B=p(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`}
 function rkSkyAt(h){const S=[[0,'#7d93a3'],[5,'#6f8fb3'],[11,'#2f4a80'],[18,'#0d1230'],[28,'#000004']];if(h<=0)return S[0][1];for(let i=1;i<S.length;i++)if(h<S[i][0]){const t=(h-S[i-1][0])/(S[i][0]-S[i-1][0]);return rkCol(S[i-1][1],S[i][1],t)}return S[S.length-1][1]}
 function rkDraw(){const c=RK.c,W=RK.W,H=RK.H,s=RK.s,dpr=RK.dpr;if(!c)return;c.setTransform(dpr,0,0,dpr,0,0);
-  const gy=H-34,X=x=>W/2+(x-RK.camX)*s,Y=y=>gy-(y-RK.camY)*s,hTop=RK.camY+(gy)/s-RK_FL,hBot=RK.camY-RK_FL;
+  const gy=H-34,X=x=>W/2+(x-RK.camX)*s,Y=y=>gy-(y-RK.camY)*s,hTop=RK.camY+gy/s,hBot=RK.camY;
   const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,rkSkyAt(hTop));sky.addColorStop(1,rkSkyAt(Math.max(0,hBot)));c.fillStyle=sky;c.fillRect(0,0,W,H);
   // csillagok, Hold, Föld íve
   const st=Math.min(1,Math.max(0,(hTop-12)/9));if(st>0){for(const q of RK.stars){c.globalAlpha=st*(.5+.5*Math.sin(RK.t*2+q.p));c.fillStyle='#fff';c.beginPath();c.arc(q.x*W,((q.y*H*1.6+RK.camY*s*.05)%(H*1.6))-H*.3,q.r,0,7);c.fill()}c.globalAlpha=1}
@@ -2392,9 +2394,9 @@ function rkDraw(){const c=RK.c,W=RK.W,H=RK.H,s=RK.s,dpr=RK.dpr;if(!c)return;c.se
     c.fillStyle='#3b3f33';c.fillRect(0,Y(0),W,H);c.fillStyle='#55584a';for(let i=0;i<24;i++)c.fillRect(X(-12+i*1.2),Y(0)+8,.6*s,3)}
   // magasságmérő
   c.fillStyle='rgba(243,236,212,.55)';c.font='700 10px system-ui';c.textAlign='left';c.textBaseline='middle';
-  for(let m=0;m<2000;m++){const y=Y(RK_FL+m);if(y<-10)break;if(y>H+10)continue;c.fillRect(0,y,m%5===0?12:6,1.5);if(m%5===0&&m>0)c.fillText(m+' m',15,y)}
+  for(let m=0;m<2000;m++){const y=Y(m);if(y<-10)break;if(y>H+10)continue;c.fillRect(0,y,m%5===0?12:7,1.5);if(m>0&&m%5===0)c.fillText(m+' m',15,y)}
   // rekordvonal
-  const rb=rkBest()/100;if(rb>0){const y=Y(RK_FL+rb);if(y>-10&&y<H+10){c.strokeStyle='rgba(255,215,0,.85)';c.setLineDash([10,6]);c.lineWidth=2;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);c.lineWidth=1;c.fillStyle='#ffd700';c.textAlign='right';c.font='800 11px system-ui';c.fillText('🏆 REKORD '+rkM(rkBest()),W-8,y-9)}}
+  const rb=rkBest()/100;if(rb>0){const y=Y(rb);if(y>-10&&y<H+10){c.strokeStyle='rgba(255,215,0,.85)';c.setLineDash([10,6]);c.lineWidth=2;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();c.setLineDash([]);c.lineWidth=1;c.fillStyle='#ffd700';c.textAlign='right';c.font='800 11px system-ui';c.fillText('🏆 REKORD '+rkM(rkBest()),W-8,y-9)}}
   let sy=RK.shake?Math.sin(RK.shake*80)*3:0;c.save();c.translate(0,sy);
   // Rába + torony
   const tx=RK.truckX||0;rkTruck(c,m=>X(m-RK_BC+tx),Y,s);
@@ -2403,6 +2405,9 @@ function rkDraw(){const c=RK.c,W=RK.W,H=RK.H,s=RK.s,dpr=RK.dpr;if(!c)return;c.se
     rkCrate(c,b.k,X(b.lx+sw+tx+ox)-T.w*s/2,Y(b.y0+oy),T.w*s,T.h*s,rot)}
   rkTruckFront(c,m=>X(m-RK_BC+tx),Y,s);
   c.restore();
+  // valós viszonyítási magasságok (talajtól)
+  if(RK.camY<4&&!RK.truckX){c.font='700 10px system-ui';c.textAlign='left';c.textBaseline='middle';[[RK_FL,'plató 1,55 m'],[2.94,'fülketető 2,94 m'],[3.375,'ponyvával 3,38 m']].forEach(([m,t])=>{const y=Y(m);
+    c.strokeStyle='rgba(255,224,138,.55)';c.setLineDash([3,4]);c.beginPath();c.moveTo(0,y);c.lineTo(X(-RK_BC+3.08),y);c.stroke();c.setLineDash([]);const w=c.measureText(t).width+10;c.fillStyle='rgba(15,18,10,.72)';c.fillRect(14,y-8,w,16);c.fillStyle='#ffe08a';c.fillText(t,19,y+.5)})}
   for(const f of RK.fx){c.globalAlpha=Math.max(0,1-f.t/3);const T=RK_T[f.k];rkCrate(c,f.k,X(f.x)-T.w*s/2,Y(f.y),T.w*s,T.h*s,f.rot);c.globalAlpha=1}
   // drón + kötél + láda
   if(RK.phase==='play'){const dxs=X(RK.dx),dys=Y(RK.dy),tilt=Math.max(-.35,Math.min(.35,(RK.vx||0)*.08));
@@ -2456,7 +2461,8 @@ function rkTruck(c,X,Y,s){const G='#4a5a2c',GD='#34401e',GL='#5c6d38',D='#22281a
 function rkTruckFront(c,X,Y,s){// ledönthető oldalfal: keret + zsanérok, hogy a rakomány látsszon
   c.strokeStyle='rgba(74,90,44,.95)';c.lineWidth=Math.max(2,s*.05);c.strokeRect(X(3.12),Y(2.05),4.1*s,.5*s);c.lineWidth=1;
   c.strokeStyle='rgba(74,90,44,.6)';for(const x of [4.16,5.16,6.18]){c.beginPath();c.moveTo(X(x),Y(2.05));c.lineTo(X(x),Y(1.55));c.stroke()}
-  c.fillStyle='#2b3320';for(const x of [3.4,4.4,5.4,6.4,7.0])c.fillRect(X(x),Y(1.62),.12*s,.08*s)}
+  c.fillStyle='#2b3320';for(const x of [3.4,4.4,5.4,6.4,7.0])c.fillRect(X(x),Y(1.62),.12*s,.08*s);
+  c.strokeStyle='rgba(110,122,80,.75)';c.lineWidth=Math.max(2,s*.04);for(const x of [3.1,7.2]){c.beginPath();c.moveTo(X(x),Y(2.05));c.lineTo(X(x),Y(3.33));c.quadraticCurveTo(X(x),Y(3.375),X(x+(x<5?.08:-.08)),Y(3.375));c.stroke()}c.lineWidth=1}
 function rkCrate(c,k,x,yb,w,h,rot){const T=RK_T[k];c.save();c.translate(x+w/2,yb-h/2);if(rot)c.rotate(rot);
   c.fillStyle='rgba(0,0,0,.3)';c.fillRect(-w/2+2,-h/2+2,w,h);c.fillStyle=T.col;c.fillRect(-w/2,-h/2,w,h);c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=1.5;c.strokeRect(-w/2+.75,-h/2+.75,w-1.5,h-1.5);
   c.strokeStyle='rgba(255,255,255,.12)';c.beginPath();c.moveTo(-w/2+3,-h/2+3);c.lineTo(w/2-3,h/2-3);c.moveTo(w/2-3,-h/2+3);c.lineTo(-w/2+3,h/2-3);c.stroke();
