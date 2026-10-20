@@ -68,6 +68,18 @@ nav.bottom .cnt{position:absolute;top:2px;left:calc(50% + 8px);background:var(--
 .btn.line{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
 .btn.danger{background:var(--bad-bg);color:var(--bad)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.upd-panel{position:relative;overflow:hidden}
+.upd-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;border:0;background:var(--surface2);color:var(--fg);position:relative}
+.upd-btn.has-update{background:#ff4d4d !important;color:#fff !important;animation:updPulse 1.2s ease-in-out infinite;box-shadow:0 0 0 4px rgba(255,77,77,.4)}
+@keyframes updPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.upd-btn.updating{opacity:.85;pointer-events:none}
+.upd-badge{position:absolute;top:-6px;right:-6px;background:#ff4d4d;color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;min-width:18px;text-align:center}
+.upd-progress{height:10px;background:rgba(255,255,255,.15);border-radius:999px;margin-top:8px;overflow:hidden;display:none}
+.upd-progress.on{display:block}
+.upd-bar{height:100%;width:0%;background:linear-gradient(90deg,#ff6b5b,#ffd700);border-radius:999px;transition:width .25s ease}
+.upd-pct{font-size:14px;font-weight:800;text-align:center;margin-top:6px;color:#fff;display:none;text-shadow:0 1px 2px #000}
+.upd-pct.on{display:block}
+
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 input,select,textarea{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
 textarea{min-height:70px;resize:vertical}
@@ -348,7 +360,7 @@ nav.bottom .mlic .pp{transition:fill .25s}nav.bottom button.mlon .mlic .pp{fill:
 #harc .dbtn b{font-size:11.5px;line-height:1.05;text-align:center;letter-spacing:.02em;position:relative;z-index:2}#harc .dbtn small{font-size:8.5px;opacity:.8;position:relative;z-index:2}
 #harc .dbtn i{position:absolute;inset:0;z-index:3;pointer-events:none}#harc .dbtn em{position:absolute;left:0;right:0;bottom:4px;font-style:normal;font-size:12px;font-weight:900;z-index:4;text-align:center;text-shadow:0 1px 2px #000}
 #harc .dbtn.cd{filter:saturate(.35) brightness(.8)}#harc .dbtn:active:not(.cd){transform:scale(.94)}
-#harc .dsmoke{left:calc(50% - 82px);background:linear-gradient(160deg,#6b7363,#3a4034)}#harc .dsmoke b{font-size:17px;font-family:var(--f-display)}
+#harc .dsmoke{left:16px;bottom:calc(110px + env(safe-area-inset-bottom,0px));background:linear-gradient(160deg,#6b7363,#3a4034)}#harc .dsmoke b{font-size:17px;font-family:var(--f-display)}
 #harc .dvesz{left:calc(50% + 6px);background:linear-gradient(160deg,#3a3a3a,#1a1a1a);box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 0 0 2px #c8a400}
 #harc .dvesz b{font-size:8.5px;color:#ffd84a}
 #harc .dvesz .sw{position:relative;width:30px;height:34px;border-radius:6px;background:#b5170e;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35),0 0 0 2px #2a2a2a;z-index:2;display:block}
@@ -357,7 +369,7 @@ nav.bottom .mlic .pp{transition:fill .25s}nav.bottom button.mlon .mlic .pp{fill:
 #harc .dvesz .seal{position:absolute;left:50%;bottom:-6px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#c9c9c9;box-shadow:0 0 0 1.5px #777}
 #harc .dvesz.on .lid{transform:perspective(80px) rotateX(-75deg)}#harc .dvesz.on .seal{opacity:0}#harc .dvesz.on .sw::after{transform:rotate(-35deg) translateY(2px);background:linear-gradient(#ffe36b,#c89b00)}#harc .dvesz.on{animation:hvesz .3s steps(2) infinite}@keyframes hvesz{50%{box-shadow:0 0 22px #ff3b30,inset 0 0 0 2px #ff3b30}}
 #harc .dhud{position:absolute;left:12px;top:10px;right:12px;display:flex;align-items:center;gap:10px;pointer-events:none;font-weight:800;font-size:12px;text-shadow:0 1px 2px #000}
-#harc .dhp{flex:0 0 140px;height:10px;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.5)}#harc .dhp i{display:block;height:100%;width:100%;background:#2ecc40;transition:width .25s}
+#harc .darmor{height:6px;border-radius:4px;background:linear-gradient(90deg,#6b7a4a,#4a5a32);margin-bottom:3px;box-shadow:0 0 0 1px rgba(255,255,255,.3)}#harc .dhp{flex:0 0 140px;height:10px;border-radius:6px;background:rgba(0,0,0,.45);overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.5)}#harc .dhp i{display:block;height:100%;width:100%;background:#2ecc40;transition:width .25s}
 #harc .dpedal{position:absolute;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:96px;height:96px;border-radius:50%;border:0;font:inherit;font-family:var(--f-display);font-size:24px;letter-spacing:.06em;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 8px 20px rgba(0,0,0,.45),inset 0 -6px 0 rgba(0,0,0,.25)}
 #harc .dpedal small{font-family:var(--f-body,sans-serif);font-size:10px;letter-spacing:0;opacity:.85}
 #harc .dpedal.gas{right:16px;background:radial-gradient(circle at 40% 35%,#3ccf6a,#1a7a37)}#harc .dpedal.brake{left:16px;background:radial-gradient(circle at 40% 35%,#ff6b5e,#9b1a12)}
@@ -911,6 +923,9 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 #harc .rkpop{position:absolute;left:8px;right:8px;top:46%;z-index:18;text-align:center;font-weight:900;font-size:17px;text-shadow:0 2px 6px #000,0 0 2px #000;pointer-events:none;opacity:0}#harc .rkpop.on{animation:rkpop 1.8s ease-out forwards}@keyframes rkpop{0%{opacity:0;transform:translateY(10px) scale(.9)}12%{opacity:1;transform:none}75%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}#harc .rkradio{pointer-events:none}
 #harc .rknext{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;opacity:.85}#harc .rkic.sm{width:30px;height:30px;font-size:16px;border-radius:8px}#harc .rktap{font-weight:800;font-size:12px;color:#f3d77a;opacity:.9}#harc .rk3{font-size:13px;background:rgba(201,162,39,.15);border-radius:10px;padding:8px 10px}#harc .rkres b.dim{color:#cfd6c0}
 #harc.rk .htitle{font-size:15px;white-space:nowrap}#harc.rk .hstat{gap:7px;font-size:11px}#harc.rk .hstat b{font-size:13px}
+#updPanel .upd-btn{width:100%;border:0;cursor:pointer;font-weight:800}#updPanel .upd-btn.has-update{animation:lvp 1.2s ease-in-out infinite}#updPanel .upd-btn.updating{opacity:.85;cursor:progress}
+#updPanel .upd-progress{height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;display:none}#updPanel .upd-progress.on{display:block}#updPanel .upd-bar{height:100%;width:0;background:#ffd24a;transition:width .3s}
+#updPanel .upd-pct{display:none;font-size:12px;margin-top:4px;text-align:center;opacity:.85}#updPanel .upd-pct.on{display:block}#updPanel .upd-badge{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#fff;color:#c0262f;font-size:13px;margin-left:6px}
 #harc .rkhero{font-size:44px}#harc .rklv{display:flex;flex-direction:column;gap:8px;margin:10px 0}#harc .rklv .btn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;white-space:normal;border-radius:14px;padding:10px 14px}
 #harc .rklv .btn.line{color:#f3ecd4;box-shadow:inset 0 0 0 1.5px rgba(243,236,212,.35);background:transparent}#harc .rklv .btn.pri{background:#c9a227;color:#1e2419}#harc .rklv small{font-weight:500;font-size:12px;opacity:.85}
 #harc .rkrules{text-align:left;font-size:13px;background:rgba(255,255,255,.06);border-radius:12px;padding:8px 12px;margin:6px 0}#harc .rkrules summary{font-weight:800;cursor:pointer}#harc .rkrules ul{margin:6px 0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
@@ -961,7 +976,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='2.0.0',APP_DATE='2026.10.12.';
+const APP_VER='2.1.0',APP_DATE='2026.10.20.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1207,7 +1222,7 @@ function harcDie(){HARC.dead=true;HARC.run=false;rockStop(1.5);HARC.deathT=0;HAR
   if(MODE==='fb'&&UID&&sc>(USERDOC?.harcBest||0)){try{DB.doc('users/'+UID).update({harcBest:sc,harcAt:Date.now()}).catch(()=>{})}catch(e){}}
   $('#hBest')&&($('#hBest').textContent=best);
   setTimeout(()=>{const o=$('#hOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💀 A medve elesett</h3><p>Elkapott gránát: <b class="hred">${sc} db</b><br>Elért szint: <b>${HARC.lvl+1}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p><button class="btn pri" id="hAgain">↻ Újra</button> <button class="btn line" data-rank="harc">🏆 Rekordjaim</button> <button class="btn line" id="hQuit">Kilépés</button>${harcBoard()}`;$('#hAgain').onclick=()=>harcStart();$('#hQuit').onclick=harcClose},3400)}
-const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' db'],['drone','DroneRun','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkBest','medve-rk-best',false,v=>(v/100).toFixed(1).replace('.',',')+' m']];
+const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' db'],['drone','DroneRun','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkhBest','medve-rkh-best',false,v=>(v/100).toFixed(1).replace('.',',')+' m']];
 const NF={harc:'harcN',drone:'droneN',terep:'gtN',konvoj:'gkN',rakodo:'rkN'};
 const uname=u=>(u.rank?u.rank+' ':'')+(u.name||'?');
 const uplays=u=>Object.values(NF).reduce((t,k)=>t+(u[k]||0),0);
@@ -1800,7 +1815,7 @@ function gvGame(dt){const V=GV.veh,L=V[0],now=performance.now();
   GV.bul=GV.bul.filter(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.vy+=80*dt;b.t-=dt;for(const e of GV.amb){if(e.act&&!e.dead&&Math.abs(b.x-e.x)<12&&b.y>e.y-34&&b.y<e.y+2){e.dead=1;e.aim=0;GV.kills++;GV.score+=50;b.t=0;for(let i=0;i<8;i++)GV.fx.push({x:e.x,y:e.y-15,vx:(Math.random()-.5)*120,vy:-Math.random()*120,t:.5,k:'d'})}}
     {const h=GV.heli;if(h&&h.st!=='down'&&Math.abs(b.x-h.x)<95&&Math.abs(b.y-(h.y-6))<26){h.hp--;h.hit=.08;b.t=0;for(let i=0;i<4;i++)GV.fx.push({x:b.x,y:b.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,t:.18,k:'f'});if(Math.random()<.3)sndPing();if(h.hp<=0)gvHeliDown()}}
     for(const v of GV.ev){if(!v.dead&&b.t>0&&Math.abs(b.x-v.x)<v.w/2&&b.y>gvG(v.x)-v.h&&b.y<gvG(v.x)){b.t=0;v.hit=.08;GV.fx.push({x:b.x,y:b.y,vx:(Math.random()-.5)*160,vy:-Math.random()*120,t:.2,k:'f'});if(v.k==='tech'){v.hp--;if(v.hp<=0)gvEvKill(v,'RWS')}else if(Math.random()<.25)sndPing()}}
-    for(const d of GV.drones){if(!d.down&&Math.hypot(b.x-d.x,b.y-d.y)<22){d.hp--;d.hit=.1;b.t=0;if(d.hp<=0){d.down=true;d.vy=-60;d.spin=6;GV.kills++;GV.score+=80;gvMsg('🎯 Drón lelőve +80',1.5)}}}
+    for(const d of GV.drones){if(!d.down&&Math.hypot(b.x-d.x,b.y-d.y)<14){d.hp--;d.hit=.1;b.t=0;if(d.hp<=0){d.down=true;d.vy=-60;d.spin=6;GV.kills++;GV.score+=80;gvMsg('🎯 Drón lelőve +80',1.5)}}}
     return b.t>0&&b.y<gvG(b.x)});
   // drónok
   GV.droneT-=dt;if(GV.droneT<=0&&GV.drones.filter(d=>!d.down).length<2){GV.droneT=22+Math.random()*16;GV.drones.push({x:L.x+700,y:gvG(L.x)-330,vx:0,vy:0,hp:3,cd:2,carry:1,ph:Math.random()*6})}
@@ -1834,17 +1849,17 @@ const PZH_SPRITE='data:image/webp;base64,UklGRjZDAABXRUJQVlA4WAoAAAAQAAAA4QIAswA
 const DR={};
 const PK=200/475,PCX=285,PBY=178;
 const D_WHEELS=[-92,-64,-42,-20,2,24,46,68,92].map((x,i,a)=>({lx:x,r:i===0||i===a.length-1?7.5:9.5,road:i>0&&i<a.length-1}));
-function drGround(x){const t=Math.max(0,Math.min(1,(x-200)/900));const sm=t*t*(3-2*t);const amp=30+Math.min(55,Math.max(0,x)/90);
-  return 320-sm*amp*(.55*Math.sin(x/260)+.32*Math.sin(x/97+1.3)+.1*Math.sin(x/41+.7))-sm*Math.max(0,Math.sin(x/1300))*40}
+function drGround(x){const t=Math.max(0,Math.min(1,(x-200)/1600));const sm=t*t*(3-2*t);const amp=28+Math.min(50,Math.max(0,x)/140);
+  return 320-sm*amp*(.55*Math.sin(x/420)+.32*Math.sin(x/160+1.3)+.1*Math.sin(x/70+.7))-sm*Math.max(0,Math.sin(x/2100))*36}
 function drBest(){try{return Number(localStorage.getItem('medve-drone-best')||0)}catch(e){return 0}}
 function droneOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');
   el.innerHTML=`<div class="hbar"><div class="htitle">Drone<b>Run</b></div><div class="hstat"><span>Táv <b id="dDist">0</b> m</span><span>Drón <b id="dKills">0</b></span><span>Rekord <b id="dBest">${drBest()}</b></span></div><button class="hx" id="dClose" aria-label="Bezárás">✕</button></div>
-   <div class="dwrap"><canvas id="dCv"></canvas><div class="dhud"><div class="dhp"><i id="dHp"></i></div><span id="dAmmo">FN MAG 120</span></div><div class="dspd" id="dSpd"></div>
-   <div class="dstat" id="dStat" hidden></div><button class="dbtn dsmoke" id="dSmoke"><b>KÖD</b><small>76 mm gránátvető</small><i></i><em></em></button><button class="dbtn dvesz" id="dVesz"><span class="sw"><span class="lid"></span><span class="seal"></span></span><b>VÉSZ ÁTHIDALÓ</b><i></i><em></em></button>
+   <div class="dwrap"><canvas id="dCv"></canvas><div class="dhud"><div class="darmor" title="Plusz páncélzat"></div><div class="dhp"><i id="dHp"></i></div><span id="dAmmo">FN MAG 120</span></div><div class="dspd" id="dSpd"></div>
+   <div class="dstat" id="dStat" hidden></div><button class="dbtn dsmoke" id="dSmoke"><b>KÖD</b><small>76 mm gránátvető</small><i></i><em></em></button>
    <button class="dbtn dfm" id="dFm"><b>TŰZ-<br>FELADAT</b><small id="dFmS">1000 m-nél</small><i></i><em id="dFmN"></em></button><button class="dbtn dhb" id="dHb" hidden><b>(P)<br>KÉZIFÉK</b><small id="dHbS">kiengedve</small></button>
    <button class="dpedal brake" id="dBrake">FÉK<small>hátra</small></button><button class="dpedal gas" id="dGas">GÁZ</button>
    <div class="dhint" id="dHint">Érintsd az eget a géppuska tüzéhez!</div></div>
-   <div class="hstart" id="dStart"><img class="pzhfull" src="${PZH_FULL||PZH_SPRITE}" alt="" style="width:100%;height:auto"><h3>DroneRun</h3><p>Egy kumulatív gránátot szállító harci drón vadászik a PzH 2000-redre. <b>GÁZ</b> / <b>FÉK</b> gombokkal vezess a dombokon, és <b>érintsd az eget</b>: oda tüzel az FN MAG.<br>Ne borulj fel, és ne kapj találatot!<br><b>KÖD</b>: ködfal 9 s-ig (újratöltés 30 s). <b>VÉSZ ÁTHIDALÓ</b>: motorhibák tiltva, +50 LE 4 s-ig (15–20 s töltés). 30% alatt leeshet a lánctag – 5 s gyorsjavítás.<br><b>TŰZFELADAT</b>: minden megtett 1000 m után megállva kilőhetsz egy <b>MRSI</b> tűzfeladatot a Rheinmetall L52 155 mm-es löveggel (5 gránát különböző csőemelkedéssel, egyszerre csapódnak be) – a cső kiold, felemelkedik, majd visszarögzül. Előtte húzd be a <b>KÉZIFÉKET</b>! Közben a drónok találatai hatástalanok, a becsapódás pedig megsemmisíti a drónirányító pontot.</p><div class="dinfo"><b>FN MAG – általános géppuska</b><span>Lőszer</span><i>7,62×51 mm NATO</i><span>Tűzgyorsaság</span><i>650–1000 lövés/perc</i><span>Hatásos lőtáv</span><i>800–1200 m</i><span>Lőszerellátás</span><i>M13 széteső tagos heveder</i><span>Javadalmazás</span><i>2000 db a PzH-ban</i><span>Újratöltés</span><i>200 lövésenként, 6 s</i></div><button class="btn pri" id="dGo">▶ Indítás</button> <button type="button" class="btn line rkstart" data-rank="drone">🏆 Rekordjaim</button>${drBoard()}</div>
+   <div class="hstart" id="dStart"><img class="pzhfull" src="${PZH_FULL||PZH_SPRITE}" alt="" style="width:100%;height:auto"><h3>DroneRun</h3><p>Menekülj a PzH 2000-rel a támadó drónok elől. <b>GÁZ</b> / <b>FÉK</b> gombokkal vezess, <b>érintsd az eget</b> az FN MAG tüzéhez.<br>Kb. 1000 m-nél drónraj támad. <b>KÖD</b> gomb: 9 s védelem. 1000 m-enként megállva <b>TŰZFELADAT</b> (MRSI). Ne borulj fel!</p><div class="dinfo"><b>FN MAG – általános géppuska</b><span>Lőszer</span><i>7,62×51 mm NATO</i><span>Tűzgyorsaság</span><i>650–1000 lövés/perc</i><span>Hatásos lőtáv</span><i>800–1200 m</i><span>Lőszerellátás</span><i>M13 széteső tagos heveder</i><span>Javadalmazás</span><i>2000 db a PzH-ban</i><span>Újratöltés</span><i>200 lövésenként, 6 s</i></div><button class="btn pri" id="dGo">▶ Indítás</button> <button type="button" class="btn line rkstart" data-rank="drone">🏆 Rekordjaim</button>${drBoard()}</div>
    <div class="hover" id="dOver" hidden></div>`;
   $('#dClose').onclick=droneClose;$('#dGo').onclick=droneStart;droneSetup();pzhFullSet()}
 function drBoard(){const us=arr('users').filter(u=>u.droneBest>0).sort((a,b)=>b.droneBest-a.droneBest).slice(0,5);if(!us.length)return '';
@@ -1854,7 +1869,7 @@ function droneSetup(){const cv=$('#dCv');const dpr=Math.min(2,devicePixelRatio||
   DR.img=new Image();DR.img.src=PZH_SPRITE;DR.gas=0;DR.brake=0;DR.aim=null;
   const hold=(id,k)=>{const b=$(id);const on=e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);DR[k]=1;b.classList.add('on')},off=()=>{DR[k]=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)};
   hold('#dGas','gas');hold('#dBrake','brake');
-  const tap=(id,fn)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fn()})};tap('#dSmoke',drSmoke);tap('#dVesz',drVesz);tap('#dFm',drFm);tap('#dHb',drHb);
+  const tap=(id,fn)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fn()})};tap('#dSmoke',drSmoke);tap('#dFm',drFm);tap('#dHb',drHb);
   const aim=e=>{const r=cv.getBoundingClientRect();DR.aim={sx:e.clientX-r.left,sy:e.clientY-r.top}};
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);DR.aimId=e.pointerId;aim(e);$('#dHint')&&($('#dHint').hidden=true)});
   cv.addEventListener('pointermove',e=>{if(e.pointerId===DR.aimId&&DR.aim)aim(e)});
@@ -1898,7 +1913,8 @@ function drEngine(dt){const T=DR.t,sp=Math.abs(T.vx);const fl=DR.fault&&!(DR.ovr
   DR.rpm=DR.rpm||650;DR.rpm+=(target-DR.rpm)*Math.min(1,dt*(target>DR.rpm?2.2:1.4));
   if(!DR.run)return;DR.temp=DR.temp||82;const heat=DR.gas?(.8+DR.rpm/2500*.9+(DR.ovr>0?2.2:0)+(DR.trk0>0?-.6:0)):-.9;DR.temp=Math.max(72,Math.min(118,DR.temp+(heat-(DR.fan?3:0))*dt));
   if(!DR.fan&&DR.temp>=104){DR.fan=1;toast('🌀 Elérte a max. hőmérsékletet – bekapcsolt a hűtőventilátor')}if(DR.fan&&DR.temp<92)DR.fan=0;
-  if(DR.temp>=114&&!DR.fault)DR.fault={n:'túlmelegedés',t:6}}
+  // túlmelegedés hiba kikapcsolva
+  }
 function drSoundTick(dt,now){const S2=DR.snd;if(!S2)return;const T=DR.t,sp=Math.abs(T.vx),t=AC.currentTime,rpm=DR.rpm||650;
   const gas=DR.run&&DR.gas&&!(DR.trk0>0);const load=gas?Math.min(1,.55+Math.max(0,1-sp/160)*.45+(DR.ovr>0?.2:0)):.12;S2.ld=(S2.ld||0)+(load-(S2.ld||0))*Math.min(1,dt*4);
   const fire=rpm/60*4;S2.f1.frequency.setTargetAtTime(fire,t,.03);S2.f2.frequency.setTargetAtTime(fire/2,t,.03);S2.f3.frequency.setTargetAtTime(fire,t,.03);S2.lfo.frequency.setTargetAtTime(rpm/60/2,t,.05);
@@ -1934,7 +1950,15 @@ function drPhys(dt){const T=DR.t,G=600,K=80,C=10,I=3200;const ca=Math.cos(T.a),s
   const dx=T.vx*dt;T.dist=Math.max(T.dist,T.x-120);T.trk+=dx}
 function drToWorld(lx,ly){const T=DR.t,c=Math.cos(T.a),s=Math.sin(T.a);return {x:T.x+lx*c-ly*s,y:T.y+lx*s+ly*c}}
 function drToLocal(x,y){const T=DR.t,c=Math.cos(T.a),s=Math.sin(T.a);const dx=x-T.x,dy=y-T.y;return {x:dx*c+dy*s,y:-dx*s+dy*c}}
-function drBoom(x,y,big){for(let i=0;i<(big?40:18);i++){const a=Math.random()*Math.PI*2,v=(big?260:150)*Math.random();DR.fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,t:.6+Math.random()*.6,k:Math.random()<.5?'f':'s'})}DR.fx.push({x,y,ring:0,t:.5,big})}
+function drBoom(x,y,big){
+  const n=big?70:36;
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(big?320:180)*(0.4+Math.random()*0.8);
+    DR.fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-100-Math.random()*60,t:.7+Math.random()*.8,k:Math.random()<.45?'f':(Math.random()<.5?'s':'d')})}
+  // törmelék
+  for(let i=0;i<(big?14:7);i++){const a=Math.random()*Math.PI*2,v=90+Math.random()*240;
+    DR.fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-70,t:1.4+Math.random()*1.6,t0:1.4,deb:1,rot:Math.random()*6,vr:(Math.random()-.5)*14,w:5+Math.random()*10,h:3+Math.random()*5})}
+  DR.fx.push({x,y,ring:0,t:.6,big});
+}
 function drLoop(now){const cv=$('#dCv');if(!cv)return;const c=cv.getContext('2d');let dt=Math.min(.04,(now-DR.last)/1000);DR.last=now;const W=DR.W,H=DR.H,T=DR.t;
   if(DR.run){const n=5;for(let i=0;i<n;i++)drPhys(dt/n);drGame(dt)}else if(DR.dead){DR.gas=0;DR.brake=0;const n=5;for(let i=0;i<n;i++)drPhys(dt/n)}
   // kamera
@@ -1955,7 +1979,7 @@ function drLoop(now){const cv=$('#dCv');if(!cv)return;const c=cv.getContext('2d'
   for(let m=Math.ceil(x0/500)*500;m<x1;m+=500){const gy=drGround(m);c.fillStyle='#ddd';c.fillRect(m-1.5,gy-26,3,26);c.fillStyle='#B0121E';c.fillRect(m-1.5,gy-26,3,6);c.fillStyle='#fff';c.font='bold 11px sans-serif';c.textAlign='center';c.fillText(Math.round(m/20)+' m',m,gy-30)}
   if(DR.lostTrk){const lx=DR.lostTrk.x;c.lineWidth=6;c.strokeStyle='#1d1b18';c.setLineDash([3,3]);c.beginPath();for(let x=lx-55;x<=lx+35;x+=5){const y=drGround(x)-3+Math.sin(x*.3)*1.5;x===lx-55?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();c.setLineDash([])}
   drDrawTank(c);drDrawExtras(c);drDrawSmoke(c);drFmDraw(c);
-  for(const g of DR.grenades)drDrawGrenade(c,g.x,g.y,g.a);
+  for(const g of DR.grenades){c.save();c.translate(g.x,g.y);c.scale(0.5,0.5);drDrawGrenade(c,0,0,g.a);c.restore();}
   for(const d of DR.drones)drDrawDrone(c,d,now);
   for(const b of DR.bullets){c.lineWidth=b.tr?3.2:1.8;c.strokeStyle=b.tr?'rgba(255,90,50,.95)':'rgba(255,230,140,.8)';c.beginPath();c.moveTo(b.x,b.y);c.lineTo(b.x-b.vx*(b.tr?.045:.028),b.y-b.vy*(b.tr?.045:.028));c.stroke()}
   drDyingTick(dt);
@@ -1981,7 +2005,19 @@ function drGame(dt){const T=DR.t;
     for(const d of DR.drones){if(!d.down&&Math.hypot(b.x-d.x,b.y-d.y)<22){d.hp--;d.hit=.1;b.t=0;if(d.hp<=0){d.down=true;d.vy=-60;d.spin=6;DR.kills++;toast(`🎯 Drón lelőve! (${DR.kills})`);sndAdd()}}}
     return b.t>0&&b.y<drGround(b.x)});
   // drónok
-  DR.spawnT-=dt;const maxD=Math.min(3,1+Math.floor(DR.kills/5));if(DR.spawnT<=0&&DR.drones.filter(d=>!d.down).length<maxD){DR.spawnT=5+Math.random()*4;const lvl=DR.kills,fr=Math.random()<.45;DR.drones.push({x:T.x+(fr?650:-600),y:T.y-200-Math.random()*220,vx:0,vy:0,hp:4+Math.floor(lvl/5),cd:2.6+Math.random()*3,carry:1,spd:300+lvl*14,ph:Math.random()*6,wt:0})}
+  DR.spawnT-=dt;
+  // drónraj 900-1100 m körül
+  if(!DR.swarmDone && T.dist>900 && T.dist<1100){
+    DR.swarmDone=1;
+    const n=6+Math.floor(Math.random()*5); // 6-10
+    for(let i=0;i<n;i++){
+      const side=Math.random()<.5?1:-1;
+      DR.drones.push({x:T.x+side*(420+Math.random()*280),y:T.y-180-Math.random()*260,vx:0,vy:0,hp:3+Math.floor(Math.random()*3),cd:1.8+Math.random()*2.2,carry:Math.random()<.7,spd:200+Math.random()*50,ph:Math.random()*6,wt:0,swarm:1});
+    }
+    toast('⚠️ Drónraj közeledik!');
+  }
+  const maxD=Math.min(4,1+Math.floor(DR.kills/4));
+  if(DR.spawnT<=0&&DR.drones.filter(d=>!d.down).length<maxD){DR.spawnT=6+Math.random()*5;const lvl=DR.kills,fr=Math.random()<.45;DR.drones.push({x:T.x+(fr?650:-600),y:T.y-200-Math.random()*220,vx:0,vy:0,hp:4+Math.floor(lvl/5),cd:2.6+Math.random()*3,carry:1,spd:180+lvl*8,ph:Math.random()*6,wt:0})}
   for(const d of DR.drones){if(d.down){d.vy+=500*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.spin+=dt*4;if(d.y>drGround(d.x)){d.dead=true;drBoom(d.x,d.y,false);sndThud()}continue}
     d.cd-=dt;if(DR.smoke>0)d.cd=Math.max(d.cd,.6);d.wt-=dt;d.hit=Math.max(0,(d.hit||0)-dt);const pn=performance.now();let tx,ty,spd=d.spd;d.atk=d.cd<=0;
     if(d.atk){if(!d.alt)d.alt=110+Math.random()*130;const fall=Math.sqrt(2*(d.alt+40)/600);tx=T.x+T.vx*fall*1.05+Math.sin(pn/140+d.ph)*10;ty=T.y-d.alt-40;spd*=1.4}
@@ -1997,7 +2033,11 @@ function drGame(dt){const T=DR.t;
   // gránátok
   DR.grenades=DR.grenades.filter(g=>{g.vy+=600*dt;g.x+=g.vx*dt;g.y+=g.vy*dt;g.a=Math.atan2(g.vy,g.vx)-Math.PI/2;const l=drToLocal(g.x,g.y);
     if(l.x>-108&&l.x<108&&l.y>-72&&l.y<12&&DR.fmS){drBoom(g.x,g.y,false);sndPing();DR.shake=Math.max(DR.shake,.2);if(!DR.fmHitMsg){DR.fmHitMsg=1;toast('🛡 Drón-találat – hatástalan, a tűzfeladat folytatódik')}return false}
-    if(l.x>-108&&l.x<108&&l.y>-72&&l.y<12&&!(DR.trk0>0)&&!(DR.smoke>0)){drBoom(g.x,g.y,true);sndBoom();DR.hp=Math.max(0,DR.hp-25);if(DR.hp<=30&&DR.hp>0&&!DR.trkDone)drTrackOff();DR.shake=.4;try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}if(DR.hp<=0)drDie('Kumulatív találat – a PzH kiégett.');return false}
+    if(l.x>-108&&l.x<108&&l.y>-72&&l.y<12&&!(DR.trk0>0)&&!(DR.smoke>0)){
+      if(Math.random()<.28){ // néha lepattan
+        g.vy*=-0.6;g.vx+=(Math.random()-.5)*80;sndPing();return true;
+      }
+      drBoom(g.x,g.y,true);sndBoom();DR.hp=Math.max(0,DR.hp-25);if(DR.hp<=30&&DR.hp>0&&!DR.trkDone)drTrackOff();DR.shake=.4;try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}if(DR.hp<=0)drDie('Kumulatív találat – a PzH kiégett.');return false}
     if(g.y>drGround(g.x)){drBoom(g.x,g.y,false);sndThud();return false}return true});
   drExtras(dt);drSystems(dt);drFmTick(dt);drFmGain();
   // felborulás
@@ -2035,12 +2075,9 @@ function drExtras(dt){const T=DR.t;
   DR.sa=DR.sa.filter(r=>{if(r.d>0){r.d-=dt;if(r.d<=0&&SOUND&&AC)snare(AC.currentTime,.035);return true}const dx=r.tx-r.x,dy=r.ty-r.y,dl=Math.hypot(dx,dy);const st=1500*dt;
     if(dl<=st){for(let i=0;i<7;i++){const a=Math.PI*.6+Math.random()*1.4;DR.fx.push({x:r.tx,y:r.ty,vx:Math.cos(a)*(120+Math.random()*200)+T.vx,vy:Math.sin(a)*(120+Math.random()*200)-60,t:.18+Math.random()*.2,k:'f'})}sndPing();return false}
     r.x+=dx/dl*st;r.y+=dy/dl*st;r.tx+=T.vx*dt;r.ty+=T.vy*dt;return true});
-  // gyalogsági aknák
-  if(T.x>DR.nextMine){DR.nextMine=T.x+900+Math.random()*1700;DR.mines.push({x:T.x+700+Math.random()*500})}
-  for(const m of DR.mines){if(!m.hit&&m.x>T.x-95&&m.x<T.x+95){m.hit=1;const gy=drGround(m.x);drBoom(m.x,gy-4,false);for(let i=0;i<16;i++){const a=-Math.PI/2+(Math.random()-.5)*1.6,v=150+Math.random()*300;DR.fx.push({x:m.x,y:gy-4,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:.9,k:'s'})}
-      const lx=m.x-T.x;T.vy-=170+Math.random()*90;T.w+=(lx>0?-1:1)*(.5+Math.abs(lx)/95*.7);DR.shake=Math.max(DR.shake||0,.6);sndPop();if(SOUND&&AC)boom(AC.currentTime+.02,.6,42);try{navigator.vibrate&&navigator.vibrate(90)}catch(e){}
-      if(!DR.mineMsg){DR.mineMsg=1;toast('💥 Gyalogsági akna – a PzH páncélja kibírta!')}}}
-  DR.mines=DR.mines.filter(m=>m.x>T.x-1500)}
+  // aknák kikapcsolva
+  DR.mines=[];
+}
 function sndPing(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime+.005;const o=a.createOscillator();o.type='sine';const f=2300+Math.random()*2200;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.82,t+.25);const g=a.createGain();g.gain.setValueAtTime(.09,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.3);snare(t,.06)}
 function drDrawExtras(c){for(const m of DR.mines){if(m.hit)continue;const gy=drGround(m.x);c.fillStyle='#3d4a22';c.beginPath();c.ellipse(m.x,gy+1,9,3.5,0,Math.PI,0);c.fill();c.fillStyle='#222';c.fillRect(m.x-1,gy-5,2,3)}
   for(const p of DR.cas){c.save();c.translate(p.x,p.y);c.rotate(p.a);if(p.k==='c'){c.fillStyle='#D4A64A';c.fillRect(-3,-1,6,2.2);c.fillStyle='#8a6a2a';c.fillRect(2,-1,1,2.2)}else{c.fillStyle='#4a4a46';c.fillRect(-1.6,-1.2,3.2,2.4)}c.restore()}
@@ -2094,10 +2131,10 @@ function drFmHud(){const b=$('#dFm'),h=$('#dHb');if(!b)return;const S=DR.fmS;con
   if(h){const show=!!S||!!DR.hb;if(h.hidden===show)h.hidden=!show;h.classList.toggle('on',!!DR.hb);h.classList.toggle('need',!!S&&!DR.hb);const hs=$('#dHbS');const t2=DR.hb?'BEHÚZVA':'kiengedve';if(hs&&hs.textContent!==t2)hs.textContent=t2}}
 function drFmGain(){const d=Math.floor(DR.t.dist/20);if(d>=DR.fmNext){DR.fm++;DR.fmNext+=1000;toast(`🎯 ${d} m – TŰZFELADAT elérhető! Állj meg és nyomd meg a gombot`);if(SOUND&&ac()){const t=AC.currentTime;[0,.14,.28].forEach(q=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1320;g.gain.setValueAtTime(.05,t+q);g.gain.setValueAtTime(0,t+q+.09);o.connect(g).connect(MASTER);o.start(t+q);o.stop(t+q+.1)})}}}
 function drSpd(){const e=$('#dSpd');if(!e)return;const T=DR.t;const kmh=Math.round(Math.abs(T.vx)/20*3.6);const tp=Math.round(DR.temp||82);const s=`${kmh}|${Math.round((DR.rpm||650)/50)*50}|${tp}|${DR.fan?1:0}`;if(e.dataset.s===s)return;e.dataset.s=s;e.innerHTML=`<span class="kmh">${kmh} km/h</span><span>${Math.round((DR.rpm||650)/50)*50} 1/min</span><span class="${tp>=104?'hot':''}${DR.fan?' fan':''}">${DR.fan?'🌀 ':'🌡 '}${tp} °C</span>`}
-function drStat(){const e=$('#dStat');if(!e)return;let t='',k='';if(DR.fmS){t=DR.fmS.msg||'';k='fm'}else if(DR.trk0>0){t=`🔧 LÁNCJAVÍTÁS ${DR.trk0.toFixed(1)} s · védett`;k='rep'}else if(DR.ovr>0){t=`🔴 ÁTHIDALÓ +50 LE · ${DR.ovr.toFixed(1)} s`;k='ovr'}else if(DR.fault){t=`⚠ MOTORHIBA: ${DR.fault.n}`;k='flt'}else if(DR.smoke>0){t=`🌫 KÖDFAL ${DR.smoke.toFixed(1)} s · védett`;k='rep'}
+function drStat(){const e=$('#dStat');if(!e)return;let t='',k='';if(DR.fmS){t=DR.fmS.msg||'';k='fm'}else if(DR.trk0>0){t=`🔧 LÁNCJAVÍTÁS ${DR.trk0.toFixed(1)} s · védett`;k='rep'}else if(DR.ovr>0){t=`🔴 ÁTHIDALÓ +50 LE · ${DR.ovr.toFixed(1)} s`;k='ovr'}else if(false){t='';k=''}else if(DR.smoke>0){t=`🌫 KÖDFAL ${DR.smoke.toFixed(1)} s · védett`;k='rep'}
   e.hidden=!t;e.className='dstat '+k;e.textContent=t;
   const cd=(id,v,max)=>{const b=$(id);if(!b)return;b.classList.toggle('cd',v>0);b.querySelector('i').style.background=v>0?`conic-gradient(rgba(0,0,0,.55) ${v/max*360}deg,transparent 0)`:'';b.querySelector('em').textContent=v>0?Math.ceil(v)+' s':''};
-  drFmHud();cd('#dSmoke',DR.smokeCd,30);cd('#dVesz',DR.ovrCd,(DR.ovrMax||18)+4);const v=$('#dVesz');if(v)v.classList.toggle('on',DR.ovr>0)}
+  drFmHud();cd('#dSmoke',DR.smokeCd,30);}
 function drTrackOff(){DR.trk0=5;DR.trkDone=1;DR.repT=0;const T=DR.t;const p=drToWorld(-80,26);DR.lostTrk={x:p.x-30};DR.fx.push({x:p.x,y:p.y,vx:-80+T.vx*.3,vy:-160,t:1.4,t0:1.4,deb:1,rot:0,vr:-6,w:24,h:5});
   if(SOUND&&ac()){const t=AC.currentTime;boom(t,.6,70);snare(t,.4);snare(t+.12,.3);sndPing()}DR.shake=Math.max(DR.shake||0,.5);
   toast('⛓️ Leesett a lánctag! Gyorsjavítás 5 s – közben használd a ködgránátvetőt');try{navigator.vibrate&&navigator.vibrate([80,40,80,40,200])}catch(e){}}
@@ -2112,8 +2149,8 @@ function drSystems(dt){const T=DR.t;if(DR.hb&&!DR.fmS&&DR.gas){DR.hb=0;toast('K�
   if(DR.smoke>0){DR.smoke-=dt}
   if(DR.trk0>0){DR.trk0-=dt;DR.repT-=dt;if(DR.repT<=0){DR.repT=.35+Math.random()*.3;const p=drToWorld(-75+Math.random()*30,24);for(let i=0;i<6;i++)DR.fx.push({x:p.x,y:p.y,vx:(Math.random()-.5)*160,vy:-60-Math.random()*120,t:.25,k:'f'});if(SOUND&&AC){snare(AC.currentTime,.12);if(Math.random()<.5)sndPing()}}
     if(DR.trk0<=0){DR.trk0=0;toast('✅ Lánctag visszaszerelve – mehet tovább!')}}
-  // motorhibák (a VÉSZ ÁTHIDALÓ figyelmen kívül hagyja)
-  if(DR.fault){DR.fault.t-=dt;if(DR.fault.t<=0)DR.fault=null}else{DR.faultT-=dt;if(DR.faultT<=0){DR.faultT=22+Math.random()*18;const n=['túlmelegedés','turbónyomás-hiba','üzemanyagszűrő eltömődés','hűtőventilátor hiba','olajnyomás alacsony'][Math.floor(Math.random()*5)];DR.fault={n,t:7+Math.random()*4};toast('⚠ Motorhiba: '+n+' – kapcsold a VÉSZ ÁTHIDALÓT!');if(SOUND&&AC){const t=AC.currentTime;[0,.3].forEach(d=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=620;g.gain.setValueAtTime(.05,t+d);g.gain.setValueAtTime(0,t+d+.18);o.connect(g).connect(MASTER);o.start(t+d);o.stop(t+d+.2)})}}}
+  // motorhibák kikapcsolva
+  DR.fault=null;
   // ködgránátok röppályája → felhő
   DR.smg=(DR.smg||[]).filter(g=>{g.t-=dt;g.vy+=500*dt;g.x+=g.vx*dt;g.y+=g.vy*dt;if(g.t<=0||g.y>drGround(g.x)){for(let i=0;i<9;i++)DR.sm.push({x:g.x+(Math.random()-.5)*40,y:g.y+(Math.random()-.5)*30,vx:DR.t.vx*.4+(Math.random()-.5)*60,vy:-10-Math.random()*30,r:14+Math.random()*12,gr:26+Math.random()*20,t:8+Math.random()*3,t0:11});if(SOUND&&AC){const a=AC,t=a.currentTime,n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=900;const gg=a.createGain();gg.gain.setValueAtTime(.25,t);gg.gain.exponentialRampToValueAtTime(.001,t+.9);n.connect(f).connect(gg).connect(MASTER);n.start(t,Math.random()*.3,1)}return false}return true});
   // a felhő a PzH-val együtt sodródik, hogy takarja
@@ -2162,25 +2199,39 @@ function drDrawTank(c){const T=DR.t;// lánctalp + kerekek (világkoordinátába
   const top1=drToWorld(-100,12),top2=drToWorld(100,12);
   c.save();c.lineJoin='round';c.lineCap='round';
   const path=()=>{c.beginPath();if(DR.trk0>0){const st=4,w0=ws[st];c.moveTo(w0.cx-Math.sin(T.a)*w0.r,w0.cy+Math.cos(T.a)*w0.r);for(let i=st+1;i<ws.length;i++){const w=ws[i];c.lineTo(w.cx-Math.sin(T.a)*w.r,w.cy+Math.cos(T.a)*w.r)}const L=ws[ws.length-1];c.lineTo(L.cx+L.r*Math.cos(T.a),L.cy);c.lineTo(top2.x,top2.y);const tm=drToWorld(-15,12),hg=drToWorld(-40,30);c.lineTo(tm.x,tm.y);c.quadraticCurveTo(hg.x,hg.y-6,hg.x-6,hg.y+6);return}c.moveTo(top1.x,top1.y);c.lineTo(ws[0].cx-ws[0].r*Math.cos(T.a),ws[0].cy);for(const w of ws){c.lineTo(w.cx-Math.sin(T.a)*w.r,w.cy+Math.cos(T.a)*w.r)}const L=ws[ws.length-1];c.lineTo(L.cx+L.r*Math.cos(T.a),L.cy);c.lineTo(top2.x,top2.y);c.closePath()};
-  path();c.lineWidth=7;c.strokeStyle='#1d1b18';c.stroke();
-  c.setLineDash([3,3]);c.lineDashOffset=-T.trk*.9;c.lineWidth=7;c.strokeStyle='#4a463f';c.stroke();c.setLineDash([]);
+  path();c.lineWidth=9;c.strokeStyle='#161412';c.stroke();
+  c.setLineDash([4,2]);c.lineDashOffset=-T.trk*1.1;c.lineWidth=5;c.strokeStyle='#3d3a34';c.stroke();c.setLineDash([]);
+  // lánctalp élek
+  c.lineWidth=2;c.strokeStyle='#2a2824';c.stroke();
   for(const w of ws){c.fillStyle='#2b2a26';c.beginPath();c.arc(w.cx,w.cy,w.r,0,Math.PI*2);c.fill();c.fillStyle='#55534a';c.beginPath();c.arc(w.cx,w.cy,w.r*.62,0,Math.PI*2);c.fill();c.save();c.translate(w.cx,w.cy);c.rotate(T.trk/w.r);c.fillStyle='#1f1e1a';for(let i=0;i<5;i++){c.rotate(Math.PI*2/5);c.fillRect(-1,w.r*.2,2,w.r*.35)}c.restore()}
   c.restore();
   c.save();c.translate(T.x,T.y);c.rotate(T.a);if(DR.img.complete){const k=PK;if(DR.dead&&'filter' in c)c.filter='brightness(.3) saturate(.35)';const BI=drBarrelImg(),BO=drBodyImg();
     c.save();c.translate((266-PCX)*k,10+(66-PBY)*k);c.rotate(-(DR.elev||0));c.translate(-(DR.rec||0)*k,0);if(BI.complete)c.drawImage(BI,6*k,-28*k,466*k,61*k);c.restore();
     if(BO.complete)c.drawImage(BO,-PCX*k,10-PBY*k,738*k,180*k);else c.drawImage(DR.img,-PCX*k,10-PBY*k,DR.img.width*k,DR.img.height*k);
+    // német felségjel lefedése + enyhe zöldes tónus
+    c.fillStyle='#3d4a2c';c.fillRect(-PCX*k+180*k,10-PBY*k+40*k,50*k,30*k);
+    c.fillStyle='#4a3c28';c.fillRect(-PCX*k+190*k,10-PBY*k+45*k,30*k,18*k);
     c.save();c.translate((381-PCX)*k,10+(86-PBY)*k);c.rotate((DR.lk||0)*1.65);c.fillStyle='#23261d';c.fillRect(-6*k,-33*k,12*k,33*k);c.fillStyle='#4a4f3a';c.fillRect(-6*k,-33*k,12*k,4*k);c.restore();c.filter='none'}
-  if(DR.aim&&!DR.dead&&DR.ammo>0&&!(DR.reload>0)){const m={x:-58,y:-66};const r=4+Math.random()*5;c.fillStyle='rgba(255,240,170,.95)';c.beginPath();c.arc(m.x+9,m.y-2,r,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,170,60,.7)';c.beginPath();c.moveTo(m.x+6,m.y-2-r*.5);c.lineTo(m.x+14+r*2.4,m.y-3-r*.3);c.lineTo(m.x+6,m.y-2+r*.5);c.fill()}
+if(DR.aim&&!DR.dead&&DR.ammo>0&&!(DR.reload>0)){const m={x:-58,y:-66};const r=4+Math.random()*5;c.fillStyle='rgba(255,240,170,.95)';c.beginPath();c.arc(m.x+9,m.y-2,r,0,Math.PI*2);c.fill();c.fillStyle='rgba(255,170,60,.7)';c.beginPath();c.moveTo(m.x+6,m.y-2-r*.5);c.lineTo(m.x+14+r*2.4,m.y-3-r*.3);c.lineTo(m.x+6,m.y-2+r*.5);c.fill()}
   if(DR.hp<50&&!DR.dead){for(let i=0;i<2;i++)DR.fx.push({x:T.x+(Math.random()-.5)*60,y:T.y-40,vx:(Math.random()-.5)*20,vy:-40-Math.random()*30,t:.8,k:'s'})}
   c.restore()}
 function drDrawGrenade(c,x,y,a){c.save();c.translate(x,y);c.rotate(a);c.fillStyle='#3E4A1E';c.beginPath();c.moveTo(-5,-9);c.lineTo(5,-9);c.lineTo(7,4);c.lineTo(0,12);c.lineTo(-7,4);c.closePath();c.fill();c.fillStyle='#E8C547';c.fillRect(-5,-3,10,2);c.strokeStyle='#999';c.lineWidth=1.5;c.beginPath();c.moveTo(0,12);c.lineTo(0,18);c.stroke();c.fillStyle='#888';c.fillRect(-4,-13,8,4);c.restore()}
-function drDrawDrone(c,d,now){c.save();c.translate(d.x,d.y);c.rotate(d.down?d.spin:Math.max(-.35,Math.min(.35,d.vx/900)));
-  c.strokeStyle='#222';c.lineWidth=3;c.beginPath();c.moveTo(-26,-2);c.lineTo(26,-2);c.stroke();
-  for(const sx of [-26,26]){c.fillStyle='rgba(200,200,200,.35)';c.beginPath();c.ellipse(sx,-6,15,3,0,0,Math.PI*2);c.fill();c.fillStyle='#222';c.fillRect(sx-2,-7,4,6)}
-  c.fillStyle=d.hit?'#fff':'#3a3d40';c.beginPath();c.roundRect?c.roundRect(-12,-6,24,12,4):c.rect(-12,-6,24,12);c.fill();
-  c.fillStyle=(now/250|0)%2?'#ff2a2a':'#550000';c.beginPath();c.arc(10,-2,2.2,0,Math.PI*2);c.fill();
-  c.fillStyle='#111';c.beginPath();c.arc(-6,0,3,0,Math.PI*2);c.fill();
-  if(d.carry&&!d.down)drDrawGrenade(c,0,16,0);c.restore()}
+function drDrawDrone(c,d,now){c.save();c.translate(d.x,d.y);c.scale(0.45,0.45);c.rotate(d.down?d.spin:Math.max(-.4,Math.min(.4,d.vx/700)));
+  // vékony, kicsi drón
+  c.strokeStyle='#0a0a0a';c.lineWidth=2;c.beginPath();c.moveTo(-22,-0.5);c.lineTo(22,-0.5);c.stroke();
+  for(const sx of [-22,22]){c.fillStyle='rgba(30,30,30,.4)';c.beginPath();c.ellipse(sx,-5,10,2,0,0,7);c.fill();c.fillStyle='#111';c.fillRect(sx-1.5,-6,3,5)}
+  c.fillStyle=d.hit?'#ff3300':'#141618';
+  c.beginPath();c.roundRect?c.roundRect(-8,-4,16,8,2):c.rect(-8,-4,16,8);c.fill();
+  c.fillStyle=(now/180|0)%2?'#ff0000':'#550000';
+  c.beginPath();c.arc(4,-1,1.6,0,7);c.arc(-4,-1,1.6,0,7);c.fill();
+  if(d.hit){c.fillStyle='rgba(255,60,0,.5)';c.beginPath();c.arc(0,0,6,0,7);c.fill();}
+  if(d.carry&&!d.down){c.scale(0.7,0.7);drDrawGrenade(c,0,10,0);}
+  c.restore();
+  // eltalálva: alkatrészek hullanak a levegőben
+  if(d.hit&&!d.down&&Math.random()<.4){
+    DR.fx.push({x:d.x+(Math.random()-.5)*20,y:d.y,vx:(Math.random()-.5)*40,vy:30+Math.random()*40,t:.6,k:'s'});
+  }
+}
 
 /* ===== rockzene: saját szintetizált dalok, minden játékhoz más (nincs hangfájl, offline is szól) ===== */
 const ROCK={on:false};
@@ -2292,29 +2343,29 @@ const RK_T={
 const RK_STAGE=[[0,['lsz','viz','epal','sat']],[5,['agg','tlt','alc','szl','eu','rad','lsz','epal']],[12,['kan','mre','lad','hzs','eu','rad','tlt','szl']],[20,['hor','gum','gra','maci','kave','kan','mre','lad','hzs']]];
 // valós magassági mérföldkövek (talajtól, méter)
 const RK_MS=[[4.14,'📦 Konténer teteje – 4,1 m'],[10,'🏠 3 emeletes ház – 10 m'],[25,'🌳 Magas fák teteje – 25 m'],[50,'⛪ Templomtorony – kb. 50 m'],[120,'⚠️ 120 m – drónok max. magassága (EU)'],[330,'🗼 Eiffel-torony – 330 m'],[828,'🏙️ Burj Khalifa – 828 m'],[1000,'☁️ Alacsony felhők – 1–2 km'],[11000,'🌌 Sztratoszféra – kb. 11 km'],[100000,'🚀 Világűr – Kármán-vonal, 100 km']];
-const rkBest=()=>{try{return Number(localStorage.getItem('medve-rk-best')||0)}catch(e){return 0}};
+const rkBest=()=>{try{return Number(localStorage.getItem('medve-rkh-best')||0)}catch(e){return 0}};
 const rkM=cm=>(cm/100).toFixed(1).replace('.',',')+' m';
 function rkOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk');document.body.classList.add('harcon');
-  el.innerHTML=`<div class="hbar"><div class="htitle">Rába <b>Rakodó</b></div><div class="hstat"><span>Magasság <b id="rkH">1,6 m</b></span><span>Rekord <b id="rkBestV">${rkM(rkBest())}</b></span><span id="rkTrucks">🚛🚛🚛</span></div><button class="hx" id="rkClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Rába <b>Rakodó</b></div><div class="hstat"><span>Magasság <b id="rkH">1,6 m</b></span><span>Rekord <b id="rkBestV">${rkM(rkBest())}</b></span></div><button class="hx" id="rkClose" aria-label="Bezárás">✕</button></div>
    <div class="rkwrap" id="rkWrap"><canvas id="rkCv"></canvas><div class="rkradio" id="rkRadio" hidden></div><div class="rkpop" id="rkPop"></div></div>
    <div class="rktray" id="rkTray"></div>
    <div class="hstart" id="rkStart"><div class="rkhero">🚁📦🚛</div><h3>RÁBA RAKODÓ</h3><p>A rakodógép feltette a <b>10 lábas konténert</b> a Rábára – a <b>HL-8 nehézteher-drón</b> (max. 500 kg) hozza rá a többit. <b>Koppints bárhol</b>, és elengedi: építs minél magasabb tornyot! Alul raklapok, feljebb ládák, kannák, legfelül hordó, pótkerék, gránát – egyre nehezebb.</p>
-    <p class="rk3">🚛🚛🚛 <b>3 teherautó</b> jön egymás után: ha leesik egy rakomány, az a torony kész, a Rába elhajt vele, és jön a következő.</p>
+    <p class="rk3">🚛 <b>Egy Rába, egy torony:</b> ha leesik egy rakomány, vége – a magasság a rekordod.</p>
     <button type="button" class="btn pri" id="rkGo">▶ Indítás</button>
     <details class="rkrules"><summary>Tippek</summary><ul><li>A rakomány akkor marad fent, ha a <b>közepe</b> az alatta lévőn van.</li><li><b>Tökéletes</b> ejtés: kiegyenesíti a tornyot; 3 egymás után = sorozatbónusz.</li><li>Figyeld a <b>csörlőkötélen lengő</b> terhet, ne csak a drónt!</li><li>A méterskála <b>valós</b>, a talajtól mér. Viszonyítás: ház 10 m, fák 25 m, templomtorony 50 m, drónkorlát 120 m – a felhők 1–2 km-en, a sztratoszféra kb. 11 km-en kezdődik.</li></ul></details>
     <p class="rkmus">🎸 Zene: Grieg – A hegyi király csarnokában · Bach – d-moll toccata · Beethoven – Örömóda · Chopin – Gyászinduló (rock átirat)</p>
-    <button type="button" class="btn line rkstart" data-rank="rakodo">🏆 Rekordok</button>${gBoard('rkBest',false,v=>rkM(v))}</div>
+    <button type="button" class="btn line rkstart" data-rank="rakodo">🏆 Rekordok</button>${gBoard('rkhBest',false,v=>rkM(v))}</div>
    <div class="hover" id="rkOver" hidden></div>`;
   $('#rkClose').onclick=rkClose;$('#rkGo').onclick=rkStart;rkSetup()}
 function rkClose(){RK.run=false;RK.phase=null;rockStop(.3);cancelAnimationFrame(RK.raf);if(RK.key)removeEventListener('keydown',RK.key);const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('rk');document.body.classList.remove('harcon')}
-function rkSetup(){const cv=$('#rkCv');RK.cv=cv;RK.c=cv.getContext('2d');RK.phase='menu';RK.T=[];RK.fx=[];RK.camY=0;RK.camX=null;RK.t=0;RK.truckX=0;RK.stars=Array.from({length:140},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.4+.3,p:Math.random()*6}));
+function rkSetup(){const cv=$('#rkCv');RK.cv=cv;RK.c=cv.getContext('2d');RK.phase='menu';RK.T=[{k:'kont',lx:0,y0:RK_FL,id:0}];RK.fx=[];RK.camY=0;RK.camX=null;RK.t=0;RK.truckX=0;RK.stars=Array.from({length:140},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.4+.3,p:Math.random()*6}));
   RK.clouds=Array.from({length:14},(_,i)=>({x:(Math.random()-.5)*14,y:1000+Math.random()*1000,w:1.5+Math.random()*2.5,v:.2+Math.random()*.4}));
   const fit=()=>{const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);cv.width=r.width*dpr;cv.height=r.height*dpr;RK.W=r.width;RK.H=r.height;RK.dpr=dpr;
     RK.s=Math.max(20,Math.min((r.width-12)/7.5,r.height/9));RK.camX0=-RK_BC+(r.width/2-8)/RK.s;if(RK.camX==null)RK.camX=RK.camX0};
   fit();RK.fit=fit;const tap=e=>{if(e.target.closest&&e.target.closest('button'))return;e.preventDefault();rkDrop()};
   $('#rkWrap').addEventListener('pointerdown',tap);$('#rkTray').addEventListener('pointerdown',tap);
   RK.key=e=>{if(e.key==='Escape')rkClose();if(e.key===' '||e.key==='ArrowDown'){e.preventDefault();rkDrop()}};addEventListener('keydown',RK.key);
-  rkTray();RK.raf=requestAnimationFrame(rkLoop)}
+  rkTray();rkHud();RK.raf=requestAnimationFrame(rkLoop)}
 function rkStart(){Object.assign(RK,{truck:1,towers:[],T:[{k:'kont',lx:0,y0:RK_FL,id:0}],ms:0,fx:[],fall:null,phase:'play',run:true,combo:0,imb:0,ph:0,dx:0,dy:0,th:0,thd:0,gust:0,gustT:3,swap:0,truckX:0,space:false,dark:false});
   RK.cur=rkPick();RK.next=rkPick();RK.dx=-1.6;RK.dy=rkTop().y+3.4;$('#rkStart').hidden=true;$('#rkOver').hidden=true;
   rockStart('rakodo');rockTempo(100);playCount('rakodo');sndDrum();rkTray();rkHud();rkPopMsg('🚁 Koppints bárhol, ha a láda a torony fölött van!','#f3d77a')}
@@ -2339,18 +2390,18 @@ function rkLand(f){const T=RK_T[f.k],top=rkTop(),sw=top.base?0:rkSway(top.y),tx=
     RK.cur=RK.next;RK.next=rkPick();rkHud();rkTray();return true}
   return false}
 function rkMiss(f){RK.fx.push({k:f.k,x:f.x,y:f.y,vx:(f.x-rkTop().lx>0?1:-1)*1.5,vy:f.vy,rot:0,vr:(Math.random()-.5)*6,t:0});rkBuzz();sndBoom();
-  const H=rkTop().y;RK.towers.push(Math.round(H*100));rkPopMsg(`💥 Leesett! ${RK.truck}. torony: ${rkM(Math.round(H*100))}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
+  const H=rkTop().y;RK.lastN=RK.T.length;RK.towers.push(Math.round(H*100));rkPopMsg(`💥 Leesett! A torony: ${rkM(Math.round(H*100))}`,'#ff6b5b');RK.phase='swap';RK.swap=0;RK.cur=null;rkTray();rkHud()}
 function rkBuzz(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='square';o.frequency.value=110;g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.2)}
 function rkRadioSnd(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;const n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;f.Q.value=1.5;const g=a.createGain();g.gain.setValueAtTime(.15,t);g.gain.exponentialRampToValueAtTime(.001,t+.3);n.connect(f).connect(g).connect(MASTER);n.start(t,0,.35);
   [1200,1600].forEach((fr,i)=>{const o=a.createOscillator(),og=a.createGain();o.frequency.value=fr;og.gain.setValueAtTime(.06,t+.32+i*.12);og.gain.exponentialRampToValueAtTime(.001,t+.42+i*.12);o.connect(og).connect(MASTER);o.start(t+.32+i*.12);o.stop(t+.45+i*.12)})}
 function rkRadio(msg){const r=$('#rkRadio');if(!r)return;r.textContent=msg;r.hidden=false;rkRadioSnd();clearTimeout(RK.rt);RK.rt=setTimeout(()=>{r.hidden=true},3500)}
 function rkPopMsg(m,col){const p=$('#rkPop');if(!p)return;p.textContent=m;p.style.color=col||'#fff';p.classList.remove('on');void p.offsetWidth;p.classList.add('on')}
-function rkHud(){const h=$('#rkH');if(h)h.textContent=rkM(Math.round(rkTop().y*100));const t=$('#rkTrucks');if(t)t.textContent=RK.phase==='menu'||!RK.truck?'🚛🚛🚛':'🚛'.repeat(Math.max(0,3-RK.truck+(RK.phase==='play'?1:0)))||'—'}
+function rkHud(){const h=$('#rkH');if(h)h.textContent=rkM(Math.round(rkTop().y*100));}
 function rkTray(){const tr=$('#rkTray');if(!tr)return;
   if(RK.phase==='play'){const c=RK.cur&&RK_T[RK.cur],n=RK.next&&RK_T[RK.next];
-    tr.innerHTML=`<div class="rkcur">${c?`<span class="rkic" style="background:${c.col}">${c.ic}</span><div class="rkinf"><b>${esc(c.n)}</b><small>${String(c.w).replace('.',',')} × ${String(c.h).replace('.',',')} m · ${c.kg} kg · ${RK.truck}. teherautó</small></div>`:'<div class="rkinf"><b>Ejtés…</b></div>'}</div>
+    tr.innerHTML=`<div class="rkcur">${c?`<span class="rkic" style="background:${c.col}">${c.ic}</span><div class="rkinf"><b>${esc(c.n)}</b><small>${String(c.w).replace('.',',')} × ${String(c.h).replace('.',',')} m · ${c.kg} kg</small></div>`:'<div class="rkinf"><b>Ejtés…</b></div>'}</div>
      <div class="rknext"><small>Következő</small>${n?`<span class="rkic sm" style="background:${n.col}">${n.ic}</span>`:''}</div><div class="rktap">👆 Koppints bárhol</div>`}
-  else if(RK.phase==='swap')tr.innerHTML=`<div class="rkcur"><div class="rkinf"><b>🚛 ${RK.truck<3?'Jön a következő teherautó…':'Vége a harmadik toronynak'}</b><small>Eddigi tornyok: ${RK.towers.map(rkM).join(' · ')}</small></div></div>`;
+  else if(RK.phase==='swap')tr.innerHTML=`<div class="rkcur"><div class="rkinf"><b>🚛 A Rába elindul a toronnyal…</b><small>Torony: ${RK.towers.map(rkM).join(' · ')}</small></div></div>`;
   else tr.innerHTML=''}
 // ---- drón mozgása: a magassággal egyre nehezebb ----
 function rkDrone(dt){const n=rkN(),top=rkTop(),R=1.75,v=Math.min(4.3,.95+n*.05);RK.ph+=v/R*dt;
@@ -2372,18 +2423,19 @@ function rkLoop(now){RK.raf=requestAnimationFrame(rkLoop);if(RK.cv){const b=RK.c
     if(RK.fall){const f=RK.fall,g=RK.space?3.2:9.8;f.vy+=g*dt;f.y-=f.vy*dt;f.x+=f.vx*dt;f.vx*=.98;const top=rkTop();
       if(f.y<=top.y){if(rkLand({...f,y:top.y})){RK.fall=null}else if(f.y<top.y-RK_T[f.k].h*.6){RK.fall=null;rkMiss(f)}}}}
   if(RK.phase==='swap'){RK.swap+=dt;if(RK.swap>1.2)RK.truckX=-Math.pow(RK.swap-1.2,2)*6;
-    if(RK.swap>3.4){if(RK.truck>=3){rkFinish();}else{RK.truck++;RK.T=[{k:'kont',lx:0,y0:RK_FL,id:0}];RK.ms=0;RK.imb=0;RK.combo=0;RK.truckX=12;RK.phase='enter';RK.space=false;RK.dark=false;rockStart('rakodo');rockTempo(100);rkHud();rkTray()}}}
-  if(RK.phase==='enter'){RK.truckX=Math.max(0,RK.truckX-dt*9);if(RK.truckX<=0){RK.phase='play';RK.cur=rkPick();RK.next=rkPick();RK.dx=-1.6;RK.dy=rkTop().y+3.4;RK.th=0;RK.thd=0;rkTray();rkHud();rkPopMsg(`🚛 ${RK.truck}. teherautó – építs!`,'#f3d77a')}}
+    if(RK.swap>3.4)rkFinish();}
+  if(RK.phase==='enter'){RK.truckX=Math.max(0,RK.truckX-dt*9);if(RK.truckX<=0){RK.phase='play';RK.cur=rkPick();RK.next=rkPick();RK.dx=-1.6;RK.dy=rkTop().y+3.4;RK.th=0;RK.thd=0;rkTray();rkHud();rkPopMsg('🚛 Rába H14 – építs!','#f3d77a')}}
   for(const f of RK.fx){f.t+=dt;f.vy+=9.8*dt;f.y-=f.vy*dt;f.x+=f.vx*dt;f.rot+=f.vr*dt}RK.fx=RK.fx.filter(f=>f.t<3);if(RK.shake)RK.shake=Math.max(0,RK.shake-dt);
   // kamera: a torony teteje kb. a képernyő 45%-ánál
   const vh=RK.H/RK.s,top=rkTop(),moving=RK.phase==='enter'||(RK.phase==='swap'&&RK.swap>1),tgtY=moving?0:Math.max(0,top.y+1.2-vh*.55);RK.camY+=(tgtY-RK.camY)*Math.min(1,dt*(moving?2.2:2.5));
   const k=Math.min(1,Math.max(0,(RK.camY-1)/4)),tgtX=RK.camX0*(1-k)+top.lx*k;RK.camX+=(tgtX-RK.camX)*Math.min(1,dt*2);
   rkDraw()}
-function rkFinish(){RK.phase='done';RK.run=false;const best=Math.max(0,...RK.towers),tot=RK.towers.reduce((a,b)=>a+b,0);
-  const r=best>0?gSave('rkBest',best,'medve-rk-best',false):{best:rkBest(),rec:false};$('#rkBestV')&&($('#rkBestV').textContent=rkM(r.best));rockStart(r.rec?'rk_win':'rk_fail');
-  const o=$('#rkOver');o.hidden=false;o.innerHTML=`<h3>${r.rec?'🏆 Új magassági rekord!':'🚛 Három torony kész'}</h3>
-   <div class="rkres">${RK.towers.map((h,i)=>`<div><span>${i+1}. teherautó</span><b class="${h===best?'':'dim'}">${rkM(h)}</b></div>`).join('')}<div><span>Összesen</span><b>${rkM(tot)}</b></div></div>
-   <p>Legmagasabb torony: <b class="hred">${rkM(best)}</b><br>${r.rec?'<b class="hrec">ÚJ REKORD!</b>':'Rekord: <b>'+rkM(r.best)+'</b>'}</p>
+function rkFinish(){RK.phase='done';RK.run=false;const best=Math.max(0,...RK.towers);const n=Math.max(0,(RK.lastN||1)-1);
+  const r=best>0&&n>0?gSave('rkhBest',best,'medve-rkh-best',false):{best:rkBest(),rec:false};$('#rkBestV')&&($('#rkBestV').textContent=rkM(r.best));rockStart(r.rec?'rk_win':'rk_fail');
+  let ms='';for(const [h,t] of RK_MS)if(best/100>=h)ms=t;
+  const o=$('#rkOver');o.hidden=false;o.innerHTML=`<h3>${r.rec?'🏆 Új magassági rekord!':'🚛 A torony kész'}</h3>
+   <div class="rkres"><div><span>Torony magassága (talajtól)</span><b>${rkM(best)}</b></div><div><span>Rakomány a konténeren</span><b>${n} db</b></div>${ms?`<div><span>Elért szint</span><b>${esc(ms)}</b></div>`:''}</div>
+   <p>${r.rec?'<b class="hrec">ÚJ REKORD!</b>':'Rekord: <b>'+rkM(r.best)+'</b>'}</p>
    <button class="btn pri" id="rkAgain">↻ Újra</button> <button class="btn line" data-rank="rakodo">🏆 Ranglista</button>`;$('#rkAgain').onclick=rkStart;rkTray();rkHud()}
 // ---- rajz ----
 function rkCol(a,b,t){const p=x=>[parseInt(x.slice(1,3),16),parseInt(x.slice(3,5),16),parseInt(x.slice(5,7),16)],A=p(a),B=p(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')})`}
@@ -2469,12 +2521,17 @@ function rkTruck(c,X,Y,s){const G='#4b5a30',GL='#56673a',GD='#36421f',BK='#1b1c1
   R(5.05,1.3,6.62,1.4,BK);R(5.05,.95,5.12,1.4,BK);R(6.55,.85,6.62,1.4,BK);
   // fekete lökhárító + fellépő + vonószem + kerek fényszóró
   P([[0,.66],[0,1.08],[.95,1.08],[.95,.9],[.5,.9],[.42,.66]],BK);R(.05,.58,.18,.66,'#111');
-  c.fillStyle='#e9e3c0';c.beginPath();c.arc(X(.18),Y(.88),.075*s,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(X(.18),Y(.88),.03*s,0,7);c.fill();
+  R(.06,.8,.34,.98,'#111');c.fillStyle='#e9e3c0';c.beginPath();c.arc(X(.14),Y(.89),.06*s,0,7);c.fill();c.fillStyle='#f08a1c';c.fillRect(X(.24),Y(.95),.07*s,.12*s);// keretes fényszóróház
+  c.strokeStyle='#333';c.lineWidth=1;for(let i=0;i<3;i++){c.beginPath();c.moveTo(X(.07),Y(.83+i*.05));c.lineTo(X(.33),Y(.83+i*.05));c.stroke()}
+  c.fillStyle='#2a2a26';c.beginPath();c.roundRect?c.roundRect(X(.08),Y(.68),.3*s,.12*s,.05*s):c.rect(X(.08),Y(.68),.3*s,.12*s);c.fill();// csörlődob
   R(.55,.72,.92,.76,'#444');R(.55,.86,.92,.9,'#444');
   // fülke: fekete alsó sáv (fellépők), zöld fülke, enyhén hátradöntött szélvédő
   R(.1,1.08,1.76,1.42,BK);R(.6,1.14,.95,1.18,'#444');R(.6,1.3,.95,1.34,'#444');
   P([[.1,1.42],[.12,2.1],[.3,2.84],[.42,2.94],[1.72,2.94],[1.76,2.88],[1.76,1.42]],G,GD);
   P([[.14,2.12],[.3,2.82],[.4,2.82],[.25,2.12]],'#1e2a33');// szélvédő oldalnézetből
+  P([[.24,2.1],[.38,2.82],[.47,2.82],[.34,2.1]],BK);// vastag A-oszlop
+  c.fillStyle='#f0a030';for(const rx of [.5,.75,1.0])c.fillRect(X(rx),Y(3.0),.07*s,.04*s);// tető-helyzetjelzők
+  R(1.74,2.0,1.84,3.02,BK);c.fillStyle=BK;c.beginPath();c.roundRect?c.roundRect(X(1.68),Y(3.14),.24*s,.14*s,.05*s):c.rect(X(1.68),Y(3.14),.24*s,.14*s);c.fill();// légbeszívó cső gombafejjel
   R(.22,2.95,.62,3.0,BK);R(1.1,2.94,1.45,2.99,GD);// napellenző, tetőnyílás
   // ajtó + nagy ajtóablak + hátsó kisablak
   P([[.42,1.45],[.42,2.78],[1.4,2.78],[1.4,1.45]],null,GD,1.4);
@@ -2521,15 +2578,20 @@ function rkCrate(c,k,x,yb,w,h,rot){const T=RK_T[k];c.save();c.translate(x+w/2,yb
 let DEFER_INSTALL=null;
 function arcRender(){const m=document.getElementById('main');
   m.innerHTML=`<div class="arc-hero"><div class="arc-hrow"><b>5 játék</b><span class="arc-ver">v${APP_VER}</span></div><span>Medvés gránátfogás · PzH 2000 drónüldözés · Gidrán terepbajnokság · Gidrán konvoj · Rába drónos toronyépítés</span></div>
+  <div class="panel arc-p upd-panel" id="updPanel" style="margin-bottom:12px;border:2px solid #ff6b5b;background:linear-gradient(135deg,#2a1a18,#1e2419)">
+    <button type="button" class="upd-btn" id="updBtn" style="background:#c0262f;color:#fff;font-size:16px;padding:14px;border-radius:12px;box-shadow:0 4px 16px rgba(192,38,47,.4)">🔄 Frissítés ellenőrzése</button>
+    <div class="upd-progress" id="updProg" style="margin-top:8px"><div class="upd-bar" id="updBar"></div></div>
+    <div class="upd-pct" id="updPct"></div>
+  </div>
   <div class="panel arc-p authbox" id="authBox">${authInner()}</div>
   ${gamesHTML()}
   ${FB_ON&&UID?`<div class="panel arc-p"><h3>🏆 Élő ranglista <span class="lvdot">ÉLŐ</span></h3><div class="lvgrid" id="arcLive">${liveHTML()}</div></div><button type="button" class="rkbtn chbtn" id="chatOpen">${chatBtnHTML()}</button>`:''}
-  <button type="button" class="rkbtn" data-rank="harc">🏆 <b>${FB_ON&&UID?'Teljes ranglista':'Rekordjaim'}</b><span>mind a 4 játék</span></button>
+  <button type="button" class="rkbtn" data-rank="harc">🏆 <b>${FB_ON&&UID?'Teljes ranglista':'Rekordjaim'}</b><span>mind az 5 játék</span></button>
   ${shareHTML()}
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
   <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" style="margin:0">✅ Telepítve, a kezdőképernyőről indul.</p>':'<p class="hint" style="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
   <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p>`;
-  setTimeout(()=>{pzhFullSet();gidFullSet()},0)}
+  setTimeout(()=>{pzhFullSet();gidFullSet(); if(typeof updSetUI==='function' && UPD_WAITING) updSetUI('available'); },0)}
 document.addEventListener('change',e=>{if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
@@ -2673,7 +2735,7 @@ const FBC=window.MEDVE_FB||null;
 let FB_ON=!!(FBC&&FBC.apiKey&&FBC.projectId&&window.firebase&&firebase.auth&&firebase.firestore);
 const FB_CFG=!!(FBC&&FBC.apiKey);
 let AUTH=null,AUTHREADY=!FB_ON,UNSUB=null,FB_SYNCED=false,AUTHTAB='login',AUTHBUSY=false;
-const LS_BEST=['medve-harc-best','medve-drone-best','medve-gt-best','medve-gk-best','medve-rk-best'];
+const LS_BEST=['medve-harc-best','medve-drone-best','medve-gt-best','medve-gk-best','medve-rk-best','medve-rkh-best'];
 const RANKS=['','honvéd','őrvezető','tizedes','szakaszvezető','őrmester','törzsőrmester','főtörzsőrmester','zászlós','törzszászlós','főtörzszászlós','hadnagy','főhadnagy','százados','őrnagy','alezredes','ezredes','dandártábornok','civil'];
 const nickId=n=>String(n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'');
 const nickMail=n=>nickId(n)+'@medve.invalid';
@@ -2746,6 +2808,95 @@ if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.fires
   catch(e){console.warn('Firebase init hiba',e);FB_ON=false;AUTHREADY=true}}
 
 applySet();arcRender();
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* ===== Frissítés (PWA) ===== */
+let UPD_REG = null, UPD_WAITING = false;
+function updSetUI(state, pct, text){
+  const btn = document.getElementById('updBtn');
+  const prog = document.getElementById('updProg');
+  const bar = document.getElementById('updBar');
+  const pctEl = document.getElementById('updPct');
+  if(!btn) return;
+  btn.classList.remove('has-update','updating');
+  if(prog) prog.classList.remove('on');
+  if(pctEl) pctEl.classList.remove('on');
+  if(state === 'available'){
+    btn.classList.add('has-update');
+    btn.innerHTML = '✨ Új verzió elérhető <span class="upd-badge">!</span>';
+    btn.disabled = false;
+  } else if(state === 'checking'){
+    btn.classList.add('updating');
+    btn.textContent = 'Ellenőrzés…';
+    btn.disabled = true;
+  } else if(state === 'downloading'){
+    btn.classList.add('updating');
+    btn.textContent = 'Letöltés…';
+    btn.disabled = true;
+    if(prog) prog.classList.add('on');
+    if(bar) bar.style.width = (pct||0) + '%';
+    if(pctEl){ pctEl.classList.add('on'); pctEl.textContent = (pct||0) + '% · ' + (text||''); }
+  } else if(state === 'ready'){
+    btn.classList.add('has-update');
+    btn.textContent = '🔄 Frissítés telepítése';
+    btn.disabled = false;
+  } else {
+    btn.textContent = 'Frissítés ellenőrzése';
+    btn.disabled = false;
+  }
+}
+async function updCheck(){
+  if(!UPD_REG){ if(typeof toast==='function') toast('Frissítés csak HTTPS-en / telepített appban működik.'); return; }
+  updSetUI('checking');
+  try{ await UPD_REG.update(); }catch(e){}
+  setTimeout(()=>{
+    if(!UPD_WAITING){
+      updSetUI('idle');
+      if(typeof toast==='function') toast('Nincs újabb verzió. A legfrissebb fut.');
+    }
+  }, 1500);
+}
+function updApply(){
+  if(UPD_REG && UPD_REG.waiting){
+    UPD_REG.waiting.postMessage({ type: 'SKIP_WAITING' });
+    updSetUI('downloading', 100, 'Telepítés…');
+  } else {
+    updCheck();
+  }
+}
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    UPD_REG = reg;
+    if(reg.waiting){ UPD_WAITING = true; updSetUI('available'); if(typeof toast==='function') toast('✨ Új frissítés elérhető!'); }
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if(!nw) return;
+      updSetUI('downloading', 0, 'Letöltés indul…');
+      nw.addEventListener('statechange', () => {
+        if(nw.state === 'installed'){
+          if(navigator.serviceWorker.controller){
+            UPD_WAITING = true;
+            updSetUI('available');
+            if(typeof toast==='function') toast('✨ Új frissítés elérhető! Nyomd meg a piros gombot felül.');
+          } else {
+            updSetUI('idle');
+          }
+        }
+      });
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(UPD_WAITING) location.reload();
+  });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data && e.data.type === 'UPDATE_PROGRESS'){
+      updSetUI('downloading', e.data.pct, e.data.text || '');
+      if(e.data.pct >= 100) setTimeout(() => { if(UPD_WAITING) updSetUI('available'); else updSetUI('idle'); }, 600);
+    }
+  });
+}
+document.addEventListener('click', e => {
+  if(e.target && e.target.id === 'updBtn'){
+    if(UPD_WAITING) updApply(); else updCheck();
+  }
+});
 </script>
 </body></html>
