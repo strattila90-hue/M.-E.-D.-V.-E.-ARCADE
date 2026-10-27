@@ -949,6 +949,25 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 .inarrow.top{bottom:auto;top:calc(6px + env(safe-area-inset-top,0px));left:auto;right:60px;transform:rotate(180deg);animation:inbt 1s ease-in-out infinite}
 @keyframes inb{50%{transform:translate(-50%,10px)}}@keyframes inbt{0%,100%{transform:rotate(180deg) translateY(0)}50%{transform:rotate(180deg) translateY(10px)}}
 @media (prefers-reduced-motion:reduce){.inarrow,.inarrow.top{animation:none}}
+.wz{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:22px;max-width:420px;width:100%;max-height:calc(100dvh - 32px);overflow:auto;padding:18px 18px 10px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 -3px 0 var(--brass);display:flex;flex-direction:column;align-items:center;gap:10px}
+.wz .inico{width:64px;height:64px;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.35)}.wz h2{margin:0;font-size:21px;line-height:1.25}
+.wz .insub{opacity:1;color:var(--muted);font-size:14.5px}.wz .inwarn{background:var(--warn-bg,rgba(201,162,39,.15));color:var(--fg);text-align:left}.wz .inhint{color:var(--muted);opacity:1}
+.wzdots{display:flex;gap:6px}.wzdots i{width:22px;height:5px;border-radius:3px;background:var(--line)}.wzdots i.on{background:var(--brass)}
+.wzbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border-radius:14px;font-weight:800;font-size:17px;text-decoration:none;cursor:pointer;border:0;padding:10px 14px}
+.wzbtn.pri{background:var(--brass);color:#1e1408}.wzbtn.sec{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 2px var(--line)}.wzbtn[disabled]{opacity:.65;cursor:progress}
+.wzos{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}.wzosb{position:relative;min-height:112px;border-radius:16px;border:2px solid var(--line);background:var(--surface2);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:16px;padding:12px 6px}
+.wzosb span{font-size:36px;line-height:1}.wzosb.det{border-color:var(--brass);box-shadow:0 0 0 3px color-mix(in srgb,var(--brass) 30%,transparent)}.wzosb i{font-style:normal;font-size:12px;font-weight:800;color:#1e1408;background:var(--brass);border-radius:999px;padding:2px 8px}
+.wzcode{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:8px 10px;text-align:left}.wzcode span{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.wzcode b{flex:1;font:800 17px/1.3 var(--f-mono);letter-spacing:.06em;text-align:center}.dlg{display:inline-block;white-space:nowrap}.wzcode .dlg,.shcode .dlg{font:inherit;color:inherit;text-transform:none;letter-spacing:inherit}.wzcode .btn{min-height:40px}.wzwho{margin:0;font-size:14px}
+.wzsteps{list-style:none;counter-reset:wz;text-align:left;margin:2px 0;padding:0;width:100%;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
+.wzsteps li{counter-increment:wz;position:relative;padding-left:40px;min-height:30px}.wzsteps li::before{content:counter(wz);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;background:var(--brass);color:#1e1408;font-weight:800;display:grid;place-items:center}
+.wzsteps .inshare{color:var(--fg);border-color:var(--brass)}.wzsvg{vertical-align:-5px;color:var(--brass)}
+.wznav{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;margin-top:2px}.wzlink{background:none;border:0;color:var(--muted);font-size:14px;font-weight:700;padding:12px 4px;min-height:44px;cursor:pointer}.wzlink:first-child{color:var(--fg)}
+#instov .inarrow{color:var(--brass)}
+.dlban{display:flex;flex-direction:column;gap:2px;position:relative;border:2px solid var(--brass)}.dlban span{color:var(--muted);font-size:14px}.dlbx{position:absolute;right:8px;top:8px;border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;min-width:36px;min-height:36px}
+.dlpaste label{font-weight:800}.dlpaste .incopy input{background:var(--surface2);color:var(--fg);border:1px solid var(--line);font:700 15px var(--f-mono);letter-spacing:.05em;min-height:48px;padding:0 10px;border-radius:10px}.dlpaste .incopy .btn{min-height:48px}
+.shcode{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;font-size:13px;color:var(--muted)}.shcode b{font:800 16px var(--f-mono);letter-spacing:.08em;color:var(--fg)}
+
 .arc-hrow{display:flex;justify-content:space-between;align-items:center;gap:8px}.arc-hero .arc-ver{font:800 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;color:#1e2419;background:#f3d77a;border-radius:999px;padding:5px 10px;opacity:1}
 .choff{font-size:13px;font-weight:700;background:var(--warn-bg,#fff3cd);color:var(--warn,#7a5a00);border-radius:10px;padding:8px 10px;margin:0 0 10px}
 .chbtn{margin-top:10px}.chbtn .chnew{font-style:normal;font-weight:800;background:#c0262f;color:#fff;border-radius:999px;padding:2px 8px}
@@ -978,7 +997,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='2.2.0',APP_DATE='2026.10.26.';
+const APP_VER='2.3.0',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2712,13 +2731,14 @@ function arcRender(){const m=document.getElementById('main');
     <div class="upd-progress" id="updProg" style="margin-top:8px"><div class="upd-bar" id="updBar"></div></div>
     <div class="upd-pct" id="updPct"></div>
   </div>
+  ${dlBannerHTML()}${isInstalled()&&FB_ON&&!UID&&!DL_BANNER?`<div class="panel arc-p">${dlPasteHTML()}</div>`:''}
   <div class="panel arc-p authbox" id="authBox">${authInner()}</div>
   ${gamesHTML()}
   ${FB_ON&&UID?`<div class="panel arc-p"><h3>🏆 Élő ranglista <span class="lvdot">ÉLŐ</span></h3><div class="lvgrid" id="arcLive">${liveHTML()}</div></div><button type="button" class="rkbtn chbtn" id="chatOpen">${chatBtnHTML()}</button>`:''}
   <button type="button" class="rkbtn" data-rank="harc">🏆 <b>${FB_ON&&UID?'Teljes ranglista':'Rekordjaim'}</b><span>mind az 5 játék</span></button>
   ${shareHTML()}
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
-  <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" style="margin:0">✅ Telepítve, a kezdőképernyőről indul.</p>':'<p class="hint" style="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
+  <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" style="margin:0 0 10px">✅ Telepítve, a kezdőképernyőről indul.</p>'+dlPasteHTML():'<p class="hint" style="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
   <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p>`;
   setTimeout(()=>{pzhFullSet();gidFullSet(); if(typeof updSetUI==='function' && UPD_WAITING) updSetUI('available'); },0)}
 document.addEventListener('change',e=>{if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
@@ -2773,14 +2793,23 @@ function qrEncode(text){
   apply(best);fmt(best);return {size:N,get:(x,y)=>M[y][x]}}
 function qrDataUrl(text,scale){const q=qrEncode(text);if(!q)return '';const B=4,S=scale||8,cv=document.createElement('canvas');cv.width=cv.height=(q.size+B*2)*S;const c=cv.getContext('2d');
   c.fillStyle='#fff';c.fillRect(0,0,cv.width,cv.height);c.fillStyle='#14180f';for(let y=0;y<q.size;y++)for(let x=0;x<q.size;x++)if(q.get(x,y))c.fillRect((x+B)*S,(y+B)*S,S,S);return cv.toDataURL('image/png')}
-function shareHTML(){return `<div class="panel arc-p shp"><h3>📤 Megosztás</h3><p class="hint" style="margin:0 0 10px">Ez a link és a QR-kód rögtön a telepítést kínálja fel – Androidon és iPhone-on is.</p>
-  <div class="shqr"><img id="shQr" src="${qrDataUrl(instShareUrl())}" alt="QR-kód: ${esc(instShareUrl())}" width="200" height="200"></div>
-  <div class="shlink"><input id="shUrl" readonly value="${esc(instShareUrl())}" aria-label="Telepítő link"></div>
+let SH_G='';
+function shareCode(){return dlEncode(SH_G,FB_ON&&UID&&USERDOC?USERDOC.name:'')}
+function shareUrl(){return dlBase()+'?k='+shareCode()}
+function shareHTML(){const u=shareUrl(),code=shareCode();return `<div class="panel arc-p shp"><h3>📤 Megosztás</h3><p class="hint" style="margin:0 0 10px">A link és a QR-kód ugyanaz: megnyitáskor felajánlja a telepítést (Android, iPhone), és utána oda visz, ahová hívod${FB_ON&&UID?' – a neveddel együtt':''}.</p>
+  <label class="authf"><span>Hova hívod?</span><select id="shGame"><option value="">Csak az app (kezdőoldal)</option>${DL_GAMES.filter(Boolean).map(g=>`<option value="${g}" ${g===SH_G?'selected':''}>${esc(DL_GNAME[g])}</option>`).join('')}</select></label>
+  <div class="shqr"><img id="shQr" src="${qrDataUrl(u)}" alt="QR-kód: ${esc(u)}" width="200" height="200"></div>
+  <div class="shcode">Meghívó kód: <b id="shCode">${dlFmtH(code)}</b><button type="button" class="btn line sm" id="shCodeCopy">Másolás</button></div>
+  <div class="shlink"><input id="shUrl" readonly value="${esc(u)}" aria-label="Meghívó link"></div>
   <div class="shbtn"><button type="button" class="btn pri" id="shGo">📤 Megosztás</button><button type="button" class="btn line" id="shCopy">🔗 Link másolása</button></div></div>`}
-async function shareCopy(){const i=$('#shUrl');try{await navigator.clipboard.writeText(instShareUrl());toast('🔗 Link kimásolva')}catch(e){if(i){i.focus();i.select();try{document.execCommand('copy');toast('🔗 Link kimásolva')}catch(x){toast('Jelöld ki és másold a linket')}}}}
+function shareUpd(){const u=shareUrl(),q=$('#shQr'),i=$('#shUrl'),c=$('#shCode');if(q){q.src=qrDataUrl(u);q.alt='QR-kód: '+u}if(i)i.value=u;if(c)c.innerHTML=dlFmtH(shareCode())}
+async function shareCopy(){const i=$('#shUrl');try{await navigator.clipboard.writeText(shareUrl());toast('🔗 Link kimásolva')}catch(e){if(i){i.focus();i.select();try{document.execCommand('copy');toast('🔗 Link kimásolva')}catch(x){toast('Jelöld ki és másold a linket')}}}}
+document.addEventListener('change',e=>{if(e.target.id==='shGame'){SH_G=e.target.value;shareUpd()}});
 document.addEventListener('click',e=>{if(!e.target.closest)return;
   if(e.target.closest('#shCopy')){shareCopy();return}
-  if(e.target.closest('#shGo')){if(navigator.share){navigator.share({title:'M.E.D.V.E. Arcade',text:'Telepítsd te is az M.E.D.V.E. Arcade-ot – katonai mini-játékok élő ranglistával és chattel:',url:instShareUrl()}).catch(()=>{})}else shareCopy()}});
+  if(e.target.closest('#shCodeCopy')){wzCopy(dlFmt(shareCode()),'🔑 Kód kimásolva');return}
+  if(e.target.closest('#shGo')){const gn=SH_G?DL_GNAME[SH_G]:'';const txt=gn?`Gyere, játssz velem: ${gn} – M.E.D.V.E. Arcade (élő ranglista, chat). Kód: ${dlFmt(shareCode())}`:'Telepítsd te is az M.E.D.V.E. Arcade-ot – katonai mini-játékok élő ranglistával és chattel:';
+    if(navigator.share){navigator.share({title:'M.E.D.V.E. Arcade',text:txt,url:shareUrl()}).catch(()=>{})}else shareCopy()}});
 document.addEventListener('focusin',e=>{if(e.target.id==='shUrl')e.target.select()});
 
 /* ===== chat: egy közös szoba, bárki írhat, aki be van jelentkezve ===== */
@@ -2821,43 +2850,106 @@ document.addEventListener('click',e=>{if(!e.target.closest)return;if(e.target.cl
 addEventListener('online',()=>{chatNet();const ab=document.getElementById('authBox');if(ab&&!UID)ab.innerHTML=authInner()});
 addEventListener('offline',()=>{chatNet();const ab=document.getElementById('authBox');if(ab&&!UID)ab.innerHTML=authInner()});
 
-/* ===== telepítő: a megosztott link (?telepit) azonnal a telepítést kínálja ===== */
+/* ===== telepítő varázsló + halasztott mélylink: a QR-kód és a megosztott link (?k=KÓD) telepítés után is oda visz, ahová mutat ===== */
 const UA=navigator.userAgent||'';
 const IS_IOS=/iPhone|iPad|iPod/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const IS_ANDROID=/Android/i.test(UA);
-const IN_APP=/FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|Viber|Snapchat|TikTok|musical_ly|; wv\)|GSA\//i.test(UA);
+const IN_APP=/FBAN|FBAV|FB_IAB|Instagram|Messenger|Viber|Line\/|Telegram|WhatsApp|Snapchat|TikTok|musical_ly|; wv\)|GSA\//i.test(UA);
 const IOS_SAFARI=IS_IOS&&/Safari/i.test(UA)&&!/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/i.test(UA)&&!IN_APP;
 const IS_IPAD=/iPad/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const isInstalled=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
-let INST_WANT=false,INST_WAIT=null;
-function instShareUrl(){return SHARE_URL.replace(/\/?$/,'/')+'?telepit'}
-function instOpen(){if(isInstalled()){toast('✅ Már telepítve van – a kezdőképernyőről indítod.');return}
-  let o=document.getElementById('instov');if(!o){o=document.createElement('div');o.id='instov';document.body.appendChild(o)}
-  o.innerHTML=`<div class="inbox" role="dialog" aria-label="Telepítés"><img class="inico" src="icon-192.png" alt="" width="72" height="72"><h2>M.E.D.V.E. Arcade</h2><p class="insub">Telepítsd alkalmazásként: saját ikon a kezdőképernyőn, teljes képernyő, net nélkül is indul.</p><div class="inbody">${instBody()}</div><button type="button" class="inlater" id="instLater">Most nem</button></div>${IOS_SAFARI?`<div class="inarrow${IS_IPAD?' top':''}" aria-hidden="true">⬇</div>`:''}`;
-  o.hidden=false;document.body.classList.add('rkon');
-  if(IS_ANDROID&&!IN_APP&&!DEFER_INSTALL){clearTimeout(INST_WAIT);INST_WAIT=setTimeout(()=>{if(!DEFER_INSTALL&&!o.hidden){const b=o.querySelector('.inbody');if(b)b.innerHTML=instAndroidManual()}},3500)}}
-function instClose(){const o=document.getElementById('instov');if(o){o.hidden=true;o.innerHTML=''}clearTimeout(INST_WAIT);if(!document.getElementById('chatov')||document.getElementById('chatov').hidden)document.body.classList.remove('rkon')}
-function instAndroidManual(){return `<ol class="insteps"><li>Koppints a böngésző <b>⋮</b> menüjére (jobb felül).</li><li>Válaszd: <b>Alkalmazás telepítése</b> vagy <b>Hozzáadás a kezdőképernyőhöz</b>.</li><li>Erősítsd meg: <b>Telepítés</b>.</li></ol>`}
-function instBody(){const url=instShareUrl();
-  if(IN_APP){if(IS_ANDROID){const host=url.replace(/^https?:\/\//,'');
-      return `<p class="inwarn">Ebből az alkalmazásból (Messenger, Viber, Facebook…) nem lehet telepíteni. Nyisd meg Chrome-ban:</p><a class="btn pri inbig" href="intent://${esc(host)}#Intent;scheme=https;package=com.android.chrome;end">🌐 Megnyitás Chrome-ban</a>${instCopy(url)}`}
-    return `<p class="inwarn">Ebből az alkalmazásból (Messenger, Viber, Facebook…) nem lehet telepíteni.</p><ol class="insteps"><li>Koppints a <b>⋯</b> vagy a <b>⤴</b> gombra.</li><li>Válaszd: <b>Megnyitás Safariban</b>.</li><li>Safariban újra feljön ez az útmutató.</li></ol>${instCopy(url)}`}
-  if(IS_IOS&&!IOS_SAFARI)return `<ol class="insteps"><li>Koppints a <b>Megosztás</b> ikonra <span class="inshare">⤴</span> a címsorban.</li><li>Görgess le: <b>Hozzáadás a főképernyőhöz</b>.</li><li>Jobb felül: <b>Hozzáadás</b>.</li></ol><p class="inhint">Ha nincs ilyen menüpont, nyisd meg a linket <b>Safariban</b>.</p>${instCopy(url)}`;
-  if(IOS_SAFARI)return `<ol class="insteps"><li>Koppints a <b>Megosztás</b> gombra <span class="inshare">⤴</span> ${IS_IPAD?'jobb felül':'lent középen'}.</li><li>Görgess le, és válaszd: <b>Főképernyőhöz adás</b> <span class="inshare">⊞</span></li><li>Jobb felül: <b>Hozzáadás</b>. Kész, az ikon a kezdőképernyőn van.</li></ol>`;
-  if(DEFER_INSTALL)return `<button type="button" class="btn pri inbig" id="instGo">📲 Telepítés most</button>`;
-  if(IS_ANDROID)return `<button type="button" class="btn pri inbig" id="instGo" disabled>⏳ Előkészítés…</button>`;
-  return `<p class="inhint">Számítógépen: a címsor jobb oldalán a <b>⊕ Telepítés</b> ikonra kattints (Chrome, Edge). Telefonon nyisd meg a linket, ott egy koppintással telepíthető.</p>`}
-function instCopy(url){return `<div class="incopy"><input id="instUrl" readonly value="${esc(url)}" aria-label="Telepítő link"><button type="button" class="btn line sm" id="instCopy">Másolás</button></div>`}
-async function instGo(){if(!DEFER_INSTALL){instOpen();return}const p=DEFER_INSTALL;DEFER_INSTALL=null;try{p.prompt();const r=await p.userChoice;if(r&&r.outcome==='accepted'){instClose();toast('✅ Telepítve! Indítsd a kezdőképernyőről.')}else{instClose()}}catch(e){instOpen()}}
-document.addEventListener('click',e=>{if(!e.target.closest)return;
-  if(e.target.closest('#instGo')){instGo();return}if(e.target.closest('#instLater')){instClose();return}
-  if(e.target.closest('#instOpen')){instOpen();return}
-  if(e.target.closest('#instCopy')){const u=instShareUrl();(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast('🔗 Link kimásolva')).catch(()=>{const i=$('#instUrl');if(i){i.focus();i.select()}})}});
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFER_INSTALL=e;const o=document.getElementById('instov');if(o&&!o.hidden){const b=o.querySelector('.inbody');if(b)b.innerHTML=instBody()}const b=document.getElementById('instNow');if(b)b.hidden=false});
-addEventListener('appinstalled',()=>{DEFER_INSTALL=null;instClose();toast('✅ Telepítve! Indítsd a kezdőképernyőről.')});
-// a telepítő link megnyitásakor azonnal felajánlja
-if(/[?&]telepit\b/.test(location.search)){INST_WANT=true;try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
-  if(!isInstalled())setTimeout(instOpen,350)}
+// --- meghívókód: játék + meghívó neve + ellenőrző bájt, olvasható 32-es ábécével (nincs O/I/L/U), 5-ös csoportokban ---
+const DL_AB='0123456789ABCDEFGHJKMNPQRSTVWXYZ',DL_GAMES=['','harc','drone','terep','konvoj','rakodo'];
+const DL_GNAME={harc:'M.E.D.V.E. H.A.R.C.',drone:'DroneRun',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó'};
+const DL_KEY='medve-deeplink',DL_SKIP='medve-dl-skip',DL_TTL=48*3600e3;
+function dlCrc(a){let c=0x5A;for(const b of a){c^=b;for(let i=0;i<8;i++)c=c&0x80?((c<<1)^0x07)&255:(c<<1)&255}return c}
+function dlEncode(g,nick){let nb=Array.from(new TextEncoder().encode(String(nick||'').trim().slice(0,16)));while(nb.length>24)nb.pop();
+  const a=[Math.max(0,DL_GAMES.indexOf(g||'')),...nb];while(a.length<5)a.push(0);a.push(dlCrc(a));
+  let bits=0,v=0,out='';for(const b of a){v=(v<<8)|b;bits+=8;while(bits>=5){out+=DL_AB[(v>>(bits-5))&31];bits-=5;v&=(1<<bits)-1}}if(bits)out+=DL_AB[(v<<(5-bits))&31];return out}
+function dlDecode(code){const s=String(code||'').toUpperCase().replace(/O/g,'0').replace(/[IL]/g,'1').replace(/U/g,'V').replace(/[^0-9A-Z]/g,'');if(s.length<10)return null;
+  let bits=0,v=0;const a=[];for(const ch of s){const x=DL_AB.indexOf(ch);if(x<0)return null;v=(v<<5)|x;bits+=5;if(bits>=8){a.push((v>>(bits-8))&255);bits-=8;v&=(1<<bits)-1}}
+  if(a.length<6)return null;const crc=a.pop();if(dlCrc(a)!==crc||a[0]>=DL_GAMES.length)return null;const nb=a.slice(1);while(nb.length&&nb[nb.length-1]===0)nb.pop();
+  let nick='';try{nick=new TextDecoder('utf-8',{fatal:true}).decode(new Uint8Array(nb))}catch(e){return null}return {g:DL_GAMES[a[0]],nick,code:s}}
+const dlFmt=c=>String(c||'').replace(/(.{5})(?=.)/g,'$1-');
+const dlFmtH=c=>dlFmt(c).split('-').map(g=>`<span class="dlg">${esc(g)}</span>`).join('-');
+function dlBase(){return SHARE_URL.replace(/\/?$/,'/')}
+function dlLink(d){return dlBase()+(d&&d.q?d.q:'?k='+(d?d.code:dlEncode('','')))}
+// a link paramétereiből: ?k=KÓD (új), ?telepit (régi, kezdőoldalra visz)
+function dlFromSearch(q){let p;try{p=new URLSearchParams(q||'')}catch(e){return null}
+  if(p.has('k')){const d=dlDecode(p.get('k'));if(d){d.q=q;return d}}
+  if(p.has('telepit'))return {g:'',nick:'',code:dlEncode('',''),q,legacy:1};return null}
+function dlSave(q){try{localStorage.setItem(DL_KEY,JSON.stringify({q,path:location.pathname,exp:Date.now()+DL_TTL}))}catch(e){}}
+function dlLoad(){try{const o=JSON.parse(localStorage.getItem(DL_KEY)||'null');if(!o||!(o.exp>Date.now())){localStorage.removeItem(DL_KEY);return null}return o}catch(e){return null}}
+function dlClear(){try{localStorage.removeItem(DL_KEY)}catch(e){}}
+function dlSkipped(){try{return sessionStorage.getItem(DL_SKIP)==='1'}catch(e){return false}}
+// iPhone: a Safari és a kezdőképernyős app tárhelye külön van → a manifest start_url-jébe kerül a cél (csak iPhone-on)
+async function dlIosManifest(q){try{const l=document.querySelector('link[rel="manifest"]');if(!l||String(l.href).startsWith('data:'))return;const base=new URL(l.getAttribute('href')||'manifest.webmanifest',location.href);
+  const m=await (await fetch(base.href)).json();const abs=u=>new URL(u,base).href;
+  m.start_url=abs(m.start_url||'./').split('?')[0]+q;m.scope=abs(m.scope||'./');m.icons=(m.icons||[]).map(i=>Object.assign({},i,{src:abs(i.src)}));
+  l.setAttribute('href','data:application/manifest+json,'+encodeURIComponent(JSON.stringify(m)))}catch(e){}}
+function dlCleanUrl(){try{history.replaceState(history.state,'',location.pathname+location.hash)}catch(e){}}
+// --- a cél végrehajtása: meghívó üzenet, regisztráció/belépés, majd a játék indul ---
+let DL_PEND=null,DL_BANNER=null;
+function dlApply(d){if(!d)return;DL_BANNER=(d.nick||d.g)?d:null;DL_PEND=d.g?d:null;
+  if(!FB_ON||AUTHREADY)dlAfterAuth();else if(DL_BANNER)arcRender()}
+function dlAfterAuth(){const d=DL_PEND;
+  if(FB_ON&&!UID&&navigator.onLine){if(DL_BANNER||d){AUTHTAB=DL_BANNER&&DL_BANNER.nick?'reg':AUTHTAB;arcRender();setTimeout(()=>document.getElementById('dlBan')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}return}
+  if(d){DL_PEND=null;DL_BANNER=null;arcRender();setTimeout(()=>{if(document.getElementById('harc')?.hidden!==false)gameStart(d.g)},450)}
+  else if(DL_BANNER){const n=DL_BANNER.nick;DL_BANNER=null;arcRender();if(n)toast('🎖️ '+n+' meghívása – jó játékot!')}}
+function dlBannerHTML(){const d=DL_BANNER;if(!d)return '';const gn=d.g?DL_GNAME[d.g]:'';
+  return `<div class="panel arc-p dlban" id="dlBan"><b>🎖️ ${d.nick?esc(d.nick)+' meghívott':'Meghívót kaptál'}${gn?' – '+esc(gn):''}</b><span>${FB_ON&&!UID?(d.nick?'Regisztrálj (vagy lépj be), és '+(gn?'indul a játék.':'jöhet a közös ranglista.'):'Lépj be, és '+(gn?'indul a játék.':'kezdheted.')):''}</span><button type="button" class="dlbx" id="dlBanX" aria-label="Bezárás">✕</button></div>`}
+function dlPasteHTML(){return `<div class="dlpaste"><label for="dlIn">🔑 Meghívó kód vagy link</label><p class="hint" style="margin:2px 0 8px">Ha a meghívó nem nyílt meg magától, írd be a kódot (pl. ABCDE-FGHJK) vagy illeszd be a teljes linket.</p>
+  <div class="incopy"><input id="dlIn" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCDE-FGHJK vagy link"><button type="button" class="btn pri sm" id="dlGo">Tovább</button></div></div>`}
+function dlPasteGo(){const v=($('#dlIn')?.value||'').trim();if(!v)return;let d=null;
+  if(/[?&](k|telepit)\b/.test(v)){try{d=dlFromSearch(new URL(v,location.href).search)}catch(e){}}if(!d)d=dlDecode(v.replace(/^.*[?&]k=/,''));
+  if(!d){toast('Ez nem érvényes meghívó kód vagy link.');return}dlClear();dlApply(d)}
+// --- varázsló ---
+let WZ={step:0,os:null,d:null,wait:0};
+const WZ_SHARE='<svg class="wzsvg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function wzOpen(d,step){WZ={step:step||1,os:IS_IOS?'ios':IS_ANDROID?'android':null,d:d||{g:'',nick:'',code:dlEncode('',''),q:''},wait:0};
+  let o=document.getElementById('instov');if(!o){o=document.createElement('div');o.id='instov';document.body.appendChild(o)}o.hidden=false;document.body.classList.add('rkon');wzRender()}
+function wzClose(){const o=document.getElementById('instov');if(o){o.hidden=true;o.innerHTML=''}clearTimeout(WZ.wait);if(!document.getElementById('chatov')||document.getElementById('chatov').hidden)document.body.classList.remove('rkon')}
+function wzBrowser(){try{sessionStorage.setItem(DL_SKIP,'1')}catch(e){}const d=WZ.d;wzClose();if(d&&(d.q||d.g||d.nick))dlApply(d)}
+function wzGo(step,os){WZ.step=step;if(os)WZ.os=os;wzRender()}
+function wzCode(){const d=WZ.d;const who=d.nick?`🎖️ <b>${esc(d.nick)}</b> meghívott${d.g?' – '+esc(DL_GNAME[d.g]):''}`:(d.g?'🎮 '+esc(DL_GNAME[d.g]):'');
+  return `${who?`<p class="wzwho">${who}</p>`:''}<div class="wzcode"><span>Meghívó kód</span><b id="wzCodeV">${dlFmtH(d.code)}</b><button type="button" class="btn line sm" id="wzCopyCode">Másolás</button></div>`}
+function wzNav(back){return `<div class="wznav">${back?'<button type="button" class="wzlink" id="wzBack">‹ Vissza</button>':'<span></span>'}<button type="button" class="wzlink" id="wzBrowser">Inkább a böngészőben folytatom</button></div>`}
+function wzAndroid(){const url=dlLink(WZ.d);
+  if(IN_APP&&IS_ANDROID){const host=url.replace(/^https?:\/\//,'');return `<p class="inwarn">Ebből az alkalmazásból (Messenger, Viber, Facebook…) nem lehet telepíteni. Nyisd meg Chrome-ban – ott folytatódik.</p>
+    <a class="wzbtn pri" id="wzChrome" href="intent://${esc(host)}#Intent;scheme=https;package=com.android.chrome;end">🌐 Megnyitás Chrome-ban</a><button type="button" class="wzbtn sec" id="wzCopyLink">🔗 Link másolása</button>`}
+  if(DEFER_INSTALL)return `<p class="insub">Egy koppintás, és az ikon a kezdőképernyőn lesz.</p><button type="button" class="wzbtn pri" id="wzInstall">📲 Telepítés most</button>`;
+  if(IS_ANDROID&&!WZ.waited){clearTimeout(WZ.wait);WZ.wait=setTimeout(()=>{WZ.waited=1;if(WZ.step===3&&WZ.os==='android')wzRender()},3000);return `<button type="button" class="wzbtn pri" disabled>⏳ Előkészítés…</button>`}
+  return `<ol class="wzsteps"><li><b>Chrome:</b> jobb felül <span class="inshare">⋮</span> › <b>Alkalmazás telepítése</b> (vagy <b>Hozzáadás a kezdőképernyőhöz</b>).</li><li><b>Samsung Internet:</b> lent <span class="inshare">≡</span> › <b>Oldal hozzáadása</b> › <b>Kezdőképernyő</b>.</li><li>Erősítsd meg: <b>Telepítés</b> / <b>Hozzáadás</b>.</li><li>Nyisd meg az új <b>M.E.D.V.E.</b> ikont – ott folytatódik.</li></ol>`}
+function wzIos(){if(IS_IOS&&!IOS_SAFARI){return `<p class="inwarn">iPhone-on csak <b>Safariból</b> lehet telepíteni.${IN_APP?' Koppints a <b>⋯</b> menüre › <b>Megnyitás Safariban</b>, vagy másold ki a linket:':' Másold ki a linket, és illeszd be a Safari címsorába:'}</p>
+    <button type="button" class="wzbtn pri" id="wzCopyLink">🔗 Link másolása Safarihoz</button><p class="inhint">A link a meghívót is tartalmazza, Safariban innen folytatódik.</p>`}
+  return `<ol class="wzsteps"><li>Koppints a <b>Megosztás</b> gombra ${WZ_SHARE} ${IS_IPAD?'jobb fent':'lent középen'}.</li><li>Görgess le: <b>Főképernyőhöz adás</b> <span class="inshare">＋</span></li><li>Jobb fent: <b>Hozzáadás</b>.</li><li>Nyisd meg az új <b>M.E.D.V.E.</b> ikont – ott folytatódik.</li></ol>`}
+function wzRender(){const o=document.getElementById('instov');if(!o||o.hidden)return;const s=WZ.step;let body='';
+  if(s===1)body=`<h2>📲 Telepíted az appot?</h2><p class="insub">Saját ikon a kezdőképernyőn, teljes képernyő, net nélkül is indul. Telepítés után egyből oda visz, ahová a link mutat.</p>${wzCode()}
+    <button type="button" class="wzbtn pri" id="wzYes">Igen, telepítem</button><button type="button" class="wzbtn sec" id="wzBrowser2">Inkább a böngészőben folytatom</button>`;
+  else if(s===2){const det=WZ.os;body=`<h2>Milyen telefonod van?</h2>${wzCode()}<div class="wzos">
+    <button type="button" class="wzosb${det==='android'?' det':''}" data-wzos="android"><span>🤖</span><b>Android</b>${det==='android'?'<i>ez a telefonod</i>':''}</button>
+    <button type="button" class="wzosb${det==='ios'?' det':''}" data-wzos="ios"><span>🍎</span><b>iPhone</b>${det==='ios'?'<i>ez a telefonod</i>':''}</button></div>${wzNav(true)}`}
+  else if(s===3)body=`<h2>${WZ.os==='ios'?'🍎 Telepítés iPhone-ra':'🤖 Telepítés Androidra'}</h2>${wzCode()}${WZ.os==='ios'?wzIos():wzAndroid()}${wzNav(true)}`;
+  else body=`<h2>✅ Telepítve</h2><p class="insub">Nyisd meg a kezdőképernyőn az <b>M.E.D.V.E. Arcade</b> ikont – ott folytatódik${WZ.d.g?': '+esc(DL_GNAME[WZ.d.g]):''}.</p>${wzCode()}<button type="button" class="wzbtn pri" id="wzOk">Rendben</button>${wzNav(false)}`;
+  o.innerHTML=`<div class="wz" role="dialog" aria-modal="true" aria-label="Telepítés"><img class="inico" src="icon-192.png" alt="" width="64" height="64"><div class="wzdots" aria-hidden="true">${[1,2,3,4].map(i=>`<i class="${i<=s?'on':''}"></i>`).join('')}</div>${body}</div>${s===3&&WZ.os==='ios'&&IOS_SAFARI?`<div class="inarrow${IS_IPAD?' top':''}" aria-hidden="true">⬇</div>`:''}`}
+async function wzInstall(){const p=DEFER_INSTALL;if(!p){wzRender();return}DEFER_INSTALL=null;try{p.prompt();const r=await p.userChoice;if(r&&r.outcome==='accepted')wzGo(4);else wzRender()}catch(e){wzRender()}}
+function wzCopy(txt,msg){(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast(msg)).catch(()=>{const i=document.createElement('textarea');i.value=txt;document.body.appendChild(i);i.select();try{document.execCommand('copy');toast(msg)}catch(e){toast(txt)}i.remove()})}
+document.addEventListener('click',e=>{if(!e.target.closest)return;const t=e.target;
+  if(t.closest('#wzYes')){wzGo(2);return}if(t.closest('#wzBrowser')||t.closest('#wzBrowser2')){wzBrowser();return}
+  if(t.closest('#wzBack')){wzGo(Math.max(1,WZ.step-1));return}const os=t.closest('[data-wzos]');if(os){wzGo(3,os.dataset.wzos);return}
+  if(t.closest('#wzInstall')){wzInstall();return}if(t.closest('#wzOk')){wzClose();return}
+  if(t.closest('#wzCopyCode')){wzCopy(dlFmt(WZ.d.code),'🔑 Kód kimásolva');return}if(t.closest('#wzCopyLink')){wzCopy(dlLink(WZ.d),'🔗 Link kimásolva – illeszd be '+(IS_IOS?'a Safariba':'a böngészőbe'));return}
+  if(t.closest('#instOpen')){if(isInstalled())toast('✅ Már telepítve van – a kezdőképernyőről indítod.');else wzOpen(null,2);return}
+  if(t.closest('#dlGo')){dlPasteGo();return}if(t.closest('#dlBanX')){DL_BANNER=null;DL_PEND=null;document.getElementById('dlBan')?.remove();return}});
+document.addEventListener('keydown',e=>{if(e.target&&e.target.id==='dlIn'&&e.key==='Enter'){e.preventDefault();dlPasteGo()}});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();DEFER_INSTALL=e;if(WZ.step===3&&WZ.os==='android')wzRender()});
+addEventListener('appinstalled',()=>{DEFER_INSTALL=null;const o=document.getElementById('instov');if(o&&!o.hidden)wzGo(4);else toast('✅ Telepítve! Nyisd meg a kezdőképernyőről.')});
+// --- indulás: link → mentés (48 óra) → varázsló; telepített app → a mentett célra ugrik, egyszer ---
+(function dlBoot(){const inst=isInstalled(),d=dlFromSearch(location.search);
+  if(d){if(inst){dlClear();dlCleanUrl();setTimeout(()=>dlApply(d),300);return}
+    dlSave(location.search);if(IS_IOS)dlIosManifest(location.search);else dlCleanUrl();
+    if(dlSkipped()){setTimeout(()=>dlApply(d),300);return}setTimeout(()=>wzOpen(d,1),350);return}
+  if(inst){const o=dlLoad();if(o){const d2=dlFromSearch(o.q);dlClear();if(d2)setTimeout(()=>dlApply(d2),300)}}})();
 
 /* ===== fiókok + élő ranglista (Firebase) ===== */
 const FBC=window.MEDVE_FB||null;
@@ -2933,7 +3025,7 @@ if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.fires
     AUTH.onAuthStateChanged(u=>{AUTHREADY=true;AUTHTAB='login';
       if(u){UID=u.uid;MODE='fb';fbOwnLocal(u.uid);fbListen();chatListen()}
       else{if(UNSUB){UNSUB();UNSUB=null}chatStop();UID=null;USERDOC=null;MODE='local';S.users={}}
-      if(document.getElementById('harc')?.hidden!==false)arcRender()})}
+      if(document.getElementById('harc')?.hidden!==false)arcRender();dlAfterAuth()})}
   catch(e){console.warn('Firebase init hiba',e);FB_ON=false;AUTHREADY=true}}
 
 applySet();arcRender();
