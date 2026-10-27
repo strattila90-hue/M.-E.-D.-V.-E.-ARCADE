@@ -986,6 +986,26 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 @keyframes sepadh{0%{opacity:1;transform:scale(.92)}100%{opacity:0;transform:scale(1.12)}}
 @media (max-width:340px){#harc .sepad{grid-template-columns:repeat(3,1fr)}#harc .sepad button{min-height:46px}}
 #harc .setray{padding-bottom:8px}
+#harc .sedaybar{display:flex;align-items:center;gap:7px;padding:5px 8px;background:linear-gradient(180deg,#1f2817,#151b10);border-bottom:1.5px solid rgba(201,162,39,.55);color:#f3ecd4}
+#harc .sedaybar[hidden]{display:none}
+#harc .sdbbtn{flex:0 0 auto;min-width:44px;height:44px;border:2.5px solid #0b0e08;border-radius:10px 4px 10px 4px;background:linear-gradient(160deg,#ffe58a,#e0b52c 55%,#a87d12);color:#1a1405;font:900 20px/1 system-ui;box-shadow:0 3px 0 #0b0e08;transform:skewX(-7deg);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:0 6px;-webkit-tap-highlight-color:transparent}
+#harc .sdbbtn small{font-size:8px;letter-spacing:.04em}
+#harc .sdbbtn:active{transform:skewX(-7deg) translateY(2px);box-shadow:0 1px 0 #0b0e08}
+#harc .sdbpause{background:linear-gradient(160deg,#ff9a7a,#e0482c 55%,#9c2412);color:#fff;font-size:16px;text-shadow:0 1px 0 #000}
+#harc .sdbmid{flex:1;min-width:0}
+#harc .sdbgoal{font:800 11px/1.25 system-ui;color:#f3d77a;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#harc .sdbtrack{position:relative;height:10px;margin:4px 0 3px;border-radius:6px;border:1.5px solid #0b0e08;background:linear-gradient(90deg,#e9d27a 0%,#e9d27a 42%,#ff8a3e 47%,#3b3f78 52%,#151c3a 88%,#ff9f6a 100%)}
+#harc .sdbfill{position:absolute;left:0;top:0;bottom:0;background:rgba(0,0,0,.45);border-radius:5px 0 0 5px}
+#harc .sdbtrack em{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:rgba(255,255,255,.55)}
+#harc .sdbmk{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:15px;line-height:1;filter:drop-shadow(0 0 3px rgba(0,0,0,.8));transition:left .25s linear}
+#harc .sdblab{display:flex;justify-content:space-between;gap:6px;font:700 10px/1.1 system-ui;opacity:.85;white-space:nowrap}
+#harc .hover.sebag{width:min(380px,94vw);text-align:left}
+#harc .hover.sebag h3,#harc .hover.sebag>.sesm{text-align:center}#harc .hover.sebag>.btn{display:block;margin:10px auto 0}
+#harc .sebagtabs{display:flex;gap:6px;margin:6px 0 8px}#harc .sebagtabs button{flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid rgba(243,236,212,.35);background:transparent;color:#f3ecd4;font:800 12px system-ui;cursor:pointer}
+#harc .sebagtabs button.on{background:#c9a227;color:#1e2419;border-color:#c9a227}
+#harc .rkres b.ok{color:#9dff9d}
+#harc .sekit{display:flex;flex-direction:column;gap:7px;margin:8px 0}#harc .sekit>div{display:flex;gap:9px;align-items:flex-start;background:rgba(255,255,255,.05);border-radius:10px;padding:7px 9px}
+#harc .sekit i{font-style:normal;font-size:22px;line-height:1.1}#harc .sekit b{display:block;font-size:13px;color:#f3d77a}#harc .sekit span{display:block;font-size:12px;line-height:1.35;opacity:.9}
 #harc .setut{position:absolute;left:10px;right:10px;top:8px;z-index:21;background:rgba(10,14,8,.93);border:1.5px solid #9dff9d;border-radius:14px;padding:8px 12px 10px;color:#f3ecd4;box-shadow:0 6px 18px rgba(0,0,0,.5)}
 #harc .setut b{display:block;font-size:16px;color:#9dff9d;margin:2px 0}#harc .setut p{margin:0;font-size:13px;line-height:1.4}#harc .setuth{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
 #harc .setuth button{background:none;border:0;color:#f3d77a;font-weight:800;font-size:13px;padding:6px 4px;cursor:pointer}
@@ -1067,7 +1087,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='2.9.0',APP_DATE='2026.10.27.';
+const APP_VER='2.10.0',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2837,7 +2857,22 @@ const SE_QA=[
  ['Hol pihensz kitérés közben?',['Sűrű takarásban, utaktól és falutól távol','Út melletti árokban','Elhagyott házban a faluban'],'Az utak, házak és hidak mentén járnak a járőrök.'],
  ['Mi az EPA (Evasion Plan of Action)?',['Előre megtervezett kitérési terv','Elsősegélycsomag','Egy rádiótípus'],'Útvonal, rejtekhelyek, jelzések és kimentési pontok – még bevetés előtt.'],
  ['Fáradt vagy és szomjas. Mi a fontosabb?',['A víz','Az élelem','Az alvás'],'Víz nélkül pár nap alatt összeomlik a szervezet.'],
- ['Tükörrel jelzel. Hogyan célzol?',['Kinyújtott kézzel V-t formálsz, és a fényfoltot a célra vezeted','Vakon villogtatsz','Csak éjjel működik'],'Napos időben egy jelzőtükör villanása kilométerekről látszik.']];
+ ['Tükörrel jelzel. Hogyan célzol?',['Kinyújtott kézzel V-t formálsz, és a fényfoltot a célra vezeted','Vakon villogtatsz','Csak éjjel működik'],'Napos időben egy jelzőtükör villanása kilométerekről látszik.'],
+ ['Melyik a kihűlés korai jele?',['Erős didergés, ügyetlen kéz, lassuló gondolkodás','Kipirult, forró bőr','Csak az erős szomjúság'],'Didergés és ügyetlenség az első jel – ekkor kell menedék, száraz ruha, meleg.'],
+ ['Nappal, napsütésben hogyan jelzel a kimentő helikopternek?',['Jelzőtükörrel villantasz felé','Síppal','Zseblámpával'],'A tükör villanása kilométerekről látszik, és szinte nem fogy energiád.'],
+ ['Hogyan add le a vészjelet síppal?',['Hármas csoportokban, szünetekkel ismételve','Egy hosszú sípszóval','Folyamatos sípolással, amíg bírod'],'A hármas jelcsoport (sípszó, villanás, tűz) nemzetközileg vészjelzésnek számít.'],
+ ['Hol NE verj tábort?',['Kiszáradt patakmederben, völgy alján','Szélvédett, kissé kiemelt, takart helyen','Sűrű növényzet takarásában'],'A mederben hirtelen ár jöhet, a völgy aljára éjjel lefolyik a hideg levegő.'],
+ ['Hogyan találod meg a Sarkcsillagot?',['A Göncölszekér hátsó két csillagát kb. ötszörösen meghosszabbítod','Ez a legfényesebb csillag az égen','Mindig keleten kel fel'],'A Sarkcsillag nem a legfényesebb, de szinte pontosan északon áll.'],
+ ['Megbízható a „moha az északi oldalon nő” szabály?',['Nem – a moha a nedvességet és árnyékot követi','Igen, mindig','Csak télen'],'Erdőben a moha bármelyik oldalon nőhet – iránytű, Nap, csillagok a biztosak.'],
+ ['Erős vérzés a karon. Mi az első lépés?',['Erős, közvetlen nyomás a sebre','Kimosod alkohollal','Megvárod, hátha eláll'],'Nyomás, nyomókötés – ha életveszélyes végtagvérzés, érszorító a seb fölé.'],
+ ['Nagyon kevés a vized. Mit egyél?',['Keveset, és a fehérjedús ételt kerüld','Sokat, hogy legyen erőd','Sós ételt'],'Az emésztés – főleg a fehérjéé – vizet von el a szervezettől.'],
+ ['Hidegben menetelsz, izzadni kezdesz. Mit teszel?',['Lassítasz, leveszel egy réteget','Semmit, a meleg jó','Még gyorsabban mész, hogy átérj'],'A nedves ruha megállás után gyorsan kihűt – az izzadást kerülni kell.'],
+ ['Hogyan őrzöd meg az éjszakai látásodat?',['Piros fényt használsz, nem nézel erős fénybe','Fehér zseblámpával világítasz','Belebámulsz a tűzbe'],'A szem sötéthez szokása kb. 20-30 perc – egy fehér villanás lenullázza.'],
+ ['Nincs más víz, csak hó. Mit teszel?',['Előbb megolvasztod, nem eszed a havat','Eszed a havat, ugyanúgy itat','Sóval keverve eszed'],'A hó evése elvonja a testhőt és kevés vizet ad – olvaszd meg, ha tudod, forrald.'],
+ ['Hogyan lépsz csendben avarban, éjjel?',['Lassan, a talp külső élét letéve, előbb tapogatva','Gyorsan, hogy minél előbb átérj','Nagy léptekkel, sarokra érkezve'],'A tapogató lépéssel a reccsenő ágat még terhelés előtt megérzed.'],
+ ['Nyílt terepen kell átkelned nappal. Hogyan?',['Takarástól takarásig, a gerincvonalat kerülve','A dombgerincen, onnan messze látsz','Egyenesen, a tisztás közepén'],'A gerincen az égbolt előtt a sziluetted messziről látszik.'],
+ ['Kullancsot találsz a bőrödön. Hogyan távolítod el?',['Csipesszel a bőrhöz közel fogva, egyenletesen kihúzva','Olajjal lekenve megvárod, míg kimászik','Kiégeted'],'Az olaj és az égetés miatt a kullancs a kórokozókat a sebbe ürítheti.'],
+ ['Mit tegyél a hátizsák helyett a zsebedbe?',['A túléléshez nélkülözhetetlent: kés, tűzgyújtó, tükör, iránytű','Semmit, minden a zsákban legyen','A tartalék ruhát'],'Ha a zsákot el kell dobnod menekülés közben, a legfontosabb akkor is nálad marad.']];
 // Charlie – helyes magatartás fogságban (nyilvános alapelvek, III. genfi egyezmény)
 const SE_CAP=[
  ['Kihallgatnak. Mit kell megadnod?',['Név, rendfokozat, szolgálati szám, születési dátum','Az egységed helyét','A bevetés célját'],'A III. genfi egyezmény szerint ennyit – és nem többet.'],
@@ -2897,6 +2932,7 @@ const SE_EV={
   mush:{ic:'🍄',t:'Ismeretlen gomba',q:'Szép, fehér gomba a fa tövében. Megeszed?',o:[['Nem, a gombát terepen nem lehet biztosan felismerni',1,'A halálos gyilkos galóca is fehér és szép.'],['Igen, ha fehér, akkor ehető',0,'Hiba – a gyilkos galóca is fehér.'],['Megfőzöm, akkor már nem mérgező',0,'A főzés a legtöbb gombaméreget nem bontja el.']]}};
 function seOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','se');document.body.classList.add('harcon');
   el.innerHTML=`<div class="hbar"><div class="htitle">SERE <b>Kitörés</b></div><div class="hstat"><span id="seDay">☀️ 1. nap</span><span>💧<b id="seW">100</b></span><span>🍖<b id="seF">100</b></span><span>❤<b id="seHp">100</b></span></div><button class="hx sep" id="sePause" aria-label="Szünet"><b style="letter-spacing:-1px">❙❙</b></button><button class="hx" id="seClose" aria-label="Bezárás">✕</button></div>
+   <div class="sedaybar" id="seDayBar" hidden><button type="button" class="sdbbtn" id="seBagBtn" aria-label="Hátizsák">🎒</button><div class="sdbmid"><div class="sdbgoal" id="seDbG"></div><div class="sdbtrack"><i class="sdbfill" id="seDbF"></i><b class="sdbmk" id="seDbM">☀️</b><em style="left:42%"></em><em style="left:52%"></em><em style="left:90%"></em></div><div class="sdblab"><span id="seDbL"></span><span id="seDbR"></span></div></div><button type="button" class="sdbbtn sdbpause" id="seBarPause" aria-label="Szünet">⏸<small>SZÜNET</small></button></div>
    <div class="rkwrap" id="seWrap"><canvas id="seCv"></canvas><div class="setut" id="seTut" hidden></div><div class="rkradio" id="seRadio" hidden></div><div class="rkpop" id="sePop"></div></div>
    <div class="rktray setray" id="seTray"></div>
    <div class="sepad" id="sePad" hidden>${SE_PAD.map(([k,i,t])=>`<button type="button" data-sc="${k}" aria-label="${t}"><i>${i}</i><span>${t}</span></button>`).join('')}</div>
@@ -2906,7 +2942,7 @@ function seOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','se'
     <button type="button" class="btn pri" id="seGo">▶ Indítás</button> <button type="button" class="btn line" id="seTutGo">🎓 Gyakorlás</button>
     <button type="button" class="btn line rkstart" data-rank="sere">🏆 Rekordok</button>${gBoard('sereBest',false,seFmt)}</div>
    <div class="hover" id="seOver" hidden></div>`;
-  $('#seClose').onclick=seClose;$('#seGo').onclick=()=>{let done=false;try{done=localStorage.getItem(SE_TUTKEY)==='1'}catch(e){}done?seStart():seTutStart()};$('#seTutGo').onclick=seTutStart;$('#sePause').onclick=()=>sePause();seSetup()}
+  $('#seClose').onclick=seClose;$('#seGo').onclick=()=>{let done=false;try{done=localStorage.getItem(SE_TUTKEY)==='1'}catch(e){}done?seStart():seTutStart()};$('#seTutGo').onclick=seTutStart;$('#sePause').onclick=()=>sePause();$('#seBarPause').onclick=()=>{if(SE.bag)seBagClose();else sePause()};$('#seBagBtn').onclick=seBag;seSetup()}
 function seClose(){if(SE.up){removeEventListener('pointerup',SE.up);removeEventListener('pointercancel',SE.up)}if(SE.vis)document.removeEventListener('visibilitychange',SE.vis);saStop(.3);SE.run=false;SE.phase=null;rockStop(.3);cancelAnimationFrame(SE.raf);if(SE.key){removeEventListener('keydown',SE.key);removeEventListener('keyup',SE.key)}const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('rk','se');document.body.classList.remove('harcon')}
 function seSetup(){const cv=$('#seCv');SE.cv=cv;SE.c=cv.getContext('2d');seReset();SE.phase='menu';
   SE.stars=Array.from({length:110},()=>({x:Math.random(),y:Math.random()*.62,r:Math.random()*1.3+.3,p:Math.random()*6}));
@@ -2915,14 +2951,14 @@ function seSetup(){const cv=$('#seCv');SE.cv=cv;SE.c=cv.getContext('2d');seReset
   const wrap=$('#seWrap'),down=e=>{if(e.target.closest&&e.target.closest('button'))return;e.preventDefault();const r=wrap.getBoundingClientRect();if(SE.phase==='play'&&!SE.paused&&!SE.mg)SE.jumpBuf=.18;saStart()},
     up=()=>{};
   wrap.addEventListener('pointerdown',down);addEventListener('pointerup',up);addEventListener('pointercancel',up);SE.up=up;
-  SE.key=e=>{const dn=e.type==='keydown';if(dn&&e.key==='Escape')seClose();if(dn&&(e.key==='p'||e.key==='P'))sePause();if(dn&&(e.key===' '||e.key==='ArrowUp')){e.preventDefault();SE.jumpBuf=.18}
+  SE.key=e=>{const dn=e.type==='keydown';if(dn&&e.key==='Escape')seClose();if(dn&&(e.key==='p'||e.key==='P'))sePause();if(dn&&(e.key==='b'||e.key==='B'))seBag();if(dn&&(e.key===' '||e.key==='ArrowUp')){e.preventDefault();SE.jumpBuf=.18}
     const km={ArrowRight:'walk',d:'walk',D:'walk',s:'stop',S:'stop',c:'crouch',C:'crouch',ArrowDown:'prone',x:'crawl',X:'crawl',ArrowLeft:'back',a:'back',A:'back'}[e.key];if(km){e.preventDefault();if(dn&&!e.repeat)seCmd(km)}};addEventListener('keydown',SE.key);addEventListener('keyup',SE.key);
-  SE.pad=$('#sePad');SE.pad.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-sc]');if(!b)return;e.preventDefault();saStart();seCmd(b.dataset.sc)});SE.pad.addEventListener('contextmenu',e=>e.preventDefault());
+  SE.dbar=$('#seDayBar');SE.dbG=$('#seDbG');SE.dbF=$('#seDbF');SE.dbM=$('#seDbM');SE.dbL=$('#seDbL');SE.dbR=$('#seDbR');SE.pad=$('#sePad');SE.pad.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-sc]');if(!b)return;e.preventDefault();saStart();seCmd(b.dataset.sc)});SE.pad.addEventListener('contextmenu',e=>e.preventDefault());
   SE.vis=()=>{if(document.hidden&&SE.phase==='play'&&!SE.paused)sePause(true)};document.addEventListener('visibilitychange',SE.vis);
   seTray();seHud();SE.raf=requestAnimationFrame(seLoop)}
 function seReset(){Object.assign(SE,{x:0,y:0,vy:0,v:0,pr:0,fallT:0,land:0,step:0,crawlD:0,spd:4.2,day:1,tod:.03,t:0,water:100,food:100,hp:100,det:0,objs:[],genX:12,pts:0,items:0,correct:0,wrong:0,escapes:0,captures:0,extr:0,silent:0,
   inv:{tinder:0,kindling:0,wood:0,leaf:0,forage:0},al:0,alDone:{},cleanWater:false,choice:null,mg:null,climbT:0,climbFrom:null,atWall:false,inDitch:false,crawling:false,
-  mv:0,post:'stand',cr:0,maxX:0,padHint:null,padK:'',jumpBuf:0,quiz:null,nextQuiz:16,dog:null,ex:null,cap:null,fx:[],seen:0,inStream:false,inBush:false,prone:false,cause:'',hudT:0,beepT:0,tut:null,paused:false,banner:null,shake:0,rain:0,
+  mv:0,post:'stand',cr:0,maxX:0,padHint:null,padK:'',jumpBuf:0,quiz:null,nextQuiz:20,qDeck:null,qLast:-1,bag:false,dog:null,ex:null,cap:null,fx:[],seen:0,inStream:false,inBush:false,prone:false,cause:'',hudT:0,beepT:0,tut:null,paused:false,banner:null,shake:0,rain:0,
   sheltered:false,fire:false,campT:0,campNext:0,vehT:14,cones:[],calmT:9,alNext:0,br:0,brDone:{},brBusy:null,brNext:0,camo:false,epa:false,esc:null,auth:['BAGOLY-7','HÓVIRÁG-3','VÉRCSE-9','TÖLGY-4','SÓLYOM-2','PATAK-8'][Math.floor(Math.random()*6)]})}
 function seStart(){seReset();Object.assign(SE,{phase:'play',run:true});$('#seStart').hidden=true;$('#seOver').hidden=true;$('#seTut').hidden=true;
   for(let x=SE.genX;x<SE.x+45;)x=seGen(x);rockStop(.5);saStart();playCount('sere');seTray();seHud();seBanner(1);setTimeout(()=>{if(SE.phase==='play'&&SE.day===1&&SE.al===0)seEvent('stop')},2600);setTimeout(()=>{if(SE.phase==='play')seRadio(`🔐 Hitelesítő jelszavad: ${SE.auth} – jegyezd meg! A kimentéskor kérik. (A Szünetben is látod.)`,6000)},9000)}
@@ -2931,9 +2967,9 @@ function sePop(m,col){const p=$('#sePop');if(!p)return;p.textContent=m;p.style.c
 function seRadio(msg,ms){const r=$('#seRadio');if(!r)return;r.textContent=msg;r.hidden=false;rkRadioSnd();clearTimeout(SE.rt);SE.rt=setTimeout(()=>{r.hidden=true},ms||3800)}
 function seLight(t){t=t==null?SE.tod:t;if(t<.42)return 1;if(t<.52)return 1-(t-.42)/.1;if(t<.9)return 0;return (t-.9)/.1}
 function seNight(){return seLight()<.5}
-function sePause(auto){if(SE.phase!=='play'&&!SE.paused)return;SE.paused=!SE.paused;const o=$('#seOver');
+function sePause(auto){if(SE.bag){if(!auto)seBagClose();return}if(SE.phase!=='play'&&!SE.paused)return;SE.paused=!SE.paused;const o=$('#seOver');
   if(SE.paused){SE.mv=0;o.hidden=false;const bl=seBrList(),br=bl?`<div class="rkres">${bl.map((id,i)=>`<div><span>${SE_BRN[id][0]} ${SE_BRN[id][1]}</span><b>${SE.brDone[id]?'✅':i===SE.br?'▶':'·'}</b></div>`).join('')}</div>`:'';const al=SE.day===1?`<div class="rkres">${SE_AL.map((a,i)=>`<div><span>${a.ic} ${a.n}</span><b>${SE.alDone[a.id]?'✅':i===SE.al?'▶':'·'}</b></div>`).join('')}</div>`:'';
-    o.innerHTML=`<h3>❙❙ Szünet</h3><p class="sesm">${auto?'Az app a háttérbe került, megállítottuk.':'A játék áll.'} 🔐 Jelszó: <b>${SE.auth}</b></p>${al}${br}<div class="rkres"><div><span>🚶 Séta · 2× 🏃 futás</span><b>→ / D</b></div><div><span>🛑 Állj</span><b>S</b></div><div><span>🧎 Guggolás</span><b>C</b></div><div><span>🛌 Fekvés</span><b>↓</b></div><div><span>🐛 Kúszás</span><b>X</b></div><div><span>↩️ Hátra</span><b>← / A</b></div><div><span>👆 Koppintás a terepre</span><b>ugrás / kimászás (␣)</b></div><div><span>🌿 bokor · 🕳️ árok · 🌊 patak</span><b>takarás</b></div></div><button class="btn pri" id="seResume">▶ Folytatás</button> <button class="btn line" id="seQuit">Kilépés</button>`;
+    o.innerHTML=`<h3>❙❙ Szünet</h3><p class="sesm">${auto?'Az app a háttérbe került, megállítottuk.':'A játék áll.'} 🔐 Jelszó: <b>${SE.auth}</b></p>${al}${br}<div class="rkres"><div><span>🚶 Séta · 2× 🏃 futás</span><b>→ / D</b></div><div><span>🛑 Állj</span><b>S</b></div><div><span>🧎 Guggolás</span><b>C</b></div><div><span>🛌 Fekvés</span><b>↓</b></div><div><span>🐛 Kúszás</span><b>X</b></div><div><span>↩️ Hátra</span><b>← / A</b></div><div><span>👆 Koppintás a terepre</span><b>ugrás / kimászás (␣)</b></div><div><span>🌿 bokor · 🕳️ árok · 🌊 patak</span><b>takarás</b></div></div><button class="btn pri" id="seResume">▶ Folytatás</button> <button class="btn line" id="seBag2">🎒 Hátizsák</button> <button class="btn line" id="seQuit">Kilépés</button>`;$('#seBag2').onclick=()=>{sePause();seBag()};
     $('#seResume').onclick=()=>sePause();$('#seQuit').onclick=seClose;saVol(.25);try{if(ROCK.on&&AC)ROCK.b.out.gain.setTargetAtTime(.1,AC.currentTime,.2)}catch(e){}}
   else{o.hidden=true;SE.last=performance.now();saVol(1);try{if(ROCK.on&&AC)ROCK.b.out.gain.setTargetAtTime(.5,AC.currentTime,.2)}catch(e){}}}
 function seBeep(f,d,v){if(!SOUND||!ac())return;const a=AC,t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(v||.05,t);g.gain.exponentialRampToValueAtTime(.001,t+(d||.1));o.connect(g).connect(MASTER);o.start(t);o.stop(t+(d||.1)+.02)}
@@ -2980,6 +3016,64 @@ function seTension(dt){const night=seNight();let danger=SE.det>.12||(SE.dog&&SE.
   if(SE.tut)danger=false;
   if(danger){SE.calmT=0;if(!(ROCK.on&&ROCK.id==='sere_t'))rockStart('sere_t');rockTempo(Math.round(84+SE.det*70+(SE.dog&&SE.dog.st==='chase'?24:0)))}
   else{SE.calmT+=dt;if(SE.calmT>4.5&&ROCK.on&&ROCK.id==='sere_t')rockStop(2.5)}}
+
+// ---- felvételi hangok tárgyfajtánként ----
+function sePickSnd(it){if(!SOUND||!ac()||!NOISE)return;const a=AC,t=a.currentTime+.01;
+  const nz=(t0,dur,type,f,q,v)=>{const n=a.createBufferSource();n.buffer=NOISE;const fl=a.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q||.7;const g=a.createGain();g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);n.connect(fl).connect(g).connect(MASTER);n.start(t0,Math.random()*2);n.stop(t0+dur+.02)};
+  const tone=(t0,dur,type,f1,f2,v)=>{const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f1,t0);o.frequency.exponentialRampToValueAtTime(f2,t0+dur);g.gain.setValueAtTime(v,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);o.connect(g).connect(MASTER);o.start(t0);o.stop(t0+dur+.02)};
+  if(it==='water'){// kulacs: csavar + kortyolás
+    nz(t,.06,'highpass',3000,.7,.05);[.12,.36,.6].forEach((d,i)=>{tone(t+d,.13,'sine',420-i*30,170,.13);nz(t+d,.1,'bandpass',600,1.5,.05)})}
+  else if(it==='food'){// csomag tépése + rágás
+    nz(t,.22,'bandpass',2600,.5,.07);[.32,.5,.68,.86].forEach(d=>nz(t+d,.07,'lowpass',900+Math.random()*400,1,.12))}
+  else if(it==='berry'||it==='nut'||it==='grub'){// apró roppanás, csemegézés
+    [0,.1,.2].forEach(d=>nz(t+d,.045,'bandpass',it==='nut'?2400:1500,2,.1));if(it==='nut')tone(t,.05,'square',900,600,.03)}
+  else if(it==='med'){// tépőzár + csomag
+    nz(t,.3,'highpass',2500,.5,.06);tone(t+.32,.08,'triangle',700,500,.05)}
+  else if(it==='wood'||it==='kindling'){// fa koppanás
+    const n=it==='wood'?2:3;for(let i=0;i<n;i++){tone(t+i*.11,.09,'triangle',it==='wood'?190:330,it==='wood'?120:220,.16);nz(t+i*.11,.04,'bandpass',1200,1,.06)}}
+  else if(it==='tinder'||it==='leaf'){// száraz fű, ágak zizegése
+    nz(t,.35,'bandpass',it==='leaf'?1800:3200,.6,.07);nz(t+.15,.25,'bandpass',2400,.6,.04)}
+  else sndPing()}
+// ---- hátizsák ----
+const SE_KIT=[['💧','Kulacs + víztisztító tabletta','Víz nélkül kb. 3 nap. A tabletta után várni kell (általában 30 perc); a zavaros vizet előbb ruhán szűrd át.'],
+ ['🔥','Tűzacél + tapló (pl. vazelinos vatta)','Nedvesen is szikrázik, ezer gyújtásra elég. A gyufa elázik, az öngyújtó kifagyhat.'],
+ ['🔪','Rögzített pengéjű kés','Menedék, tűzifa, élelem – a legfontosabb szerszám. Legyen a testeden.'],
+ ['🧭','Iránytű + térkép vízálló tasakban','Az elem lemerül, a jel zavarható – az iránytűnek nem kell áram.'],
+ ['✚','Egyéni elsősegélycsomag, érszorító','Először a vérzést csillapítsd. Hólyagtapasz: ha a lábad tönkremegy, nem tudsz haladni.'],
+ ['🪞','Jelzőtükör + síp','Kimentéskor: a villanás messzire látszik, a síp kevesebb erőt visz, mint a kiabálás.'],
+ ['🪢','10 m paracord (zsinór)','Menedék, javítás, csomag rögzítése – kis helyen, sokra jó.'],
+ ['🛡️','Túlélőfólia vagy poncsó','A hideg és a nedvesség gyorsabban öl, mint az éhség. Tető, alátét, szélfogó.'],
+ ['🔦','Fejlámpa piros szűrővel','A piros fény nem vakít el, és nehezebben veszik észre.'],
+ ['🍫','Kis tömegű, nagy energiájú élelem','Nem kell főzni. Ha kevés a víz, keveset egyél.'],
+ ['🧦','Száraz zokni','A láb ápolása = mozgásképesség. Esténként cseréld.'],
+ ['🎨','Álcafesték / sötét kendő','A fénylő arc és kéz messziről elárul.']];
+function seBag(){if(SE.phase!=='play'||SE.tut||SE.cap)return;if(SE.bag){seBagClose();return}if(SE.paused)return;SE.paused=true;SE.bag=true;SE.mv=0;SE.padK='';
+  const I=SE.inv,o=$('#seOver');o.hidden=false;o.classList.add('sebag');const row=(ic,n,v,ok)=>`<div><span>${ic} ${n}</span><b class="${ok?'ok':''}">${v}</b></div>`;
+  o.innerHTML=`<h3>🎒 Hátizsák</h3><p class="sesm">A játék áll, amíg nyitva van.</p>
+   <div class="sebagtabs"><button type="button" class="on" data-sebt="0">Nálad van</button><button type="button" data-sebt="1">Mit érdemes vinni?</button></div>
+   <div class="sebagp" data-sebp="0"><div class="rkres">${row('💧','Víz',Math.round(SE.water)+'%',SE.water>40)}${row('🍖','Erő / élelem',Math.round(SE.food)+'%',SE.food>40)}${row('❤','Egészség',Math.round(SE.hp)+'%',SE.hp>40)}</div>
+    <div class="rkres">${row('🌾','Tapló, száraz fű',I.tinder+' db',I.tinder>=2)}${row('🍂','Gyújtós',I.kindling+' db',I.kindling>=3)}${row('🪵','Tűzifa',I.wood+' db',I.wood>=3)}${row('🌿','Ágak (menedék)',I.leaf+' db',I.leaf>=3)}${row('🫐','Gyűjtött élelem',I.forage+' db',I.forage>=3)}</div>
+    <div class="rkres">${row('🔪','Kés','✅',1)}${row('🔥','Tűzacél','✅',1)}${row('🪞','Jelzőtükör','✅',1)}${row('🎨','Álcázás',SE.camo?'✅ felvéve':'—',SE.camo)}${row('🗺️','Rejtekhely-terv (EPA)',SE.epa?'✅':'—',SE.epa)}${row('🔐','Hitelesítő jelszó','<span style="font-family:monospace">'+SE.auth+'</span>',1)}</div>
+    <p class="sesm">Tűzhöz kell: 🌾 2 · 🍂 3 · 🪵 3 · menedékhez 🌿 3.</p></div>
+   <div class="sebagp" data-sebp="1" hidden><p class="sesm"><b>Alapelv:</b> kevés, de többfunkciós. A legfontosabb a <b>testeden</b> (zsebben) legyen – ha a hátizsákot menekülés közben el kell dobnod, az életben maradáshoz szükséges akkor is nálad marad.</p>
+    <div class="sekit">${SE_KIT.map(k=>`<div><i>${k[0]}</i><div><b>${k[1]}</b><span>${k[2]}</span></div></div>`).join('')}</div><p class="sesm" style="opacity:.7">Általános túlélési ismeret, nem hivatalos felszerelési jegyzék.</p></div>
+   <button class="btn pri" id="seBagX">▶ Vissza a játékba</button>`;
+  o.querySelectorAll('[data-sebt]').forEach(b=>b.onclick=()=>{o.querySelectorAll('[data-sebt]').forEach(x=>x.classList.toggle('on',x===b));o.querySelectorAll('[data-sebp]').forEach(p=>p.hidden=p.dataset.sebp!==b.dataset.sebt)});
+  $('#seBagX').onclick=seBagClose;saRustle(.06);saVol(.25)}
+function seBagClose(){if(!SE.bag)return;SE.bag=false;SE.paused=false;const o=$('#seOver');o.hidden=true;o.classList.remove('sebag');SE.last=performance.now();saVol(1);saRustle(.05)}
+// ---- felső napcsúszka: mennyi van hátra a napból, mi a cél ----
+function seDayBar(){const el=SE.dbar;if(!el)return;const show=(SE.phase==='play'||SE.phase==='camp')&&!SE.tut;if(el.hidden===show)el.hidden=!show;if(!show)return;
+  const now=performance.now();if(SE.dbT&&now-SE.dbT<250)return;SE.dbT=now;
+  const tod=SE.tod,night=seNight(),dayLen=SE.day===1?170:SE_DAY,capped=SE.day===1&&!SE.sheltered&&SE.al<SE_AL.length-1&&tod>=.329;
+  let goal;if(SE.esc)goal='🅲 SZÖKÉS – kússz ki a kerítés alatt, észrevétlenül';
+  else if(SE.ex&&SE.ex.st!=='out')goal='🚁 KIMENTÉS – '+(SE.ex.st==='land'?'fuss a leszállóhelyre!':'jelezz a helikopternek, készítsd a jelszót');
+  else if(SE.phase==='camp')goal='⛺ Tábor – menedék és tűz, átvészeled az éjszakát';
+  else if(SE.day===1){const A=SE_AL[SE.al];goal=A?`🎯 Alpha ${SE.al+1}/${SE_AL.length}: ${A.ic} ${A.n} · estére ⛺+🔥`:'🎯 Sötétedés előtt: ⛺ menedék + 🔥 tűz'}
+  else{const BL=seBrList(),id=BL&&BL[SE.br];let nx=SE.day+1;while((nx-1)%3!==0)nx++;goal=(id?`🎯 ${SE_BRN[id][0]} ${SE_BRN[id][1]}`:night?'🎯 Éld túl az éjszakát – rejtőzz!':'🎯 Juss tovább észrevétlenül')+` · 🚁 ${nx}. nap hajnalán kimentés`}
+  const left=capped?null:Math.max(0,(1-tod)*dayLen),fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+  const phase=tod<.42?'☀️ nappal':tod<.52?'🌇 alkonyat':tod<.9?'🌙 éjszaka':'🌅 hajnal';
+  SE.dbG.textContent=goal;SE.dbF.style.width=(tod*100).toFixed(1)+'%';SE.dbM.style.left=(tod*100).toFixed(1)+'%';SE.dbM.textContent=night?'🌙':'☀️';
+  SE.dbL.textContent=`${SE.day}. nap · ${phase}`;SE.dbR.textContent=capped?'⏳ az este az Alpha után jön':`⏱ ${fmt(left)} a nap végéig`;el.classList.toggle('night',night)}
 // ---- pálya-generátor ----
 function seGen(x){const O=SE.objs,d=SE.day,dayT=SE.tod+((x-SE.x)/SE.spd)/SE_DAY,dark=seLight(dayT%1)<.5,gap=6+Math.random()*5.5;
   if(SE.ex&&SE.ex.lz&&x>SE.ex.lz-12&&x<SE.ex.lz+6)return x+gap;
@@ -3018,7 +3112,7 @@ function seLoop(now){SE.raf=requestAnimationFrame(seLoop);if(SE.cv){const b=SE.c
   if(!SE.paused){if(SE.phase==='play')seStep(dt*(SE.quiz||SE.choice?.35:1),dt);else if(SE.phase==='cap')seCapTick(dt);else if(SE.phase==='camp')seCampTick(dt);saTick(dt);if(SE.phase==='play'||SE.phase==='camp')seTension(dt)}
   if(SE.banner){SE.banner.t+=dt;if(SE.banner.t>3.6)SE.banner=null}if(SE.shake>0)SE.shake=Math.max(0,SE.shake-dt);
   if(SE.mg&&!SE.paused)seMgTick(dt);
-  for(const f of SE.fx){f.t+=dt;if(f.vx!=null){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy-=9*dt}}SE.fx=SE.fx.filter(f=>f.t<(f.life||1.2));seDraw(now/1000);sePadSync()}
+  for(const f of SE.fx){f.t+=dt;if(f.vx!=null){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy-=9*dt}}SE.fx=SE.fx.filter(f=>f.t<(f.life||1.2));seDraw(now/1000);sePadSync();seDayBar()}
 function seHit(dmg,why,msg,fall){SE.hp-=dmg;SE.cause=why;SE.fallT=fall||.8;SE.v*=.2;SE.mv=0;SE.shake=.25;sndThud();sePop(msg,'#ff7b7b');if(navigator.vibrate)try{navigator.vibrate(70)}catch(e){}
   for(let i=0;i<8;i++)SE.fx.push({k:'dust',x:SE.x+.2,y:Math.max(0,SE.y)+.1,vx:(Math.random()-.3)*2,vy:Math.random()*2,t:0,life:.7})}
 function seStep(dt,rdt){SE.t+=dt;const T=SE.tut;
@@ -3091,7 +3185,7 @@ function seStep(dt,rdt){SE.t+=dt;const T=SE.tut;
 function seGet(o){SE.items++;SE.pts+=25;const it=o.it,I=SE.inv;
   const M={water:['💧 Kulacs +30','#9fd8ff'],food:['🍖 Élelem +30','#ffd28a'],med:['✚ Elsősegély +30','#9dff9d'],tinder:['🌾 Tapló, száraz fű','#e8d08a'],kindling:['🍂 Gyújtós (vékony gally)','#e8c08a'],wood:['🪵 Tűzifa','#e8c08a'],leaf:['🌿 Ágak a menedékhez','#9dff9d'],berry:['🫐 Áfonya – ismert, ehető +12','#c8b8ff'],nut:['🌰 Mogyoró +12','#e8c08a'],grub:['🐛 Lárva – fehérje +10','#e8d08a']};
   if(it==='redb'||it==='mush'){SE.v=0;seEvent(it==='redb'?'berry':'mush');return}
-  sndPing();if(it==='water')SE.water=Math.min(100,SE.water+30);else if(it==='food')SE.food=Math.min(100,SE.food+30);else if(it==='med')SE.hp=Math.min(100,SE.hp+30);
+  sePickSnd(it);if(it==='water')SE.water=Math.min(100,SE.water+30);else if(it==='food')SE.food=Math.min(100,SE.food+30);else if(it==='med')SE.hp=Math.min(100,SE.hp+30);
   else if(it==='berry'||it==='nut'||it==='grub'){SE.food=Math.min(100,SE.food+(it==='grub'?10:12));I.forage++}else I[it]=(I[it]||0)+1;
   const m=M[it]||['+','#fff'];sePop(m[0]+(I[it]!=null&&['tinder','kindling','wood','leaf'].includes(it)?` (${I[it]})`:''),m[1]);SE.fx.push({k:'+',x:o.x,y:o.y,t:0});seAlCheck()}
 // ---- Alpha küldetések ----
@@ -3198,8 +3292,8 @@ function seExtract(){const E=SE.ex;E.st='out';SE.extr++;SE.pts+=1000;SE.water=SE
   seRadio('🚁 KIMENTVE! +1000 pont. Feltöltés, új bevetés…',4000);rockStart('rk_win');setTimeout(()=>{if(ROCK.on&&ROCK.id==='rk_win')rockStop(2)},6500);
   SE.x+=6;SE.objs=SE.objs.filter(o=>o.x>SE.x+8||o.x<SE.x-14);seTray();seHud();if(navigator.vibrate)try{navigator.vibrate([60,40,120])}catch(e){}}
 // ---- villámkérdés ----
-function seQuiz(){const q=SE_QA[Math.floor(Math.random()*SE_QA.length)];const order=seShuf([0,1,2]);SE.quiz={q,order,t:8};seTray();seBeep(880,.08,.05)}
-function seAnswer(i){const Q=SE.quiz;if(!Q)return;SE.quiz=null;SE.nextQuiz=(SE.day===1?15:12)+Math.random()*5;const ok=i===0;
+function seQuiz(){if(!SE.qDeck||!SE.qDeck.length){const last=SE.qLast;SE.qDeck=seShuf(SE_QA.map((_,i)=>i));if(SE.qDeck[SE.qDeck.length-1]===last)SE.qDeck.unshift(SE.qDeck.pop())}const qi=SE.qDeck.pop();SE.qLast=qi;const q=SE_QA[qi];const order=seShuf([0,1,2]);SE.quiz={q,order,t:8};seTray();seBeep(880,.08,.05)}
+function seAnswer(i){const Q=SE.quiz;if(!Q)return;SE.quiz=null;SE.nextQuiz=(SE.day===1?24:20)+Math.random()*10;const ok=i===0;
   if(ok){SE.correct++;SE.pts+=50;SE.water=Math.min(100,SE.water+8);SE.food=Math.min(100,SE.food+8);sePop('✅ Helyes! +50','#9dff9d');sndPing()}
   else{SE.wrong++;SE.hp=Math.max(1,SE.hp-6);sePop(i<0?'⏱️ Lejárt az idő! −6':'❌ Nem jó! −6','#ff7b7b');seBeep(220,.18,.06)}
   seRadio((ok?'✅ ':'ℹ️ ')+Q.q[2],4200);seTray()}
@@ -3460,7 +3554,7 @@ function seHudCanvas(c,W,H,gy,s,L,tm,X,Y){
   if(SE.phase==='play'&&SE.atWall){c.fillStyle='#ffe08a';c.font='900 15px system-ui';c.textAlign='center';if(!SE.tut)c.fillText('👆 KOPPINTS: KIMÁSZÁS',Math.max(110,X(SE.x)+30),Y(1.7)+Math.sin(tm*6)*3)}
   // gyakorlás: melyik gombot nyomja / hova koppintson
   SE.padHint=null;
-  if(SE.phase==='play'&&!SE.tut&&SE.mv===0&&SE.t<7&&!SE.choice&&!SE.quiz){c.fillStyle='#ffe08a';c.font='900 16px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('⬇ Indulás: 🚶 SÉTA gomb',W/2,H*.42+Math.sin(tm*5)*3);SE.padHint='walk'}
+  if(SE.phase==='play'&&!SE.tut&&SE.mv===0&&SE.t<7&&!SE.choice&&!SE.quiz){c.fillStyle='#ffe08a';c.font='900 16px system-ui';c.textAlign='center';c.textBaseline='middle';c.fillText('⬇ Indulás: 🚶 SÉTA gomb',W/2,H*.64+Math.sin(tm*5)*3);SE.padHint='walk'}
   if(SE.tut&&SE.phase==='play'&&!SE.tut.next){const T=SE.tut,st=T.st,ob=SE.objs.find(o=>o.tut);let hint=null,tap=false,txt='';
     if(st===0){const fx=X(T.x0+6);c.fillStyle='#ddd';c.fillRect(fx-1,Y(1.6),2.5,1.6*s);c.fillStyle='#ff4a3e';c.beginPath();c.moveTo(fx+1.5,Y(1.6));c.lineTo(fx+1.5+s*.55,Y(1.45));c.lineTo(fx+1.5,Y(1.3));c.fill();
       if(SE.x<T.x0+5.1){if(SE.mv===0){hint='walk';txt='⬇ NYOMD: 🚶 SÉTA'}}else{hint='stop';txt='🛑 ÁLLJ – MOST!'}}
