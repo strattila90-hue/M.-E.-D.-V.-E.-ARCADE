@@ -1,6 +1,6 @@
 // M.E.D.V.E. Arcade – offline gyorsítótár + frissítés gomb támogatás.
-// Új verzió: letöltődik, a játékos a piros „Frissítés telepítése” gombbal kapcsol át rá.
-const CACHE = 'medve-arcade-v3.0.1';
+// Új verzió: letöltődik, és az app automatikusan átvált rá (játék közben a játék bezárásakor).
+const CACHE = 'medve-arcade-v3.1.0';
 const FBV = '10.14.1';
 const FB_SDK = ['app', 'auth', 'firestore'].map(m => `https://www.gstatic.com/firebasejs/${FBV}/firebase-${m}-compat.js`);
 const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable.png'];
@@ -39,6 +39,13 @@ self.addEventListener('fetch', e => {
   }
   if (url.origin !== location.origin) return; // Firestore / bejelentkezés: mindig hálózat
   // index/sw.js: hálózat elsőként (friss), net nélkül gyorsítótár
-  e.respondWith(fetch(e.request).then(r => { if (r.ok && r.type === 'basic') { const c = r.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } return r; })
-    .catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
+  // hálózat elsőként, de ha 4 mp alatt nem jön válasz (gyenge térerő) vagy nincs net: azonnal a gyorsítótárból – offline is megy
+  const cached = () => caches.match(e.request, { ignoreSearch: true }).then(r => r || (e.request.mode === 'navigate' ? caches.match('./index.html').then(x => x || caches.match('./')) : undefined));
+  e.respondWith(new Promise(resolve => {
+    let done = false;
+    const fin = r => { if (!done && r) { done = true; resolve(r); } };
+    const t = setTimeout(() => cached().then(r => { if (r) fin(r); }), 4000);
+    fetch(e.request).then(r => { clearTimeout(t); if (r.ok && r.type === 'basic') { const c = r.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); } fin(r); })
+      .catch(() => { clearTimeout(t); cached().then(r => { if (r) fin(r); else if (!done) { done = true; resolve(new Response('Offline', { status: 503, statusText: 'Offline' })); } }); });
+  }));
 });
