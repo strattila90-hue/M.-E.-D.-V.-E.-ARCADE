@@ -1123,7 +1123,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.2.1',APP_DATE='2026.10.27.';
+const APP_VER='4.2.2',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1475,9 +1475,9 @@ const GT_TRACK=[['aszfalt',180,.05],['murva',170,.4],['sar',170,.3],['aszfalt',9
 const GT_PR=[4.0,2.5,1.2];
 function gtBuild(){let x0=0;GT.segs=GT_TRACK.map(([s,m,h])=>{const o={s,x0,x1:x0+m*20,h};x0+=m*20;return o});GT.len=x0;const OFF=1200,N=Math.ceil((x0+OFF+2400)/2);const Hh=new Float32Array(N);
   const hil=x=>{let h=0,wsum=0;for(const g of GT.segs){const d=x<g.x0?g.x0-x:x>g.x1?x-g.x1:0;const w=Math.exp(-(d*d)/(2*140*140));h+=g.h*w;wsum+=w}return wsum>1e-6?h/wsum:.05};
-  GT.water=null;for(let i=0;i<N;i++){const x=i*2-OFF;const A=hil(x)*120;let y=A*(.55*Math.sin(x/430+.7)+.3*Math.sin(x/170+2.1)+.15*Math.sin(x/66+.4));const g=gtSeg(x);
+  GT.water=null;for(let i=0;i<N;i++){const x=i*2-OFF;const A=hil(x)*120;let y=A*(.58*Math.sin(x/430+.7)+.32*Math.sin(x/170+2.1)+.06*Math.sin(x/90+.4));const g=gtSeg(x);
     if(g&&g.s==='ko')y+=11*Math.pow(Math.max(0,Math.sin(x/24)),3)+5*Math.pow(Math.max(0,Math.sin(x/9.7+1)),4);
-    if(g&&g.s==='homok')y+=14*Math.sin(x/120)*Math.sin(x/37);
+    if(g&&g.s==='homok')y+=10*Math.sin(x/140)*Math.sin(x/70);
     y+=gtXtr(x);
     Hh[i]=300-y}
   const wv=GT.segs.find(g=>g.s==='viz');if(wv){const i0=Math.round((wv.x0+OFF)/2),i1=Math.round((wv.x1+OFF)/2),rim=Math.min(Hh[i0],Hh[i1]);for(let i=i0;i<=i1;i++){const t=(i-i0)/(i1-i0);Hh[i]=Hh[i]*(1-Math.sin(t*Math.PI))+(rim+24)*Math.sin(t*Math.PI)}GT.water={x0:wv.x0,x1:wv.x1,y:rim+2}}
@@ -1515,7 +1515,7 @@ function gtReset(){const y=gtG(-200);Object.assign(GT,{t:{x:-200,y:y-GWR-20,a:0,
 function gtStart(){$('#gtStart').hidden=true;$('#gtOver').hidden=true;gtSirenSnd(false);gtReset();['#gtHand','#gtSiren'].forEach(id=>$(id)?.setAttribute('aria-pressed','false'));GT.run=true;GT.last=performance.now();gEngStart(GT);gtWinchUi();rockStart('terep');playCount('terep');toast('Rajt! Tartalékban vagy – tankolj a tábori töltőállomáson ⛽')}
 function gtCtisUi(){document.querySelectorAll('.gtctis [data-p]').forEach(b=>b.classList.toggle('on',GT_PR[+b.dataset.p]===GT.pt))}
 function gtPar(s){const S=GT_S[s]||GT_S.aszfalt;const k=Math.max(0,Math.min(2,(4-GT.p)/(4-1.2)*2)),i=Math.min(1,Math.floor(k)),f=k-i;return {mu:S.mu[i]+(S.mu[i+1]-S.mu[i])*f,crr:S.crr[i]+(S.crr[i+1]-S.crr[i])*f}}
-function gtPhys(dt){const T=GT.t,G=500,K=42,Cd=6.5,Lmax=20,Lmin=5;const ca=Math.cos(T.a),sa=Math.sin(T.a);const dx=-sa,dy=ca;let ax=0,ay=G,tq=0;const sp=T.vx*ca+T.vy*sa;
+function gtPhys(dt){const T=GT.t,G=500,K=42,Cd=10,Lmax=20,Lmin=5;const ca=Math.cos(T.a),sa=Math.sin(T.a);const dx=-sa,dy=ca;let ax=0,ay=G,tq=0;const sp=T.vx*ca+T.vy*sa;
   const kmh=Math.abs(sp)/20*3.6;let Fe=0;const rev=GT.revMode&&GT.brake&&!GT.hook&&!GT.hand;if(GT.gas&&!GT.hand)Fe=300*Math.min(1,90/Math.max(Math.abs(sp),1));if(rev)Fe=-160*Math.min(1,60/Math.max(Math.abs(sp),1));if(kmh>108&&sp>0)Fe=Math.min(Fe,0);if(GT.flat)Fe*=.38;if(GT.fuel<=0)Fe=0;
   let cont=0;for(const w of GT.wh){const lx=w.lx,ly=-14;const Ax=T.x+lx*ca-ly*sa,Ay=T.y+lx*sa+ly*ca;const gy=gtG(Ax+dx*w.L);const sC=(gy-w.r-Ay)/Math.max(.3,dy);
     if(sC<Lmax){const L=Math.max(Lmin-3,sC);w.L=Math.max(Lmin,L);const rx=Ax-T.x,ry=Ay-T.y;const vpx=T.vx-T.w*ry,vpy=T.vy+T.w*rx;const vn=vpx*dx+vpy*dy;let F=K*(Lmax-Math.max(Lmin,L))+Cd*vn;if(L<Lmin)F+=K*12*(Lmin-L);F=Math.max(0,F);
@@ -1538,7 +1538,7 @@ function gtLoop(now){const cv=$('#gtCv');if(!cv)return;const c=cv.getContext('2d
   const sc=Math.min(1.45,W/300)*(1-.2*(GT.cineK||0));const FX=GT.wreck||T;const tcx=GT.wreck?FX.x-W*.45/sc:T.x+T.vx*.2-W*.32/sc,tcy=(GT.wreck?FX.y:(gtG(T.x-30)+gtG(T.x+30)+gtG(T.x+90))/3-GWR-22)-H*.58/sc;GT.camX=GT.camX==null?tcx:GT.camX+(tcx-GT.camX)*Math.min(1,dt*5);{const dy=tcy-(GT.camY??tcy);GT.camY=GT.camY==null?tcy:GT.camY+dy*Math.min(1,dt*(Math.abs(dy)>60?4:1.6))}
   c.setTransform(GT.dpr,0,0,GT.dpr,0,0);const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#6fa3c9');sky.addColorStop(.7,'#cfe0e6');sky.addColorStop(1,'#e8e2cc');c.fillStyle=sky;c.fillRect(0,0,W,H);
   [['#8fa59a',.2,70,0],['#6f8a72',.45,50,1.3]].forEach(([col,pf,amp,ph])=>{c.fillStyle=col;c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=8){const wx=(x/sc+GT.camX)*pf;c.lineTo(x,H*.55-amp*(.6+.4*Math.sin(wx/260+ph))*(.6+.4*Math.sin(wx/91+ph)))}c.lineTo(W,H);c.fill();if(pf===.2)gtBgHeli(c,W,H,rdt,now)});gtBgRace(c,W,H,sc,rdt,now);
-  GT.shake=Math.max(0,(GT.shake||0)-dt*1.4);c.save();if(GT.shake>0)c.translate((Math.random()-.5)*GT.shake*16,(Math.random()-.5)*GT.shake*12);c.scale(sc,sc);c.translate(-GT.camX,-GT.camY);const x0=GT.camX-30,x1=GT.camX+W/sc+30,yb=GT.camY+H/sc+60;
+  GT.shake=Math.max(0,(GT.shake||0)-dt*1.4);c.save();if(GT.shake>0)c.translate((Math.random()-.5)*GT.shake*8,(Math.random()-.5)*GT.shake*5);c.scale(sc,sc);c.translate(-GT.camX,-GT.camY);const x0=GT.camX-30,x1=GT.camX+W/sc+30,yb=GT.camY+H/sc+60;
   for(const g of GT.segs.concat([{s:'aszfalt',x0:-GT.OFF,x1:0},{s:'aszfalt',x0:GT.len,x1:GT.len+2400}])){const a=Math.max(x0,g.x0),b=Math.min(x1,g.x1);if(a>=b)continue;const S=GT_S[g.s];
     c.beginPath();c.moveTo(a,yb);for(let x=a;x<=b;x+=4)c.lineTo(x,gtG(x));c.lineTo(b,gtG(b));c.lineTo(b,yb);c.closePath();c.fillStyle=S.col;c.fill();
     c.lineWidth=6;c.strokeStyle=S.top;c.beginPath();for(let x=a;x<=b;x+=4){x===a?c.moveTo(x,gtG(x)+2):c.lineTo(x,gtG(x)+2)}c.stroke();
@@ -1596,7 +1596,7 @@ function gtGame(dt){const T=GT.t;
   // vége
   const up=Math.cos(T.a);if(up<.05)GT.flipT+=dt;else GT.flipT=0;if(GT.flipT>2)return gtEnd(false,'Felborult a Gidrán!');
   if(GT.dmg>=100&&!GT.flat){const wi=Math.random()<.5?0:1;GT.wh[wi].flat=1;GT.wh[wi].r=GWR*.55;GT.flat={t:0,wi};toast('💥 Defekt! Lapos kerékkel próbálj tovább haladni…');sndFlat();GT.shake=.4}
-  if(GT.flat){GT.flat.t+=dt;GT.warnTxt='💥 DEFEKT – lapos kerékkel döcög';const w=GT.wh[GT.flat.wi];const rv=Math.floor(w.rot/(Math.PI*2));if(rv!==w.rev){w.rev=rv;if(SOUND&&AC){boom(AC.currentTime,.22,52);snare(AC.currentTime,.05)}GT.shake=Math.max(GT.shake,.12)}
+  if(GT.flat){GT.flat.t+=dt;GT.warnTxt='💥 DEFEKT – lapos kerékkel döcög';const w=GT.wh[GT.flat.wi];const rv=Math.floor(w.rot/(Math.PI*2));if(rv!==w.rev){w.rev=rv;if(SOUND&&AC){boom(AC.currentTime,.22,52);snare(AC.currentTime,.05)}GT.shake=Math.max(GT.shake,.03)}
     if(GT.flat.t>5&&!GT.terr){const x=T.x+330+Math.random()*90;GT.terr={x,y:gtG(x),aim:2,fired:0};toast('⚠ Terroristák! RPG-s a domb mögül!')}}
   if(GT.terr){const e=GT.terr;e.y=gtG(e.x);if(!e.fired){e.aim-=dt;if(e.aim<=0){e.fired=1;e.flash=.25;const sx=e.x-14,sy=e.y-27;const dx=T.x-sx,dy=T.y-22-sy,dl=Math.hypot(dx,dy);GT.rk={x:sx,y:sy,vx:dx/dl*480,vy:dy/dl*480};sndRpg();for(let i=0;i<14;i++)GT.fx.push({x:e.x+14,y:e.y-27,vx:60+Math.random()*120,vy:-20-Math.random()*60,t:.8,r:4+Math.random()*4,c:'rgba(170,160,150,A)',g:-40})}}else e.flash=Math.max(0,(e.flash||0)-dt)}
   if(GT.rk){const r=GT.rk;const dx=T.x-r.x,dy=T.y-22-r.y,dl=Math.hypot(dx,dy);r.vx+=(dx/dl*480-r.vx)*Math.min(1,dt*3);r.vy+=(dy/dl*480-r.vy)*Math.min(1,dt*3);r.x+=r.vx*dt;r.y+=r.vy*dt;GT.fx.push({x:r.x,y:r.y,vx:(Math.random()-.5)*20,vy:-20,t:.9,r:3+Math.random()*3,c:'rgba(150,145,140,A)',g:-30});if(dl<30){GT.rk=null;return gtBlowUp()}}
