@@ -1123,7 +1123,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.1.1',APP_DATE='2026.10.27.';
+const APP_VER='4.1.2',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1723,6 +1723,9 @@ function gvHeliTick(dt){const L=GV.veh[0],V=GV.veh;if(!GV.heli&&GV.heliAt.length
     if(h.y>=gvG(h.x)-30){gvBlast(h.x,true);gvBlast(h.x+50,true);gvBlast(h.x-60,true);if(typeof sndMega==='function')sndMega();GV.shake=1.4;for(const v of V){if(!v.dead&&Math.abs(v.x-h.x)<200)gvHit(v,v.k==='g'?15:50,'Lezuhanó helikopter')}GV.wrecks.push({x:h.x,y:gvG(h.x)-40,face:h.face,wreck:1,rot:0,hp:0,hit:0});GV.heli=null;gvHeliSndStop();return}}
   h.mf=Math.max(0,(h.mf||0)-dt);h.x+=h.vx*dt;h.y+=h.vy*dt;gvHeliSndTick(h)}
 function gvHeliDown(){const h=GV.heli;if(!h||h.st==='down')return;h.st='down';h.t=0;h.vy=-40;GV.score+=400;GV.kills++;GV.heliKills++;gvMsg('🔥 Mi-24 LELŐVE! +400',3);gvBlast(h.x,false);if(SOUND&&AC){const t=AC.currentTime;boom(t,.8,60);snare(t,.4)}}
+function gvDrawWreck(c,w,now){const key='wr'+(w.face>0?1:0);GV.spr=GV.spr||{};let sp=GV.spr[key];
+  if(!sp){sp=document.createElement('canvas');sp.width=460;sp.height=280;const x=sp.getContext('2d');try{gvDrawHeli(x,{x:230,y:150,face:w.face,wreck:1,rot:0,hp:0,hit:0,vx:0},0)}catch(e){}GV.spr[key]=sp;GV.fx.length=Math.min(GV.fx.length,350)}
+  c.drawImage(sp,w.x-230,w.y-150);if(Math.random()<.25)GV.fx.push({x:w.x+(Math.random()-.5)*50,y:w.y-10,vx:(Math.random()-.5)*20,vy:-40-Math.random()*30,t:1.3,k:Math.random()<.3?'f':'s'})}
 function gvDrawHeli(c,h,now){c.save();c.translate(h.x,h.y);if(h.wreck){c.rotate(.25);if('filter' in c)c.filter='brightness(.25)'}else{c.rotate((h.spin||0)+Math.max(-.22,Math.min(.22,h.vx*.0006)));}c.scale(h.face*.85,.85);
   const cam='#5b5f3c',dk='#3d4128';
   // farokrotor + vezérsík
@@ -1874,7 +1877,7 @@ function gvNearCity(c,x0,x1,nf,now){GV.lit=[];const k0=Math.floor(x0/300)-1,k1=M
 function gvLoop(now){const cv=$('#gvCv');if(!cv)return;const c=cv.getContext('2d');let dt=Math.min(.04,(now-GV.last)/1000);GV.last=now;if(GV.title>0)GV.title=Math.max(0,GV.title-dt);if(GV.slow>0){GV.slow-=dt;dt*=.35}const W=GV.W,H=GV.H;
   if(GV.run)gvGame(dt);const L=GV.veh[0];const nf=gvNight(L.x);GV.nf=nf;
   if(nf>.5&&!GV.nightMsg){GV.nightMsg=1;gvMsg('🌙 Leszállt az éj – kapcsold be az ÉJJELLÁTÓT!',4);const b=$('#gvNv');if(b)b.classList.add('pulse')}
-  const chs=GV.ch&&GV.ch.some(p=>!p.dead)?1:0;GV.chK=(GV.chK||0)+(chs-(GV.chK||0))*Math.min(1,dt*1.5);const sc=Math.min(.85,W/(700+400*GV.chK));GV.sc=sc;const tcx=L.x+L.v*.25*(1-GV.chK)-W*(.72+.12*GV.chK)/sc,tcy=gvG(L.x)-H*.64/sc;GV.camX=GV.camX==null?tcx:GV.camX+(tcx-GV.camX)*Math.min(1,dt*4);GV.camY=GV.camY==null?tcy:GV.camY+(tcy-GV.camY)*Math.min(1,dt*3);
+  const chs=GV.ch&&GV.ch.some(p=>!p.dead)?1:GV.drones.some(d=>!d.down&&d.x<L.x+60&&d.x>L.x-900)?.75:0;GV.chK=(GV.chK||0)+(chs-(GV.chK||0))*Math.min(1,dt*1.3);const sc=Math.min(.85,W/(700+420*GV.chK));GV.sc=sc;const tcx=L.x-W*(.27+.57*GV.chK)/sc,tcy=gvG(L.x)-H*.64/sc;GV.camX=GV.camX==null?tcx:GV.camX+(tcx-GV.camX)*Math.min(1,dt*4);GV.camY=GV.camY==null?tcy:GV.camY+(tcy-GV.camY)*Math.min(1,dt*3);
   c.setTransform(GV.dpr,0,0,GV.dpr,0,0);GV.shake=Math.max(0,(GV.shake||0)-dt*1.5);const shx=GV.shake>0?(Math.random()-.5)*GV.shake*12:0,shy=GV.shake>0?(Math.random()-.5)*GV.shake*9:0;c.translate(shx,shy);
   gvCity(c,W,H,sc,nf,now);
   c.save();c.scale(sc,sc);c.translate(-GV.camX,-GV.camY);const x0=GV.camX-40,x1=GV.camX+W/sc+40,yb=GV.camY+H/sc+80;
@@ -1886,7 +1889,7 @@ function gvLoop(now){const cv=$('#gvCv');if(!cv)return;const c=cv.getContext('2d
   for(let x=Math.ceil(x0/130)*130;x<x1;x+=130){if(gvH(x*.37)<.4){c.fillStyle=gvMix('#6d665a','#16171c',nf);c.beginPath();c.ellipse(x,gvG(x)-10,10+gvH(x)*14,4,0,Math.PI,0);c.fill()}}
   for(let m=Math.ceil(x0/2000)*2000;m<x1;m+=2000){const y=gvG(m)-12;c.fillStyle=gvMix('#eeeeee','#555555',nf);c.fillRect(m-2,y-30,4,30);c.font='bold 14px sans-serif';c.textAlign='center';c.fillText(Math.round(m/20)+' m',m,y-36)}
   {const fx=GV_LEN;if(fx>x0&&fx<x1){const y=gvG(fx)-18;c.fillStyle='#3a5a2a';c.fillRect(fx-60,y-60,120,60);c.fillStyle='#fff';c.font='bold 16px sans-serif';c.textAlign='center';c.fillText('BÁZIS – CÉL',fx,y-66)}}
-  for(const w of GV.wrecks)gvDrawHeli(c,w,now);
+  for(const w of GV.wrecks){if(w.x<x0-260||w.x>x1+260)continue;gvDrawWreck(c,w,now)}
   for(const o of GV.objs){if(o.gone||o.x<x0||o.x>x1)continue;gvDrawObj(c,o,now)}
   for(const e of GV.amb){if(!e.act||e.x<x0||e.x>x1)continue;gvDrawEnemy(c,e,now)}
   gvCivDraw(c,x0,x1,nf,now);gvCineDraw(c,x0,x1,nf,now);
@@ -1903,7 +1906,7 @@ function gvLoop(now){const cv=$('#gvCv');if(!cv)return;const c=cv.getContext('2d
   // éjszaka: sötétség fényszóró-kúppal, vagy éjjellátó
   if(nf>0&&!GV.nv){gvDark(c,W,H,sc,nf,shx,shy);c.save();c.translate(shx,shy);c.scale(sc,sc);c.translate(-GV.camX,-GV.camY);gvEmissive(c,0,false);c.restore()}
   if(GV.nv)gvNV(c,cv,W,H,nf);
-  gvCineOverlay(c,W,H);gvMap(now);gvHud();
+  gvCineOverlay(c,W,H);gvConvoyPanel(c,W,H,now);gvMap(now);gvHud();
   const sp=Math.abs(L.v)/20*3.6;gEngTick(GV,gRpm(sp,GV.gas),GV.gas?.7:.12,false);
   GV.raf=requestAnimationFrame(gvLoop)}
 function gvEmissive(c,dt,full){const L=GV.veh[0];
@@ -2401,6 +2404,17 @@ function gvCineDraw(c,x0,x1,nf,now){const S=GV.snp;if(S&&S.x>x0-50&&S.x<x1+50){c
     c.fillStyle='#111';for(const wx of [-36,38]){c.beginPath();c.arc(wx,-4,11,0,7);c.fill()}
     if(!p.dead){c.fillStyle='#2b2620';c.fillRect(-28,-50,8,24);c.beginPath();c.arc(-24,-54,5,0,7);c.fill();c.fillStyle='#151515';c.fillRect(-20,-50,30,4);if(p.cd<.08){c.fillStyle='#ffd24a';c.beginPath();c.arc(12,-48,6,0,7);c.fill()}}
     c.filter='none';c.restore();if(p.dead&&Math.random()<.4)GV.fx.push({x:p.x,y:y-30,vx:(Math.random()-.5)*30,vy:-60,t:1,k:'s'})}}
+function gvConvoyPanel(c,W,H,now){const V=GV.veh;if(!GV.panY||(GV._pc=(GV._pc||0)+1)%120===0){const cr=GV.cv&&GV.cv.getBoundingClientRect(),hp=$('#gvHp');const hr=hp&&hp.parentElement?hp.parentElement.getBoundingClientRect():null;GV.panY=cr&&hr&&hr.bottom>cr.top?hr.bottom-cr.top+8:70}
+  const n=V.length,iw=31,pw=n*iw+14,ph=50,x0=W-pw-8,y0=GV.panY;c.save();c.setTransform(GV.dpr,0,0,GV.dpr,0,0);c.globalAlpha=.92;c.fillStyle='rgba(10,12,8,.72)';c.beginPath();c.roundRect?c.roundRect(x0,y0,pw,ph,9):c.rect(x0,y0,pw,ph);c.fill();
+  c.fillStyle='#cfd8b0';c.font='bold 9px sans-serif';c.textAlign='left';c.fillText('KONVOJ ◀',x0+7,y0+11);
+  for(let i=0;i<n;i++){const v=V[i],x=x0+pw-10-iw*(i+1)+iw/2+3,y=y0+28;v._ph=v._ph??v.hp;if(v.hp<v._ph-.5)v._fl=.5;v._ph=v.hp;v._fl=Math.max(0,(v._fl||0)-.016);
+    const dead=v.dead||v.hp<=0,col=dead?'#5a1d18':v._fl>0&&Math.sin(now/50)>0?'#ff5a4a':v.hp>50?'#7d8c4a':v.hp>25?'#c9a227':'#d0442e';c.fillStyle=col;
+    if(v.k==='g'){c.fillRect(x-11,y-6,22,9);c.fillRect(x-5,y-10,10,4)}else{c.fillRect(x-13,y-8,17,11);c.fillRect(x+5,y-5,8,8)}c.fillStyle='#111';c.beginPath();c.arc(x-7,y+4,2.6,0,7);c.arc(x+7,y+4,2.6,0,7);c.fill();
+    if(v.vip){c.fillStyle='#ffd24a';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('★',x,y-12)}
+    c.fillStyle='rgba(0,0,0,.6)';c.fillRect(x-12,y+9,24,4);if(!dead){c.fillStyle=v.hp>50?'#2ecc40':v.hp>25?'#f4c04e':'#ff3b30';c.fillRect(x-12,y+9,24*v.hp/100,4)}
+    if(dead){c.strokeStyle='#ff3b30';c.lineWidth=2;c.beginPath();c.moveTo(x-8,y-9);c.lineTo(x+8,y+5);c.moveTo(x+8,y-9);c.lineTo(x-8,y+5);c.stroke()}}
+  const thr=GV.drones.some(d=>!d.down&&d.x<GV.veh[0].x)||(GV.ch&&GV.ch.some(p=>!p.dead));if(thr&&Math.sin(now/160)>0){c.fillStyle='#ff5a4a';c.font='bold 9px sans-serif';c.textAlign='right';c.fillText('⚠ HÁTUL',x0+pw-6,y0+11)}
+  c.restore()}
 function gvCineOverlay(c,W,H){const k=GV.cineK||0,bh=H*.075*k;if(bh>.5){c.fillStyle='#000';c.fillRect(0,0,W,bh);c.fillRect(0,H-bh,W,bh)}
   if(GV.slow>0){c.fillStyle='rgba(180,200,255,.06)';c.fillRect(0,0,W,H)}
   const s=GV.sub&&GV.sub[0];if(s){const a=Math.min(1,s.t*4,(s.d-s.t)*3);c.globalAlpha=Math.max(0,a);c.font='700 14px system-ui';const txt=s.txt,w=Math.min(W-24,c.measureText(txt).width+24),y=Math.min(H-bh-150,H*.74);c.fillStyle='rgba(0,0,0,.65)';c.fillRect((W-w)/2,y-30,w,46);c.textAlign='center';c.fillStyle='#ffd24a';c.font='800 11px system-ui';c.fillText('📻 '+s.who.toUpperCase(),W/2,y-14);c.fillStyle='#fff';c.font='700 14px system-ui';c.fillText(txt.length>48?txt.slice(0,46)+'…':txt,W/2,y+4);c.globalAlpha=1}
@@ -2552,7 +2566,7 @@ function drDrawDrone(c,d,now){c.save();c.translate(d.x,d.y);c.scale(0.45,0.45);c
   c.restore();
   // eltalálva: alkatrészek hullanak a levegőben
   if(d.hit&&!d.down&&Math.random()<.4){
-    DR.fx.push({x:d.x+(Math.random()-.5)*20,y:d.y,vx:(Math.random()-.5)*40,vy:30+Math.random()*40,t:.6,k:'s'});
+    (GV.run&&GV.fx?GV.fx:(DR.fx||(DR.fx=[]))).push({x:d.x+(Math.random()-.5)*20,y:d.y,vx:(Math.random()-.5)*40,vy:30+Math.random()*40,t:.6,k:'s'});
   }
 }
 
@@ -4780,5 +4794,22 @@ document.addEventListener('click', e => {
     if(UPD_WAITING) updApply(); else updCheck();
   }
 });
+/* ===== v4.1.2: hibakódos értesítő + a játékciklusok nem állnak le hiba esetén ===== */
+const MERR={seen:{},n:0};
+function medveErr(e,game){try{const msg=String(e&&e.message||e||'ismeretlen hiba');if(/ResizeObserver|Script error|extension/i.test(msg))return;
+  const st=String(e&&e.stack||''),fn=(st.split('\n').map(l=>l.trim()).find(l=>/^at /.test(l))||'').replace(/^at /,'').replace(/\(.*?:(\d+):\d+\)/,'@$1').slice(0,60);
+  let h=0;for(const ch of msg+fn)h=(h*31+ch.charCodeAt(0))>>>0;const code=(game||'APP').slice(0,3).toUpperCase().replace(/[^A-Z]/g,'X')+'-'+(h%65536).toString(16).toUpperCase().padStart(4,'0');
+  MERR.n++;const rec=MERR.seen[code]=(MERR.seen[code]||{n:0});rec.n++;
+  try{const lg=JSON.parse(localStorage.getItem('medve-errlog')||'[]');lg.unshift({code,game,msg,fn,v:APP_VER,t:new Date().toISOString()});localStorage.setItem('medve-errlog',JSON.stringify(lg.slice(0,15)))}catch(_){}
+  if(rec.n>1&&rec.shown){const c=document.querySelector('#errBox .ecnt');if(c)c.textContent='×'+rec.n;return}rec.shown=1;
+  let b=document.getElementById('errBox');if(!b){b=document.createElement('div');b.id='errBox';b.style.cssText='position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:99999;background:#2a0d0b;border:2px solid #ff5a4a;border-radius:14px;padding:12px 14px;color:#ffe9e4;font:600 14px/1.35 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.6)';document.body.appendChild(b)}
+  const txt=`M.E.D.V.E. Arcade ${APP_VER} · ${game} · ${code}\n${msg}\n${fn}`;
+  b.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:15px">⚠ Hiba történt · <span style="color:#ffd24a">${code}</span> <span class="ecnt"></span></b><button data-x style="background:none;border:0;color:#fff;font-size:20px">✕</button></div><div style="margin:6px 0 8px;font-weight:500;opacity:.9">${game}: ${esc(msg)}<br><small style="opacity:.7">${esc(fn)}</small><br>A játék megpróbál tovább futni. Küldd el a kódot a fejlesztőnek.</div><button data-c style="background:#ff5a4a;color:#fff;border:0;border-radius:9px;padding:7px 12px;font-weight:800">📋 Kód másolása</button> <button data-x style="background:#4a2420;color:#fff;border:0;border-radius:9px;padding:7px 12px;font-weight:700">Bezár</button>`;
+  b.hidden=false;b.querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>{b.hidden=true});b.querySelector('[data-c]').onclick=()=>{try{navigator.clipboard.writeText(txt);toast('Hibakód kimásolva')}catch(_){}};
+  clearTimeout(MERR.to);MERR.to=setTimeout(()=>{b.hidden=true},20000)}catch(_){}}
+window.addEventListener('error',ev=>medveErr(ev.error||ev.message,'APP'));
+window.addEventListener('unhandledrejection',ev=>medveErr(ev.reason,'APP'));
+function medveWrap(orig,S,label){const w=function(t){const r0=S.raf;try{orig(t)}catch(e){medveErr(e,label);if(S.raf===r0)S.raf=requestAnimationFrame(w)}};return w}
+gvLoop=medveWrap(gvLoop,GV,'KONVOJ');drLoop=medveWrap(drLoop,DR,'DRONERUN');gtLoop=medveWrap(gtLoop,GT,'TEREP');harcLoop=medveWrap(harcLoop,HARC,'HARC');rkLoop=medveWrap(rkLoop,RK,'RAKODO');seLoop=medveWrap(seLoop,SE,'SERE');
 </script>
 </body></html>
