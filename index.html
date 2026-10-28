@@ -1123,7 +1123,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.2.0',APP_DATE='2026.10.27.';
+const APP_VER='4.2.1',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1535,7 +1535,7 @@ function gtPhys(dt){const T=GT.t,G=500,K=42,Cd=6.5,Lmax=20,Lmin=5;const ca=Math.
   GT.kmh=kmh;GT.cont=cont}
 function gtLoop(now){const cv=$('#gtCv');if(!cv)return;const c=cv.getContext('2d');let dt=Math.min(.04,(now-GT.last)/1000);GT.last=now;const W=GT.W,H=GT.H,T=GT.t;const rdt=dt;if(GT.slow>0){GT.slow-=dt;dt*=.38}
   if(GT.run){for(let i=0;i<6;i++)gtPhys(dt/6);gtGame(dt);gtXtrTick(dt,rdt)}
-  const sc=Math.min(1.45,W/300)*(1-.2*(GT.cineK||0));const FX=GT.wreck||T;const tcx=GT.wreck?FX.x-W*.45/sc:T.x+T.vx*.2-W*.32/sc,tcy=FX.y-H*.58/sc;GT.camX=GT.camX==null?tcx:GT.camX+(tcx-GT.camX)*Math.min(1,dt*5);GT.camY=GT.camY==null?tcy:GT.camY+(tcy-GT.camY)*Math.min(1,dt*3);
+  const sc=Math.min(1.45,W/300)*(1-.2*(GT.cineK||0));const FX=GT.wreck||T;const tcx=GT.wreck?FX.x-W*.45/sc:T.x+T.vx*.2-W*.32/sc,tcy=(GT.wreck?FX.y:(gtG(T.x-30)+gtG(T.x+30)+gtG(T.x+90))/3-GWR-22)-H*.58/sc;GT.camX=GT.camX==null?tcx:GT.camX+(tcx-GT.camX)*Math.min(1,dt*5);{const dy=tcy-(GT.camY??tcy);GT.camY=GT.camY==null?tcy:GT.camY+dy*Math.min(1,dt*(Math.abs(dy)>60?4:1.6))}
   c.setTransform(GT.dpr,0,0,GT.dpr,0,0);const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#6fa3c9');sky.addColorStop(.7,'#cfe0e6');sky.addColorStop(1,'#e8e2cc');c.fillStyle=sky;c.fillRect(0,0,W,H);
   [['#8fa59a',.2,70,0],['#6f8a72',.45,50,1.3]].forEach(([col,pf,amp,ph])=>{c.fillStyle=col;c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=8){const wx=(x/sc+GT.camX)*pf;c.lineTo(x,H*.55-amp*(.6+.4*Math.sin(wx/260+ph))*(.6+.4*Math.sin(wx/91+ph)))}c.lineTo(W,H);c.fill();if(pf===.2)gtBgHeli(c,W,H,rdt,now)});gtBgRace(c,W,H,sc,rdt,now);
   GT.shake=Math.max(0,(GT.shake||0)-dt*1.4);c.save();if(GT.shake>0)c.translate((Math.random()-.5)*GT.shake*16,(Math.random()-.5)*GT.shake*12);c.scale(sc,sc);c.translate(-GT.camX,-GT.camY);const x0=GT.camX-30,x1=GT.camX+W/sc+30,yb=GT.camY+H/sc+60;
@@ -1611,7 +1611,7 @@ function gtXtrTick(dt,rdt){const T=GT.t,sg=gtSeg(T.x),k=sg&&(sg.s==='szikla'||sg
   if(GT.cam2){const C=GT.cam2,tx=T.x+(k?150:900),ty=gtG(T.x)-(k?250:420);C.vx+=((tx-C.x)*1.6-C.vx)*Math.min(1,rdt*1.8);C.vy+=((ty-C.y)*1.6-C.vy)*Math.min(1,rdt*1.8);C.x+=C.vx*dt;C.y+=C.vy*dt;if(!k&&C.x-T.x>1500)GT.cam2=null}
   // levegőben: lassítás + kemény landolás
   if(GT.cont===0){GT.air+=rdt;if(GT.air>.18&&!GT.airSlow&&k&&T.vy>60){GT.airSlow=1;GT.slow=Math.max(GT.slow,1.1);GT.flashT=.2}}
-  else{if(GT.air>.35){const hv=Math.abs(T.vy);GT.shake=Math.max(GT.shake||0,Math.min(1,.25+hv/900));if(SOUND&&ac())boom(AC.currentTime,Math.min(.8,.3+hv/1200),48);if(GT.air>.6){toast(hv>380?'💥 Kemény landolás!':'🪨 Landolás!');if(hv>380)GT.dmg+=6}for(let i=0;i<16;i++)GT.fx.push({x:T.x+(Math.random()-.5)*120,y:gtG(T.x)-4,vx:(Math.random()-.5)*260,vy:-60-Math.random()*160,t:.8,r:2+Math.random()*3,c:'rgba(150,140,125,A)'})}GT.air=0;GT.airSlow=0}}
+  else{if(GT.air>.55&&k){const hv=Math.abs(T.vy);GT.shake=Math.max(GT.shake||0,Math.min(1,.25+hv/900));if(SOUND&&ac())boom(AC.currentTime,Math.min(.8,.3+hv/1200),48);if(GT.air>.6){toast(hv>380?'💥 Kemény landolás!':'🪨 Landolás!');if(hv>380)GT.dmg+=6}for(let i=0;i<16;i++)GT.fx.push({x:T.x+(Math.random()-.5)*120,y:gtG(T.x)-4,vx:(Math.random()-.5)*260,vy:-60-Math.random()*160,t:.8,r:2+Math.random()*3,c:'rgba(150,140,125,A)'})}GT.air=0;GT.airSlow=0}}
 function gtCineOverlay(c,W,H,now){const k=GT.cineK||0,bh=H*.07*k;if(bh>.5){c.fillStyle='#000';c.fillRect(0,0,W,bh);c.fillRect(0,H-bh,W,bh)}
   if(GT.title>0&&GT.titleTx){const a=Math.min(1,GT.title*1.4,(3.2-GT.title)*3);c.save();c.globalAlpha=Math.max(0,a);c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(0,H*.3-38,W,66);c.fillStyle='#ffcf3a';c.font='900 30px Anton, Impact, sans-serif';c.fillText(GT.titleTx[0],W/2,H*.3);c.fillStyle='#f3ecd4';c.font='bold 12px sans-serif';c.fillText(GT.titleTx[1],W/2,H*.3+20);c.restore()}
   if(GT.slow>0){c.fillStyle='rgba(255,255,255,.75)';c.font='bold 11px sans-serif';c.textAlign='right';c.fillText('▶▶ LASSÍTÁS',W-12,H*.07*k+18)}}
@@ -1926,7 +1926,7 @@ function gvNearCity(c,x0,x1,nf,now){GV.lit=[];const k0=Math.floor(x0/300)-1,k1=M
 function gvLoop(now){const cv=$('#gvCv');if(!cv)return;const c=cv.getContext('2d');let dt=Math.min(.04,(now-GV.last)/1000);GV.last=now;if(GV.title>0)GV.title=Math.max(0,GV.title-dt);if(GV.slow>0){GV.slow-=dt;dt*=.35}const W=GV.W,H=GV.H;
   if(GV.run)gvGame(dt);const L=GV.veh[0];const nf=gvNight(L.x);GV.nf=nf;
   if(nf>.5&&!GV.nightMsg){GV.nightMsg=1;gvMsg('🌙 Leszállt az éj – kapcsold be az ÉJJELLÁTÓT!',4);const b=$('#gvNv');if(b)b.classList.add('pulse')}
-  const chs=GV.ch&&GV.ch.some(p=>!p.dead)?1:GV.drones.some(d=>!d.down&&d.x<L.x+60&&d.x>L.x-900)?.75:0;GV.chK=(GV.chK||0)+(chs-(GV.chK||0))*Math.min(1,dt*1.3);const sc=Math.min(.85,W/(700+420*GV.chK));GV.sc=sc;const tcx=L.x-W*(.27+.57*GV.chK)/sc,tcy=gvG(L.x)-H*.64/sc;GV.camX=GV.camX==null?tcx:GV.camX+(tcx-GV.camX)*Math.min(1,dt*4);GV.camY=GV.camY==null?tcy:GV.camY+(tcy-GV.camY)*Math.min(1,dt*3);
+  if(GV.drones.some(d=>!d.down&&d.x<L.x+150&&d.x>L.x-900))GV.thrT=4;else GV.thrT=Math.max(0,(GV.thrT||0)-dt);const chs=GV.ch&&GV.ch.some(p=>!p.dead)?1:GV.thrT>0?.75:0;GV.chK=(GV.chK||0)+(chs-(GV.chK||0))*Math.min(1,dt*.7);const sc=Math.min(.85,W/(700+420*GV.chK));GV.sc=sc;const tcx=L.x-W*(.27+.57*GV.chK)/sc,tcy=gvG(L.x)-H*.64/sc;GV.camX=GV.camX==null?tcx:GV.camX+(tcx-GV.camX)*Math.min(1,dt*4);GV.camY=GV.camY==null?tcy:GV.camY+(tcy-GV.camY)*Math.min(1,dt*3);
   c.setTransform(GV.dpr,0,0,GV.dpr,0,0);GV.shake=Math.max(0,(GV.shake||0)-dt*1.5);const shx=GV.shake>0?(Math.random()-.5)*GV.shake*12:0,shy=GV.shake>0?(Math.random()-.5)*GV.shake*9:0;c.translate(shx,shy);
   gvCity(c,W,H,sc,nf,now);
   c.save();c.scale(sc,sc);c.translate(-GV.camX,-GV.camY);const x0=GV.camX-40,x1=GV.camX+W/sc+40,yb=GV.camY+H/sc+80;

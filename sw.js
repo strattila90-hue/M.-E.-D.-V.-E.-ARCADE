@@ -1,6 +1,6 @@
 // M.E.D.V.E. Arcade – offline gyorsítótár + frissítés gomb támogatás.
 // Új verzió: letöltődik, és az app automatikusan átvált rá (játék közben a játék bezárásakor).
-const CACHE = 'medve-arcade-v4.2.0';
+const CACHE = 'medve-arcade-v4.2.1';
 const FBV = '10.14.1';
 const FB_SDK = ['app', 'auth', 'firestore'].map(m => `https://www.gstatic.com/firebasejs/${FBV}/firebase-${m}-compat.js`);
 const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable.png'];
