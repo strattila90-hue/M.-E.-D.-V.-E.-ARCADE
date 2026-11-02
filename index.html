@@ -21,13 +21,37 @@
 .tkdens{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tkdens>div{background:#1d2416;border-radius:10px;padding:6px;text-align:center}.tkdens img{width:100%;max-width:150px;image-rendering:pixelated;display:block;margin:0 auto 4px}.tkdens b{font-size:12px}.tkdens small{display:block;font-size:10px;opacity:.75;line-height:1.25}.tkdens .lock img{filter:brightness(0) opacity(.5)}
 .tkuteglist{display:grid;gap:8px}.tkucard{display:flex;gap:10px;align-items:center;background:#1d2416;border-radius:12px;padding:8px;border:1px solid #2f3b22}.tkucard.me{border-color:#c9a227}.tkucard canvas{width:120px;height:70px;image-rendering:pixelated;background:#0b0f08;border-radius:8px;flex:0 0 auto}.tkucard>div{flex:1;min-width:0}.tkucard span{display:block;font:900 16px Anton,Impact,sans-serif;color:#f3d77a}.tkucard small{font-size:10.5px;opacity:.75}.tkucard .btn{font-size:11px;padding:6px 8px}
 .tkutegs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
-.ani7{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 0;padding:12px 14px;border:0;border-radius:16px;background:linear-gradient(110deg,#3a2a06,#7a5a10 55%,#c9a227);color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.4),0 0 0 3px #000;text-align:left;font:inherit;cursor:pointer;position:relative}.ani7 img{width:96px;image-rendering:pixelated;filter:drop-shadow(0 3px 0 rgba(0,0,0,.5))}.ani7 b{display:block;font:900 22px Anton,Impact,sans-serif;letter-spacing:.04em}.ani7 span{font-size:12px;opacity:.9}.ani7 .no{position:absolute;left:10px;top:6px;font-style:normal;font:900 11px Anton,Impact,sans-serif;opacity:.7}.ani7 .new{position:absolute;right:10px;top:8px;font-style:normal;background:#ff3b30;color:#fff;font:900 11px Anton,Impact,sans-serif;padding:2px 6px;border-radius:6px}
 .tkbtn{background:#2a3320;color:#f3ecd4;border:2px solid #c9a227;border-radius:10px;padding:10px 8px;font:800 14px system-ui,sans-serif}.tkbtn:active{background:#c9a227;color:#2a1c04}.tkbtn.sm{padding:6px 8px;font-size:11px;flex:0 0 auto}
 .tkmint{position:absolute;left:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));background:linear-gradient(#9fe0ff,#3a8ab0);color:#06202e;border:0;border-radius:12px;padding:9px 12px;font:900 12px Anton,Impact,sans-serif;letter-spacing:.03em;box-shadow:0 4px 0 #1d4a60;animation:tkp 1s infinite alternate}@keyframes tkp{to{filter:brightness(1.25)}}
 .tkmintbox{display:flex;gap:10px;align-items:center;background:#1d2416;border:1px solid #c9a227;border-radius:12px;padding:8px}.tkmintbox img{width:110px;image-rendering:pixelated;flex:0 0 auto}.tkmintbox>div{flex:1;min-width:0}.tkmintbox small{display:block;font-size:10.5px;opacity:.8;line-height:1.3}.tkmintbox button{background:#3a8ab0;color:#fff;border:0;border-radius:9px;padding:8px;font-weight:800;font-size:11px;flex:0 0 auto}.tkmintbox button:disabled{background:#3a4030;color:#8a907c}
 .tkcat{margin:12px 0 2px;font:900 13px Anton,Impact,sans-serif;letter-spacing:.05em;color:#c9d6a8;border-bottom:1px solid #3a4826;padding-bottom:3px}
 .tkic{width:64px;height:32px;image-rendering:pixelated;flex:0 0 auto;background:linear-gradient(#5d6b45,#3a4630);border-radius:6px;border:1px solid #6f8048}
 .tkucard{cursor:pointer}.tkhold{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 6px;padding:8px;background:#10150c;border:1px dashed #3a4826;border-radius:0 0 12px 12px;font-size:11px}.tkhold span{display:flex;align-items:center;gap:4px;background:#1d2416;border-radius:8px;padding:2px 6px 2px 2px}.tkhold img{width:36px;height:18px;image-rendering:pixelated}.tkhold em{opacity:.7}
+.anistack{position:relative;border-radius:18px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.45),0 0 0 3px #000;background:#05060a;--th:clamp(108px,30vw,150px)}
+.anistack .anigrid{border-radius:0;box-shadow:none;margin-top:calc(var(--th) * -.14)}
+.ani7wrap{position:relative;height:var(--th);z-index:6}
+.ani.ani7{clip-path:polygon(0 0,100% 0,100% 86%,0 100%)}
+.ani.ani7 .anic{width:92%;flex-direction:row;gap:10px;justify-content:center;transform:translate(-50%,-50%) rotate(-3deg)}
+.ani.ani7 img{height:clamp(52px,15vw,78px);width:auto;max-width:44%;image-rendering:pixelated}
+.ani7t{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.ani.ani7 b{font-size:clamp(22px,7vw,34px);text-align:left}
+.seam7{position:absolute;left:0;right:0;bottom:0;width:100%;height:100%;pointer-events:none;z-index:7}.seam7 polyline{fill:none;stroke:#fff;stroke-width:5;vector-effect:non-scaling-stroke}
+.tkinfo{background:linear-gradient(#2a3320,#161c10);border:1px solid #6f8048;color:#e8e2c0;font:700 10px ui-monospace,Menlo,monospace;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 2px 0 #000;border-radius:6px;padding:3px 8px}
+.tknav{background:linear-gradient(#2a3320,#0d120a);border-top:3px solid #c9a227;gap:6px}
+.tknav button{background:linear-gradient(#66764a,#36412a);border:1px solid #11160c;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 0 rgba(0,0,0,.35),0 3px 0 #070a05;color:#f3ecd4;border-radius:8px;position:relative}
+.tknav button::after{content:"";position:absolute;left:5px;top:5px;width:3px;height:3px;border-radius:50%;background:#9fb27a;box-shadow:calc(100% * 0) 0 0 #9fb27a}
+.tknav button b{font:400 11.5px var(--f-display);letter-spacing:.07em;text-transform:uppercase;text-shadow:1px 1px 0 #000}
+.tknav button:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 #070a05}
+.tkpush{background:linear-gradient(#6f8048,#3a4628);color:#ffe08a;border:2px solid #11160c;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 0 #070a05;overflow:hidden;padding:8px 12px 8px 20px;text-shadow:1px 1px 0 #000;font:400 15px var(--f-display);letter-spacing:.06em}
+.tkpush::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:repeating-linear-gradient(45deg,#e8b923 0 5px,#14140f 5px 10px)}.tkpush small{color:#e8e2c0;text-shadow:none}
+.tkpush:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 #070a05}
+.tkmint{background:linear-gradient(#ffe08a,#c9a227);color:#2a1c04;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 0 #6e5408;font:400 13px var(--f-display);letter-spacing:.05em}
+.tksheet{background:linear-gradient(#1f2817,#0e130a);border-top:7px solid #e8b923;border-image:repeating-linear-gradient(45deg,#e8b923 0 9px,#14140f 9px 18px) 7;border-radius:0}
+.tksheet h4{display:inline-block;background:#c9a227;color:#14140f;padding:3px 12px 2px;transform:skewX(-8deg);box-shadow:3px 3px 0 #000;font:400 16px var(--f-display);letter-spacing:.06em;margin:4px 0 10px}
+.tkrow{background:linear-gradient(90deg,rgba(111,128,72,.16),rgba(255,255,255,.02));border:1px solid #2f3b22;border-radius:10px;padding:8px;margin:6px 0}
+.tkrow button{background:linear-gradient(#ffe08a,#c9a227);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 3px 0 #6e5408;color:#2a1c04;font:400 13px var(--f-display);letter-spacing:.04em}.tkrow button:active{transform:translateY(2px);box-shadow:0 1px 0 #6e5408}
+.tkcat{font:400 14px var(--f-display);letter-spacing:.08em;color:#e8b923;text-shadow:1px 1px 0 #000;border-bottom:2px dashed #3a4826}
+.tkucard{background:linear-gradient(90deg,#26301b,#171e11);border:2px solid #3a4826;box-shadow:0 3px 0 #070a05}.tkucard.me{border-color:#c9a227}
+.tkx{background:#c9a227;color:#14140f;font-weight:900;box-shadow:2px 2px 0 #000}
 </style><style>
 /* Layout: tüzér-vörös, lekerekített app. Felül sáv (medve-jelvény), középen oldalra lapozható típus-oldalak (Összesítő díszszemle + 6 típus), alul fix menü. Háttérben halvány Szent Borbála. */
 :root{
@@ -1147,7 +1171,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" crossorigin="anonymous"></script>
 <script type="module">
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.5.0',APP_DATE='2026.10.27.';
+const APP_VER='4.5.1',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1440,9 +1464,9 @@ const MEDAL_SVG=`<svg viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" a
 <text y="23" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="8" letter-spacing="1" fill="#f3d77a">MEDVE</text></g></svg>`;
 function gamesHTML(){const P=aniPolys(),img=k=>k==='b'?BEAR_SPRITE:k==='p'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD;
   const seams=[];for(let r=0;r<3;r++)seams.push(P[r*2][1],P[r*2][2]);
-  return `<div class="anisel"><div class="anihd"><span>⚡ VÁLASSZ BEVETÉST</span><i>7 játék</i></div><div class="anigrid">${ANI_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const p=P[i],cx=p.reduce((a,q)=>a+q[0],0)/4,cy=p.reduce((a,q)=>a+q[1],0)/4,left=i%2===0;
+  return `<div class="anisel"><div class="anihd"><span>⚡ VÁLASSZ BEVETÉST</span><i>7 játék</i></div><div class="anistack"><div class="ani7wrap"><button type="button" class="ani ani7" data-game="kassza" aria-label="Tüzér Kassza – tap-tap pénzcsináló" style="--bg:linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402);--ac:#2f7a2f;--cx:50%;--cy:48%"><i class="no" style="left:2%;top:4%">07</i><i class="new" style="right:3%;top:10%">ÚJ!</i><div class="anic"><img src="${tkNoteCv(6).toDataURL()}" alt=""><div class="ani7t"><b>TÜZÉR KASSZA</b><span>Tap-tap pénzcsináló · ütegkassza</span></div></div></button><svg class="seam7" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,100 100,86" /></svg></div><div class="anigrid">${ANI_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const p=P[i],cx=p.reduce((a,q)=>a+q[0],0)/4,cy=p.reduce((a,q)=>a+q[1],0)/4,left=i%2===0;
     return `<button type="button" class="ani" data-game="${g}" aria-label="${t.replace(/<br>/g,' ')} – ${sub}" style="--bg:${bg};--ac:${ac};--cx:${cx.toFixed(1)}%;--cy:${cy.toFixed(1)}%;clip-path:polygon(${p.map(q=>q[0].toFixed(1)+'% '+q[1].toFixed(1)+'%').join(',')})"><i class="no" style="${left?'left:3%':'right:3%'};top:${(p[0][1]+1).toFixed(1)}%">0${i+1}</i>${nw?'<i class="new" style="right:4%;top:'+(p[1][1]+3).toFixed(1)+'%">ÚJ!</i>':''}<div class="anic"><img class="${ik==='p'?'pzhfull':ik[0]==='g'?'gidfull':''}${ik==='g2'?' flip':''}" src="${img(ik)}" alt=""><b>${t}</b><span>${esc(sub)}</span></div></button>`}).join('')}
-    <svg class="seams" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${seams.map(q=>q.join(',')).join(' ')}" /><polyline points="0,35 ${P[0][2].join(',')} 100,29" /><polyline points="0,68 ${P[2][2].join(',')} 100,62" /></svg></div><button type="button" class="ani7" data-game="kassza" aria-label="Tüzér Kassza – tap-tap pénzcsináló"><i class="no">07</i><i class="new">ÚJ!</i><img src="${tkNoteCv(6).toDataURL()}" alt=""><div><b>TÜZÉR KASSZA</b><span>Tap-tap pénzcsináló · ütegkassza</span></div></button></div>`}
+    <svg class="seams" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${seams.map(q=>q.join(',')).join(' ')}" /><polyline points="0,35 ${P[0][2].join(',')} 100,29" /><polyline points="0,68 ${P[2][2].join(',')} 100,62" /></svg></div></div></div>`}
 function gameStart(k){if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');document.getElementById('authBox')?.scrollIntoView({behavior:'smooth',block:'center'});return}k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():gvOpen()}
 document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('#main [data-game]');if(!g)return;e.stopPropagation();const grid=g.closest('.anigrid');
   if(grid&&!matchMedia('(prefers-reduced-motion: reduce)').matches){if(grid.classList.contains('pick'))return;grid.classList.add('pick');g.classList.add('on');try{sndClink()}catch(x){}setTimeout(()=>{grid.classList.remove('pick');g.classList.remove('on');gameStart(g.dataset.game)},380)}else gameStart(g.dataset.game)},true);
@@ -2527,11 +2551,20 @@ function tkBg(c,W,H,now){const rush=TK.rush>0;if(!TK.bgc||TK.bgc.w!==W||TK.bgc.h
   // borostyán forgó jelzőfények a két felső sarokban
   for(const bx of [16,W-16]){const by=24,a=now/(rush?180:420);c.fillStyle='#2a2a22';c.fillRect(bx-7,by+4,14,5);c.fillStyle='#d98a10';c.beginPath();c.arc(bx,by,6,Math.PI,0);c.fill();c.save();c.globalCompositeOperation='lighter';const dx=Math.cos(a)*44;const gg=c.createRadialGradient(bx+dx*.15,by,0,bx+dx*.15,by,40);gg.addColorStop(0,`rgba(255,170,40,${.35+.3*Math.abs(Math.cos(a))})`);gg.addColorStop(1,'rgba(255,170,40,0)');c.fillStyle=gg;c.fillRect(bx-44,by-44,88,88);c.restore()}}
 // ---- hang: csilingelés, kassza, kaszinós lounge-zene ----
-function tkJingle(den,crit){if(!SOUND||!ac())return;const a=AC,t=a.currentTime,n=crit?6:2+(Math.random()<.4?1:0);
-  for(let k=0;k<n;k++){const tt=t+k*(crit?.045:.03)+Math.random()*.01,f=(den<3?2400:1800)*(1+Math.random()*.9)+(crit?k*180:0);
-    for(const [m,v] of [[1,.05],[2.76,.022],[5.4,.01]]){const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f*m;g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(v,tt+.004);g.gain.exponentialRampToValueAtTime(.0001,tt+(crit?.5:.28)/m);o.connect(g).connect(MASTER);o.start(tt);o.stop(tt+.55)}}}
-function tkKaching(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;const n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=3200;f.Q.value=2;const g=a.createGain();g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);n.connect(f).connect(g).connect(MASTER);n.start(t,0,.15);
-  [[1568,.09],[2093,.16],[3136,.2]].forEach(([fr,d])=>{const o=a.createOscillator(),gg=a.createGain();o.type='triangle';o.frequency.value=fr;gg.gain.setValueAtTime(.0001,t+d);gg.gain.exponentialRampToValueAtTime(.09,t+d+.01);gg.gain.exponentialRampToValueAtTime(.0001,t+d+.9);o.connect(gg).connect(MASTER);o.start(t+d);o.stop(t+d+1)})}
+function tkJingle(den,crit){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;
+  const tone=(f,tt,v,d,lp)=>{const o=a.createOscillator(),g=a.createGain(),fl=a.createBiquadFilter();o.type='sine';o.frequency.value=f;fl.type='lowpass';fl.frequency.value=lp||2200;g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(v,tt+.006);g.gain.exponentialRampToValueAtTime(.0001,tt+d);o.connect(fl).connect(g).connect(MASTER);o.start(tt);o.stop(tt+d+.05)};
+  const noise=(tt,f,q,v,d,type)=>{const n=a.createBufferSource();n.buffer=NOISE;const fl=a.createBiquadFilter();fl.type=type||'bandpass';fl.frequency.value=f;fl.Q.value=q;const g=a.createGain();g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(v,tt+.008);g.gain.exponentialRampToValueAtTime(.0001,tt+d);n.connect(fl).connect(g).connect(MASTER);n.start(tt,Math.random()*.6,d+.05)};
+  const P5=[523.25,587.33,659.25,783.99,880];
+  if(TK_DEN[den].t==='c'){// tompa, kerek érme-pöttyenés + halk koppanás az asztalon
+    tone(P5[Math.floor(Math.random()*5)]*(den>=2?1.5:1),t,.045,.16,1800);noise(t,700,.7,.02,.05,'lowpass')}
+  else{// papírpénz-suhogás + halk mély koppanás
+    noise(t,1600+Math.random()*500,.9,.05,.09);tone(196,t,.025,.08,600)}
+  if(crit){[523.25,659.25,783.99].forEach((f,k)=>tone(f,t+.05+k*.05,.04,.45,1500))}}
+function tkKaching(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;
+  // mély pénztárfiók-„kacc”: fiókhúzás zaj + puha mély ütés + lágy harangszó
+  const n=a.createBufferSource();n.buffer=NOISE;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=1100;const g=a.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.22);n.connect(f).connect(g).connect(MASTER);n.start(t,0,.25);
+  const o=a.createOscillator(),og=a.createGain();o.type='sine';o.frequency.setValueAtTime(140,t+.18);o.frequency.exponentialRampToValueAtTime(70,t+.34);og.gain.setValueAtTime(.0001,t+.18);og.gain.exponentialRampToValueAtTime(.14,t+.19);og.gain.exponentialRampToValueAtTime(.0001,t+.4);o.connect(og).connect(MASTER);o.start(t+.18);o.stop(t+.45);
+  [[784,.22],[1175,.3]].forEach(([fr,d])=>{const b=a.createOscillator(),bg=a.createGain();b.type='sine';b.frequency.value=fr;bg.gain.setValueAtTime(.0001,t+d);bg.gain.exponentialRampToValueAtTime(.045,t+d+.01);bg.gain.exponentialRampToValueAtTime(.0001,t+d+.8);b.connect(bg).connect(MASTER);b.start(t+d);b.stop(t+d+.85)})}
 const TK_CH=[[48,[60,64,67,71]],[45,[57,60,64,67]],[50,[62,65,69,72]],[43,[55,59,62,65]]];// Cmaj7 – Am7 – Dm7 – G7
 const tkHz=m=>440*Math.pow(2,(m-69)/12);
 function tkMusic(on){if(!on){clearInterval(TK.musI);TK.musI=null;if(TK.musG){try{TK.musG.gain.setTargetAtTime(0,AC.currentTime,.2)}catch(e){}}return}
@@ -2545,7 +2578,7 @@ function tkMusic(on){if(!on){clearInterval(TK.musI);TK.musI=null;if(TK.musG){try
       // swinges cin nyolcadokra
       if(beat%2===0||Math.random()<.3){const n=AC.createBufferSource();n.buffer=NOISE;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=7500;const g=AC.createGain();g.gain.setValueAtTime(beat%4===2?.05:.025,tt);g.gain.exponentialRampToValueAtTime(.0001,tt+.05);n.connect(f).connect(g).connect(TK.musG);n.start(tt,Math.random()*.5,.06)}
       // csilingelő harang-arpeggio (kaszinó)
-      if(Math.random()<(TK.rush>0?.7:.32)){const m=ch[Math.floor(Math.random()*4)]+24,o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();o.type='sine';o2.type='sine';o.frequency.value=tkHz(m);o2.frequency.value=tkHz(m)*3.01;g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(.03,tt+.005);g.gain.exponentialRampToValueAtTime(.0001,tt+.6);o.connect(g);o2.connect(g);g.connect(TK.musG);o.start(tt);o2.start(tt);o.stop(tt+.65);o2.stop(tt+.65)}
+      if(Math.random()<(TK.rush>0?.5:.25)){const m=ch[Math.floor(Math.random()*4)]+12,o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();o.type='sine';o2.type='sine';o.frequency.value=tkHz(m);o2.frequency.value=tkHz(m)*2;g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(.018,tt+.02);g.gain.exponentialRampToValueAtTime(.0001,tt+.6);o.connect(g);o2.connect(g);g.connect(TK.musG);o.start(tt);o2.start(tt);o.stop(tt+.65);o2.stop(tt+.65)}
       TK.mt+=q/4;TK.mb++}},90)}
 // ---- színpalettás pixelsprite-ok (16×12) ----
 const TK_PAL={k:'#14140f',g:'#4b5a32',G:'#6f8048',d:'#2c361d',s:'#8a939a',S:'#c8cfd4',y:'#c9a227',Y:'#f3d77a',w:'#f2f2ea',r:'#c0392b',b:'#6a4a2a',B:'#9a7040',c:'#7fc8e8',o:'#e07a1a',t:'#b8a27a',n:'#1e2a3a'};
@@ -2661,7 +2694,7 @@ function tkStartScreen(){const s=$('#tkStart');s.hidden=false;s.innerHTML=`<h3>T
 function tkClose(){try{tkMusic(false);TK.run=false;clearInterval(TK.saveI);tkSave();tkSync(true)}catch(e){}gClose(TK)}
 // ---- bevitel ----
 function tkDown(e){e.preventDefault();const r=TK.cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;TK.ptr[e.pointerId]={x,y,t:performance.now()};
-  const G=TK.gold;if(G&&Math.hypot(x-G.x,y-G.y)<46){TK.gold=null;TK.tickets++;TK.rush=15;toast('🎫 GOLDEN TICKET! 15 mp-ig dupla bevétel');if(SOUND&&ac()){const t=AC.currentTime;[523,659,784,1047].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.07,t+k*.08);g.gain.exponentialRampToValueAtTime(.001,t+k*.08+.4);o.connect(g).connect(MASTER);o.start(t+k*.08);o.stop(t+k*.08+.42)})}return}
+  const G=TK.gold;if(G&&Math.hypot(x-G.x,y-G.y)<46){TK.gold=null;TK.tickets++;TK.rush=15;toast('🎫 GOLDEN TICKET! 15 mp-ig dupla bevétel');if(SOUND&&ac()){const t=AC.currentTime;[392,523.25,659.25,783.99].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.055,t+k*.08);g.gain.exponentialRampToValueAtTime(.001,t+k*.08+.4);o.connect(g).connect(MASTER);o.start(t+k*.08);o.stop(t+k*.08+.42)})}return}
   tkTap(x,y)}
 function tkUp(e){const p=TK.ptr[e.pointerId];delete TK.ptr[e.pointerId];if(!p)return;const r=TK.cv.getBoundingClientRect(),y=e.clientY-r.top;if(p.y-y>70&&performance.now()-p.t<900)tkPush()}
 function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>now-t<1000);if(TK.tapsSec.length>=15)return;TK.tapsSec.push(now);
@@ -2673,7 +2706,7 @@ function tkPush(){const v=Math.floor(TK.pocket);if(v<1){toast('A zsebed üres �
   TK.pocket-=v;TK.given+=v;TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
   toast(`⇡ ${tkFmt(v)} Ft az ütegkasszába – ${TK.uteg}`);tkSave();tkSync(true)}
 function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;const c=tkMintCost(n);if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.newDen={i:n,t:0};TK.sig='';tkKaching();
-  if(SOUND&&ac()){const t=AC.currentTime;[660,880,1320].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.045,t+.3+k*.09);g.gain.exponentialRampToValueAtTime(.001,t+.3+k*.09+.2);o.connect(g).connect(MASTER);o.start(t+.3+k*.09);o.stop(t+.3+k*.09+.22)})}tkSave();tkSheetRender()}
+  if(SOUND&&ac()){const t=AC.currentTime;[523.25,659.25,783.99].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.05,t+.3+k*.09);g.gain.exponentialRampToValueAtTime(.001,t+.3+k*.09+.2);o.connect(g).connect(MASTER);o.start(t+.3+k*.09);o.stop(t+.3+k*.09+.22)})}tkSave();tkSheetRender()}
 // ---- fülek ----
 function tkSheet(id){const s=$('#tkSheet');if(!s.hidden&&TK.sheet===id){s.hidden=true;TK.sheet=null;return}TK.sheet=id;TK.sig='';s.hidden=false;TK.open=TK.open||{};tkSheetRender();s.scrollTop=0}
 function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=TK.sheet;let h='';
@@ -2756,7 +2789,9 @@ function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getCo
   // zseb-köteg
   const pk=Math.min(12,Math.ceil(Math.log10(TK.pocket+1)*1.4)),px=W*.5,py=H*.9;if(TK.pocket>=1){const di=TK_DEN.reduce((m,d,i)=>i<=TK.den&&d.v<=TK.pocket?i:m,0),im=tkNoteCv(di),sw=TK_DEN[di].t==='c'?24:48;for(let i=0;i<pk;i++)c.drawImage(im,px-sw/2+(i%2)*2,py-i*3,sw,sw*im.height/im.width);
     const a=.5+.5*Math.sin(now/250);c.fillStyle=`rgba(255,224,138,${a})`;c.font='bold 16px sans-serif';c.fillText('⇡',px,py-pk*3-6)}
-  if(TK.combo>=3){c.fillStyle='#ffd24a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='right';c.fillText(`KOMBÓ ${Math.floor(TK.combo)} · ×${(1+TK.combo*(.01+TK.upg.combo*.005)).toFixed(2)}`,W-30,50)}
+  {const tx=tkPlain(tkFmt(TK.pocket)+' FT').replace(/\u00a0/g,' '),k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);
+    c.fillStyle='#c9a227';c.font='900 9px sans-serif';c.textAlign='center';c.fillText('ZSEB',W/2,y0-4);tkTxt(c,tx,x0+k,y0+k,'#3a2a04',k);tkTxt(c,tx,x0,y0,TK.rush>0?'#fff4b0':'#ffe08a',k)}
+  if(TK.combo>=3){c.fillStyle='#ffd24a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(`KOMBÓ ${Math.floor(TK.combo)} · ×${(1+TK.combo*(.01+TK.upg.combo*.005)).toFixed(2)}`,W/2,104)}
   if(TK.rush>0){c.fillStyle='#ffe08a';c.font='900 14px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(`🎫 GOLDEN TICKET · DUPLA BEVÉTEL · ${Math.ceil(TK.rush)} mp`,W/2,H*.2)}
   if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=70;c.save();c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);c.shadowColor='#ffd24a';c.shadowBlur=18;c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
   if(TK.newDen){const N=TK.newDen;N.t+=dt;const a=Math.min(1,N.t*3,(3.2-N.t)*2);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(0,0,0,.65)';c.fillRect(0,H*.13,W,60);c.fillStyle='#ffcf3a';c.font='900 20px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('ÚJ PÉNZNEM: '+TK_DEN[N.i].n.toUpperCase(),W/2,H*.13+26);c.fillStyle='#f3ecd4';c.font='bold 11px sans-serif';c.fillText(TK_DEN[N.i].m,W/2,H*.13+44);c.globalAlpha=1;if(N.t>3.2)TK.newDen=null}
