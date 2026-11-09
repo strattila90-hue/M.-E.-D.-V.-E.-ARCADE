@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <title>M.E.D.V.E. Arcade</title><meta name="description" content="Katonai témájú mini-játékok: M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj.">
 <meta name="theme-color" content="#1e2419"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="MEDVE Arcade">
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -79,6 +82,12 @@
 .tkchip.u span{color:#fff}
 .tkchip.u b{color:#fff}
 @media(max-width:340px){.tkchip span{display:none}.tkchip{grid-template-columns:18px 1fr auto}}
+html{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+input,textarea,[contenteditable],.chatmsg,.chat-text{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,canvas{-webkit-user-drag:none;user-drag:none}
+button,a,[role=button],label{-webkit-tap-highlight-color:transparent}
+@media (display-mode: standalone){body{cursor:default}}
 </style><style>
 /* Layout: tüzér-vörös, lekerekített app. Felül sáv (medve-jelvény), középen oldalra lapozható típus-oldalak (Összesítő díszszemle + 6 típus), alul fix menü. Háttérben halvány Szent Borbála. */
 :root{
@@ -1200,7 +1209,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.8.2',APP_DATE='2026.10.27.';
+const APP_VER='4.8.3',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2576,6 +2585,9 @@ function tkHex(h){const n=parseInt(h.slice(1),16);return [n>>16&255,n>>8&255,n&2
 function tkMixC(a,b,k){const A=tkHex(a),B=tkHex(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*k)).join(',')})`}
 const tkPlain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 // katonai háttér: olajzöld páncéllemez, szegecsek, terepminta, sablonfelirat, figyelmeztető csík, jelzőfények
+function tkFlush(){TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={}}
+function tkCacheCheck(now){if(now-(TK._cchk||0)<2000)return;TK._cchk=now;try{const b=TK.bgc;if(b&&b.cv){const d=b.cv.getContext('2d').getImageData(2,2,1,1).data;if(d[3]===0)tkFlush()}}catch(e){tkFlush()}}
+addEventListener('visibilitychange',()=>{if(!document.hidden)tkFlush()});addEventListener('pageshow',tkFlush);
 function tkBg(c,W,H,now){const rush=TK.rush>0;if(!TK.bgc||TK.bgc.w!==W||TK.bgc.h!==H){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
     const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#46553a');g.addColorStop(.5,'#323f27');g.addColorStop(1,'#1a2213');x.fillStyle=g;x.fillRect(0,0,W,H);
     let sd=11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
@@ -2831,7 +2843,7 @@ function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getCo
   if(TK.rush>0)TK.rush=Math.max(0,TK.rush-dt);TK.goldT-=dt;if(TK.goldT<=0&&!TK.gold){TK.gold={x:-40,y:H*.2+Math.random()*H*.12,t:0,vx:60+Math.random()*30};TK.goldT=180+Math.random()*150}
   if(TK.gold){const G=TK.gold;G.t+=dt;G.x+=G.vx*dt;G.y+=Math.sin(G.t*3)*30*dt;if(G.x>W+60)TK.gold=null}
   if(now-TK.lastTap>900)TK.combo=Math.max(0,TK.combo-dt*8);TK.bump=Math.max(0,TK.bump-dt*7);
-  c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;tkBg(c,W,H,now);
+  c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#1d2612';c.fillRect(0,0,W,H);tkCacheCheck(now);tkBg(c,W,H,now);
   // az üteg pénzhalma (domb) a bázis mögött
   const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);
   if(U.sum>=1e3){for(let i=0;i<5;i++){const t=now/700+i*1.9,x=W/2+Math.sin(i*7.1)*pw*.25,y=H*.735-(pile.ph||0)*(.4+.5*Math.abs(Math.sin(i*3.3)))+4,a=Math.max(0,Math.sin(t));c.fillStyle=`rgba(255,250,210,${a})`;c.fillRect(x,y,2,2);c.fillRect(x-2,y+0.5,6,1);c.fillRect(x+.5,y-2,1,6)}}

@@ -1,7 +1,7 @@
 {
   "name": "M.E.D.V.E. Arcade",
   "short_name": "MEDVE Arcade",
-  "description": "Katonai témájú mini-játékok élő ranglistával és chattel: M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés.",
+  "description": "Katonai témájú mini-játékok élő ranglistával és chattel: M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza.",
   "id": "./",
   "lang": "hu",
   "start_url": "./",
@@ -28,5 +28,17 @@
       "purpose": "maskable"
     }
   ],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "dir": "ltr"
 }
