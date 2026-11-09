@@ -88,6 +88,7 @@ input,textarea,[contenteditable],.chatmsg,.chat-text{-webkit-user-select:text;us
 img,canvas{-webkit-user-drag:none;user-drag:none}
 button,a,[role=button],label{-webkit-tap-highlight-color:transparent}
 @media (display-mode: standalone){body{cursor:default}}
+.tkrow.me{outline:2px solid #c9a227;outline-offset:-2px;border-radius:8px}
 </style><style>
 /* Layout: tüzér-vörös, lekerekített app. Felül sáv (medve-jelvény), középen oldalra lapozható típus-oldalak (Összesítő díszszemle + 6 típus), alul fix menü. Háttérben halvány Szent Borbála. */
 :root{
@@ -1209,7 +1210,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.8.3',APP_DATE='2026.10.27.';
+const APP_VER='4.8.4',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2725,13 +2726,20 @@ function tkDmClaim(i){const D=tkDM(),q=D.list[i];if(!q||q.done||tkDmProg(q)<q.go
 function tkDmHTML(){const D=tkDM();return `<h4>📅 Napi küldetések</h4><p class="hint">Éjfélkor újak jönnek. Mind a 3 teljesítése sorozat-bónuszt ad (most: ${TK.streak||0} nap).</p>`+D.list.map((q,i)=>{const t=TK_DMT.find(x=>x.k===q.k),p=Math.min(q.goal,tkDmProg(q)),ok=p>=q.goal;return `<div class="tkrow"><div><b>${q.done?'✅':'🎯'} ${t.n(q.goal)}</b><small>${tkFmt(p)} / ${tkFmt(q.goal)} · jutalom: ${tkFmt(tkDmRw())} Ft</small><span class="tkbar"><i style="width:${Math.min(100,p/q.goal*100)}%"></i></span></div><button type="button" data-dmc="${i}" ${q.done||!ok?'disabled':''}>${q.done?'KÉSZ':'Átvesz'}</button></div>`}).join('')}
 // ---- állapot ----
 function tkLoad(){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}catch(e){}let mig=false;if(s&&s.uteg!==undefined&&s.ver!==TK_VER){mig=true;s={uteg:s.uteg}}
-  Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:Date.now(),synced:0,dm:null,wk:'',wg:0,streak:0,lastDm:''},s);TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
-  if(typeof USERDOC!=='undefined'&&USERDOC){if(!TK.uteg&&USERDOC.tkUteg)TK.uteg=USERDOC.tkUteg;if(USERDOC.tkFt>TK.given)TK.given=USERDOC.tkFt}
+  Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:Date.now(),synced:0,wgSynced:null,dm:null,wk:'',wg:0,streak:0,lastDm:''},s);TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
+  tkAdopt();
   if(mig)setTimeout(()=>toast('🔄 Új szezon: mostantól forintban megy – a ranglista és a mentés nulláról indul.'),900)}
-function tkSave(){try{TK.lastT=Date.now();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','dm','wk','wg','streak','lastDm','crits','bestCombo'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
-function tkSync(force){try{if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
-  if(TK.given<=TK.synced&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&TK.wgSynced===TK.wg)return;TK.syncT=now;const g=TK.given,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
-  const wk=TK.wk||tkWeek(),wg=TK.wk===tkWeek()?TK.wg:0;DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=TK.wg;tkSave()}).catch(e=>console.warn('tk sync',e&&e.message))}catch(e){}}
+function tkSave(){try{TK.lastT=Date.now();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','wgSynced','dm','wk','wg','streak','lastDm','crits','bestCombo'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
+// szerveren lévő (másik eszközről befizetett) értékek átvétele – különben a szabály (csak nőhet) elutasítja a mentést
+function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)return;if(!TK.uteg&&d.tkUteg)TK.uteg=d.tkUteg;
+  if(TK.wgSynced==null)TK.wgSynced=TK.wg||0;if(TK.synced==null)TK.synced=TK.given||0;const w=tkWeek();if(TK.wk!==w){TK.wk=w;TK.wg=0;TK.wgSynced=0}
+  if(typeof d.tkFt==='number'&&d.tkFt>(TK.synced||0)){const un=Math.max(0,TK.given-(TK.synced||0));TK.given=Math.max(TK.given,d.tkFt+un);TK.synced=d.tkFt}
+  if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
+  if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
+function tkSync(force){try{if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
+  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;TK.syncT=now;const g=TK.given,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
+  const wk=TK.wk,wg=TK.wg||0;DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
+    if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{if(x.exists){tkAdopt(x.data());TK.syncT=0}}).catch(()=>{});if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u),'kassza')}catch(_){}}}})}catch(e){}}
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
 function tkMult(){const ach=TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0);return (1+ach*.03)*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
 const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*tkMult();
@@ -2786,7 +2794,7 @@ function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=T
   if(id==='ach')h=tkDmHTML()+`<h4 style="margin-top:12px">🎖️ Érdemek – szintenként fejlődnek</h4><p class="hint">Minden elért fokozat +3% az összes bevételre.</p>`+TK_ACH.map(a=>{const l=tkAchLvl(a),v=a.m(),nx=a.t[l];return `<div class="tkrow"><div><b>${a.ic} ${a.n}</b> <i style="color:${l?TK_MED[l-1]:'#888'}">${l?['I','II','III','IV','V'][l-1]+'. fokozat':'még nincs'}</i><small>${nx!=null?`Következő: ${tkFmt(v)} / ${tkFmt(nx)}`:'Legmagasabb fokozat elérve!'}</small><span class="tkbar"><i style="width:${nx!=null?Math.min(100,v/nx*100):100}%"></i></span></div><span class="tkmed">${[0,1,2,3,4].map(k=>`<i style="background:${k<l?TK_MED[k]:'#333'}"></i>`).join('')}</span></div>`}).join('')+
     `<h4 style="margin-top:12px">💵 Pénznemek</h4><div class="tkdens">${TK_DEN.map((d,i)=>`<div class="${i<=TK.den?'':'lock'}"><img src="${tkNoteCv(i).toDataURL()}" alt=""><b>${i<=TK.den?d.n:'???'}</b><small>${tkFmt(d.v)} Ft${i<=TK.den?' · '+d.m:' · pénzverde: '+tkFmt(tkMintCost(i))+' Ft'}</small></div>`).join('')}</div>`;
   if(id==='uteg'){const U=tkUtegStats();h=`<h4>🏆 Ütegek kasszája</h4><div class="tkseg"><button type="button" data-utw="1" class="${TK.utw?'on':''}">📅 Heti verseny</button><button type="button" data-utw="0" class="${TK.utw?'':'on'}">∑ Összesített</button></div><p class="hint">${TK.utw?`Ezen a héten (${tkWeek()}) befizetett összeg – <b>hétfőn 0:00-kor nullázódik</b>, még ${tkWeekLeft()}.`:'A szezon kezdete óta befizetett összeg.'} Koppints egy ütegre: megmutatja, mivel rendelkezik.</p><div class="tkuteglist">${U.map((u,k)=>`<div class="tkucard${u.n===TK.uteg?' me':''}" data-uo="${u.n}" style="--uc:${tkUC(u.n)[0]};--ut:${tkUC(u.n)[1]}"><canvas data-pile="${u.sum}" width="120" height="70"></canvas><div><b>${k+1}. ${k===0&&TK.utw&&u.wsum>0?'🥇 ':''}<em class="tkuchip">${u.n}</em>${u.n===TK.uteg?' (te)':''}</b><span>${tkFmt(TK.utw?u.wsum:u.sum)} Ft</span><small style="display:block">${TK.utw?'összesen: '+tkFmt(u.sum)+' Ft':'e héten: '+tkFmt(u.wsum)+' Ft'}</small><small>${u.m} fő${u.top?' · legbőkezűbb: '+esc(u.top):''}<br>Eszközök: ${tkFmt(u.items)} db · ${tkFmt(u.val)} Ft értékben</small></div>${u.n!==TK.uteg?`<button type="button" class="tkbtn sm" data-mv="${u.n}">Átigazolok</button>`:''}</div>${TK.open&&TK.open[u.n]?`<div class="tkhold">${u.list.length?u.list.map(([g,c])=>`<span><img src="${tkIconURL(g)}" alt="">${esc(g.n)} <b>× ${tkFmt(c)}</b></span>`).join(''):'<em>Még nincs beszerzésük.</em>'}</div>`:''}`).join('')}</div>
-    <h4 style="margin-top:10px">🎖️ Legbőkezűbb bajtársak</h4>${tkTopGivers().map((u,k)=>`<div class="tkrow"><div><b>${k+1}. ${esc(u.name)}</b><small>${tkChip(u.uteg)}</small></div><b>${tkFmt(u.g)} Ft</b></div>`).join('')||'<p class="hint">Még senki nem adott – légy az első!</p>'}`}
+    <h4 style="margin-top:10px">🎖️ Legbőkezűbb bajtársak${TK.utw?' – e héten':''}</h4>${tkTopGivers().map((u,k)=>`<div class="tkrow${u.me?' me':''}"><div><b>${k<3?['🥇','🥈','🥉'][k]:k+1+'.'} ${esc(u.name)}${u.me?' (te)':''}</b><small>${tkChip(u.uteg)}</small></div><b>${tkFmt(u.g)} Ft</b></div>`).join('')||'<p class="hint">Még senki nem adott – légy az első!</p>'}`}
   s.innerHTML=`<button type="button" class="tkx" data-tkx>✕</button>`+h;s.querySelector('[data-tkx]').onclick=()=>{s.hidden=true;TK.sheet=null};
   const mb=s.querySelector('[data-mint]');if(mb)mb.onclick=tkMint;
   s.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>{const u=TK_UPG.find(q=>q.id===b.dataset.ub),c=tkUpgCost(u);if(TK.pocket<c||TK.upg[u.id]>=u.max)return;TK.pocket-=c;TK.upg[u.id]++;tkJingle(3,false);tkSheetRender()});
@@ -2798,7 +2806,7 @@ function tkUsers(){let a=[];try{a=(typeof arr==='function'?arr('users'):[]).map(
   if(!mine){mine={id:'me',name:(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Te'};a=a.concat([mine])}mine=Object.assign({},mine,{tkGive:Math.max(TK.given,mine.tkGive||0),tkUteg:TK.uteg||mine.tkUteg,tkOwn:TK.own,tkW:TK.wk===tkWeek()?TK.wg:0});return a.map(u=>u.id===mine.id?mine:u)}
 function tkUtegStats(){const us=tkUsers();return TK_UTEG.map(n=>{const m=us.filter(u=>u.tkUteg===n),t=m.slice().sort((a,b)=>(b.tkGive||0)-(a.tkGive||0))[0],agg={};for(const u of m)for(const [k,v] of Object.entries(u.tkOwn||{}))if(typeof v==='number'&&v>0)agg[k]=(agg[k]||0)+v;
   const list=TK_GEAR.filter(g=>agg[g.id]).map(g=>[g,agg[g.id]]);return {n,sum:m.reduce((s,u)=>s+(u.tkGive||0),0),wsum:m.reduce((s,u)=>s+(u.tkW||0),0),m:m.length,top:t&&t.tkGive>0?t.name:'',list,items:list.reduce((s,x)=>s+x[1],0),val:list.reduce((s,[g,c])=>s+tkGP(g)*c,0)}}).sort((a,b)=>TK.utw?b.wsum-a.wsum||b.sum-a.sum:b.sum-a.sum)}
-function tkTopGivers(){return tkUsers().filter(u=>u.tkGive>0).sort((a,b)=>b.tkGive-a.tkGive).slice(0,5).map(u=>({name:u.name||u.nick||'?',uteg:u.tkUteg,g:u.tkGive}))}
+function tkTopGivers(){const f=TK.utw?'tkW':'tkGive';return tkUsers().filter(u=>u[f]>0).sort((a,b)=>b[f]-a[f]).slice(0,10).map(u=>({name:u.name||u.nick||'?',uteg:u.tkUteg,g:u[f],me:u.id===UID||u.id==='me'}))}
 function tkEquiv(v){const g=TK_GEAR.filter(q=>!q.gold&&tkGP(q)<=v).sort((a,b)=>a.p-b.p).pop();if(!g)return 'még egy MRE-re sem elég';const n=Math.floor(v/tkGP(g));return `≈ ${tkFmt(n)} db ${g.n.replace(/ \(.*\)/,'').replace(/,.*$/,'')} ára`}
 // ---- pénzhalom (domb), részletes pixelkép ----
 function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'x'+h+':'+Math.floor(n*4);if(TK.pc[key])return TK.pc[key];
