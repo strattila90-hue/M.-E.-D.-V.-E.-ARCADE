@@ -1210,7 +1210,7 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.8.4',APP_DATE='2026.10.27.';
+const APP_VER='4.8.5',APP_DATE='2026.10.27.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -5413,7 +5413,7 @@ applySet();arcRender();
 /* ===== Offline mód: magától átvált, ha nincs net ===== */
 function netBadge(){const b=document.getElementById('netBadge');if(b)b.hidden=navigator.onLine}
 addEventListener('offline',()=>{netBadge();if(typeof toast==='function')toast('📴 Nincs internet – offline módban játszol tovább. A rekordok netkapcsolatkor szinkronizálódnak.')});
-addEventListener('online',()=>{netBadge();if(typeof toast==='function')toast('📶 Újra van internet – szinkronizálás…');try{UPD_REG&&UPD_REG.update()}catch(e){}});
+addEventListener('online',()=>{netBadge();if(typeof toast==='function')toast('📶 Újra van internet – szinkronizálás…');swUpd(UPD_REG);});
 netBadge();
 /* ===== Frissítés (PWA) ===== */
 let UPD_REG = null, UPD_WAITING = false;
@@ -5485,9 +5485,9 @@ if('serviceWorker' in navigator && (location.protocol === 'https:' || location.h
     UPD_REG = reg;
     if(reg.waiting){ UPD_WAITING = true; updSetUI('available'); updAuto(); }
     // csendes ellenőrzés: induláskor, 15 percenként és amikor visszatérsz az appba
-    setTimeout(()=>{ try{ reg.update(); }catch(e){} }, 4000);
-    setInterval(()=>{ if(!document.hidden) try{ reg.update(); }catch(e){} }, 15*60*1000);
-    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) try{ reg.update(); }catch(e){} else updAuto(); });
+    setTimeout(()=>swUpd(reg), 4000);
+    setInterval(()=>{ if(!document.hidden) swUpd(reg); }, 15*60*1000);
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) swUpd(reg); else updAuto(); });
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       if(!nw) return;
@@ -5522,6 +5522,7 @@ document.addEventListener('click', e => {
 });
 /* ===== v4.1.2: hibakódos értesítő + a játékciklusok nem állnak le hiba esetén ===== */
 const MERR={seen:{},n:0};
+function swUpd(r){try{if(r&&navigator.onLine)r.update().catch(e=>console.warn('SW frissítés-ellenőrzés kihagyva:',e&&e.message))}catch(e){}}
 function medveErr(e,game){try{const msg=String(e&&e.message||e||'ismeretlen hiba');if(/ResizeObserver|Script error|extension/i.test(msg))return;
   const st=String(e&&e.stack||''),fn=(st.split('\n').map(l=>l.trim()).find(l=>/^at /.test(l))||'').replace(/^at /,'').replace(/\(.*?:(\d+):\d+\)/,'@$1').slice(0,60);
   let h=0;for(const ch of msg+fn)h=(h*31+ch.charCodeAt(0))>>>0;const code=(game||'APP').slice(0,3).toUpperCase().replace(/[^A-Z]/g,'X')+'-'+(h%65536).toString(16).toUpperCase().padStart(4,'0');
@@ -5534,7 +5535,7 @@ function medveErr(e,game){try{const msg=String(e&&e.message||e||'ismeretlen hiba
   b.hidden=false;b.querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>{b.hidden=true});b.querySelector('[data-c]').onclick=()=>{try{navigator.clipboard.writeText(txt);toast('Hibakód kimásolva')}catch(_){}};
   clearTimeout(MERR.to);MERR.to=setTimeout(()=>{b.hidden=true},20000)}catch(_){}}
 window.addEventListener('error',ev=>medveErr(ev.error||ev.message,'APP'));
-window.addEventListener('unhandledrejection',ev=>medveErr(ev.reason,'APP'));
+window.addEventListener('unhandledrejection',ev=>{const m=String((ev.reason&&(ev.reason.message||ev.reason))||'');if(/ServiceWorker|Failed to fetch|NetworkError|Load failed|network error|fetching the script/i.test(m)){ev.preventDefault();console.warn('hálózati hiba (nem jelentve):',m);return}medveErr(ev.reason,'APP')});
 function medveFps(S,t){const p=S._fpt;S._fpt=t;if(!p||t-p>250||document.hidden)return;const f=S._fps||(S._fps={n:0,sum:0,t0:t});f.n++;f.sum+=t-p;if(t-f.t0>4000){const fps=1000/(f.sum/f.n);S._fps=null;
     if(fps<38&&!LOWFX&&LOWAUTO){LOWFX=true;try{localStorage.setItem('medve-lowfx','1')}catch(e){}toast('🔋 Akadozást észleltem – gyenge telefon mód bekapcsolva (Beállításokban kikapcsolható)');try{if(S===SE&&SE.fit)SE.fit();else if(S.cv&&S.W){S.dpr=1;S.cv.width=Math.round(S.W);S.cv.height=Math.round(S.H)}}catch(e){}}}}
 function medveWrap(orig,S,label){const w=function(t){const r0=S.raf;medveFps(S,t);try{orig(t)}catch(e){medveErr(e,label);if(S.raf===r0)S.raf=requestAnimationFrame(w)}};return w}
