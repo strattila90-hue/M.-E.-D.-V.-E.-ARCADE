@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.9.5',APP_DATE='2026.11.10.';
+const APP_VER='4.9.6',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1633,7 +1633,7 @@ function tkEquiv(v){const g=TK_GEAR.filter(q=>!q.gold&&tkGP(q)<=v).sort((a,b)=>a
 // ---- pénzhalom (domb), részletes pixelkép ----
 function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'x'+h+':'+Math.floor(n*4);if(TK.pc[key])return TK.pc[key];
   const P=2,cw=Math.ceil(w/P),ch=Math.ceil(h/P),lo=document.createElement('canvas');lo.width=cw;lo.height=ch;const c=lo.getContext('2d');let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  const ph=Math.max(0,Math.min(ch-6,Math.round(n/13*(ch-6)))),cx=cw/2,hw=Math.max(4,cw*.47*Math.min(1,.3+n/11));const maxD=TK_DEN.reduce((m,d,i)=>d.v*30<=total?i:m,0);
+  const ph=Math.max(0,Math.min(ch-6,Math.round(n/11.5*(ch-6)))),cx=cw/2,hw=Math.max(4,cw*.47*Math.min(1,.3+n/11));const maxD=TK_DEN.reduce((m,d,i)=>d.v*30<=total?i:m,0);
   // árnyék
   if(ph>0){c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(cx,ch-2,hw+3,3,0,0,7);c.fill()}
   const top=new Array(cw).fill(ch);
@@ -1644,12 +1644,14 @@ function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'
       const shade=k>0?Math.min(.35,k*.4):0;c.fillStyle=shade>.15?tkMixC(col.startsWith('#')?col:D.c,'#000000',shade):col;c.fillRect(x,y,1,1)}}
   // körvonal
   c.fillStyle='rgba(10,10,6,.6)';for(let x=1;x<cw-1;x++)if(top[x]<ch&&(top[x-1]>top[x]||top[x+1]>top[x]||true))c.fillRect(x,top[x],1,1);
-  // csillanások a halom felszínén és szórt érmék a tövében (nagyobb összegnél több)
-  for(let i=0;i<Math.round(n*6);i++){const x=1+Math.floor(rnd()*(cw-2));if(top[x]>=ch)continue;const y=Math.min(ch-3,top[x]+Math.floor(rnd()*3));c.fillStyle=rnd()<.6?'#fffbe0':'#ffffff';c.fillRect(x,y,1,1)}
+  // kötegelt bankjegyek a felszínen nagyobb összegnél
+  if(total>=1e6){const nb=Math.min(5,1+Math.floor(n-5));for(let i=0;i<nb;i++){const x0=Math.round(cx-hw*.55+i*(hw*1.1/Math.max(1,nb-1)))-5;if(x0<1||x0+10>=cw-1)continue;const surf=Math.min(...top.slice(x0,x0+10));if(surf>=ch-6)continue;const by=surf-5,D=TK_DEN[Math.min(maxD,TK_DEN.length-1)];c.fillStyle=D.c;c.fillRect(x0,by,10,5);c.fillStyle=D.l;c.fillRect(x0,by,10,1);c.fillStyle=D.d;c.fillRect(x0+4,by,2,5)}}
+  // csillanási pontok (a tkLoop villogtatja)
+  const sparks=[];for(let i=0;i<Math.min(28,4+Math.round(n*3));i++){const x=Math.floor(cw*.12+rnd()*cw*.76);if(top[x]>=ch)continue;sparks.push({x:x*P,y:(top[x]+Math.floor(rnd()*3))*P,p:rnd()*6})}
   if(n>=4){for(let i=0;i<Math.round(n*1.5);i++){const side=rnd()<.5?-1:1,x=Math.round(cx+side*(hw*.9+rnd()*hw*.6)),y=ch-4-Math.floor(rnd()*2);if(x<1||x>=cw-2)continue;const D=TK_DEN[Math.min(maxD,Math.floor(rnd()*(maxD+1)))];c.fillStyle=D.d;c.fillRect(x,y+1,2,1);c.fillStyle=D.c;c.fillRect(x,y,2,1);c.fillStyle=D.l;c.fillRect(x,y,1,1)}}
   if(total>=1e9){const nb=Math.min(11,Math.floor(n-8)+2);for(let i=0;i<nb;i++){const bx=Math.round(cx-nb*2.4+i*4.8),row=i%2,by=ch-2-ph-3-row*3;c.fillStyle='#6e4a04';c.fillRect(bx,by,5,3);c.fillStyle='#e0aa22';c.fillRect(bx,by,4,2);c.fillStyle='#fff4b0';c.fillRect(bx,by,2,1)}}
   if(total>=1e12){const tx=Math.round(cx)-4,ty=ch-2-ph-13;c.fillStyle='#6e4a04';c.fillRect(tx,ty,9,5);c.fillStyle='#e0aa22';c.fillRect(tx+1,ty+1,7,3);c.fillStyle='#fff';c.fillRect(tx+2,ty+1,1,1)}
-  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x2=cv.getContext('2d');x2.imageSmoothingEnabled=false;x2.drawImage(lo,0,0,cw*P,ch*P);cv.ph=(ph+2)*P;return TK.pc[key]=cv}
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x2=cv.getContext('2d');x2.imageSmoothingEnabled=false;x2.drawImage(lo,0,0,cw*P,ch*P);cv.ph=(ph+2)*P;cv.sparks=sparks;return TK.pc[key]=cv}
 // ---- bázis-jelenet: minden megvásárolt eszköz látszik ----
 function tkBase(c,W,H,now){const gy=H*.735,own=TK.own;
   // talaj, horizont
@@ -1678,7 +1680,7 @@ function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getCo
   if(now-TK.lastTap>900)TK.combo=Math.max(0,TK.combo-dt*8);TK.bump=Math.max(0,TK.bump-dt*7);
   c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#1d2612';c.fillRect(0,0,W,H);tkCacheCheck(now);tkBg(c,W,H,now);
   // az üteg pénzhalma (domb) a bázis mögött
-  const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);
+  const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);{const ox=(W-pw)/2,oy=H*.735-phh+4;for(const s of pile.sparks||[]){const a=.5+.5*Math.sin(now/260+s.p);if(a<.5)continue;c.fillStyle=`rgba(255,250,220,${a.toFixed(2)})`;c.fillRect(ox+s.x-1,oy+s.y,3,1);c.fillRect(ox+s.x,oy+s.y-1,1,3)}}
   if(U.sum>=1e3){for(let i=0;i<5;i++){const t=now/700+i*1.9,x=W/2+Math.sin(i*7.1)*pw*.25,y=H*.735-(pile.ph||0)*(.4+.5*Math.abs(Math.sin(i*3.3)))+4,a=Math.max(0,Math.sin(t));c.fillStyle=`rgba(255,250,210,${a})`;c.fillRect(x,y,2,2);c.fillRect(x-2,y+0.5,6,1);c.fillRect(x+.5,y-2,1,6)}}
   tkBase(c,W,H,now);
   {const ly=H*.735-(pile.ph||0)-16;c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(W/2-150,ly-12,300,30);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-150,ly-12,6,30);c.fillRect(W/2+144,ly-12,6,30);c.fillRect(W/2-150,ly+16,300,2)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(`${(TK.uteg||'Üteg').toUpperCase()} KASSZÁJA · ${tkFmt(U.sum)} Ft`,W/2,ly);c.fillStyle='rgba(243,236,212,.85)';c.font='bold 9.5px sans-serif';c.fillText(tkEquiv(U.sum),W/2,ly+13)}
