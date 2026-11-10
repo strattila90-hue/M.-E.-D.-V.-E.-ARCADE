@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.9.5',APP_DATE='2026.11.10.';
+const APP_VER='4.10.0',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1335,7 +1335,9 @@ const TK_DEN=[
  {n:'Arany Jegy',v:1000000000,c:'#e0aa22',d:'#6e4a04',l:'#fff4b0',e:'pzh',t:'g',ab:'AJ',m:'Golden Ticket – arany PzH, hologramfólia'}];
 const tkMintCost=i=>TK_DEN[i].v*250;// a következő pénznem legyártása (pénzverde)
 // piac – nyilvános piaci, gyártói és sajtóadatokon alapuló BECSÜLT árak (€ = Ft)
-const TK_CAT=[['ell','🍲 Ellátás'],['fel','🦺 Felszerelés'],['dron','🛸 Drónok'],['lsz','💥 Lőszer'],['jar','🚛 Járművek'],['baz','🏗️ NATO-bázis'],['tro','🏆 Trófea']];
+const TK_CAT=[['ell','🍲 Ellátás'],['fel','🦺 Felszerelés'],['dron','🛸 Drónok'],['lsz','💥 Lőszer'],['jar','🚛 Járművek'],['baz','🏗️ NATO-bázis']];
+// valódi mértékegység a tételekhez (a bolt és a hangár ezt mutatja)
+const TK_UNIT={mre:'karton (12 adag)',kave:'db',kaja:'hét (1 üteg)',plate:'db',therm:'db',nvg:'db',radio:'db',fpv:'db',quad:'db',puma:'db (rendszer)',tb2:'db (rendszer)',lsz:'db',lada:'láda (8 db)',exc:'db',raba:'db',gid:'db',lynx:'db',pzh:'db',star:'csomag (1 év)',korlet:'konténer',konyha:'konténer',kantin:'projekt',napelem:'MW',ut:'km',szin:'épület',loter:'projekt'};
 const TK_GEAR=[
  {id:'mre',c:'ell',n:'Harci csomag (MRE), 1 karton',p:120,ic:'mre',z:'kit',src:'kereskedelmi ár alapján'},
  {id:'kave',c:'ell',n:'Kávégép a kantinba',p:2500,ic:'kave',z:'kit',src:'irodai/vendéglátós géppiaci ár'},
@@ -1363,12 +1365,12 @@ const TK_GEAR=[
  {id:'ut',c:'baz',n:'Új aszfaltút (1 km)',p:900000,ic:'ut',z:'road',src:'hazai útépítési km-ár alapján becsülve'},
  {id:'szin',c:'baz',n:'Fedett gépjárműszín',p:2000000,ic:'szin',z:'base',src:'csarnoképítési becslés'},
  {id:'loter',c:'baz',n:'Lőtér-korszerűsítés',p:3000000,ic:'loter',z:'base',src:'becslés'},
- {id:'apzh',c:'tro',n:'ARANY PzH 2000 (trófea)',p:1e12,ic:'sil:pzh',z:'veh',gold:1,src:'kitalált – a végtelen pénz jelképe'}];
+];
 const TK_UPG=[
- {id:'tap',n:'Erős ujj',d:'+25% koppintásérték szintenként',b:1000,k:1.7,max:999},
- {id:'auto',n:'Töltőkezelő',d:'+0,5 automata koppintás/mp szintenként',b:8000,k:1.8,max:999},
- {id:'crit',n:'Telitalálat',d:'+1% esély 5× értékre (max. 20%)',b:30000,k:2.1,max:20},
- {id:'combo',n:'Tűzgyorsaság',d:'Gyors koppintásnál nagyobb kombószorzó',b:60000,k:2.3,max:10}];
+ {id:'tap',n:'Erős ujj',d:'+25% koppintásérték szintenként',b:2000,k:1.7,max:999},
+ {id:'auto',n:'Töltőkezelő',d:'+0,5 automata koppintás/mp szintenként',b:16000,k:1.8,max:999},
+ {id:'crit',n:'Telitalálat',d:'+1% esély 5× értékre (max. 20%)',b:60000,k:2.1,max:20},
+ {id:'combo',n:'Tűzgyorsaság',d:'Gyors koppintásnál nagyobb kombószorzó',b:120000,k:2.3,max:10}];
 const TK_ACH=[
  {id:'tap',n:'Tappancs',ic:'👆',m:()=>TK.taps,t:[500,5e3,5e4,5e5,5e6]},
  {id:'earn',n:'Pénzcsináló',ic:'💰',m:()=>TK.earned,t:[1e4,1e6,1e8,1e10,1e12]},
@@ -1517,8 +1519,14 @@ const tkFt=v=>{const r=TK.huf||0;if(!r)return '';const f=v*r;return f<1e9?Math.r
 function tkRate(){try{const o=JSON.parse(localStorage.getItem('medve-eurhuf')||'null');if(o){TK.huf=o.r;TK.hufD=o.d;TK.hufLive=false}}catch(e){}if(!TK.huf){TK.huf=395;TK.hufD='becsült';TK.hufLive=false}
   if(!navigator.onLine)return;fetch('https://api.frankfurter.app/latest?from=EUR&to=HUF',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.rates&&j.rates.HUF){TK.huf=j.rates.HUF;TK.hufD=j.date;TK.hufLive=true;try{localStorage.setItem('medve-eurhuf',JSON.stringify({r:TK.huf,d:TK.hufD}))}catch(e){}}}).catch(()=>{})}
 // ---- heti verseny + napi küldetések ----
-function tkWeek(d){d=d?new Date(d):new Date();const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return t.getUTCFullYear()+'-W'+String(Math.ceil(((t-y)/864e5+1)/7)).padStart(2,'0')}
-function tkWeekLeft(){const n=new Date(),d=(8-(n.getDay()||7))%7||7,end=new Date(n.getFullYear(),n.getMonth(),n.getDate()+d),h=Math.ceil((end-n)/36e5);return h>48?Math.ceil(h/24)+' nap':h+' óra'}
+function tkWeek(d){d=d?new Date(d):new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+// havi lezárás: az előző hónap összegét a közös tkRes gyűjteménybe írjuk, mielőtt helyben nullázódik
+function tkArchive(m,g,u){const name=(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Ismeretlen';const data={m,uid:UID,name:String(name).slice(0,20),uteg:u||TK.uteg,g:Math.max(0,Math.floor(Number(g)||0)),ts:Date.now()};
+  if(!UID||!DB||!navigator.onLine){TK.pendArch=data;return}
+  DB.collection('tkRes').doc(m+'_'+UID).set(data).catch(()=>{})}
+function tkRoll(w){if(TK.wk===w)return;if(TK.wk&&(TK.wg||0)>0&&TK.uteg)tkArchive(TK.wk,TK.wg,TK.uteg);TK.wk=w;TK.wg=0;TK.wgSynced=0}
+function tkResSub(){if(!UID||!DB||TK.resUnsub)return;TK.resUnsub=DB.collection('tkRes').onSnapshot(qs=>{TK.res=[];qs.forEach(d=>TK.res.push(d.data()));if(TK.sheet==='uteg')tkSheetRender()},e=>console.warn('tkRes',e&&e.message))}
+function tkWeekLeft(){const n=new Date(),end=new Date(n.getFullYear(),n.getMonth()+1,1),h=Math.ceil((end-n)/36e5);return h>48?Math.ceil(h/24)+' nap':h+' óra'}
 const tkToday=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const TK_DMT=[
  {k:'tap',n:v=>`Koppints ${v}-szor`,g:()=>[300,500,800][Math.floor(Math.random()*3)],m:()=>TK.taps},
@@ -1543,36 +1551,36 @@ function tkLoad(){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}
 function tkSave(){try{TK.lastT=Date.now();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','wgSynced','dm','wk','wg','streak','lastDm','crits','bestCombo'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
 // szerveren lévő (másik eszközről befizetett) értékek átvétele – különben a szabály (csak nőhet) elutasítja a mentést
 function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)return;if(!TK.uteg&&d.tkUteg)TK.uteg=d.tkUteg;
-  if(TK.wgSynced==null)TK.wgSynced=TK.wg||0;if(TK.synced==null)TK.synced=TK.given||0;const w=tkWeek();if(TK.wk!==w){TK.wk=w;TK.wg=0;TK.wgSynced=0}
+  if(TK.wgSynced==null)TK.wgSynced=TK.wg||0;if(TK.synced==null)TK.synced=TK.given||0;tkRoll(tkWeek());
   if(typeof d.tkFt==='number'&&d.tkFt>(TK.synced||0)){const un=Math.max(0,TK.given-(TK.synced||0));TK.given=Math.max(TK.given,d.tkFt+un);TK.synced=d.tkFt}
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
-function tkSync(force){try{if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
+function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
   if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;TK.syncT=now;const g=Number.isFinite(TK.given)?TK.given:0,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
   const wk=TK.wk,wg=Number.isFinite(TK.wg)?TK.wg:0;DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
     if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{const sd=x.exists?x.data():{};if(x.exists){tkAdopt(sd);TK.syncT=0}if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');const srv=Object.fromEntries(['tkFt','tkWk','tkWg','tkUteg','tkAt','tkOwnF'].map(k=>[k,sd[k]===undefined?'(nincs)':sd[k]]));try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u+' | kliens '+JSON.stringify({tkFt:g,tkWk:wk,tkWg:wg,tkOwnF:own,tkAt:now})+' | szerver '+JSON.stringify(srv)),'kassza')}catch(_){}}}).catch(()=>{})}})}catch(e){}}
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
 function tkMult(){const ach=TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0);return (1+ach*.03)*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
-const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*tkMult();
-const TK_HUF0=395;const tkGP=g=>Math.round(g.p*(TK.huf||TK_HUF0));const tkGInc=g=>g.p*TK_HUF0/1500;
+const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*.5*tkMult();
+const TK_HUF0=395;const tkGP=g=>Math.round(g.p*(TK.huf||TK_HUF0));const tkGInc=g=>g.p*TK_HUF0/3000;
 const tkGearInc=()=>TK_GEAR.reduce((s,g)=>s+(TK.own[g.id]||0)*tkGInc(g),0)*tkMult();
 const tkAutoInc=()=>TK.upg.auto*.5*tkTapV()*.5;
 const tkUpgCost=u=>Math.ceil(u.b*Math.pow(u.k,TK.upg[u.id]));
-const tkGearCost=g=>Math.ceil(tkGP(g)*Math.pow(1.15,TK.own[g.id]||0));
+const tkGearCost=g=>Math.ceil(tkGP(g)*Math.pow(1.2,TK.own[g.id]||0));
 // mennyiségi vásárlás: q darab ára, a 15%-os szintenkénti drágulással együtt
-const tkBulk=(g,q)=>{let t=0;const n=TK.own[g.id]||0;for(let k=0;k<q;k++)t+=Math.ceil(tkGP(g)*Math.pow(1.15,n+k));return t};
+const tkBulk=(g,q)=>{let t=0;const n=TK.own[g.id]||0;for(let k=0;k<q;k++)t+=Math.ceil(tkGP(g)*Math.pow(1.2,n+k));return t};
 // üteg-hangár: a megvásárolt eszközök halmozva, darabszámmal és becsült értékkel
 function tkHangarHTML(){const owned=TK_GEAR.filter(g=>(TK.own[g.id]||0)>0);let sumV=0,sumP=0;
   const cards=owned.map(g=>{const n=TK.own[g.id],v=n*tkGP(g),inc=tkGInc(g)*tkMult()*n;sumV+=v;sumP+=inc;
     const layers=Math.min(4,1+Math.floor(Math.log2(n+1)));
     const stack=Array.from({length:layers},(_,i)=>`<img src="${tkIconURL(g)}" alt="" data-st="transform:translate(${i*5}px,${-i*4}px)">`).join('');
-    return `<div class="tkstack"><div class="tkpile2">${stack}</div><div><b>${g.n}</b> <i>× ${n}</i><small>becsült érték: ${tkFmt(v)} Ft · +${tkFmtR(inc)} Ft/mp</small></div></div>`}).join('');
+    return `<div class="tkstack"><div class="tkpile2">${stack}</div><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>becsült érték: ${tkFmt(v)} Ft · +${tkFmtR(inc)} Ft/mp</small></div></div>`}).join('');
   return `<h4 data-st="margin-top:12px">🏭 Üteg-hangár</h4>`+(owned.length?`<div class="tkhangar">${cards}</div><p class="hint">Hangár összértéke: <b>${tkFmt(sumV)} Ft</b> · termelés: <b>${tkFmtR(sumP)} Ft/mp</b></p>`:'<p class="hint">A hangár üres. Vásárolj eszközöket a Piacon – itt halmozódnak fel.</p>')}
 
 function tkEarn(v,x,y,show){if(!v)return;TK.pocket+=v;TK.earned+=v;if(show)TK.pop.push({x,y,t:0,s:'+'+tkFmt(v),crit:show==='crit'})}
 // ---- megnyitás ----
-function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');tkLoad();tkSilLoad();tkRate();
-  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Kassza</b></div><div class="tkhs"><div class="tkchip p" title="Zseb – még be nem fizetett pénzed"><i>💰</i><span>ZSEB</span><b id="tkPocket">0</b><em>Ft</em></div><div class="tkchip u" id="tkUChip" title="Az ütegkasszába befizetett összeged"><i>🏆</i><span id="tkUN">ÜTEG</span><b id="tkGiven">0</b><em>Ft</em></div></div><button class="hx" id="tkClose" aria-label="Bezárás">✕</button></div>
+function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');tkLoad();tkSilLoad();tkRate();tkResSub();
+  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Kassza</b></div><div class="tkhs"><div class="tkchip p" title="Zseb – még be nem fizetett pénzed"><i>💰</i><span>ZSEB</span><b id="tkPocket">0</b><em>Ft</em></div><div class="tkchip u" id="tkUChip" title="Az ütegkasszába befizetett összeged"><i>🏆</i><span id="tkUN">ÜTEG</span><b id="tkGiven">0</b><em>Ft</em></div><div class="tkmonth" id="tkMonth"></div></div><button class="hx" id="tkClose" aria-label="Bezárás">✕</button></div>
    <div class="dwrap tkwrap"><canvas id="tkCv"></canvas>
     <div class="tkinfo" id="tkInfo"></div>
     <button type="button" class="tkmint" id="tkMint" hidden></button>
@@ -1602,7 +1610,7 @@ function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>
   TK.bump=1;for(let i=0;i<(crit?5:1);i++)TK.fx.push({x:TK.W/2+(Math.random()-.5)*60,y:TK.H*.36,vx:(Math.random()-.5)*160,vy:-240-Math.random()*180,t:0,i:TK.den,r:Math.random()*6});
   tkJingle(TK.den,crit);if(crit&&navigator.vibrate)try{navigator.vibrate(18)}catch(e){}}
 function tkPush(){const v=Math.floor(TK.pocket);if(v<1){toast('A zsebed üres – koppints a pénzre!');return}if(!TK.uteg){tkStartScreen();return}
-  TK.pocket-=v;TK.given+=v;{const w=tkWeek();if(TK.wk!==w){TK.wk=w;TK.wg=0}TK.wg+=v}TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
+  TK.pocket-=v;TK.given+=v;{tkRoll(tkWeek());TK.wg+=v}TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
   toast(`⇡ ${tkFmt(v)} Ft az ütegkasszába – ${TK.uteg}`);tkSave();tkSync(true)}
 function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;const c=tkMintCost(n);if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.newDen={i:n,t:0};TK.sig='';tkKaching();
   if(SOUND&&ac()){const t=AC.currentTime;[523.25,659.25,783.99].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.05,t+.3+k*.09);g.gain.exponentialRampToValueAtTime(.001,t+.3+k*.09+.2);o.connect(g).connect(MASTER);o.start(t+.3+k*.09);o.stop(t+.3+k*.09+.22)})}tkSave();tkSheetRender()}
@@ -1611,29 +1619,42 @@ function tkSheet(id){const s=$('#tkSheet');if(!s.hidden&&TK.sheet===id){s.hidden
 function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=TK.sheet;let h='';
   if(id==='upg'){const n=TK.den+1;h=`<h4>🏦 Pénzverde</h4>`+(n<TK_DEN.length?`<div class="tkmintbox"><img src="${tkNoteCv(n).toDataURL()}" alt=""><div><b>${TK_DEN[n].n}</b><small>${tkFmt(TK_DEN[n].v)} Ft névérték · ${TK_DEN[n].m}<br>Ezután minden koppintás ${tkFmt(TK_DEN[n].v)} Ft alapértékű.</small></div><button type="button" data-mint ${TK.pocket<tkMintCost(n)?'disabled':''}>Pénzverde<br>${tkFmt(tkMintCost(n))} Ft</button></div>`:'<p class="hint">Minden pénznemet legyártottál – a legmagasabb az Arany Jegy.</p>')+
     `<h4 data-st="margin-top:12px">🔧 Fejlesztések</h4>`+TK_UPG.map(u=>{const lv=TK.upg[u.id],c=tkUpgCost(u),mx=lv>=u.max;return `<div class="tkrow"><div><b>${u.n}</b> <i>${lv}. szint</i><small>${u.d}</small></div><button type="button" data-ub="${u.id}" ${mx||TK.pocket<c?'disabled':''}>${mx?'MAX':tkFmt(c)+' Ft'}</button></div>`}).join('')+`<p class="hint">Koppintás: <b>${tkFmt(tkTapV())} Ft</b> · Automata: <b>${tkFmtR(tkAutoInc())} Ft/mp</b> · Ütegszellem: <b>×${(1+.1*Math.log10(1+TK.given)).toFixed(2)}</b></p>`}
-  if(id==='gear')h=`<h4>🛒 Piac – NATO-szintű beszerzések</h4><p class="hint">Árak: nyilvános piaci, gyártói és sajtóadatokon alapuló <b>becslések</b> euróban, élő árfolyamon forintra váltva (1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft). Minden eszköz termel és megjelenik a bázisodon.</p><div class="tkseg">${[1,10,100].map(q=>`<button type="button" data-qty="${q}" class="${(TK.qty||1)===q?'on':''}">×${q}</button>`).join('')}</div>`+TK_CAT.map(([ck,cn])=>`<div class="tkcat">${cn}</div>`+TK_GEAR.filter(g=>g.c===ck).map(g=>{const n=TK.own[g.id]||0,q=TK.qty||1,c=tkBulk(g,q);return `<div class="tkrow${g.gold?' gold':''}"><img class="tkic" src="${tkIconURL(g)}" alt=""><div><b>${g.n}</b> <i>× ${n}</i><small>kb. ${tkFmt(g.p)} € ≈ ${tkFmt(tkGP(g))} Ft · ${g.src}<br>+${tkFmtR(tkGInc(g)*tkMult())} Ft/mp</small></div><button type="button" data-gb="${g.id}" ${TK.pocket<c?'disabled':''}>${q>1?'×'+q+'<br>':''}${tkFmt(c)} Ft</button></div>`}).join('')).join('');
+  if(id==='gear')h=`<h4>🛒 Piac – NATO-szintű beszerzések</h4><p class="hint">Árak: nyilvános piaci, gyártói és sajtóadatokon alapuló <b>becslések</b> euróban, élő árfolyamon forintra váltva (1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft). Minden eszköz termel és megjelenik a bázisodon.</p><div class="tkseg">${[1,10,100].map(q=>`<button type="button" data-qty="${q}" class="${(TK.qty||1)===q?'on':''}">×${q}</button>`).join('')}</div>`+TK_CAT.map(([ck,cn])=>`<div class="tkcat">${cn}</div>`+TK_GEAR.filter(g=>g.c===ck).map(g=>{const n=TK.own[g.id]||0,q=TK.qty||1,c=tkBulk(g,q);return `<div class="tkrow${g.gold?' gold':''}"><img class="tkic" src="${tkIconURL(g)}" alt=""><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>kb. ${tkFmt(g.p)} € ≈ ${tkFmt(tkGP(g))} Ft · ${g.src}<br>+${tkFmtR(tkGInc(g)*tkMult())} Ft/mp</small></div><button type="button" data-gb="${g.id}" ${TK.pocket<c?'disabled':''}>${q>1?'×'+q+'<br>':''}${tkFmt(c)} Ft</button></div>`}).join('')).join('');
   if(id==='ach')h=tkDmHTML()+`<h4 data-st="margin-top:12px">🎖️ Érdemek – szintenként fejlődnek</h4><p class="hint">Minden elért fokozat +3% az összes bevételre.</p>`+TK_ACH.map(a=>{const l=tkAchLvl(a),v=a.m(),nx=a.t[l];return `<div class="tkrow"><div><b>${a.ic} ${a.n}</b> <i data-st="color:${l?TK_MED[l-1]:'#888'}">${l?['I','II','III','IV','V'][l-1]+'. fokozat':'még nincs'}</i><small>${nx!=null?`Következő: ${tkFmt(v)} / ${tkFmt(nx)}`:'Legmagasabb fokozat elérve!'}</small><span class="tkbar"><i data-st="width:${nx!=null?Math.min(100,v/nx*100):100}%"></i></span></div><span class="tkmed">${[0,1,2,3,4].map(k=>`<i data-st="background:${k<l?TK_MED[k]:'#333'}"></i>`).join('')}</span></div>`}).join('')+
     `<h4 data-st="margin-top:12px">💵 Pénznemek</h4><div class="tkdens">${TK_DEN.map((d,i)=>`<div class="${i<=TK.den?'':'lock'}"><img src="${tkNoteCv(i).toDataURL()}" alt=""><b>${i<=TK.den?d.n:'???'}</b><small>${tkFmt(d.v)} Ft${i<=TK.den?' · '+d.m:' · pénzverde: '+tkFmt(tkMintCost(i))+' Ft'}</small></div>`).join('')}</div>`;
-  if(id==='uteg'){const U=tkUtegStats();h=`<h4>🏆 Ütegek kasszája</h4><div class="tkseg"><button type="button" data-utw="1" class="${TK.utw?'on':''}">📅 Heti verseny</button><button type="button" data-utw="0" class="${TK.utw?'':'on'}">∑ Összesített</button></div><p class="hint">${TK.utw?`Ezen a héten (${tkWeek()}) befizetett összeg – <b>hétfőn 0:00-kor nullázódik</b>, még ${tkWeekLeft()}.`:'A szezon kezdete óta befizetett összeg.'} Koppints egy ütegre: megmutatja, mivel rendelkezik.</p><div class="tkuteglist">${U.map((u,k)=>`<div class="tkucard${u.n===TK.uteg?' me':''}" data-uo="${u.n}" data-st="--uc:${tkUC(u.n)[0]};--ut:${tkUC(u.n)[1]}"><canvas data-pile="${u.sum}" width="120" height="70"></canvas><div><b>${k+1}. ${k===0&&TK.utw&&u.wsum>0?'🥇 ':''}<em class="tkuchip">${u.n}</em>${u.n===TK.uteg?' (te)':''}</b><span>${tkFmt(TK.utw?u.wsum:u.sum)} Ft</span><small data-st="display:block">${TK.utw?'összesen: '+tkFmt(u.sum)+' Ft':'e héten: '+tkFmt(u.wsum)+' Ft'}</small><small>${u.m} fő${u.top?' · legbőkezűbb: '+esc(u.top):''}<br>Eszközök: ${tkFmt(u.items)} db · ${tkFmt(u.val)} Ft értékben</small></div>${u.n!==TK.uteg?`<button type="button" class="tkbtn sm" data-mv="${u.n}">Átigazolok</button>`:''}</div>${TK.open&&TK.open[u.n]?`<div class="tkhold">${u.list.length?u.list.map(([g,c])=>`<span><img src="${tkIconURL(g)}" alt="">${esc(g.n)} <b>× ${tkFmt(c)}</b></span>`).join(''):'<em>Még nincs beszerzésük.</em>'}</div>`:''}`).join('')}</div>
-    <h4 data-st="margin-top:10px">🎖️ Legbőkezűbb bajtársak${TK.utw?' – e héten':''}</h4>${tkTopGivers().map((u,k)=>`<div class="tkrow${u.me?' me':''}"><div><b>${k<3?['🥇','🥈','🥉'][k]:k+1+'.'} ${esc(u.name)}${u.me?' (te)':''}</b><small>${tkChip(u.uteg)}</small></div><b>${tkFmt(u.g)} Ft</b></div>`).join('')||'<p class="hint">Még senki nem adott – légy az első!</p>'}`}
+  if(id==='uteg'&&TK.uth){h=tkSegHTML()+tkHistHTML()}else if(id==='uteg'){const U=tkUtegStats(),TR=tkTrophies();h=`<h4>🏆 Ütegek kasszája</h4>${tkSegHTML()}<p class="hint">${TK.utw?`Ebben a hónapban (${tkWeek()}) befizetett összeg – <b>minden hónap 1-jén 0:00-kor nullázódik</b>, még ${tkWeekLeft()}.`:'A szezon kezdete óta befizetett összeg.'} Koppints egy ütegre: megmutatja, mivel rendelkezik.</p><div class="tkuteglist">${U.map((u,k)=>`<div class="tkucard${u.n===TK.uteg?' me':''}" data-uo="${u.n}" data-st="--uc:${tkUC(u.n)[0]};--ut:${tkUC(u.n)[1]}"><canvas data-pile="${u.sum}" width="120" height="70"></canvas><div><b>${k+1}. ${k===0&&TK.utw&&u.wsum>0?'🥇 ':''}<em class="tkuchip">${u.n}</em>${u.n===TK.uteg?' (te)':''}</b><span>${tkFmt(TK.utw?u.wsum:u.sum)} Ft</span><small data-st="display:block">${TK.utw?'összesen: '+tkFmt(u.sum)+' Ft':'e hónapban: '+tkFmt(u.wsum)+' Ft'}</small><small>${u.m} fő${u.top?' · legbőkezűbb: '+esc(u.top):''}<br>Eszközök: ${tkFmt(u.items)} db · ${tkFmt(u.val)} Ft értékben</small></div>${u.n!==TK.uteg?`<button type="button" class="tkbtn sm" data-mv="${u.n}">Átigazolok</button>`:''}</div>${TK.open&&TK.open[u.n]?`<div class="tkhold">${u.list.length?u.list.map(([g,c])=>`<span><img src="${tkIconURL(g)}" alt="">${esc(g.n)} <b>× ${tkFmt(c)}</b></span>`).join(''):'<em>Még nincs beszerzésük.</em>'}</div>`:''}`).join('')}</div>
+    <h4 data-st="margin-top:10px">🎖️ Legbőkezűbb bajtársak${TK.utw?' – e hónapban':''}</h4>${tkTopGivers().map((u,k)=>`<div class="tkrow${u.me?' me':''}"><div><b>${k<3?['🥇','🥈','🥉'][k]:k+1+'.'} ${esc(u.name)}${u.me?' (te)':''}${TR[u.id]?' 🏆×'+TR[u.id]:''}</b><small>${tkChip(u.uteg)}</small></div><b>${tkFmt(u.g)} Ft</b></div>`).join('')||'<p class="hint">Még senki nem adott – légy az első!</p>'}`}
   if(id==='uteg')h+=tkHangarHTML();
   s.innerHTML=`<button type="button" class="tkx" data-tkx>✕</button>`+h;s.querySelector('[data-tkx]').onclick=()=>{s.hidden=true;TK.sheet=null};
   const mb=s.querySelector('[data-mint]');if(mb)mb.onclick=tkMint;
   s.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>{const u=TK_UPG.find(q=>q.id===b.dataset.ub),c=tkUpgCost(u);if(TK.pocket<c||TK.upg[u.id]>=u.max)return;TK.pocket-=c;TK.upg[u.id]++;tkJingle(3,false);tkSheetRender()});
   s.querySelectorAll('[data-gb]').forEach(b=>b.onclick=()=>{const g=TK_GEAR.find(q=>q.id===b.dataset.gb),q=TK.qty||1,c=tkBulk(g,q);if(TK.pocket<c)return;TK.pocket-=c;TK.own[g.id]=(TK.own[g.id]||0)+q;TK.newBuy={g,t:0};tkKaching();toast(`🛒 Beszerezve: ${q}× ${g.n}`);tkSave();tkSync(true);tkSheetRender()});s.querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{TK.qty=+b.dataset.qty;tkSheetRender()});
   s.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();TK.uteg=b.dataset.mv;tkSave();tkSync(true);toast(`Átigazoltál: ${TK.uteg} – a befizetéseid veled jönnek`);tkSheetRender()});
-  s.querySelectorAll('[data-uo]').forEach(b=>b.onclick=()=>{TK.open[b.dataset.uo]=!TK.open[b.dataset.uo];tkSheetRender()});s.querySelectorAll('[data-utw]').forEach(b=>b.onclick=()=>{TK.utw=b.dataset.utw==='1';tkSheetRender()});s.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=()=>tkDmClaim(+b.dataset.dmc));
+  s.querySelectorAll('[data-uo]').forEach(b=>b.onclick=()=>{TK.open[b.dataset.uo]=!TK.open[b.dataset.uo];tkSheetRender()});s.querySelectorAll('[data-uth]').forEach(b=>b.onclick=()=>{TK.uth=true;tkSheetRender()});s.querySelectorAll('[data-utw]').forEach(b=>b.onclick=()=>{TK.uth=false;TK.utw=b.dataset.utw==='1';tkSheetRender()});s.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=()=>tkDmClaim(+b.dataset.dmc));
   s.querySelectorAll('canvas[data-pile]').forEach(cv=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(tkPileCv(Number(cv.dataset.pile),120,70),0,0)})}
 function tkUsers(){let a=[];try{a=(typeof arr==='function'?arr('users'):[]).map(u=>Object.assign({},u,{tkGive:u.tkFt||0,tkOwn:u.tkOwnF||{},tkW:u.tkWk===tkWeek()?(u.tkWg||0):0}))}catch(e){}const me=typeof UID!=='undefined'?UID:null;let mine=a.find(u=>u.id===me);
   if(!mine){mine={id:'me',name:(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Te'};a=a.concat([mine])}mine=Object.assign({},mine,{tkGive:Math.max(TK.given,mine.tkGive||0),tkUteg:TK.uteg||mine.tkUteg,tkOwn:TK.own,tkW:TK.wk===tkWeek()?TK.wg:0});return a.map(u=>u.id===mine.id?mine:u)}
 function tkUtegStats(){const us=tkUsers();return TK_UTEG.map(n=>{const m=us.filter(u=>u.tkUteg===n),t=m.slice().sort((a,b)=>(b.tkGive||0)-(a.tkGive||0))[0],agg={};for(const u of m)for(const [k,v] of Object.entries(u.tkOwn||{}))if(typeof v==='number'&&v>0)agg[k]=(agg[k]||0)+v;
   const list=TK_GEAR.filter(g=>agg[g.id]).map(g=>[g,agg[g.id]]);return {n,sum:m.reduce((s,u)=>s+(u.tkGive||0),0),wsum:m.reduce((s,u)=>s+(u.tkW||0),0),m:m.length,top:t&&t.tkGive>0?t.name:'',list,items:list.reduce((s,x)=>s+x[1],0),val:list.reduce((s,[g,c])=>s+tkGP(g)*c,0)}}).sort((a,b)=>TK.utw?b.wsum-a.wsum||b.sum-a.sum:b.sum-a.sum)}
-function tkTopGivers(){const f=TK.utw?'tkW':'tkGive';return tkUsers().filter(u=>u[f]>0).sort((a,b)=>b[f]-a[f]).slice(0,10).map(u=>({name:u.name||u.nick||'?',uteg:u.tkUteg,g:u[f],me:u.id===UID||u.id==='me'}))}
+// lezárt hónapok: a győztes üteg (legnagyobb összeg) és a tagjai, akik trófeát kapnak
+function tkHistory(){const cur=tkWeek(),rows=new Map();
+  for(const r of TK.res||[])if(r&&r.m&&r.uid)rows.set(r.m+'|'+r.uid,{m:r.m,uid:r.uid,name:r.name||'?',uteg:r.uteg,g:Number(r.g)||0});
+  let users=[];try{users=typeof arr==='function'?arr('users'):[]}catch(e){}
+  for(const u of users){if(!u||!u.tkWk||u.tkWk===cur||!((u.tkWg||0)>0))continue;const k=u.tkWk+'|'+u.id;if(!rows.has(k))rows.set(k,{m:u.tkWk,uid:u.id,name:u.name||u.nick||'?',uteg:u.tkUteg,g:Number(u.tkWg)||0})}
+  const byM={};for(const r of rows.values()){if(r.m===cur)continue;(byM[r.m]=byM[r.m]||[]).push(r)}
+  return Object.keys(byM).sort().reverse().map(m=>{const rs=byM[m],sum={};for(const r of rs)if(TK_UTEG.includes(r.uteg))sum[r.uteg]=(sum[r.uteg]||0)+r.g;
+    const ranked=Object.entries(sum).sort((a,b)=>b[1]-a[1]);if(!ranked.length||ranked[0][1]<=0)return null;const [win,total]=ranked[0];
+    return {m,winner:win,sum:total,trophy:rs.filter(r=>r.uteg===win&&r.g>0).map(r=>({uid:r.uid,name:r.name}))}}).filter(Boolean)}
+function tkTrophies(){const t={};for(const h of tkHistory())for(const p of h.trophy)t[p.uid]=(t[p.uid]||0)+1;return t}
+function tkSegHTML(){return `<div class="tkseg"><button type="button" data-utw="1" class="${!TK.uth&&TK.utw?'on':''}">📅 Havi verseny</button><button type="button" data-utw="0" class="${!TK.uth&&!TK.utw?'on':''}">∑ Összesített</button><button type="button" data-uth="1" class="${TK.uth?'on':''}">🏆 Hónapok</button></div>`}
+function tkHistHTML(){const H=tkHistory(),T=tkTrophies(),mine=(typeof UID!=='undefined'&&UID)?(T[UID]||0):0;
+  return `<h4>🏆 Hónapok és trófeák</h4><p class="hint">Minden hónap végén a legtöbbet befizető üteg nyer. A győztes üteg akkori tagjai <b>trófeát</b> kapnak – ezt mindenki látja.</p><p class="hint">Te: <b>${mine} 🏆</b></p>`+(H.length?H.map(h=>`<div class="tkrow"><div><b>${h.m}</b> <em class="tkuchip">${esc(h.winner)}</em><small>${h.trophy.map(t=>'🏆 '+esc(t.name)).join(' · ')||'–'}</small></div><b>${tkFmt(h.sum)} Ft</b></div>`).join(''):'<p class="hint">Még nincs lezárult hónap. Az első lezárás a következő hónap elején lesz.</p>')}
+function tkTopGivers(){const f=TK.utw?'tkW':'tkGive';return tkUsers().filter(u=>u[f]>0).sort((a,b)=>b[f]-a[f]).slice(0,10).map(u=>({id:u.id,name:u.name||u.nick||'?',uteg:u.tkUteg,g:u[f],me:u.id===UID||u.id==='me'}))}
 function tkEquiv(v){const g=TK_GEAR.filter(q=>!q.gold&&tkGP(q)<=v).sort((a,b)=>a.p-b.p).pop();if(!g)return 'még egy MRE-re sem elég';const n=Math.floor(v/tkGP(g));return `≈ ${tkFmt(n)} db ${g.n.replace(/ \(.*\)/,'').replace(/,.*$/,'')} ára`}
 // ---- pénzhalom (domb), részletes pixelkép ----
 function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'x'+h+':'+Math.floor(n*4);if(TK.pc[key])return TK.pc[key];
   const P=2,cw=Math.ceil(w/P),ch=Math.ceil(h/P),lo=document.createElement('canvas');lo.width=cw;lo.height=ch;const c=lo.getContext('2d');let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
-  const ph=Math.max(0,Math.min(ch-6,Math.round(n/13*(ch-6)))),cx=cw/2,hw=Math.max(4,cw*.47*Math.min(1,.3+n/11));const maxD=TK_DEN.reduce((m,d,i)=>d.v*30<=total?i:m,0);
+  const ph=Math.max(0,Math.min(ch-6,Math.round(n/11.5*(ch-6)))),cx=cw/2,hw=Math.max(4,cw*.47*Math.min(1,.3+n/11));const maxD=TK_DEN.reduce((m,d,i)=>d.v*30<=total?i:m,0);
   // árnyék
   if(ph>0){c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(cx,ch-2,hw+3,3,0,0,7);c.fill()}
   const top=new Array(cw).fill(ch);
@@ -1644,12 +1665,14 @@ function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'
       const shade=k>0?Math.min(.35,k*.4):0;c.fillStyle=shade>.15?tkMixC(col.startsWith('#')?col:D.c,'#000000',shade):col;c.fillRect(x,y,1,1)}}
   // körvonal
   c.fillStyle='rgba(10,10,6,.6)';for(let x=1;x<cw-1;x++)if(top[x]<ch&&(top[x-1]>top[x]||top[x+1]>top[x]||true))c.fillRect(x,top[x],1,1);
-  // csillanások a halom felszínén és szórt érmék a tövében (nagyobb összegnél több)
-  for(let i=0;i<Math.round(n*6);i++){const x=1+Math.floor(rnd()*(cw-2));if(top[x]>=ch)continue;const y=Math.min(ch-3,top[x]+Math.floor(rnd()*3));c.fillStyle=rnd()<.6?'#fffbe0':'#ffffff';c.fillRect(x,y,1,1)}
+  // kötegelt bankjegyek a felszínen nagyobb összegnél
+  if(total>=1e6){const nb=Math.min(5,1+Math.floor(n-5));for(let i=0;i<nb;i++){const x0=Math.round(cx-hw*.55+i*(hw*1.1/Math.max(1,nb-1)))-5;if(x0<1||x0+10>=cw-1)continue;const surf=Math.min(...top.slice(x0,x0+10));if(surf>=ch-6)continue;const by=surf-5,D=TK_DEN[Math.min(maxD,TK_DEN.length-1)];c.fillStyle=D.c;c.fillRect(x0,by,10,5);c.fillStyle=D.l;c.fillRect(x0,by,10,1);c.fillStyle=D.d;c.fillRect(x0+4,by,2,5)}}
+  // csillanási pontok (a tkLoop villogtatja)
+  const sparks=[];for(let i=0;i<Math.min(28,4+Math.round(n*3));i++){const x=Math.floor(cw*.12+rnd()*cw*.76);if(top[x]>=ch)continue;sparks.push({x:x*P,y:(top[x]+Math.floor(rnd()*3))*P,p:rnd()*6})}
   if(n>=4){for(let i=0;i<Math.round(n*1.5);i++){const side=rnd()<.5?-1:1,x=Math.round(cx+side*(hw*.9+rnd()*hw*.6)),y=ch-4-Math.floor(rnd()*2);if(x<1||x>=cw-2)continue;const D=TK_DEN[Math.min(maxD,Math.floor(rnd()*(maxD+1)))];c.fillStyle=D.d;c.fillRect(x,y+1,2,1);c.fillStyle=D.c;c.fillRect(x,y,2,1);c.fillStyle=D.l;c.fillRect(x,y,1,1)}}
   if(total>=1e9){const nb=Math.min(11,Math.floor(n-8)+2);for(let i=0;i<nb;i++){const bx=Math.round(cx-nb*2.4+i*4.8),row=i%2,by=ch-2-ph-3-row*3;c.fillStyle='#6e4a04';c.fillRect(bx,by,5,3);c.fillStyle='#e0aa22';c.fillRect(bx,by,4,2);c.fillStyle='#fff4b0';c.fillRect(bx,by,2,1)}}
   if(total>=1e12){const tx=Math.round(cx)-4,ty=ch-2-ph-13;c.fillStyle='#6e4a04';c.fillRect(tx,ty,9,5);c.fillStyle='#e0aa22';c.fillRect(tx+1,ty+1,7,3);c.fillStyle='#fff';c.fillRect(tx+2,ty+1,1,1)}
-  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x2=cv.getContext('2d');x2.imageSmoothingEnabled=false;x2.drawImage(lo,0,0,cw*P,ch*P);cv.ph=(ph+2)*P;return TK.pc[key]=cv}
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x2=cv.getContext('2d');x2.imageSmoothingEnabled=false;x2.drawImage(lo,0,0,cw*P,ch*P);cv.ph=(ph+2)*P;cv.sparks=sparks;return TK.pc[key]=cv}
 // ---- bázis-jelenet: minden megvásárolt eszköz látszik ----
 function tkBase(c,W,H,now){const gy=H*.735,own=TK.own;
   // talaj, horizont
@@ -1671,14 +1694,14 @@ function tkBase(c,W,H,now){const gy=H*.735,own=TK.own;
   // új beszerzés kiemelése
   if(TK.newBuy){const N=TK.newBuy;N.t+=1/60;const a=Math.min(1,N.t*3,(3-N.t)*2);if(a>0){c.globalAlpha=a;c.fillStyle='rgba(0,0,0,.65)';c.fillRect(W/2-120,gy-70,240,34);c.fillStyle='#ffe08a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('BESZEREZVE: '+N.g.n.toUpperCase(),W/2,gy-48);c.globalAlpha=1}if(N.t>3)TK.newBuy=null}}
 // ---- fő ciklus ----
-function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getContext('2d');let dt=Math.min(.1,(now-TK.last)/1000);TK.last=now;if(GP)dt=0;const W=TK.W,H=TK.H;
+function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getContext('2d');let dt=Math.min(.1,(now-TK.last)/1000);TK.last=now;if(GP)dt=0;if(!TK._mc||now-TK._mc>1000){TK._mc=now;const mc=$('#tkMonth');if(mc)mc.textContent='📅 Hónap vége: '+tkWeekLeft()}const W=TK.W,H=TK.H;
   const inc=tkAutoInc()+tkGearInc();if(inc>0){TK.pocket+=inc*dt;TK.earned+=inc*dt}
   if(TK.rush>0)TK.rush=Math.max(0,TK.rush-dt);TK.goldT-=dt;if(TK.goldT<=0&&!TK.gold){TK.gold={x:-40,y:H*.2+Math.random()*H*.12,t:0,vx:60+Math.random()*30};TK.goldT=180+Math.random()*150}
   if(TK.gold){const G=TK.gold;G.t+=dt;G.x+=G.vx*dt;G.y+=Math.sin(G.t*3)*30*dt;if(G.x>W+60)TK.gold=null}
   if(now-TK.lastTap>900)TK.combo=Math.max(0,TK.combo-dt*8);TK.bump=Math.max(0,TK.bump-dt*7);
   c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#1d2612';c.fillRect(0,0,W,H);tkCacheCheck(now);tkBg(c,W,H,now);
   // az üteg pénzhalma (domb) a bázis mögött
-  const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);
+  const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);{const ox=(W-pw)/2,oy=H*.735-phh+4;for(const s of pile.sparks||[]){const a=.5+.5*Math.sin(now/260+s.p);if(a<.5)continue;c.fillStyle=`rgba(255,250,220,${a.toFixed(2)})`;c.fillRect(ox+s.x-1,oy+s.y,3,1);c.fillRect(ox+s.x,oy+s.y-1,1,3)}}
   if(U.sum>=1e3){for(let i=0;i<5;i++){const t=now/700+i*1.9,x=W/2+Math.sin(i*7.1)*pw*.25,y=H*.735-(pile.ph||0)*(.4+.5*Math.abs(Math.sin(i*3.3)))+4,a=Math.max(0,Math.sin(t));c.fillStyle=`rgba(255,250,210,${a})`;c.fillRect(x,y,2,2);c.fillRect(x-2,y+0.5,6,1);c.fillRect(x+.5,y-2,1,6)}}
   tkBase(c,W,H,now);
   {const ly=H*.735-(pile.ph||0)-16;c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(W/2-150,ly-12,300,30);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-150,ly-12,6,30);c.fillRect(W/2+144,ly-12,6,30);c.fillRect(W/2-150,ly+16,300,2)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(`${(TK.uteg||'Üteg').toUpperCase()} KASSZÁJA · ${tkFmt(U.sum)} Ft`,W/2,ly);c.fillStyle='rgba(243,236,212,.85)';c.font='bold 9.5px sans-serif';c.fillText(tkEquiv(U.sum),W/2,ly+13)}

@@ -1195,3 +1195,6 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 /* szünet-overlay a játékokhoz */
 .gpov{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,6,4,.6);color:#f3ecd4;text-align:center;cursor:pointer;font-family:'Anton',sans-serif;touch-action:none}
 .gpov b{font-size:30px;letter-spacing:.08em;font-weight:400}.gpov span{font-family:'Manrope',sans-serif;font-size:15px;opacity:.85}
+
+/* havi számláló a Kassza fejlécében */
+.tkmonth{font-size:11px;color:#f3ecd4;opacity:.9;white-space:nowrap;margin-top:2px}

@@ -21,6 +21,12 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['uid', 'name', 'rank', 'text', 'ts']) && request.resource.data.uid == request.auth.uid && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 300 && request.resource.data.name == me().name && request.resource.data.rank == me().get('rank', '') && request.resource.data.ts is number && request.resource.data.ts <= request.time.toMillis() + 60000 && request.resource.data.ts > request.time.toMillis() - 86400000;
       allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
     }
+    // havi lezárás: minden játékos a saját előző havi összegét írja (egyszer), mindenki olvashatja
+    match /tkRes/{rid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['m', 'uid', 'name', 'uteg', 'g', 'ts']) && request.resource.data.uid == request.auth.uid && rid == request.resource.data.m + '_' + request.auth.uid && request.resource.data.m is string && request.resource.data.m.matches('[0-9]{4}-[0-9]{2}') && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 20 && request.resource.data.uteg in ['1. üteg', '2. üteg', '3. üteg', 'Kiképző üteg', 'Törzsüteg', 'Felderítő', 'Szakjavító'] && request.resource.data.g is number && request.resource.data.g >= 0 && request.resource.data.g <= 1000000000000000 && request.resource.data.ts is number;
+      allow update, delete: if false;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
