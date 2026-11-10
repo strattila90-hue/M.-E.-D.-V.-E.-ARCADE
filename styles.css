@@ -374,7 +374,7 @@ tr.hl td{background:var(--surface2);font-weight:700}
 .rqa{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:10px}
 .okbox{display:flex;align-items:center;gap:10px;font-weight:800;cursor:pointer;background:var(--ok-bg);color:var(--ok);border-radius:14px;padding:8px 14px}
 .okbox input{width:24px;height:24px;accent-color:var(--ok);margin:0;cursor:pointer}
-html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh}[hidden]{display:none!important}img{max-width:100%}
+html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh;min-height:100dvh}[hidden]{display:none!important}img{max-width:100%}
 .topbar{top:0;padding-top:calc(10px + env(safe-area-inset-top,0px))}
 .auth{max-width:440px;margin:0 auto}
 .authhero{border-radius:26px;background:linear-gradient(150deg,var(--hero1),var(--hero2));color:var(--hero-fg);padding:22px;text-align:center;position:relative;overflow:hidden}
