@@ -1186,6 +1186,12 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 .shqr{display:flex;justify-content:center;margin:0 0 12px}.shqr img{width:200px;max-width:100%;height:auto;aspect-ratio:1;border-radius:12px;image-rendering:pixelated;box-shadow:0 0 0 1.5px var(--line)}
 .shlink input{font:600 13px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center}.shbtn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.shbtn .btn{flex:1 1 140px}
 
+/* üteg-hangár */
+.tkhangar{display:grid;gap:8px;margin-top:6px}
+.tkstack{display:flex;align-items:center;gap:10px;background:rgba(20,26,15,.7);border:1px solid #4a5a2c;border-radius:12px;padding:8px}
+.tkpile2{position:relative;width:56px;height:52px;flex:0 0 56px}
+.tkpile2 img{position:absolute;left:0;bottom:0;width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.tkstack b{display:block}.tkstack i{font-style:normal;color:#ffd24a;margin-left:4px}.tkstack small{display:block;opacity:.8}
 /* szünet-overlay a játékokhoz */
 .gpov{position:absolute;inset:0;z-index:95;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,6,4,.6);color:#f3ecd4;text-align:center;cursor:pointer;font-family:'Anton',sans-serif;touch-action:none}
 .gpov b{font-size:30px;letter-spacing:.08em;font-weight:400}.gpov span{font-family:'Manrope',sans-serif;font-size:15px;opacity:.85}
