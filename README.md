@@ -3,6 +3,10 @@
 Telepíthető (PWA) játékgyűjtemény négy katonai témájú mini-játékkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj.
 
+**v4.8.5 (aktuális, 2026.11.09.):** a frissítés-ellenőrzés hálózati hibája nem jelenik meg hibaként. (v4.8.4: Tüzér Kassza ranglista-szinkron; v4.8.3: Kassza háttér-csíkozás javítása, natív app viselkedés.)
+
+*Korábbi számozás (v1.x–v3.x) a játékok régi kiadásaiból:*
+
 **v1.11.0:** Rába Rakodó: a platform rakétákkal emelkedik, a bal skála a valós tengerszint feletti magasság; tolóerő-bónusz, villám, zónák. (v1.10.0: 6×6 Rába, nehéz ipari drón.)
 
 **v1.1.0:** becenév + jelszó fiók és **élő közös ranglista** (Firebase).
