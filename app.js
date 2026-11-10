@@ -4313,6 +4313,7 @@ async function updCheck(){
 let UPD_AUTO_TOLD=false;
 function updGameOpen(){const h=document.getElementById('harc');return !!(h&&!h.hidden)}
 function updAuto(){if(!UPD_REG||!UPD_REG.waiting)return;
+  if(typeof SR!=='undefined'&&SR.net&&updGameOpen())return;// futó online párbajt nem szakítunk meg
   if(updGameOpen()&&!document.hidden){if(!UPD_AUTO_TOLD&&typeof toast==='function'){UPD_AUTO_TOLD=true;toast('✨ Új verzió letöltve – a játék bezárásakor automatikusan frissül.')}return}
   try{if(typeof seSave==='function')seSave()}catch(e){}
   try{localStorage.setItem('medve-upd-from',APP_VER)}catch(e){}
@@ -4696,7 +4697,8 @@ function srUpdate(dt,now){const P=SR.phase;
     else if(srMyTurn()&&SR.mv){moving=srMove(v,SR.mv,dt);if(moving&&!SR.camFree)SR.ovw=false}
     if(SR.tlEnd&&SR.phase==='aim'){const left=(SR.tlEnd-Date.now())/1000,s=Math.ceil(left);
       if(srMyTurn()){if(s<=10&&s>0&&s!==SR.tlS){SR.tlS=s;srClick(s<=3?2:1)}if(left<=0){SR.mv=0;const e={k:'skip',to:1,by:v.i,sx:v.x,wind:SR.wind};srNetSend(e);srPlay(e,true)}}
-      else if(left<-25&&SR.net){srMsg('Az ellenfél nem válaszol.');srNetGone()}}}
+      else if(left<-25&&SR.net){if(navigator.onLine===false){if(!SR.offW){SR.offW=1;srMsg('📴 Nincs internet – várakozás a kapcsolatra…',0)}SR.tlEnd=Date.now()-20000}else{srMsg('Az ellenfél nem válaszol.');srNetGone()}}
+      else if(SR.offW&&navigator.onLine!==false){SR.offW=0;srMsg('')}}}
   else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt;S.t+=dt;
     if(!S.wh&&T-S.t<1.15&&ev.end.type!=='out'){S.wh=true;srSndWhistle(Math.max(.3,T-S.t))}
     if(ev.am==='vlap'&&S.t>.45&&S.t<1.35){const p=srShotPos(S,S.t);for(let i=0;i<2;i++)SR.fx.push({k:'j',x:p.x,y:p.y,vx:-p.dx*20+(Math.random()-.5)*20,vy:-p.dy*20+(Math.random()-.5)*20,t:.5,t0:.5})}
@@ -4710,7 +4712,7 @@ function srUpdate(dt,now){const P=SR.phase;
   if(!SR.camFree){
     if(SR.ovw){const [a,b]=SR.v;tx=(a.x+b.x)/2;tz=Math.min(SR.zb,W/(Math.abs(b.x-a.x)+260));ty=Math.min(a.y,b.y)-H*.12/tz}
     else if(P==='fly'){const p=srShotPos(SR.shot,SR.shot.t);tx=p.x;ty=p.y+H*.08/SR.zb;tz=SR.zb*.82}
-    else if(P==='boom'||P==='dying'){const d=SR.v.find(v=>v.dead);if(d){tx=d.x;ty=d.y-40}else{tx=SR.shot.ev.end.x;ty=Math.min(660,SR.shot.ev.end.y)-20}tz=SR.zb}
+    else if(P==='boom'||P==='dying'||P==='over'){const d=SR.v.find(v=>v.dead);if(d){tx=d.x;ty=d.y-40}else if(SR.shot){tx=SR.shot.ev.end.x;ty=Math.min(660,SR.shot.ev.end.y)-20}tz=SR.zb}
     else{const v=P==='prep'?srCtl():SR.v[SR.turn];tx=v.x+v.face*W*.2/SR.zb*(P==='prep'?-.6:1);ty=v.y-34;tz=SR.zb*(P==='prep'?1.3:1)}}
   const k=Math.min(1,dt*(P==='fly'?9:3.2));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*3)}
 
@@ -4873,7 +4875,7 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(150,W*.36
   if(radio&&Math.abs(SR.wind.z)>=1){const d=Math.sign(SR.wind.z*ctl.face),wy=by-22;c.strokeStyle='#bfe3ff';c.lineWidth=1.5;c.beginPath();c.moveTo(cx-d*26,wy);c.lineTo(cx-d*12,wy);c.moveTo(cx-d*16,wy-3);c.lineTo(cx-d*12,wy);c.lineTo(cx-d*16,wy+3);c.stroke()}}
 function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;let dt=Math.min(.05,(now-SR.lastT)/1000);SR.lastT=now;if(!(dt>0))dt=0;
   srNetPoll();
-  if(SR.v){if(SR.phase!=='over')srUpdate(dt,now);
+  if(SR.v){srUpdate(dt,now);
     const ctl=srCtl();if(SR.phase==='aim'&&srMyTurn()&&SR.flares.some(f=>f.by===ctl.i)){const key=[ctl.x|0,ctl.elev,ctl.trav,ctl.sel].join();if(key!==SR.predK){SR.predK=key;SR.pred=srSim(ctl,SR.v[1-ctl.i],ctl.elev,ctl.trav,SR_AM[ctl.sel],false)}}else if(SR.phase==='aim')SR.pred=null;
     srDraw(now,dt);srHudDom()}
   else{const c=SR.c;c.setTransform(SR.dpr,0,0,SR.dpr,0,0);const sky=c.createLinearGradient(0,0,0,SR.H);sky.addColorStop(0,'#241826');sky.addColorStop(.55,'#8e4a2c');sky.addColorStop(1,'#4a2418');c.fillStyle=sky;c.fillRect(0,0,SR.W,SR.H)}
@@ -4932,7 +4934,7 @@ async function srNetHost(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (onl
   srNetListen()}
 async function srNetJoin(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}const code=($('#srCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5){toast('Az 5 jegyű meghívókódot írd be!');return}
   srNetLeave();let d;try{const ref=DB.collection('srRooms').doc(code),s=await ref.get();if(!s.exists){toast('Nincs ilyen szoba: '+code);return}d=s.data();
-    if(d.host===UID){toast('Ez a saját szobád – a kódot a társadnak küldd el.');return}if(d.guest&&d.guest!==UID){toast('Ez a szoba már megtelt.');return}
+    if(d.host===UID){toast('Ez a saját szobád – a kódot a társadnak küldd el.');return}if(d.guest&&d.guest!==UID){toast('Ez a szoba már megtelt.');return}if(d.guest===UID){toast('Ez a párbaj már elindult – kérj új meghívókódot.');return}
     if(Date.now()-d.ts>3600000&&!d.guest){toast('Ez a meghívó lejárt – kérj újat.');return}
     if(!d.guest)await ref.update({guest:UID,guestName:srMyName(),ts:Date.now()})}catch(e){srNetErr(e);return}
   SR.net={code,role:1,last:d.ev||'',started:true};SR.inbox=[];srNetListen();srBegin('net',{me:1,seed:d.seed,names:[d.hostName,srMyName()]})}
