@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.12.0',APP_DATE='2026.11.10.';
+const APP_VER='4.12.1',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4318,7 +4318,7 @@ function updAuto(){if(!UPD_REG||!UPD_REG.waiting)return;
   try{localStorage.setItem('medve-upd-from',APP_VER)}catch(e){}
   if(typeof toast==='function'&&!document.hidden)toast('✨ Új verzió – frissítés…');
   UPD_REG.waiting.postMessage({ type: 'SKIP_WAITING' });updSetUI('downloading',100,'Telepítés…')}
-(()=>{const h=document.getElementById('harc');if(h)new MutationObserver(()=>{if(h.hidden&&UPD_WAITING)setTimeout(updAuto,400)}).observe(h,{attributes:true,attributeFilter:['hidden']});
+(()=>{const h=document.getElementById('harc');if(h)new MutationObserver(()=>{if(h.hidden){if(UPD_WAITING)setTimeout(updAuto,400);else swUpd(UPD_REG)}}).observe(h,{attributes:true,attributeFilter:['hidden']});
   try{const f=localStorage.getItem('medve-upd-from');if(f){localStorage.removeItem('medve-upd-from');if(f!==APP_VER)setTimeout(()=>{if(typeof toast==='function')toast('✅ Frissítve: v'+f+' → v'+APP_VER)},1200)}}catch(e){}})();
 function updApply(){
   if(UPD_REG && UPD_REG.waiting){
@@ -4329,12 +4329,14 @@ function updApply(){
   }
 }
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
-  navigator.serviceWorker.register('sw.js').then(reg => {
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg => {
     UPD_REG = reg;
     if(reg.waiting){ UPD_WAITING = true; updSetUI('available'); updAuto(); }
     // csendes ellenőrzés: induláskor, 15 percenként és amikor visszatérsz az appba
-    setTimeout(()=>swUpd(reg), 4000);
-    setInterval(()=>{ if(!document.hidden) swUpd(reg); }, 15*60*1000);
+    // automatikus frissítés: indításkor azonnal, utána 2 percenként, valamint előtérbe kerüléskor és játék bezárásakor keres új verziót
+    swUpd(reg);
+    setInterval(()=>{ if(!document.hidden) swUpd(reg); }, 2*60*1000);
+    addEventListener('focus', ()=>swUpd(reg));addEventListener('pageshow', ()=>swUpd(reg));
     document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) swUpd(reg); else updAuto(); });
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
@@ -4370,7 +4372,8 @@ document.addEventListener('click', e => {
 });
 /* ===== v4.1.2: hibakódos értesítő + a játékciklusok nem állnak le hiba esetén ===== */
 const MERR={seen:{},n:0};
-function swUpd(r){try{if(r&&navigator.onLine)r.update().catch(e=>console.warn('SW frissítés-ellenőrzés kihagyva:',e&&e.message))}catch(e){}}
+let SWUPD_T=0;
+function swUpd(r){try{const n=Date.now();if(n-SWUPD_T<20000)return;SWUPD_T=n;if(r&&navigator.onLine)r.update().catch(e=>console.warn('SW frissítés-ellenőrzés kihagyva:',e&&e.message))}catch(e){}}
 function medveErr(e,game){try{const msg=String(e&&e.message||e||'ismeretlen hiba');if(/ResizeObserver|Script error|extension/i.test(msg))return;
   const st=String(e&&e.stack||''),fn=(st.split('\n').map(l=>l.trim()).find(l=>/^at /.test(l))||'').replace(/^at /,'').replace(/\(.*?:(\d+):\d+\)/,'@$1').slice(0,60);
   let h=0;for(const ch of msg+fn)h=(h*31+ch.charCodeAt(0))>>>0;const code=(game||'APP').slice(0,3).toUpperCase().replace(/[^A-Z]/g,'X')+'-'+(h%65536).toString(16).toUpperCase().padStart(4,'0');
