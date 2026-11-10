@@ -1,9 +1,12 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.10.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.11.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
-Telepíthető (PWA) játékgyűjtemény négy katonai témájú mini-játékkal:
-M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj.
+Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
+M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.11.0:** **Shot&Run** – körökre osztott PzH 2000 tüzérpárbaj a DroneRun pályáján: gép ellen, meghívókóddal ember ellen (online), vagy ketten egy telefonon.
+Az online párbajhoz a `firestore.rules` új `srRooms` szabályát közzé kell tenni a Firebase konzolban (Firestore → Rules → Publish).
 
 **v1.11.0:** Rába Rakodó: a platform rakétákkal emelkedik, a bal skála a valós tengerszint feletti magasság; tolóerő-bónusz, villám, zónák. (v1.10.0: 6×6 Rába, nehéz ipari drón.)
 
