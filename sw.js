@@ -1,9 +1,9 @@
 // M.E.D.V.E. Arcade – offline gyorsítótár + frissítés gomb támogatás.
 // Új verzió: letöltődik, és az app automatikusan átvált rá (játék közben a játék bezárásakor).
-const CACHE = 'medve-arcade-v4.8.5';
+const CACHE = 'medve-arcade-v4.9.2';
 const FBV = '10.14.1';
 const FB_SDK = ['app', 'auth', 'firestore'].map(m => `https://www.gstatic.com/firebasejs/${FBV}/firebase-${m}-compat.js`);
-const SHELL = ['./', './index.html', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable.png'];
+const SHELL = ['./', './index.html', './app.js', './styles.css', './firebase-config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable.png', './fonts/font1.woff2', './fonts/font2.woff2', './fonts/font3.woff2', './img/sprite1.webp', './img/sprite2.webp', './img/sprite3.webp', './img/sprite4.webp', './img/sprite5.webp', './img/sprite6.webp'];
 async function tell(pct, text) {
   const cl = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
   cl.forEach(c => c.postMessage({ type: 'UPDATE_PROGRESS', pct, text }));
