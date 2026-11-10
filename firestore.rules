@@ -31,9 +31,7 @@ service cloud.firestore {
     match /srRooms/{code} {
       allow read: if signedIn();
       allow create: if signedIn() && code.matches('[A-Z0-9]{5}') && request.resource.data.keys().hasOnly(['host', 'hostName', 'guest', 'guestName', 'seed', 'ev', 'ts']) && request.resource.data.host == request.auth.uid && request.resource.data.guest == null && request.resource.data.hostName is string && request.resource.data.hostName.size() <= 24 && request.resource.data.guestName == '' && request.resource.data.seed is int && request.resource.data.ev == '' && request.resource.data.ts is number;
-      allow update: if signedIn() && request.resource.data.ts is number && (
-        (resource.data.guest == null && resource.data.host != request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guest', 'guestName', 'ts']) && request.resource.data.guest == request.auth.uid && request.resource.data.guestName is string && request.resource.data.guestName.size() <= 24)
-        || ((resource.data.host == request.auth.uid || resource.data.guest == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ev', 'ts']) && request.resource.data.ev is string && request.resource.data.ev.size() <= 30000));
+      allow update: if signedIn() && request.resource.data.ts is number && ((resource.data.guest == null && resource.data.host != request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guest', 'guestName', 'ts']) && request.resource.data.guest == request.auth.uid && request.resource.data.guestName is string && request.resource.data.guestName.size() <= 24) || ((resource.data.host == request.auth.uid || resource.data.guest == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ev', 'ts']) && request.resource.data.ev is string && request.resource.data.ev.size() <= 30000));
       allow delete: if signedIn() && (resource.data.host == request.auth.uid || isAdmin());
     }
     match /{document=**} { allow read, write: if false; }
