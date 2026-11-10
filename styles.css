@@ -489,7 +489,7 @@ nav.bottom button.navharc span{color:#E8424E;font-family:var(--f-display);letter
 #harcBtn span{font-family:var(--f-display);font-size:8.5px;line-height:1.05;letter-spacing:.06em;color:#FF5A4E;text-align:center}
 @media (prefers-reduced-motion:no-preference){#harcBtn{animation:hpulse 2.8s ease-in-out infinite}@keyframes hpulse{50%{box-shadow:0 6px 16px rgba(60,0,8,.45),0 0 0 5px rgba(255,90,78,.25)}}}
 body.harcon{overflow:hidden}body.harcon #harcBtn{display:none}
-#harc{position:fixed;inset:0;z-index:90;background:#1b0306;color:#fff;display:flex;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
+#harc{position:fixed;inset:0;z-index:90;background:#1b0306;color:#fff;display:flex;flex-direction:column;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 #harc .hbar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;background:linear-gradient(90deg,#4a0910,#7A0F18)}
 #harc .htitle{font-family:var(--f-display);font-size:18px;letter-spacing:.05em}#harc .htitle b{color:#FF5A4E;font-weight:400}
 #harc .hstat{display:flex;gap:10px;margin-left:auto;font-size:12px;font-weight:700;opacity:.95}#harc .hstat b{font-size:15px;color:#FFE08A}#harc .hstat span{white-space:nowrap}
