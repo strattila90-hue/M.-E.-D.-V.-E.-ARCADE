@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.9.0',APP_DATE='2026.11.10.';
+const APP_VER='4.9.1',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1536,6 +1536,8 @@ function tkDmHTML(){const D=tkDM();return `<h4>📅 Napi küldetések</h4><p cla
 // ---- állapot ----
 function tkLoad(){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}catch(e){}let mig=false;if(s&&s.uteg!==undefined&&s.ver!==TK_VER){mig=true;s={uteg:s.uteg}}
   Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:Date.now(),synced:0,wgSynced:null,dm:null,wk:'',wg:0,streak:0,lastDm:''},s);TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
+  // A mentett állapot hibás számot is tartalmazhat (null, NaN, szöveg). Ezt nem küldjük a szervernek.
+  for(const k of ['pocket','given','earned','taps','den','tickets','wg','streak']){const x=Number(TK[k]);TK[k]=Number.isFinite(x)?x:0}
   tkAdopt();
   if(mig)setTimeout(()=>toast('🔄 Új szezon: mostantól forintban megy – a ranglista és a mentés nulláról indul.'),900)}
 function tkSave(){try{TK.lastT=Date.now();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','wgSynced','dm','wk','wg','streak','lastDm','crits','bestCombo'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
@@ -1546,8 +1548,8 @@ function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)r
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
 function tkSync(force){try{if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
-  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;TK.syncT=now;const g=TK.given,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
-  const wk=TK.wk,wg=TK.wg||0;DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
+  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;TK.syncT=now;const g=Number.isFinite(TK.given)?TK.given:0,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
+  const wk=TK.wk,wg=Number.isFinite(TK.wg)?TK.wg:0;DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
     if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{if(x.exists){tkAdopt(x.data());TK.syncT=0}}).catch(()=>{});if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u),'kassza')}catch(_){}}}})}catch(e){}}
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
 function tkMult(){const ach=TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0);return (1+ach*.03)*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
