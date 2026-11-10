@@ -75,7 +75,7 @@
 .tkchip.u b{color:#fff}
 @media(max-width:340px){.tkchip span{display:none}.tkchip{grid-template-columns:18px 1fr auto}}
 html{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 input,textarea,[contenteditable],.chatmsg,.chat-text{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 img,canvas{-webkit-user-drag:none;user-drag:none}
 button,a,[role=button],label{-webkit-tap-highlight-color:transparent}
