@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.12.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.13.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.13.0:** Shot&Run: valósabb talajfizika (két ponton felfekvő, rugózó, leeső löveg), nagyobb pálya és lőtávolság, élesebb és részletesebb grafika, minden telefonkijelzőre (iOS, Android, fekvő, kivágásos) igazított kezelőfelület.
 
 **v4.12.1:** Automatikus frissítés: az app indításkor azonnal, utána 2 percenként és előtérbe kerüléskor keres új verziót, magától letölti, és (ha épp nem fut játék) azonnal át is vált rá.
 
