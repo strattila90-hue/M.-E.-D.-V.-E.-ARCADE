@@ -1452,3 +1452,23 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 @media (orientation:landscape) and (max-height:560px){#harc .hstart,#harc .hover{top:calc(50% + (40px + env(safe-area-inset-top,0px)) / 2);max-height:calc(100% - 52px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}}
 #harc .srping{font:400 13px var(--f-comic);letter-spacing:.05em;padding:1px 7px 0;border:2px solid #111;border-radius:999px;align-self:center}
 #harc .srping.ok{background:#4fd17a;color:#0b1a0f}#harc .srping.mid{background:#ffd23a;color:#111}#harc .srping.bad{background:#ff4b3a;color:#fff}#harc .srping[hidden]{display:none}
+/* Shot&Run 4.18: figyelmeztetések, TŰZ-gomb állapotfelirata, lőszer-számláló, gombnyomás-visszajelzés */
+#harc.sr .srmsg{top:84px}
+.sralert{position:absolute;left:50%;top:116px;transform:translate(-50%,-8px);opacity:0;transition:opacity .22s,transform .22s;max-width:calc(100% - 24px);box-sizing:border-box;padding:9px 14px;border-radius:12px;font:900 14px/1.25 var(--f-body);text-align:center;z-index:4;pointer-events:none;border:2px solid #111;box-shadow:4px 4px 0 #111}
+.sralert[hidden]{display:none}
+.sralert.in{opacity:1;transform:translate(-50%,0)}
+.sralert.info{background:#1f3a52;color:#dff1ff}
+.sralert.warn{background:#ffd23a;color:#1e1400}
+.sralert.crit{background:#c8102e;color:#fff;animation:sralp .5s 3}
+@keyframes sralp{50%{transform:translate(-50%,0) scale(1.06)}}
+.srfire{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;gap:2px}
+.srfire small{display:block;max-width:100%;font:800 10px/1.1 var(--f-body);letter-spacing:.02em;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.srfire.boom{animation:srboom .45s ease-out}
+@keyframes srboom{0%{filter:brightness(2.4);transform:scale(.93)}100%{filter:none;transform:none}}
+.srcnt.low b{color:#ffb84a}.srcnt.crit{border-color:#c8102e;background:#2a0b0b}.srcnt.crit b{color:#ff5a4a;animation:srbl .7s infinite}
+#harc.sr .srpanel button{transition:transform .07s,filter .12s,box-shadow .07s}
+#harc.sr .srpanel button.tap,#harc.sr .srpanel button:active{filter:brightness(1.3)}
+.srsws button.on i{animation:srpop .28s ease-out}
+@keyframes srpop{0%{transform:scale(1.9)}100%{transform:scale(1)}}
+@media (orientation:landscape) and (max-height:560px){.sralert{top:96px;font-size:12.5px;padding:6px 10px}#harc.sr .srmsg{top:80px}.srfire small{font-size:9px}}
+@media (prefers-reduced-motion:reduce){.sralert.crit,.srcnt.crit b{animation:none}}
