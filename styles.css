@@ -1447,3 +1447,6 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
  .srpzbox{padding:10px 14px;gap:7px}.srpzbox h3{font-size:26px}.srpzbox p{font-size:12px;line-height:1.3}
  .srpzbox .srbig{min-height:44px;font-size:17px;padding:4px 8px}.srpzbox .srbig.pri{min-height:50px;font-size:22px}.srpzbox .srbig small{display:none}
 }
+/* kezdő- és eredménypanelek: ne csússzanak a fejléc alá (a cím és a gombok látszanak) */
+#harc .hstart,#harc .hover{top:calc(50% + (56px + env(safe-area-inset-top,0px)) / 2);max-height:calc(100% - 72px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+@media (orientation:landscape) and (max-height:560px){#harc .hstart,#harc .hover{top:calc(50% + (40px + env(safe-area-inset-top,0px)) / 2);max-height:calc(100% - 52px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}}

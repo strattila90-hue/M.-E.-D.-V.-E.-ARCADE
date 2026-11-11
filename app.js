@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.17.0',APP_DATE='2026.11.11.';
+const APP_VER='4.17.1',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -73,12 +73,12 @@ function harcOpen(){const el=$('#harc');el.hidden=false;document.body.classList.
   $('#hClose').onclick=harcClose;$('#hGo').onclick=()=>harcStart();harcSetup()}
 function harcBoard(){const us=arr('users').filter(u=>u.harcBest>0).sort((a,b)=>b.harcBest-a.harcBest).slice(0,5);if(!us.length)return '';
   return `<div class="hboard"><div class="lbl">Ranglista</div>${us.map((u,i)=>`<div><span>${['🥇','🥈','🥉','4.','5.'][i]} ${esc((u.rank?u.rank+' ':'')+u.name)}</span><b>${n0(u.harcBest)}</b></div>`).join('')}</div>`}
-function harcClose(){HARC.run=false;rockStop(.3);cancelAnimationFrame(HARC.raf);const el=$('#harc');el.hidden=true;el.innerHTML='';document.body.classList.remove('harcon')}
+function harcClose(){if(HARC.keyOn){removeEventListener('keydown',HARC.keyOn);HARC.keyOn=null}HARC.run=false;rockStop(.3);cancelAnimationFrame(HARC.raf);const el=$('#harc');el.hidden=true;el.innerHTML='';document.body.classList.remove('harcon')}
 function harcSetup(){const cv=$('#hCv');const dpr=Math.min(2,devicePixelRatio||1);const fit=()=>{const r=cv.getBoundingClientRect();cv.width=r.width*dpr;cv.height=r.height*dpr;HARC.W=r.width;HARC.H=r.height;HARC.dpr=dpr;if(HARC.bx==null)HARC.bx=r.width/2};fit();HARC.fit=fit;
   const img=new Image();img.src=BEAR_SPRITE;HARC.img=img;HARC.bx=HARC.W/2;HARC.run=false;HARC.shells=[];HARC.fly=[];HARC.caught=0;HARC.hp=100;HARC.parts=[];
   const mv=x=>{const r=cv.getBoundingClientRect();HARC.tx=Math.max(40,Math.min(HARC.W-40,x-r.left))};
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);mv(e.clientX)});cv.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')mv(e.clientX)});
-  HARC.key=e=>{if(e.key==='ArrowLeft')HARC.tx=Math.max(40,(HARC.tx??HARC.bx)-40);if(e.key==='ArrowRight')HARC.tx=Math.min(HARC.W-40,(HARC.tx??HARC.bx)+40);if(e.key==='Escape')harcClose()};addEventListener('keydown',HARC.key);
+  HARC.key=e=>{if(e.key==='ArrowLeft')HARC.tx=Math.max(40,(HARC.tx??HARC.bx)-40);if(e.key==='ArrowRight')HARC.tx=Math.min(HARC.W-40,(HARC.tx??HARC.bx)+40);if(e.key==='Escape')harcClose()};if(HARC.keyOn)removeEventListener('keydown',HARC.keyOn);HARC.keyOn=HARC.key;addEventListener('keydown',HARC.key);
   HARC.raf=requestAnimationFrame(harcLoop)}
 function harcStart(){$('#hStart').hidden=true;$('#hOver').hidden=true;Object.assign(HARC,{run:true,dead:false,shells:[],fly:[],parts:[],caught:0,missed:0,hp:100,pts:0,combo:0,bestCombo:0,wind:0,salvoAt:25,last:performance.now(),spawnT:0,lvl:0,deadT:0,flash:0,pal:0,palL:0,blood:[],splat:[],drips:[],deathT:0,marks:[],ex:[],shake:0});Object.assign(HSC,{tr:null,queue:0,deliv:0,salvo:0,sT:0,mf:0,boo:0,cheer:0,shots:[]});harcHud();sndDrum();rockStart('harc');playCount('harc')}
 function harcHud(){$('#hScore')&&($('#hScore').textContent=HARC.caught);$('#hLvl')&&($('#hLvl').textContent=HARC.lvl+1)}
@@ -1042,7 +1042,7 @@ function droneOpen(){const el=$('#harc');el.hidden=false;document.body.classList
   $('#dClose').onclick=droneClose;$('#dGo').onclick=droneStart;droneSetup();pzhFullSet()}
 function drBoard(){const us=arr('users').filter(u=>u.droneBest>0).sort((a,b)=>b.droneBest-a.droneBest).slice(0,5);if(!us.length)return '';
   return `<div class="hboard"><div class="lbl">Ranglista</div>${us.map((u,i)=>`<div><span>${['🥇','🥈','🥉','4.','5.'][i]} ${esc((u.rank?u.rank+' ':'')+u.name)}</span><b>${n0(u.droneBest)}</b></div>`).join('')}</div>`}
-function droneClose(){drHydro(false);DR.run=false;cancelAnimationFrame(DR.raf);drSoundStop();musStop(.3);const el=$('#harc');el.hidden=true;el.innerHTML='';document.body.classList.remove('harcon')}
+function droneClose(){if(DR.keyOn){removeEventListener('keydown',DR.keyOn);removeEventListener('keyup',DR.keyOn);DR.keyOn=null}DR.gas=DR.brake=0;drHydro(false);DR.run=false;cancelAnimationFrame(DR.raf);drSoundStop();musStop(.3);const el=$('#harc');el.hidden=true;el.innerHTML='';document.body.classList.remove('harcon')}
 function droneSetup(){const cv=$('#dCv');const dpr=Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();cv.width=r.width*dpr;cv.height=r.height*dpr;Object.assign(DR,{W:r.width,H:r.height,dpr});
   DR.img=new Image();DR.img.src=PZH_SPRITE;DR.gas=0;DR.brake=0;DR.aim=null;
   const hold=(id,k)=>{const b=$(id);const on=e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);DR[k]=1;b.classList.add('on')},off=()=>{DR[k]=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)};
@@ -1053,7 +1053,7 @@ function droneSetup(){const cv=$('#dCv');const dpr=Math.min(2,devicePixelRatio||
   cv.addEventListener('pointermove',e=>{if(e.pointerId===DR.aimId&&DR.aim)aim(e)});
   const up=e=>{if(e.pointerId===DR.aimId){DR.aim=null;DR.aimId=null}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   DR.key=e=>{const d=e.type==='keydown'?1:0;if(e.key==='ArrowRight'||e.key==='d')DR.gas=d;if(e.key==='ArrowLeft'||e.key==='a')DR.brake=d;if(e.key===' '&&d)DR.aim={sx:DR.W*.7,sy:DR.H*.25};if(e.key===' '&&!d)DR.aim=null;if(d&&(e.key==='f'||e.key==='F'))drFm();if(d&&(e.key==='p'||e.key==='P'))drHb()};
-  addEventListener('keydown',DR.key);addEventListener('keyup',DR.key);
+  if(DR.keyOn){removeEventListener('keydown',DR.keyOn);removeEventListener('keyup',DR.keyOn)}DR.keyOn=DR.key;addEventListener('keydown',DR.key);addEventListener('keyup',DR.key);
   drReset();DR.last=performance.now();DR.raf=requestAnimationFrame(drLoop)}
 function drReset(){DR.br={hp:8,down:false,t:0};DR.nuke=null;Object.assign(DR,{t:{x:120,y:drGround(120)-40,a:0,vx:0,vy:0,w:0,dist:0,trk:0},wheels:D_WHEELS.map(w=>({...w,c:0,cx:0,cy:0})),hp:100,kills:0,ammo:200,res:1800,reload:0,fireT:0,bullets:[],cas:[],sa:[],saT:3,mines:[],nextMine:900,trk0:0,trkDone:0,rpm:650,temp:82,fan:0,lostTrk:null,smoke:0,smokeCd:0,sm:[],ovr:0,ovrCd:0,fault:null,faultT:18+Math.random()*12,repT:0,drones:[],grenades:[],fx:[],flipT:0,run:false,dead:false,spawnT:5,camX:0,camY:0,maxD:1,bgx:[],trc:[],bgT:.6,dying:null,shake:0,flash:0,fm:0,fmNext:1000,fmS:null,fmN:0,fmImp:0,elev:0,rec:0,lk:0,hb:0,shells:[],mgf:0})}
 function droneStart(){$('#dStart').hidden=true;$('#dOver').hidden=true;drReset();DR.run=true;DR.last=performance.now();drSoundStart();sndDrum();musStart();playCount('drone')}
@@ -5408,3 +5408,10 @@ async function artStart(){for(const g of Object.keys(ART.url))artApply(g);if(ART
   if(on&&!sr&&!h.querySelector(':scope>.rotq')){const d=document.createElement('div');d.className='rotq';d.innerHTML=ic('rotate')+'<span>FORDÍTSD ÁLLÓ HELYZETBE!</span>';h.appendChild(d)}
   try{const o=screen.orientation;if(o&&o.lock){if(on&&!sr)o.lock('portrait').catch(()=>{});else if(!SR.fs&&o.unlock)o.unlock()}}catch(e){}};
   new MutationObserver(sync).observe(h,{attributes:true,attributeFilter:['hidden','class'],childList:true})})();
+// a csak induláskor méretezett játékvásznak újramérése (elforgatás, böngészősáv, ablakméret változása)
+function gRefitAll(){const h=document.getElementById('harc');if(!h||h.hidden)return;try{
+  if(document.getElementById('hCv')&&HARC.fit)HARC.fit();
+  const dc=document.getElementById('dCv');if(dc){const dpr=Math.min(2,devicePixelRatio||1),r=dc.getBoundingClientRect();if(r.width>0&&(Math.abs(r.width-DR.W)>1||Math.abs(r.height-DR.H)>1)){dc.width=r.width*dpr;dc.height=r.height*dpr;Object.assign(DR,{W:r.width,H:r.height,dpr})}}
+  for(const [id,S] of [['gtCv',GT],['gvCv',GV],['tkCv',TK]]){const c=document.getElementById(id);if(!c)continue;const r=c.getBoundingClientRect();if(r.width>0&&(Math.abs(r.width-S.W)>1||Math.abs(r.height-S.H)>1)){const n=gCanvas('#'+id);S.W=n.W;S.H=n.H;S.dpr=n.dpr;if(S.cv!==undefined)S.cv=n.cv}}
+}catch(e){console.warn('refit',e)}}
+{let t=0;const go=()=>{clearTimeout(t);t=setTimeout(gRefitAll,160)};addEventListener('resize',go);if(window.visualViewport)visualViewport.addEventListener('resize',go)}

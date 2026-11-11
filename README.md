@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.17.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.17.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.17.1:** Hibajavítások: H.A.R.C. és DroneRun bezárás után bent maradó billentyűkezelők (minden megnyitással szaporodtak, és bezárva is reagáltak); a csak induláskor méretezett játékvásznak (H.A.R.C., DroneRun, Gidrán Terep/Konvoj, Tüzér Kassza) elforgatáskor és böngészősáv-változáskor újraméreteződnek; a kezdő- és eredménypanelek nem csúsznak a fejléc alá.
 
 **v4.17.0:** Shot&Run: a lövegcső is ütközik – minden gránát (SMArt, köd stb. is) fennakad rajta, a cső sérül; filmszerű kamera (a végfázisban a becsapódási pont és a cél együtt a kép közepén, lassítás, ráközelítés, a löveg nem tűnik el a kép alján); a robbanás meglöki és megbillenti a löveget, a kráter mélysége korlátozott; a pálya szélén túlra lőtt gránát is földbe csapódik; ha mindkét lövegnek elfogy a lőszere, ejtőernyős lőszerláda érkezik (4 gránát), ha az is elfogy, a több életerő nyer, egyenlőnél döntetlen. Borítók: angol, kisebb hangszavak.
 
