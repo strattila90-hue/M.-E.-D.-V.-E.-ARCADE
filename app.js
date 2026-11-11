@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.13.1',APP_DATE='2026.11.10.';
+const APP_VER='4.13.2',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4873,10 +4873,38 @@ function srDraw(now,dt){const c=SR.c,W=SR.W,H=SR.H,cam=SR.cam,z=cam.z,t=now/1000
   if(!LOWFX){if(!SR.vg||SR.vgK!==W+'x'+H){SR.vgK=W+'x'+H;const g=c.createRadialGradient(W/2,H*.5,Math.min(W,H)*.45,W/2,H*.5,Math.max(W,H)*.78);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.42)');SR.vg=g}c.fillStyle=SR.vg;c.fillRect(0,0,W,H)}
   if(SR.flash>0){SR.flash-=dt;c.fillStyle=`rgba(255,200,130,${Math.max(0,SR.flash)*.8})`;c.fillRect(0,0,W,H)}
   srHud(c,W,H,t)}
-function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(150,W*.36);c.textBaseline='alphabetic';
-  SR.v.forEach((v,i)=>{const x=i?W-8-bw:8,mine=v===ctl;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(x-3,5,bw+6,29);c.font='800 10.5px system-ui';c.textAlign=i?'right':'left';c.fillStyle=SR.turn===i&&SR.phase!=='prep'&&Math.sin(t*6)>0?'#ffd24a':'#fff';
-    c.fillText((SR.turn===i&&SR.phase!=='prep'?'▶ ':'')+v.name.slice(0,18),i?x+bw:x,17);c.fillStyle='#2b1c18';c.fillRect(x,21,bw,9);const hp=v.dead?0:v.hp/100;c.fillStyle=hp>.5?'#2ecc40':hp>.25?'#f4c04e':'#ff3b30';c.fillRect(i?x+bw*(1-hp):x,21,bw*hp,9);
-    c.fillStyle='#fff';c.font='800 8.5px system-ui';c.textAlign='center';c.fillText(v.dead?'KILŐVE':Math.round(v.hp)+'%'+(v.load>=1?' · '+srAmmoN(v)+'/60':''),x+bw/2,29)});
+function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(190,W*.4);c.textBaseline='alphabetic';
+  // ---- életerő-kijelző: páncéllemez-szegmensek, találatkor villan és megrázkódik, a levont rész világos csíkként fogy el ----
+  const hdt=Math.min(.1,Math.max(0,t-(SR.hudT||t)));SR.hudT=t;
+  SR.v.forEach((v,i)=>{const hpR=v.dead?0:Math.max(0,v.hp);if(v.hpL==null){v.hpL=hpR;v.hpG=hpR;v.hpS=hpR;v.hpF=0;v.hpW=0}
+    if(hpR<v.hpL-.01){v.hpF=.7;v.hpW=.55;v.hpB=3.5}v.hpL=hpR;v.hpF=Math.max(0,v.hpF-hdt);v.hpB=Math.max(0,(v.hpB||0)-hdt);
+    v.hpS+=(hpR-v.hpS)*Math.min(1,hdt*14);if(v.hpG<hpR)v.hpG=hpR;if(v.hpW>0)v.hpW-=hdt;else v.hpG=Math.max(hpR,v.hpG-34*hdt);
+    const mineC=(SR.mode==='hot'?i===0:i===SR.me),tc=mineC?'#4fd17a':'#ff5a4a',act=SR.turn===i&&SR.phase!=='prep'&&SR.phase!=='over',low=!v.dead&&hpR<=30,
+      sh=v.hpF>0?(Math.random()-.5)*7*v.hpF:0,x=(i?W-8-bw:8)+sh,y=5+(v.hpF>0?(Math.random()-.5)*4*v.hpF:0),ph=37,sk=7,dir=i?-1:1;
+    // alaplemez (ferde, a főmenü stílusában)
+    c.save();c.beginPath();if(i){c.moveTo(x+sk,y);c.lineTo(x+bw+3,y);c.lineTo(x+bw+3,y+ph);c.lineTo(x-3,y+ph)}else{c.moveTo(x-3,y);c.lineTo(x+bw-sk,y);c.lineTo(x+bw+3,y+ph);c.lineTo(x-3,y+ph)}c.closePath();
+    const bgG=c.createLinearGradient(0,y,0,y+ph);bgG.addColorStop(0,'rgba(22,26,16,.9)');bgG.addColorStop(1,'rgba(6,8,4,.9)');c.fillStyle=bgG;
+    if(low){c.shadowColor='#ff3b30';c.shadowBlur=7+7*Math.abs(Math.sin(t*5))}else if(act){c.shadowColor='#ffd24a';c.shadowBlur=6+4*Math.abs(Math.sin(t*3))}c.fill();c.shadowBlur=0;
+    c.lineWidth=1.5;c.strokeStyle=low?`rgba(255,70,50,${.6+.4*Math.abs(Math.sin(t*5))})`:act?'#ffd24a':'rgba(255,255,255,.22)';c.stroke();
+    c.fillStyle=tc;c.fillRect(i?x+bw-1:x-3,y,4,ph);c.restore();
+    // név és nagy százalék
+    c.textBaseline='alphabetic';c.font='800 10.5px system-ui';c.textAlign=i?'right':'left';c.fillStyle=act?'#ffe08a':'#f3ecd4';c.fillText((act?'▶ ':'')+v.name.slice(0,14),i?x+bw-7:x+5,y+12,bw-58);
+    c.font='400 17px Anton,Impact,sans-serif';c.textAlign=i?'left':'right';const pc=v.dead?'✖':Math.round(v.hpS)+'%';c.lineWidth=3;c.strokeStyle='rgba(0,0,0,.8)';c.strokeText(pc,i?x+sk+3:x+bw-sk-3,y+16);
+    c.fillStyle=v.dead?'#ff5a4a':v.hpF>0?'#fff':hpR>50?'#9dff9d':hpR>25?'#ffd24a':'#ff6b5b';c.fillText(pc,i?x+sk+3:x+bw-sk-3,y+16);
+    // szegmentált sáv: 10 lemez, a saját lövegtől a közép felé fogy
+    const bx=x+3,by=y+20,bW=bw-6,bh=9,seg=10,gap=1.5,sw=(bW-gap*(seg-1))/seg,col=hpR>50?['#7dff8a','#1f9a3a']:hpR>25?['#ffe27a','#c98a12']:['#ff8a7a','#b0121e'];
+    for(let s=0;s<seg;s++){const k=i?seg-1-s:s,sx=bx+k*(sw+gap),lo=s*10,fS=srClamp((v.hpS-lo)/10,0,1),fG=srClamp((v.hpG-lo)/10,0,1);
+      c.fillStyle='#1a120e';c.fillRect(sx,by,sw,bh);
+      if(fG>fS){c.fillStyle=`rgba(255,${200+55*Math.abs(Math.sin(t*20))|0},170,.95)`;const w0=sw*fG;c.fillRect(i?sx+sw-w0:sx,by,w0,bh)}
+      if(fS>0){const g=c.createLinearGradient(0,by,0,by+bh);g.addColorStop(0,col[0]);g.addColorStop(1,col[1]);c.fillStyle=g;const w0=sw*fS;c.fillRect(i?sx+sw-w0:sx,by,w0,bh);c.fillStyle='rgba(255,255,255,.28)';c.fillRect(i?sx+sw-w0:sx,by,w0,2.2)}
+      c.strokeStyle='rgba(0,0,0,.6)';c.lineWidth=1;c.strokeRect(sx+.5,by+.5,sw-1,bh-1)}
+    if(v.hpF>0){c.fillStyle=`rgba(255,255,255,${v.hpF*.7})`;c.fillRect(bx,by,bW,bh)}
+    if(v.dead){c.save();c.translate(x+bw/2,by+5);c.rotate(-.08);c.font='400 13px Anton,Impact,sans-serif';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#000';c.strokeText('KILŐVE',0,4);c.fillStyle='#ff5a4a';c.fillText('KILŐVE',0,4);c.restore()}
+    // alsó sor: kezelők (5 pont), lőszer, tűz
+    const ry=y+34;for(let k=0;k<5;k++){c.fillStyle=k<v.crew&&!v.dead?'#bfe3ff':'#3a2622';c.beginPath();c.arc(i?x+bw-8-k*6:x+8+k*6,ry-1.5,1.9,0,7);c.fill()}
+    c.font='800 8px ui-monospace,Menlo,monospace';c.textAlign=i?'left':'right';c.fillStyle='#cfd6c0';c.fillText((v.burn>0&&!v.dead?'🔥 ':'')+(v.load>=1?srAmmoN(v)+'/60':''),i?x+sk+3:x+bw-sk-3,ry+1);
+    // találat után pár másodpercig a löveg fölött is megjelenik egy kis sáv
+    if(v.hpB>0&&!v.dead){const z=SR.cam.z,sx=(v.x-SR.cam.x)*z+W/2,sy=(v.y-58-SR.cam.y)*z+H*.62,w=54,al=Math.min(1,v.hpB);c.globalAlpha=al;c.fillStyle='rgba(0,0,0,.7)';c.fillRect(sx-w/2-1.5,sy-1.5,w+3,8);c.fillStyle='rgba(255,230,190,.9)';c.fillRect(sx-w/2,sy,w*v.hpG/100,5);c.fillStyle=col[1];c.fillRect(sx-w/2,sy,w*v.hpS/100,5);c.fillStyle=col[0];c.fillRect(sx-w/2,sy,w*v.hpS/100,2);c.globalAlpha=1}});
   if(SR.phase==='prep'||SR.phase==='over')return;
   const lines=[],radio=ctl.sys.rad&&ctl.d.rad<2,blind=srInSmoke(ctl)||srInSmoke(tg);
   if(radio){const w=SR.wind,wl=w.x*ctl.face,wc=w.z*ctl.face;lines.push(['MET  '+(Math.abs(w.x)<1?'szélcsend':(wl>0?'hátszél ':'szembeszél ')+Math.round(Math.abs(w.x)/2)+' m/s')+' · oldal '+(Math.abs(w.z)<1?'0':(wc>0?'→ ':'← ')+Math.round(Math.abs(w.z)/2)+' m/s'),'#bfe3ff'])}
@@ -4891,7 +4919,7 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(150,W*.36
   c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width));c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,Math.min(W-8,mw+10),lines.length*14+5);
   for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,W-18);y+=14}
   // felülnézet: oldalirány, szél, utolsó becsapódás
-  const iw=74,ih=96,ix=W-iw-6,iy=42,cx=ix+iw/2,sc=.3;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(ix,iy,iw,ih);c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1;c.strokeRect(ix+.5,iy+.5,iw-1,ih-1);
+  const iw=74,ih=96,ix=W-iw-6,iy=48,cx=ix+iw/2,sc=.3;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(ix,iy,iw,ih);c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1;c.strokeRect(ix+.5,iy+.5,iw-1,ih-1);
   c.font='700 7.5px system-ui';c.textAlign='center';c.fillStyle='rgba(255,255,255,.7)';c.fillText('FELÜLNÉZET',cx,iy+9);
   const by=iy+ih-10,ty=iy+20,rng=Math.abs(tg.x-ctl.x);c.setLineDash([2,3]);c.strokeStyle='rgba(255,255,255,.3)';c.beginPath();c.moveTo(cx,by);c.lineTo(cx,ty);c.stroke();c.setLineDash([]);
   const lx=srClamp(Math.tan(ctl.trav/SR_MIL)*rng*sc,-iw/2+3,iw/2-3);c.strokeStyle='#9dff9d';c.lineWidth=1.5;c.beginPath();c.moveTo(cx,by);c.lineTo(cx+lx,ty);c.stroke();
