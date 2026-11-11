@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.18.0',APP_DATE='2026.11.11.';
+const APP_VER='4.18.1',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4802,7 +4802,7 @@ const srMyName=()=>(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Te';
 function srLoadDone(v){v.loading=false;v.load=1;v.ammo={};for(const a of SR_AMMO)v.ammo[a.id]=a.q}
 function srPrep(dt){SR.prepT+=dt;const ctl=srCtl();
   for(const v of SR.v){if(v!==ctl){if(SR.prepT>.7)v.sys.eng=true;if(SR.prepT>1.1)v.sys.rad=true;if(SR.prepT>1.5)v.sys.tur=true;if(SR.prepT>1.9&&v.load<1)v.loading=true}
-    if(v===ctl&&v.loading)srLoaderHum(true);if(v.loading){const b=Math.floor(v.load*60);v.load=Math.min(1,v.load+dt/5.5);const n=Math.floor(v.load*60);if(v===ctl&&n!==b){if(n%2===0)srLoadSnd();srUI()}if(v.load>=1){srLoadDone(v);if(v===ctl){srLoaderHum(false);srUI()}}}}
+    if(v===ctl&&v.loading)srLoaderHum(true);if(v.loading){const b=Math.floor(v.load*60);v.load=Math.min(1,v.load+dt/2.75);const n=Math.floor(v.load*60);if(v===ctl&&n!==b){if(n%4===0)srLoadSnd();srUI()}if(v.load>=1){srLoadDone(v);if(v===ctl){srLoaderHum(false);srUI()}}}}
   if(SR.v.every(srReady)){SR.phase='aim';SR.turn=0;srMsg('💥 TŰZPÁRBAJ! '+(srMyTurn()&&SR.mode!=='hot'?'Te kezdesz.':SR.v[0].name+' kezd.'),3500);srTurnStart(true)}}
 // mindkét löveg kifogyott: ejtőernyős lőszerláda érkezik mindkét löveg mögé (egyszer); ha az is elfogy, az életerő dönt
 const SR_DROP=4;
@@ -4815,13 +4815,20 @@ function srDrawCrates(c,t){for(const k of SR.crates||[]){const sw=k.land?0:Math.
     if(!k.land){c.strokeStyle='rgba(230,230,220,.8)';c.lineWidth=.8;c.beginPath();c.moveTo(-9,-6);c.lineTo(-22,-46);c.moveTo(9,-6);c.lineTo(22,-46);c.moveTo(0,-6);c.lineTo(0,-50);c.stroke();
       c.fillStyle='#d9d2bd';c.beginPath();c.moveTo(-26,-44);c.quadraticCurveTo(0,-74,26,-44);c.closePath();c.fill();c.strokeStyle='#5a5446';c.lineWidth=1;c.stroke();c.fillStyle='#b8402e';c.fillRect(-4,-62,8,16)}
     c.fillStyle='#4a5a2a';c.fillRect(-10,-8,20,16);c.strokeStyle='#1d2410';c.lineWidth=1.4;c.strokeRect(-10,-8,20,16);c.beginPath();c.moveTo(-10,0);c.lineTo(10,0);c.stroke();c.fillStyle='#f3d77a';c.fillRect(-5,-5,10,3);c.restore()}}
-function srLoadSnd(){if(!srSnd())return;const t=AC.currentTime+.005;srMetal(t,360+Math.random()*160,.07,.22);srThump(t+.06,85+Math.random()*20,.16,.09);srNoise(t+.05,.06,.12,'bandpass',800,null,2);if(Math.random()<.35)srNoise(t+.1,.15,.06,'bandpass',2600,1200,1.5)}
-// a töltőautomata villanymotorja és szállítóláncának zörgése, amíg málháznak
-function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{const t=AC.currentTime;L.g.gain.setTargetAtTime(.0001,t,.08);L.o.stop(t+.5);L.n.stop(t+.5);L.l.stop(t+.5)}catch(e){}if(!quiet&&srSnd()){const t=AC.currentTime;srMetal(t+.05,300,.1,.4);srThump(t+.05,70,.25,.15)}}return}
-  if(SR.ldr||!srSnd())return;const a=AC,t=a.currentTime,o=a.createOscillator(),n=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),l=a.createOscillator(),lg=a.createGain(),og=a.createGain();
-  o.type='sawtooth';o.frequency.setValueAtTime(60,t);o.frequency.exponentialRampToValueAtTime(155,t+.4);og.gain.value=.35;n.buffer=NOISE;n.loop=true;f.type='bandpass';f.frequency.value=700;f.Q.value=.8;
-  l.frequency.value=13;lg.gain.value=.02;l.connect(lg).connect(g.gain);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.04,t+.3);
-  o.connect(og).connect(f);n.connect(f);f.connect(g).connect(MASTER);o.start(t);n.start(t);l.start(t);SR.ldr={o,n,l,g}}
+// gránátonként: pneumatikus döngölő szisszenése (sűrített levegő ki-be), majd fémes csattanás és reteszelés
+function srLoadSnd(){if(!srSnd())return;const t=AC.currentTime+.005;srNoise(t,.09,.16,'bandpass',3400,1800,1.2);srNoise(t+.07,.05,.1,'highpass',5200);srMetal(t+.06,360+Math.random()*160,.06,.2);srThump(t+.08,85+Math.random()*20,.15,.08);if(Math.random()<.4)srNoise(t+.11,.14,.07,'bandpass',2600,900,1.5)}
+// a töltőautomata pneumatikus-elektromos búgása, amíg málháznak: villanymotor (100 Hz-es hálózati búgás felharmonikusokkal,
+// felfutó fordulattal), a sűrített levegős rendszer folyamatos sziszegése és a kompresszor lüktetése
+function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{const t=AC.currentTime;L.g.gain.setTargetAtTime(.0001,t,.09);for(const x of L.st)x.stop(t+.6)}catch(e){}
+    if(!quiet&&srSnd()){const t=AC.currentTime;srNoise(t+.02,.45,.22,'bandpass',3000,700,.9);srMetal(t+.08,300,.1,.4);srThump(t+.08,70,.25,.15)}}return}// leálláskor nagy levegő-kifúvás
+  if(SR.ldr||!srSnd())return;const a=AC,t=a.currentTime,g=a.createGain(),st=[];
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.25);g.connect(MASTER);
+  const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.Q.value=2;lp.connect(g);
+  for(const [ty,f,v] of [['sawtooth',100,.5],['square',200,.18],['sine',50,.6],['sine',300,.12]]){const o=a.createOscillator(),og=a.createGain();o.type=ty;o.frequency.setValueAtTime(f*.45,t);o.frequency.exponentialRampToValueAtTime(f,t+.35);og.gain.value=v;o.connect(og).connect(lp);o.start(t);st.push(o)}
+  const am=a.createOscillator(),ag=a.createGain();am.frequency.value=7;ag.gain.value=.015;am.connect(ag).connect(g.gain);am.start(t);st.push(am);
+  const n=a.createBufferSource(),bp=a.createBiquadFilter(),ng=a.createGain(),pl=a.createOscillator(),pg=a.createGain();n.buffer=NOISE;n.loop=true;bp.type='bandpass';bp.frequency.value=3800;bp.Q.value=.9;ng.gain.value=.22;
+  pl.frequency.value=4;pg.gain.value=.16;pl.connect(pg).connect(ng.gain);n.connect(bp).connect(ng).connect(g);n.start(t,Math.random()*.5);pl.start(t);st.push(n,pl);
+  srNoise(t,.25,.18,'bandpass',4200,2200,1);SR.ldr={g,st}}
 function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];
   if(!first){SR.smokes=SR.smokes.filter(s=>--s.turns>0);SR.flares=SR.flares.filter(f=>--f.turns>0)}
   v.fuel=SR_FUEL*(v.d.trk===1?.5:1);SR.camFree=false;SR.ovw=false;SR.pred=null;SR.predK='';
@@ -5022,7 +5029,7 @@ function srDrawSoldier(c,x,y,dir,ph,carry){c.save();c.translate(x,y);c.scale(dir
 function srDrawCrew(c,v,now){if(v.load>=1&&!v.loading)return;const px=v.x-v.face*108,hx=v.x-v.face*54,py=srGy(px),left=Math.round(12*(1-v.load));
   c.fillStyle='#6b4a2a';c.fillRect(px-12,py-3,24,3);c.fillStyle='#3E4A1E';for(let i=0;i<left;i++){const col=i%4,row=i/4|0;c.fillRect(px-11+col*5.6,py-6-row*3.3,5,2.6);c.fillStyle=i%2?'#3E4A1E':'#46542a'}
   for(let i=0;i<5;i++){if(!v.loading){const x=px+v.face*(8+i*7)-v.face*30;srDrawSoldier(c,x,srGy(x),v.face,0,false);continue}
-    const u=(now/1000*.85+i/5)%1,go=u<.5,p=go?u*2:1-(u-.5)*2,x=px+(hx-px)*p;srDrawSoldier(c,x,srGy(x),go?v.face:-v.face,now/70+i*2,go)}}
+    const u=(now/1000*1.7+i/5)%1,go=u<.5,p=go?u*2:1-(u-.5)*2,x=px+(hx-px)*p;srDrawSoldier(c,x,srGy(x),go?v.face:-v.face,now/70+i*2,go)}}
 /* ---------- háttér: tájkép, háborús jelenetek, távoli atomcsapás ---------- */
 // arányosítás: a háttér elemei a távolságuknak (parallaxis) és a kamera nagyításának megfelelő méretben látszanak
 const srBgS=()=>srClamp(.62+.38*SR.cam.z/(SR.zb||1),.55,1.3);
@@ -5330,7 +5337,7 @@ function srNudgeBind(b){const key=b.dataset.nudge[0]==='e'?'elev':'trav',d=b.dat
   b.addEventListener('pointerdown',e=>{e.preventDefault();ac();try{b.setPointerCapture(e.pointerId)}catch(x){}b.classList.add('on');n=0;srDial(key,d);tm=setTimeout(rep,340)});
   for(const k of ['pointerup','pointercancel','pointerleave'])b.addEventListener(k,stop)}
 function srSwitch(k){if(!SR.v)return;const v=srCtl();if(!(SR.phase==='prep'||srMyTurn()))return;ac();
-  if(k==='load'){if(v.load>=1){toast('A lőszer már bent van: '+srAmmoN(v)+'/60');return}if(!v.loading){v.loading=true;srSwSnd(true);srMsg('A kezelők málházzák a lőszert…',5200)}srUI();return}
+  if(k==='load'){if(v.load>=1){toast('A lőszer már bent van: '+srAmmoN(v)+'/60');return}if(!v.loading){v.loading=true;srSwSnd(true);srMsg('A kezelők málházzák a lőszert…',3000)}srUI();return}
   if(v.d[k]>=2){toast('A '+SR_PN[k]+' megsemmisült – nem kapcsolható vissza.');srSwSnd(false);return}
   v.sys[k]=!v.sys[k];srSwSnd(v.sys[k]);if(v.sys[k]){if(k==='eng'){srSndEngine();setTimeout(()=>{if(SR.v&&SR.run&&srCtl().sys.eng)srEngLoop(true,true)},1400)}else if(k==='rad')srSndRadio();else srSndTurret()}else if(k==='eng'&&!SR.v.some(x=>!x.ai&&x.sys.eng))srEngLoop(false);
   SR.manW=0;srUI()}

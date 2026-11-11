@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.18.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.18.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.18.1:** Shot&Run: a málházás fele annyi ideig tart (kb. 2,7 mp); a töltőautomata pneumatikus-elektromos búgással szól (villanymotor-búgás, sűrített levegő sziszegése és lüktetése, gránátonként döngölő-szisszenés, leálláskor levegő-kifúvás).
 
 **v4.18.0:** Shot&Run: 120 mp-es köridő minden módban (fogyó sáv a kép tetején, 60/30/10 mp-es figyelmeztetés); lőszer-figyelmeztetések (elfogyott típus automatikus átváltással, kevés lőszer, teljes kifogyás – hanggal, rezgéssel; az ellenfélé is); stabilabb online kapcsolat (sorszámozott, nyugtázott, szükség esetén újraküldött események – nem vész el és nem fut le kétszer lövés; a lőszerállapot is szinkronizálódik; kapcsolódási jelzés; a Firestore-szabályok nem változtak); a készülék erejéhez igazodó részecskeszám és felbontás (gyenge telefonon visszavesz, erősön többet mutat), a kijelző játék közben nem alszik el; valósághűbb becsapódás (villanás, gomolygó tűzgömb, földoszlopok, sokkal több rög, kő és repesz, porgyűrű, füstoszlop); nagyobb lőporfüst; gránáttípusonként eltérő lövés-, röppálya- és becsapódáshang (V-LAP rakétahajtómű, Excalibur kormányszárnyak, Vulcano leváló vezetőelem, PFF repeszsüvítés, köd- és világítógránát tompább hangja); részletesebb, arányosított háttér (három hegyréteg, erdős dombok, falvak templomtoronnyal, villanyoszlopok, harckocsioszlop); háborús jelenetek (helikopterek rakétákkal, vadászgépek, rakéta-sorozatvető, világítórakéta); ritkán távoli atomcsapás gombafelhővel, késve érkező dörgéssel – a felhő később szétoszlik és eltűnik; a TŰZ gomb kiírja, mit lő vagy miért nem lehet lőni, gombnyomásra rezgés és fényvisszajelzés; nyugodt, nem rázkódó életerő-kijelzés a sebzés értékével, a lövegek fölötti sáv állandó méretű.
 
