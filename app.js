@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.19.0',APP_DATE='2026.11.11.';
+const APP_VER='4.20.0',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4026,6 +4026,7 @@ function arcMoreClose(){ARC.more=null;const o=document.getElementById('arcMore')
 document.addEventListener('click',e=>{if(!e.target.closest)return;const t=e.target.closest('[data-more]');if(t){arcMore(t.dataset.more);return}
   if(e.target.closest('#moreX')||e.target.id==='arcMore'){arcMoreClose();return}if(e.target.closest('[data-chat]')){chatOpen();return}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ARC.more&&document.getElementById('harc')?.hidden!==false)arcMoreClose()});
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#auLbReset'))lbResetAll()});
 document.addEventListener('change',e=>{if(e.target.id==='arcLow'){LOWFX=e.target.checked;LOWAUTO=0;try{localStorage.setItem('medve-lowfx',LOWFX?'1':'0')}catch(x){}toast(LOWFX?'🔋 Gyenge telefon mód BE – a következő játékindítástól':'Gyenge telefon mód KI')}if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
@@ -4252,18 +4253,34 @@ function fbErr(e){const c=(e&&e.code)||'';return ({
   })[c]||('Hiba: '+(c||e?.message||e))}
 // a készüléken tárolt rekordok ahhoz tartoznak, aki utoljára itt be volt jelentkezve
 function fbOwnLocal(uid){let o=null;try{o=localStorage.getItem('medve-owner')}catch(e){}
-  if(o&&o!==uid){try{LS_BEST.forEach(k=>localStorage.removeItem(k))}catch(e){}}
+  // más felhasználó lépett be ezen a telefonon: az előző játékos rekordjai és Kassza-állása nem kerülhet át hozzá
+  if(o&&o!==uid){try{[...LS_BEST,'medve-tkft-best',TK_KEY].forEach(k=>localStorage.removeItem(k));for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}}
   try{localStorage.setItem('medve-owner',uid)}catch(e){}}
+/* ---------- ranglista nullázása (új szezon) ----------
+   Csak admin indíthatja: minden felhasználó dokumentumából törli a rekordokat, a játékszámlálókat és a Kassza-állást,
+   és mindenkinél beírja a nullázás idejét (lbReset). Minden telefon ebből tudja meg, hogy a helyben tárolt régi
+   rekordjait el kell dobnia – így azok nem töltődnek vissza a szerverre, és a régi eltérések is eltűnnek. */
+const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','lastPlay'];
+async function lbResetAll(){if(USERDOC?.role!=='admin'){toast('Ehhez admin jog kell.');return}if(!navigator.onLine){toast('Ehhez internet kell.');return}
+  const w=prompt('Minden játék ranglistája, a játékszámlálók és a Kassza-állás MINDENKINÉL törlődik. Nem vonható vissza.\nÍrd be: NULLÁZÁS');if((w||'').trim().toUpperCase()!=='NULLÁZÁS'){toast('Nullázás megszakítva.');return}
+  const del=firebase.firestore.FieldValue.delete(),now=Date.now(),ids=Object.keys(S.users||{});let done=0;
+  try{for(let i=0;i<ids.length;i+=400){const b=DB.batch();for(const id of ids.slice(i,i+400)){const u={lbReset:now};for(const f of LB_FIELDS)if(S.users[id]&&f in S.users[id])u[f]=del;b.update(DB.doc('users/'+id),u)}await b.commit();done+=Math.min(400,ids.length-i)}
+    toast('✅ Ranglista nullázva ('+done+' játékos) – új szezon indult.');lbApply()}catch(e){console.warn('lbReset',e);toast('A nullázás nem sikerült: '+(e.code||e.message||e))}}
+// a nullázás átvétele ezen a telefonon: helyi rekordok és a Kassza-állás törlése (a választott üteg megmarad)
+function lbApply(){const R=Math.max(0,...arr('users').map(u=>Number(u.lbReset)||0));if(!R)return false;let mark=0;try{mark=Number(localStorage.getItem('medve-lbreset')||0)}catch(e){}if(mark>=R)return false;
+  try{for(const k of [...LS_BEST,'medve-tkft-best'])localStorage.removeItem(k);let t={};try{t=JSON.parse(localStorage.getItem(TK_KEY)||'{}')||{}}catch(e){}localStorage.setItem(TK_KEY,JSON.stringify({ver:TK_VER,uteg:t.uteg||''}));localStorage.setItem('medve-lbreset',String(R))}catch(e){}
+  try{for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}
+  toast('🔄 Új szezon! A ranglista nullázva – mindenki nulláról indul.');return true}
 // net nélkül elért, még fel nem töltött rekordok feltöltése
 function fbSyncLocal(){if(!USERDOC)return;const up={},now=Date.now();
-  RANKG.forEach(([,, f, ls, asc])=>{let v=0;try{v=Number(localStorage.getItem(ls)||0)}catch(e){}const cur=USERDOC[f]||0;
+  RANKG.forEach(([g,, f, ls, asc])=>{if(g==='kassza')return;/* a Kassza-összeget a tkSync tölti fel a saját szabályai szerint */let v=0;try{v=Number(localStorage.getItem(ls)||0)}catch(e){}const cur=USERDOC[f]||0;
     if(v>0&&(!cur||(asc?v<cur:v>cur))){up[f]=v;up[f==='harcBest'?'harcAt':f==='droneBest'?'droneAt':f+'At']=now}});
   if(Object.keys(up).length)DB.doc('users/'+UID).update(up).catch(()=>{})}
 function fbListen(){if(UNSUB)UNSUB();FB_SYNCED=false;
   UNSUB=DB.collection('users').onSnapshot(qs=>{const o={};qs.forEach(d=>{o[d.id]={id:d.id,...d.data()}});S.users=o;USERDOC=o[UID]||null;
     if(!USERDOC&&!qs.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
       DB.doc('users/'+UID).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:Date.now()}).catch(()=>{})}
-    if(USERDOC&&!FB_SYNCED){FB_SYNCED=true;fbSyncLocal()}
+    lbApply();if(USERDOC&&!FB_SYNCED){FB_SYNCED=true;fbSyncLocal()}
     liveRefresh()},err=>{console.warn(err);toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
 function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hidden){const t=ov.querySelector('[data-rg].on');if(t)rankFill(t.dataset.rg)}
   const lv=document.getElementById('arcLive');if(lv)lv.innerHTML=liveHTML();const ab=document.getElementById('authBox');if(ab&&UID)ab.innerHTML=authInner()}
@@ -4274,7 +4291,7 @@ function authInner(){
   if(!AUTHREADY)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">Kapcsolódás…</p>`;
   if(UID){const nm=USERDOC?((USERDOC.rank?USERDOC.rank+' ':'')+USERDOC.name):(AUTH.currentUser?.displayName||'…');
     return `<h3>👤 ${esc(nm)}</h3><label class="authf"><span>Rendfokozat</span><select id="auRankEd">${RANKS.map(r=>`<option value="${esc(r)}" ${r===(USERDOC?.rank||'')?'selected':''}>${r||'— nincs megadva —'}</option>`).join('')}</select></label>
-      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>`}
+      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>${USERDOC?.role==='admin'?`<div class="lbadm"><b>🛡 Admin</b><p class="hint">Új szezon: minden játék ranglistája, a játékszámlálók és a Kassza-állás mindenkinél nulláról indul. A telefonokon tárolt régi rekordok is törlődnek, nem töltődnek vissza.</p><button type="button" class="btn sm lbrst" id="auLbReset">🗑 Ranglista nullázása – új szezon</button></div>`:''}`}
   const reg=AUTHTAB==='reg';
   return `<h3>🔐 ${reg?'Regisztráció':'Bejelentkezés'}</h3>${navigator.onLine?'':'<p class="choff">📴 Nincs internet. Belépés nélkül is játszhatsz, a rekordjaid a következő belépéskor feltöltődnek.</p>'}<p class="hint" data-st="margin:0 0 10px">A játékhoz fiók kell, így a rekordjaid élőben felkerülnek a közös ranglistára.</p>
    <div class="autabs"><button type="button" data-autab="login" class="${reg?'':'on'}">Belépés</button><button type="button" data-autab="reg" class="${reg?'on':''}">Regisztráció</button></div>

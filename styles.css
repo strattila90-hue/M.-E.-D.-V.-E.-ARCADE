@@ -1472,3 +1472,7 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 @keyframes srpop{0%{transform:scale(1.9)}100%{transform:scale(1)}}
 @media (orientation:landscape) and (max-height:560px){.sralert{top:96px;font-size:12.5px;padding:6px 10px}#harc.sr .srmsg{top:80px}.srfire small{font-size:9px}}
 @media (prefers-reduced-motion:reduce){.sralert.crit,.srcnt.crit b{animation:none}}
+/* admin: ranglista nullázása */
+.lbadm{margin-top:14px;padding:10px 12px;border:2px dashed rgba(255,90,70,.55);border-radius:12px;background:rgba(255,90,70,.08)}
+.lbadm b{display:block;margin-bottom:4px}.lbadm .hint{margin:0 0 8px;font-size:12px}
+.lbadm .lbrst{background:#c8102e;color:#fff;border-color:#111}
