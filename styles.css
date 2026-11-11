@@ -1208,8 +1208,8 @@ body .page{padding-right:16px!important;padding-left:16px!important;max-width:64
 #harc.sr .srwrap{flex:1;min-height:0;display:flex;flex-direction:column}
 #harc.sr .srview{position:relative;flex:1;min-height:140px;overflow:hidden;touch-action:none}
 #harc.sr .srview canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.srcam{position:absolute;left:8px;top:42px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.5);font-size:17px;color:#fff;padding:0;cursor:pointer}
-.srmsg{position:absolute;left:50%;top:42px;transform:translateX(-50%);max-width:calc(100% - 190px);background:rgba(10,12,6,.82);border:1px solid rgba(243,215,122,.55);color:#f3ecd4;font-weight:800;font-size:12.5px;line-height:1.25;padding:6px 10px;border-radius:10px;text-align:center;pointer-events:none;z-index:3}
+.srcam{position:absolute;left:8px;top:60px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.5);font-size:17px;color:#fff;padding:0;cursor:pointer}
+.srmsg{position:absolute;left:50%;top:60px;transform:translateX(-50%);max-width:calc(100% - 190px);background:rgba(10,12,6,.82);border:1px solid rgba(243,215,122,.55);color:#f3ecd4;font-weight:800;font-size:12.5px;line-height:1.25;padding:6px 10px;border-radius:10px;text-align:center;pointer-events:none;z-index:3}
 .srpanel{flex:0 0 auto;background:linear-gradient(#262e1c,#141910);border-top:2px solid #6f8048;padding:7px 9px calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px;color:#f3ecd4;touch-action:none}
 .srpanel.off{opacity:.2;pointer-events:none}
 .srpanel.wait .srdial,.srpanel.wait .sract,.srpanel.wait .sram{opacity:.4;pointer-events:none}
