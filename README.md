@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.18.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.19.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.19.0:** Shot&Run: a SMArt 155 emelt, nyújtott röppályán repül (felső szögcsoport – kiválasztáskor a tűzvezető átáll rá, a lőtábla is ezt mutatja; kb. 2,5× magasabb csúcs, majdnem kétszer olyan hosszú repülés); a csúcs után magasan leválik a fenéklap, kilökődik a 2 résztöltet: fékezőszalag, majd pörgő örvényernyő, ferde tengelyű radaros-infravörös spirálpásztázás (radarimpulzusok, pásztázási hang), befogáskor piros célkeret és zárolási hang, utána felülről csapó EFP; befogás nélkül önmegsemmisítés a levegőben. Két új, valós 155 mm-es gránát: M712 Copperhead (lézerirányított páncéltörő – csak élő rádióval és ködmentes célra, villogó lézerpont a célon) és M1156 PGK (GPS-es irányító gyújtós HE); a DM121 készlet 14 db, így összesen továbbra is 60 gránát.
 
 **v4.18.2:** Shot&Run online: ha valamelyik játékos telefonhívást kap (vagy háttérbe teszi az appot, lezárja a képernyőt), a párbaj mindkét telefonon azonnal megáll, bárki köre is van – a köridő áll, az ellenfél látja, hogy hívás miatt állt meg; visszatérve a „Folytatás” gombbal megy tovább. Ha a szünetjelzés nem jutna át, az ellenfél 5 percig vár a játékosra, mielőtt a párbaj véget érne.
 
