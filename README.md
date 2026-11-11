@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.19.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.20.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.20.0:** Ranglista nullázása (új szezon): adminként a Továbbiak → Fiók panelen a „Ranglista nullázása – új szezon” gombbal minden játék rekordja, a játékszámlálók és a Kassza-állás mindenkinél törlődik; a telefonok a helyben tárolt régi rekordjaikat is eldobják, így azok nem töltődnek vissza. Javítva: ha egy telefonon másik felhasználó lépett be, átvehette az előzőnek a Kassza-állását és -rekordját; a Kassza összegét két különböző mentés is feltöltötte – ez eltéréseket okozott a ranglistán.
 
 **v4.19.0:** Shot&Run: a SMArt 155 emelt, nyújtott röppályán repül (felső szögcsoport – kiválasztáskor a tűzvezető átáll rá, a lőtábla is ezt mutatja; kb. 2,5× magasabb csúcs, majdnem kétszer olyan hosszú repülés); a csúcs után magasan leválik a fenéklap, kilökődik a 2 résztöltet: fékezőszalag, majd pörgő örvényernyő, ferde tengelyű radaros-infravörös spirálpásztázás (radarimpulzusok, pásztázási hang), befogáskor piros célkeret és zárolási hang, utána felülről csapó EFP; befogás nélkül önmegsemmisítés a levegőben. Két új, valós 155 mm-es gránát: M712 Copperhead (lézerirányított páncéltörő – csak élő rádióval és ködmentes célra, villogó lézerpont a célon) és M1156 PGK (GPS-es irányító gyújtós HE); a DM121 készlet 14 db, így összesen továbbra is 60 gránát.
 
@@ -70,6 +72,7 @@ Az online párbajhoz a `firestore.rules` új `srRooms` szabályát közzé kell 
 
 - **Adminná tétel:** Firestore → `users` → a saját dokumentumod → *Add field*: `role` = `admin` (string).
   Admin javíthat vagy törölhet bárki rekordját.
+- **Ranglista nullázása (új szezon):** adminként az appban Továbbiak → Fiók → „Ranglista nullázása – új szezon”, megerősítésként be kell írni: `NULLÁZÁS`.
 - **Sértő név / csaló rekord:** Firestore → `users` → a dokumentum → mező szerkesztése vagy törlése.
 - **Elfelejtett jelszó:** Authentication → Users → a felhasználó (`becenev@medve.invalid`) → *Delete account*,
   és Firestore-ban a `users` dokumentumát is töröld. Ezután újra regisztrálhat ugyanazzal a becenévvel.
