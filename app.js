@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.18.1',APP_DATE='2026.11.11.';
+const APP_VER='4.18.2',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4829,7 +4829,7 @@ function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{cons
   const n=a.createBufferSource(),bp=a.createBiquadFilter(),ng=a.createGain(),pl=a.createOscillator(),pg=a.createGain();n.buffer=NOISE;n.loop=true;bp.type='bandpass';bp.frequency.value=3800;bp.Q.value=.9;ng.gain.value=.22;
   pl.frequency.value=4;pg.gain.value=.16;pl.connect(pg).connect(ng.gain);n.connect(bp).connect(ng).connect(g);n.start(t,Math.random()*.5);pl.start(t);st.push(n,pl);
   srNoise(t,.25,.18,'bandpass',4200,2200,1);SR.ldr={g,st}}
-function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];
+function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];if(SR.slowW){SR.slowW=0;srMsg('')}
   if(!first){SR.smokes=SR.smokes.filter(s=>--s.turns>0);SR.flares=SR.flares.filter(f=>--f.turns>0)}
   v.fuel=SR_FUEL*(v.d.trk===1?.5:1);SR.camFree=false;SR.ovw=false;SR.pred=null;SR.predK='';
   if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
@@ -4950,7 +4950,7 @@ function srUpdate(dt,now){const P=SR.phase;
     else if(srMyTurn()&&SR.mv){moving=srMove(v,SR.mv,dt);if(moving&&!SR.camFree)SR.ovw=false}
     if(SR.tlEnd&&SR.phase==='aim'){const left=(SR.tlEnd-Date.now())/1000,s=Math.ceil(left);
       if(srMyTurn()){if(s>0&&s!==SR.tlS){SR.tlS=s;if(s===60||s===30)srAlert('⏱ Még '+s+' másodperc a lövésre','info');if(s<=10)srClick(s<=3?2:1);if(s===10)srAlert('⏱ 10 másodperc! Lőj, különben a kör kimarad','warn')}if(left<=0){SR.mv=0;const e={k:'skip',to:1,by:v.i,sx:v.x,wind:SR.wind};srNetSend(e);srPlay(e,true)}}
-      else if(left<-40&&SR.net){if(navigator.onLine===false){if(!SR.offW){SR.offW=1;srMsg('📴 Nincs internet – várakozás a kapcsolatra…',0)}SR.tlEnd=Date.now()-20000}else{srMsg('Az ellenfél nem válaszol.');srNetGone()}}
+      else if(left<-40&&SR.net){if(navigator.onLine===false){if(!SR.offW){SR.offW=1;srMsg('📴 Nincs internet – várakozás a kapcsolatra…',0)}SR.tlEnd=Date.now()-20000}else if(left<-300){srMsg('Az ellenfél 5 perce nem válaszol.');srNetGone()}else if(!SR.slowW){SR.slowW=1;srMsg('📞 Az ellenfél nem válaszol – lehet, hogy telefonál. Várunk rá (legfeljebb 5 percig)…',0)}}
       else if(SR.offW&&navigator.onLine!==false){SR.offW=0;srMsg('')}}}
   else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,tg=SR.v[1-ev.by],near=ev.end.type==='hit'||Math.abs(ev.end.x-tg.x)<130;
     // lassítás a becsapódás előtti utolsó pillanatban, ha a cél közelébe érkezik
@@ -5385,15 +5385,16 @@ function srResume(){const d=srSaveGet();if(!d){srMenu();return}
   catch(e){console.warn('srResume',e);srSaveDel();toast('A mentett állás nem tölthető be.');srMenu()}}
 const srPzCan=()=>!!SR.v&&SR.phase!=='over'&&(SR.mode!=='net'||SR.phase==='aim'&&srMyTurn());
 // online: szünetet csak a soron lévő játékos kérhet (célzás közben) – így a szobában mindig csak egy fél ír
-function srPause(on,remote){if(!SR.v)return;
-  if(on){if(SR.paused)return;if(!remote&&!srPzCan()){toast(SR.mode==='net'?'Online szünetet a saját körödben, célzás közben tarthatsz.':'Most nem lehet megállítani.');return}
-    SR.paused={by:remote?'opp':'me',left:SR.tlEnd?SR.tlEnd-Date.now():0};SR.mv=0;srEngLoop(false);srLoaderHum(false,true);try{SR.whN&&SR.whN.disconnect()}catch(e){}
-    if(SR.mode==='net'&&!remote)srNetSend({k:'pause'});srSave();srPzShow(true)}
-  else{const P=SR.paused;if(!P||SR.mode==='net'&&P.by==='opp'&&!remote)return;SR.paused=null;if(SR.tlEnd)SR.tlEnd=Date.now()+P.left;
+// bg: az app háttérbe került (telefonhívás, appváltás) – online is azonnal megáll, bárki köre is van
+function srPause(on,remote,bg){if(!SR.v)return;
+  if(on){if(SR.paused)return;if(!remote&&!bg&&!srPzCan()){toast(SR.mode==='net'?'Online szünetet a saját körödben, célzás közben tarthatsz.':'Most nem lehet megállítani.');return}
+    SR.paused={by:remote?'opp':'me',bg:!!bg,left:SR.tlEnd?Math.max(SR.tlEnd-Date.now(),bg?0:-1e9):0};SR.slowW=0;SR.mv=0;srEngLoop(false);srLoaderHum(false,true);try{SR.whN&&SR.whN.disconnect()}catch(e){}
+    if(SR.mode==='net'&&!remote)srNetSend({k:'pause',bg:bg?1:0});srSave();srPzShow(true)}
+  else{const P=SR.paused;if(!P||SR.mode==='net'&&P.by==='opp'&&!remote||remote&&P.by==='me')return;/* a saját szünetünket az ellenfél nem oldhatja fel */SR.paused=null;if(SR.tlEnd)SR.tlEnd=Date.now()+P.left;
     if(SR.mode==='net'&&!remote)srNetSend({k:'resume'});srPzShow(false);SR.lastT=performance.now();if(SR.v.some(v=>!v.ai&&!v.dead&&v.sys.eng))srEngLoop(true)}}
 function srPzShow(on){const el=$('#srPz'),pn=$('#srPanel');if(pn)pn.classList.toggle('pz',!!on);if(!el)return;el.hidden=!on;if(!on){el.innerHTML='';return}
-  const P=SR.paused,net=SR.mode==='net',opp=P&&P.by==='opp';
-  el.innerHTML=`<div class="srpzbox"><h3>${ic('pause')}SZÜNET</h3><p>${opp?esc(SR.v[1-SR.me].name)+' szünetet tart. Amint folytatja, megy tovább a párbaj – az órád addig áll.':net?'Az ellenfeled is látja, hogy szünetet tartasz. A köridő áll.':'A játék áll, az állást elmentettük.<br>Ha most kilépsz, a menüből <b>innen folytathatod</b>.'}</p>
+  const P=SR.paused,net=SR.mode==='net',opp=P&&P.by==='opp',bg=P&&P.bg;
+  el.innerHTML=`<div class="srpzbox"><h3>${ic('pause')}SZÜNET</h3><p>${opp&&bg?'📞 '+esc(SR.v[1-SR.me].name)+' telefonhívást kapott vagy háttérbe tette az appot. A párbaj áll, az órád nem fogy – amint visszajön és folytatja, megy tovább.':opp?esc(SR.v[1-SR.me].name)+' szünetet tart. Amint folytatja, megy tovább a párbaj – az órád addig áll.':bg&&net?'📞 Háttérbe került az app (pl. telefonhívás), ezért a párbaj azonnal megállt – az ellenfeled is vár, a köridő áll. Ha készen állsz, folytasd.':bg?'📞 Háttérbe került az app (pl. telefonhívás), ezért a játék megállt, az állást elmentettük.':net?'Az ellenfeled is látja, hogy szünetet tartasz. A köridő áll.':'A játék áll, az állást elmentettük.<br>Ha most kilépsz, a menüből <b>innen folytathatod</b>.'}</p>
    ${opp?'<i class="srwait"><span class="srspin"></span>Várakozás az ellenfélre…</i>':`<button type="button" class="srbig pri" id="srPzGo">${ic('play')}Folytatás</button>`}
    ${net?'':`<button type="button" class="srbig" id="srPzMenu"><span>${ic('save')}Kilépés a menübe</span><small>az állás mentve – később innen folytatod</small></button><button type="button" class="srbig" id="srPzNew">${ic('again')}Új játék</button>`}
    <button type="button" class="srbig warn" id="srPzQuit">${net?ic('flag')+'Feladás és kilépés':ic('exit')+'Kilépés a játékból'}</button></div>`;
@@ -5402,7 +5403,10 @@ function srPzShow(on){const el=$('#srPz'),pn=$('#srPanel');if(pn)pn.classList.to
   b('#srPzMenu',()=>{srSave();SR.paused=null;srMenu();toast('Állás elmentve – a menüben a „Folytatás innen” kártyával folytathatod.')});
   b('#srPzNew',()=>{if(!confirm('Új játékot kezdesz? A mostani állás elvész.'))return;srSaveDel();SR.paused=null;srPzShow(false);srBegin(SR.opts.mode,{...SR.opts.o,seed:0})});
   b('#srPzQuit',()=>{if(net){if(!confirm('Feladod a párbajt? Az ellenfeled nyer.'))return;srNetLeave();SR.paused=null;srMenu()}else{srSave();SR.paused=null;srClose()}})}
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&SR.cv&&SR.v&&SR.mode!=='net'&&!SR.paused&&SR.phase!=='over'&&SR.phase!=='prep')srPause(true)});
+// telefonhívás, appváltás, képernyőzár: azonnali szünet minden módban (online is, hogy a párbaj ne vesszen el); az ellenfél órája is megáll
+function srBgPause(){if(!SR.cv||!SR.v||SR.paused||SR.phase==='over'||SR.phase==='prep'&&SR.mode!=='net')return;if(SR.mode==='net'&&!SR.net)return;srPause(true,false,true)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)srBgPause()});
+addEventListener('pagehide',srBgPause);
 const srNetOk=()=>MODE==='fb'&&!!UID&&!!DB&&navigator.onLine!==false;
 const srNetRef=()=>DB.collection('srRooms').doc(SR.net.code);
 function srNetErr(e){console.warn('Shot&Run net',e);toast(e&&e.code==='permission-denied'?'A szerver elutasította (a Firestore-szabályokat frissíteni kell).':'Hálózati hiba – próbáld újra.')}
@@ -5455,7 +5459,7 @@ function srNetGone(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsu
   if(SR.mode==='net'&&SR.v&&SR.phase!=='over'){SR.phase='over';SR.run=false;srEngLoop(false);const o=$('#srOver');o.innerHTML='<h3>🏳 AZ ELLENFÉL KILÉPETT</h3><p>A párbaj véget ért – a harcmező a tiéd.</p><button class="btn pri" id="srBack">Ellenfélválasztás</button>';o.hidden=false;$('#srPanel').classList.add('off');$('#srBack').onclick=srMenu}
   else toast('Az ellenfél kilépett a szobából.')}
 function srNetPoll(){srNetKeep();if(SR.mode!=='net'||!SR.inbox||!SR.inbox.length)return;const e=SR.inbox[0];
-  if(e.k==='pause'||e.k==='resume'){SR.inbox.shift();srPause(e.k==='pause',true);return}
+  if(e.k==='pause'||e.k==='resume'){SR.inbox.shift();srPause(e.k==='pause',true,!!e.bg);return}
   if(e.k==='left'){SR.inbox.shift();SR.paused=null;srPzShow(false);srNetGone()}
   else if(e.k==='re'){SR.inbox.shift();if(e.seed!==SR.seed)srBegin('net',{...SR.opts.o,seed:e.seed})}
   else if(SR.phase==='aim'&&SR.turn!==SR.me){if(SR.paused)srPause(false,true);srPlay(SR.inbox.shift(),false)}}
