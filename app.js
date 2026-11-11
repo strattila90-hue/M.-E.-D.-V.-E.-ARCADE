@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.17.2',APP_DATE='2026.11.11.';
+const APP_VER='4.17.3',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4306,7 +4306,7 @@ document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest
   if(e.target.closest&&e.target.closest('#auOut')){if(confirm('Kijelentkezel?'))AUTH.signOut()}});
 document.addEventListener('change',e=>{if(e.target.id==='auRankEd'&&UID){const r=e.target.value;if(RANKS.includes(r))DB.doc('users/'+UID).update({rank:r}).then(()=>toast('Rendfokozat mentve')).catch(()=>toast('Nem sikerült menteni'))}});
 if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.firestore();
-    try{DB.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+    try{DB.enablePersistence().catch(()=>{})}catch(e){}
     AUTH.onAuthStateChanged(u=>{AUTHREADY=true;AUTHTAB='login';
       if(u){UID=u.uid;MODE='fb';fbOwnLocal(u.uid);fbListen();chatListen()}
       else{if(UNSUB){UNSUB();UNSUB=null}chatStop();UID=null;USERDOC=null;MODE='local';S.users={}}
@@ -4798,11 +4798,11 @@ function srFire(){if(!srMyTurn()||SR.paused)return;const v=srCtl();
   if(!v.sys.tur&&v.d.tur<2){toast('Kapcsold vissza a TORONY főkapcsolót!');return}
   if(!(v.ammo[v.sel]>0)){toast('Ebből a lőszerből nincs több – válassz másikat!');return}
   SR.mv=0;srFireVeh(v)}
-function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;
+function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;const ff=!local&&SR.mode==='net'?srNetLat():0;
   if(!local){if(Math.abs(v.x-ev.sx)>6)srMsg('⚠ '+v.name+' állást váltott!');v.x=ev.sx;if(ev.k==='shot'){v.elev=ev.elev;v.trav=ev.trav;v.sel=ev.am;if(v.ammo[ev.am]>0)v.ammo[ev.am]--}}
   SR.camFree=false;SR.ovw=false;SR.pred=null;
   if(ev.k==='skip'){srMsg(ev.to?'⏱ '+v.name+': lejárt az idő – a kör kimarad!':'⚙ '+v.name+': töltési hiba – a lövés kimarad!');srFloat(v,ev.to?'lejárt az idő':'töltési hiba','#ffd24a');srSwSnd(false);SR.phase='wait';SR.t=1.6;SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srUI();return}
-  SR.shot={ev,t:0,wh:false,n:ev.pts.length/2,ts:1};SR.phase='fly';v.rec=1;v.x=srClamp(v.x-v.face*1.6,60,SR_W-60);v.av-=v.face*(1.1+Math.sin(v.elev/SR_MIL)*.9);srSndFire(v.face);SR.shake=Math.max(SR.shake,.35);try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
+  SR.shot={ev,t:0,wh:false,n:ev.pts.length/2,ts:1,ff};SR.phase='fly';v.rec=1;v.x=srClamp(v.x-v.face*1.6,60,SR_W-60);v.av-=v.face*(1.1+Math.sin(v.elev/SR_MIL)*.9);srSndFire(v.face);SR.shake=Math.max(SR.shake,.35);try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
   const m=srMuzzle(v,v.elev),th=v.elev/SR_MIL,dx=Math.cos(th)*v.face,dy=-Math.sin(th);
   for(let i=0;i<5;i++)SR.fx.push({k:'b',x:m.x+dx*i*7,y:m.y+dy*i*7,vx:dx*60,vy:dy*60,R:20-i*2.4,t:.22+i*.02,t0:.3});
   for(let i=0;i<srN(10);i++)SR.fx.push({k:'s',x:m.x+dx*10,y:m.y+dy*10,vx:dx*(40+Math.random()*90)+(Math.random()-.5)*30,vy:dy*(40+Math.random()*90)-10,r0:5,r1:16+Math.random()*14,t:1.2+Math.random(),t0:2.2,c:'120,112,100',al:.5,drag:2});
@@ -4901,10 +4901,10 @@ function srUpdate(dt,now){const P=SR.phase;
       else if(SR.offW&&navigator.onLine!==false){SR.offW=0;srMsg('')}}}
   else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,tg=SR.v[1-ev.by],near=ev.end.type==='hit'||Math.abs(ev.end.x-tg.x)<130;
     // lassítás a becsapódás előtti utolsó pillanatban, ha a cél közelébe érkezik
-    S.ts=near&&T-S.t<.38?.32:1;S.t+=dt*S.ts;
+    S.ts=near&&T-S.t<.38?.32:1;S.t+=dt*S.ts;if(S.ff>0&&T-S.t>1.6){const x=Math.min(S.ff,dt*.9);S.t+=x;S.ff-=x}
     if(!S.wh&&S.t>.4&&T-S.t<2.3&&ev.end.type!=='out'){S.wh=true;if(T-S.t>.3)srSndWhistle(T-S.t,SR.v[ev.by].face)}
     if(ev.am==='vlap'&&S.t>.45&&S.t<1.35){const p=srShotPos(S,S.t);for(let i=0;i<2;i++)SR.fx.push({k:'j',x:p.x,y:p.y,vx:-p.dx*20+(Math.random()-.5)*20,vy:-p.dy*20+(Math.random()-.5)*20,t:.5,t0:.5})}
-    if(S.t>=T){srImpact(ev);SR.phase='boom';SR.t=(ev.delay||0)+2.3}}
+    if(S.t>=T){srImpact(ev);SR.phase='boom';SR.t=(ev.delay||0)+2.3-Math.min(1,S.ff||0);S.ff=0}}
   else if(P==='boom'){if((SR.t-=dt)<=0)srAfterShot(SR.shot.ev)}
   else if(P==='wait'){if((SR.t-=dt)<=0)srTurnStart()}
   else if(P==='dying'){if((SR.t-=dt)<=0)srEnd()}
@@ -5177,6 +5177,8 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   const pn=$('#srPanel'),off=!(my||P==='prep');if(pn&&pn.classList.contains('wait')!==off)pn.classList.toggle('wait',off);
   const f=$('#srFuel'),v=srCtl();if(f)f.style.width=Math.round(v.fuel/SR_FUEL*100)+'%';const fb=$('#srFire');if(fb){const rdy=my&&v.ammo[v.sel]>0;if(fb.classList.contains('rdy')!==rdy)fb.classList.toggle('rdy',rdy)}
   const pb=$('#srPzB');if(pb){const sh=P!=='over'&&(SR.mode!=='net'||P!=='prep');if(pb.hidden===sh)pb.hidden=!sh;const dim=!SR.paused&&!srPzCan();if(pb.classList.contains('dim')!==dim)pb.classList.toggle('dim',dim)}
+  if(Date.now()-(SR.pgT||0)>1000){SR.pgT=Date.now();const pg=$('#srPing'),N=SR.net,on=SR.mode==='net'&&!!N&&!!N.rtt;if(pg){pg.hidden=!on;if(on){const r=Math.round(N.rtt);pg.textContent=r+' ms';pg.className='srping '+(r<200?'ok':r<450?'mid':'bad')}}
+    if(SR.mode==='net'&&SR.net&&P==='aim'&&Date.now()-(SR.net.pingT||0)>20000){SR.net.pingT=Date.now();srNetPing()}}
   if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
   if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
 function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,1900/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5)});srDials()}
@@ -5225,7 +5227,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&SR.cv&&SR.
 const srNetOk=()=>MODE==='fb'&&!!UID&&!!DB&&navigator.onLine!==false;
 const srNetRef=()=>DB.collection('srRooms').doc(SR.net.code);
 function srNetErr(e){console.warn('Shot&Run net',e);toast(e&&e.code==='permission-denied'?'A szerver elutasította (a Firestore-szabályokat frissíteni kell).':'Hálózati hiba – próbáld újra.')}
-function srNetListen(){SR.net.unsub=srNetRef().onSnapshot(s=>{const N=SR.net;if(!N)return;const d=s.data();if(!d){if(!s.metadata||!s.metadata.fromCache)srNetGone();return}
+function srNetListen(){setTimeout(srNetPing,400);setTimeout(srNetPing,2500);SR.net.unsub=srNetRef().onSnapshot(s=>{const N=SR.net;if(!N)return;const d=s.data();if(!d){if(!s.metadata||!s.metadata.fromCache)srNetGone();return}
     if(N.role===0&&!N.started&&d.guest){N.started=true;srBegin('net',{me:0,seed:d.seed,names:[d.hostName,d.guestName||'Vendég']})}
     if(d.ev&&d.ev!==N.last){N.last=d.ev;let ev=null;try{ev=JSON.parse(d.ev)}catch(e){}if(ev&&ev.u!==UID)SR.inbox.push(ev)}},srNetErr)}
 async function srNetHost(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<5;i++)code+=A[Math.random()*A.length|0];
@@ -5247,7 +5249,11 @@ async function srNetJoin2(){const code=($('#srCode')?.value||'').toUpperCase().r
   SR.net={code,role:1,last:d.ev||'',started:true};SR.inbox=[];srNetListen();srBegin('net',{me:1,seed:d.seed,names:[d.hostName,srMyName()]})}
 function srNetSend(ev){const N=SR.net;if(!N)return;const o={...ev,u:UID,ts:Date.now()};
   if(ev.pts){const p=ev.pts,n=p.length/2,q=[];for(let i=0;i<n;i+=3)q.push(Math.round(p[i*2]*10)/10,Math.round(p[i*2+1]*10)/10);if((n-1)%3)q.push(Math.round(p[n*2-2]*10)/10,Math.round(p[n*2-1]*10)/10);o.pts=q;o.dt=ev.dt*3;o.apex=Math.round(ev.apex/3)}
-  const s=JSON.stringify(o);N.last=s;srNetRef().update({ev:s,ts:o.ts}).catch(srNetErr)}
+  const s=JSON.stringify(o);N.last=s;const t0=performance.now();srNetRef().update({ev:s,ts:o.ts}).then(()=>srNetRtt(N,performance.now()-t0)).catch(srNetErr)}
+// oda-vissza idő (a szerver nyugtázásáig) – ebből becsüljük, mennyivel később látja a másik fél az eseményt
+function srNetRtt(N,ms){if(!N||!(ms>0)||ms>8000)return;N.rtt=N.rtt?N.rtt*.7+ms*.3:ms}
+function srNetPing(){const N=SR.net;if(!N)return;const t0=performance.now();srNetRef().update({ts:Date.now()}).then(()=>srNetRtt(N,performance.now()-t0)).catch(()=>{})}
+const srNetLat=()=>{const r=SR.net&&SR.net.rtt;return r?srClamp((r*.6+60)/1000,.04,1.5):.25};
 function srNetLeave(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsub()}catch(e){}
   try{const ref=DB.collection('srRooms').doc(N.code);if(N.role===0&&!N.started)ref.delete().catch(()=>{});else ref.update({ev:JSON.stringify({k:'left',u:UID,ts:Date.now()}),ts:Date.now()}).catch(()=>{})}catch(e){}}
 function srNetGone(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsub()}catch(e){}
@@ -5301,7 +5307,7 @@ function srNetMenu(pre){const s=$('#srStart');if(!s)return;srNetLeave();const ne
 async function srLandscape(){try{if(!document.fullscreenElement&&document.documentElement.requestFullscreen){await document.documentElement.requestFullscreen({navigationUI:'hide'});SR.fs=1}await screen.orientation.lock('landscape')}catch(e){toast('Fordítsd el a telefont – a Shot&Run fekvőben is játszható.')}}
 const srInvLink=code=>location.origin+location.pathname+'?sr='+code;
 function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr');document.body.classList.add('harcon');
-  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>${ic('pause')}</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span class="srping" id="srPing" hidden></span><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>${ic('pause')}</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
    <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kamera: áttekintés / saját löveg">🔭</button><div class="srmsg" id="srMsg" hidden></div></div>
    <div class="srpanel off" id="srPanel">
     <div class="srrow srsws"><button type="button" data-sw="eng"><i></i>MOTOR</button><button type="button" data-sw="rad"><i></i>RÁDIÓ</button><button type="button" data-sw="tur"><i></i>TORONY</button><button type="button" data-sw="load"><i></i>MÁLHÁZÁS</button><div class="srcnt"><b id="srCnt">0/60</b><small>lőszer</small></div></div>
