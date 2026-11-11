@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.17.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.17.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.17.2:** Shot&Run: élethűbb rendszerhangok – dízelmotor (behúzó relé, önindító, áttekerés, beindulás, felpörgés, V8 alapjárati hurok egyenetlen gyújtással, menet közben fordulatszám és turbó), harctéri rádió (forgókapcsoló, zajzár-sistergés, torz beszédfoszlány, nyugtázó sípszó), toronyforgató (relé, szervomotor, fogaskerék-morgás, hidraulika, fémes reteszelés), málházás (töltőautomata motorja és lánca, gránátonként fémes csattanás és döngölés).
 
 **v4.17.1:** Hibajavítások: H.A.R.C. és DroneRun bezárás után bent maradó billentyűkezelők (minden megnyitással szaporodtak, és bezárva is reagáltak); a csak induláskor méretezett játékvásznak (H.A.R.C., DroneRun, Gidrán Terep/Konvoj, Tüzér Kassza) elforgatáskor és böngészősáv-változáskor újraméreteződnek; a kezdő- és eredménypanelek nem csúsznak a fejléc alá.
 
