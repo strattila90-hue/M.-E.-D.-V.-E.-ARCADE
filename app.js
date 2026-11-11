@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.13.2',APP_DATE='2026.11.11.';
+const APP_VER='4.14.0',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4617,7 +4617,7 @@ function srFloat(v,txt,col){SR.float.push({x:v.x,y:v.y-52-SR.float.filter(f=>f.v
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.opts={mode,o};const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -4638,13 +4638,13 @@ function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];
   if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
   if(srAmmoN(v)===0){if(srAmmoN(o)===0){SR.phase='dying';SR.t=.6;SR.noAmmo=true;return}srMsg(v.name+': kifogyott a lőszer – a kör kimarad');SR.turn=1-SR.turn;if(SR.turn===0)SR.round++;SR.phase='wait';SR.t=1.4;return}
   if(!(v.ammo[v.sel]>0))v.sel=(SR_AMMO.find(a=>v.ammo[a.id]>0)||{}).id;
-  SR.phase='aim';SR.tlEnd=SR.mode==='net'?Date.now()+SR_TLIM*1000:0;SR.tlS=99;if(v.ai)srAiPlan();srUI();srDials();
+  SR.phase='aim';SR.tlEnd=SR.mode==='net'?Date.now()+SR_TLIM*1000:0;SR.tlS=99;if(v.ai)srAiPlan();srUI();srDials();srSave();
   if(!first)srMsg(srMyTurn()?(SR.mode==='hot'?'▶ '+v.name+' következik':'▶ Te jössz – irányozz és TŰZ!'):'⏳ '+v.name+' céloz…',2600)}
 function srFireVeh(v){const am=SR_AM[v.sel],tg=SR.v[1-v.i],mis=(v.d.ldr===1?.2:v.d.ldr===2?.4:0)+(v.crew<=1?.15:0);let ev;
   if(Math.random()<mis)ev={k:'skip',by:v.i,sx:v.x,wind:SR.wind};
   else{v.ammo[v.sel]--;ev=srResolve(v.i,srSim(v,tg,v.elev,v.trav,am,true),am)}
   if(SR.mode==='net')srNetSend(ev);srPlay(ev,true)}
-function srFire(){if(!srMyTurn())return;const v=srCtl();
+function srFire(){if(!srMyTurn()||SR.paused)return;const v=srCtl();
   if(!v.sys.tur&&v.d.tur<2){toast('Kapcsold vissza a TORONY főkapcsolót!');return}
   if(!(v.ammo[v.sel]>0)){toast('Ebből a lőszerből nincs több – válassz másikat!');return}
   SR.mv=0;srFireVeh(v)}
@@ -4691,7 +4691,7 @@ function srApply(ev){const sh=SR.v[ev.by],tg=SR.v[1-ev.by],E=ev.end;
   srUI()}
 function srAfterShot(ev){if(SR.v.some(v=>v.dead)){SR.phase='dying';SR.t=2.8;return}
   SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srTurnStart()}
-function srEnd(){SR.phase='over';SR.run=false;srEngLoop(false);const [a,b]=SR.v;let w=a.dead&&b.dead?-1:a.dead?1:b.dead?0:a.hp===b.hp?-1:a.hp>b.hp?0:1;
+function srEnd(){if(SR.mode!=='net')srSaveDel();SR.paused=null;srPzShow(false);SR.phase='over';SR.run=false;srEngLoop(false);const [a,b]=SR.v;let w=a.dead&&b.dead?-1:a.dead?1:b.dead?0:a.hp===b.hp?-1:a.hp>b.hp?0:1;
   const mine=SR.mode==='hot'?null:SR.me,o=$('#srOver');let h;
   if(w<0)h='<h3>🤝 DÖNTETLEN</h3><p>Mindkét löveg harcképtelen.</p>';
   else if(mine==null)h=`<h3>🏆 ${esc(SR.v[w].name)} GYŐZÖTT</h3><p>${esc(SR.v[1-w].name)} lövege megsemmisült.</p>`;
@@ -4965,7 +4965,8 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
 function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;const raw=(now-SR.lastT)/1000;let dt=Math.min(.05,raw);SR.lastT=now;if(!(dt>0))dt=0;
   if(raw>0&&raw<.25&&!document.hidden&&!LOWFX){const F=SR.fa||(SR.fa={n:0,s:0});F.n++;F.s+=raw;if(F.s>2){const fps=F.n/F.s;SR.fa=null;if(fps<46&&SR.dpr>1.25){SR.qcap=SR.dpr>2?2:SR.dpr>1.5?1.5:1.25;SR._fps=null;srFit()}}}
   srNetPoll();
-  if(SR.v){srUpdate(dt,now);
+  if(SR.v&&SR.paused){if(SR.tlEnd)SR.tlEnd=Date.now()+SR.paused.left;srDraw(now,0);srHudDom()}
+  else if(SR.v){srUpdate(dt,now);
     const ctl=srCtl();if(SR.phase==='aim'&&srMyTurn()&&SR.flares.some(f=>f.by===ctl.i)){const key=[ctl.x|0,ctl.elev,ctl.trav,ctl.sel].join();if(key!==SR.predK){SR.predK=key;SR.pred=srSim(ctl,SR.v[1-ctl.i],ctl.elev,ctl.trav,SR_AM[ctl.sel],false)}}else if(SR.phase==='aim')SR.pred=null;
     srDraw(now,dt);srHudDom()}
   else{const c=SR.c;c.setTransform(SR.dpr,0,0,SR.dpr,0,0);const sky=c.createLinearGradient(0,0,0,SR.H);sky.addColorStop(0,'#241826');sky.addColorStop(.55,'#8e4a2c');sky.addColorStop(1,'#4a2418');c.fillStyle=sky;c.fillRect(0,0,SR.W,SR.H)}
@@ -5007,11 +5008,52 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   if(e&&e.textContent!==t)e.textContent=t;if(e)e.classList.toggle('low',tl!=null&&tl<=10&&my);const r=$('#srRound');if(r&&r.textContent!==String(SR.round))r.textContent=SR.round;
   const pn=$('#srPanel'),off=!(my||P==='prep');if(pn&&pn.classList.contains('wait')!==off)pn.classList.toggle('wait',off);
   const f=$('#srFuel'),v=srCtl();if(f)f.style.width=Math.round(v.fuel/SR_FUEL*100)+'%';const fb=$('#srFire');if(fb){const rdy=my&&v.ammo[v.sel]>0;if(fb.classList.contains('rdy')!==rdy)fb.classList.toggle('rdy',rdy)}
+  const pb=$('#srPzB');if(pb){const sh=P!=='over'&&(SR.mode!=='net'||P!=='prep');if(pb.hidden===sh)pb.hidden=!sh;const dim=!SR.paused&&!srPzCan();if(pb.classList.contains('dim')!==dim)pb.classList.toggle('dim',dim)}
   if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
   if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
 function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,1900/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5)});srDials()}
 
 /* ---------- online szoba (meghívókód) ---------- */
+/* ---------- szünet és mentett állás („innen folytatjuk”) ---------- */
+const SR_SAVE='srSave1';
+function srSaveGet(){try{const d=JSON.parse(localStorage.getItem(SR_SAVE)||'null');if(d&&d.v&&Date.now()-d.ts<14*864e5)return d}catch(e){}return null}
+function srSaveDel(){try{localStorage.removeItem(SR_SAVE)}catch(e){}}
+function srSaveDesc(d){const m=d.mode==='ai'?'Gép ellen · '+((SR_AI[d.lvl]||{}).n||''):'Ketten egy telefonon',hp=v=>v.dead?'kilőve':Math.round(v.hp)+'%';return `${m} · ${d.round}. kör · ${d.v[0].name} ${hp(d.v[0])} – ${d.v[1].name} ${hp(d.v[1])}`}
+// a kör elején (és szünetkor, kilépéskor) mentünk; csak célzás közbeni állapot kerül mentésre, így visszatöltve tiszta helyzetből folytatódik
+function srSave(){if(!SR.v||SR.mode==='net'||SR.phase!=='aim'||SR.v.some(v=>v.dead))return;
+  const r1=x=>Math.round(x*10)/10,veh=v=>{const o={};for(const k in v)if(k!=='dec')o[k]=v[k];return o},arc=a=>a&&{...a,pts:Array.from(a.pts,r1)};
+  const d={ts:Date.now(),mode:SR.mode,o:SR.opts.o,lvl:SR.lvl,seed:SR.seed,turn:SR.turn,round:SR.round,wind:SR.wind,zOff:SR.zOff,ai:{n:SR.ai.n,tx:SR.ai.tx},
+    h:Array.from(SR.h,r1),sc:Array.from(SR.sc,x=>Math.round(x*100)/100),trees:SR.trees,smokes:SR.smokes,flares:SR.flares,last:SR.last.map(arc),rep:SR.rep,v:SR.v.map(veh)};
+  try{localStorage.setItem(SR_SAVE,JSON.stringify(d))}catch(e){try{d.last=[null,null];localStorage.setItem(SR_SAVE,JSON.stringify(d))}catch(x){}}}
+function srResume(){const d=srSaveGet();if(!d){srMenu();return}
+  try{srBegin(d.mode,{...(d.o||{}),seed:d.seed});
+    Object.assign(SR,{turn:d.turn,round:d.round,wind:d.wind,zOff:d.zOff,trees:d.trees,smokes:d.smokes||[],flares:d.flares||[],last:d.last||[null,null],rep:d.rep||[null,null],prepT:99});
+    SR.ai.n=d.ai.n;SR.ai.tx=d.ai.tx;SR.h=Float32Array.from(d.h);SR.sc=Float32Array.from(d.sc);
+    SR.v=d.v.map(o=>Object.assign(o,{dec:[],rec:0,vy:0,av:0,loading:false,smk:0,cook:0}));for(const v of SR.v){const R=srRest(v);v.y=R.y;v.a=R.a}
+    const c=srCtl();SR.cam={x:c.x,y:c.y-30,z:SR.zb*1.25};SR.phase='aim';SR.tlEnd=0;if(SR.v[SR.turn].ai)srAiPlan();
+    srUI();srDials();if(SR.v.some(v=>!v.ai&&v.sys.eng))srEngLoop(true);srSave();
+    srMsg('▶ Folytatjuk – '+SR.round+'. kör · '+(srMyTurn()?(SR.mode==='hot'?SR.v[SR.turn].name+' következik':'te jössz'):SR.v[SR.turn].name+' céloz'),3200)}
+  catch(e){console.warn('srResume',e);srSaveDel();toast('A mentett állás nem tölthető be.');srMenu()}}
+const srPzCan=()=>!!SR.v&&SR.phase!=='over'&&(SR.mode!=='net'||SR.phase==='aim'&&srMyTurn());
+// online: szünetet csak a soron lévő játékos kérhet (célzás közben) – így a szobában mindig csak egy fél ír
+function srPause(on,remote){if(!SR.v)return;
+  if(on){if(SR.paused)return;if(!remote&&!srPzCan()){toast(SR.mode==='net'?'Online szünetet a saját körödben, célzás közben tarthatsz.':'Most nem lehet megállítani.');return}
+    SR.paused={by:remote?'opp':'me',left:SR.tlEnd?SR.tlEnd-Date.now():0};SR.mv=0;srEngLoop(false);try{SR.whN&&SR.whN.disconnect()}catch(e){}
+    if(SR.mode==='net'&&!remote)srNetSend({k:'pause'});srSave();srPzShow(true)}
+  else{const P=SR.paused;if(!P||SR.mode==='net'&&P.by==='opp'&&!remote)return;SR.paused=null;if(SR.tlEnd)SR.tlEnd=Date.now()+P.left;
+    if(SR.mode==='net'&&!remote)srNetSend({k:'resume'});srPzShow(false);SR.lastT=performance.now();if(SR.v.some(v=>!v.ai&&!v.dead&&v.sys.eng))srEngLoop(true)}}
+function srPzShow(on){const el=$('#srPz'),pn=$('#srPanel');if(pn)pn.classList.toggle('pz',!!on);if(!el)return;el.hidden=!on;if(!on){el.innerHTML='';return}
+  const P=SR.paused,net=SR.mode==='net',opp=P&&P.by==='opp';
+  el.innerHTML=`<div class="srpzbox"><h3>⏸ SZÜNET</h3><p>${opp?esc(SR.v[1-SR.me].name)+' szünetet tart. Amint folytatja, megy tovább a párbaj – az órád addig áll.':net?'Az ellenfeled is látja, hogy szünetet tartasz. A köridő áll.':'A játék áll, az állást elmentettük.<br>Ha most kilépsz, a menüből <b>innen folytathatod</b>.'}</p>
+   ${opp?'<i class="srwait"><span class="srspin"></span>Várakozás az ellenfélre…</i>':'<button type="button" class="srbig pri" id="srPzGo">▶ Folytatás</button>'}
+   ${net?'':'<button type="button" class="srbig" id="srPzMenu">💾 Kilépés a menübe<small>az állás mentve – később innen folytatod</small></button><button type="button" class="srbig" id="srPzNew">🔁 Új játék</button>'}
+   <button type="button" class="srbig warn" id="srPzQuit">${net?'🏳 Feladás és kilépés':'✕ Kilépés a játékból'}</button></div>`;
+  const b=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+  b('#srPzGo',()=>{ac();srPause(false)});
+  b('#srPzMenu',()=>{srSave();SR.paused=null;srMenu();toast('Állás elmentve – a menüben a „Folytatás innen” kártyával folytathatod.')});
+  b('#srPzNew',()=>{if(!confirm('Új játékot kezdesz? A mostani állás elvész.'))return;srSaveDel();SR.paused=null;srPzShow(false);srBegin(SR.opts.mode,{...SR.opts.o,seed:0})});
+  b('#srPzQuit',()=>{if(net){if(!confirm('Feladod a párbajt? Az ellenfeled nyer.'))return;srNetLeave();SR.paused=null;srMenu()}else{srSave();SR.paused=null;srClose()}})}
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&SR.cv&&SR.v&&SR.mode!=='net'&&!SR.paused&&SR.phase!=='over'&&SR.phase!=='prep')srPause(true)});
 const srNetOk=()=>MODE==='fb'&&!!UID&&!!DB&&navigator.onLine!==false;
 const srNetRef=()=>DB.collection('srRooms').doc(SR.net.code);
 function srNetErr(e){console.warn('Shot&Run net',e);toast(e&&e.code==='permission-denied'?'A szerver elutasította (a Firestore-szabályokat frissíteni kell).':'Hálózati hiba – próbáld újra.')}
@@ -5021,9 +5063,15 @@ function srNetListen(){SR.net.unsub=srNetRef().onSnapshot(s=>{const N=SR.net;if(
 async function srNetHost(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<5;i++)code+=A[Math.random()*A.length|0];
   srNetLeave();const seed=1+Math.random()*2147483000|0;
   try{await DB.collection('srRooms').doc(code).set({host:UID,hostName:srMyName(),guest:null,guestName:'',seed,ev:'',ts:Date.now()})}catch(e){srNetErr(e);return}
-  SR.net={code,role:0,last:'',started:false};SR.inbox=[];const r=$('#srRoom');if(r){r.hidden=false;r.innerHTML=`<small>Meghívókód – küldd el a társadnak:</small><b>${code}</b><i>⏳ Várakozás a csatlakozásra…</i><button type="button" class="btn line" id="srCopy">📋 Másolás</button>`;$('#srCopy').onclick=()=>{try{navigator.clipboard.writeText(code);toast('Kód kimásolva: '+code)}catch(e){}}}
+  SR.net={code,role:0,last:'',started:false};SR.inbox=[];const st=$('#srStart'),link=srInvLink(code),cp=(t,m)=>{try{navigator.clipboard.writeText(t).then(()=>toast(m),()=>toast(t))}catch(e){toast(t)}};
+  if(st){st.innerHTML=`<h3>📨 MEGHÍVÓ KÉSZ</h3><p class="srlead">Küldd el a barátodnak. Amint belép, <b>azonnal indul</b> a párbaj.</p>
+    <div class="srroom"><small>Meghívókód</small><b>${code}</b><i class="srwait"><span class="srspin"></span>Várakozás a barátodra…</i></div>
+    <div class="srbtns"><button type="button" class="btn pri" id="srShare">📤 Meghívó küldése</button><div class="srrow2"><button type="button" class="btn line" id="srCopyL">🔗 Link másolása</button><button type="button" class="btn line" id="srCopy">📋 Kód másolása</button></div><button type="button" class="btn line" id="srCancel">Mégse</button></div>`;
+    $('#srShare').onclick=async()=>{const d={title:'Shot&Run párbaj',text:'Gyere egy Shot&Run tüzérpárbajra! Koppints a linkre, vagy írd be a kódot: '+code,url:link};if(navigator.share){try{await navigator.share(d)}catch(e){}}else cp(d.text+' '+link,'Meghívó kimásolva – illeszd be egy üzenetbe!')};
+    $('#srCopyL').onclick=()=>cp(link,'Link kimásolva');$('#srCopy').onclick=()=>cp(code,'Kód kimásolva: '+code);$('#srCancel').onclick=()=>srNetMenu()}
   srNetListen()}
-async function srNetJoin(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}const code=($('#srCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5){toast('Az 5 jegyű meghívókódot írd be!');return}
+async function srNetJoin(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}if(SR.joining)return;SR.joining=1;try{await srNetJoin2()}finally{SR.joining=0}}
+async function srNetJoin2(){const code=($('#srCode')?.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5){toast('Az 5 jegyű meghívókódot írd be!');return}
   srNetLeave();let d;try{const ref=DB.collection('srRooms').doc(code),s=await ref.get();if(!s.exists){toast('Nincs ilyen szoba: '+code);return}d=s.data();
     if(d.host===UID){toast('Ez a saját szobád – a kódot a társadnak küldd el.');return}if(d.guest&&d.guest!==UID){toast('Ez a szoba már megtelt.');return}if(d.guest===UID){toast('Ez a párbaj már elindult – kérj új meghívókódot.');return}
     if(Date.now()-d.ts>3600000&&!d.guest){toast('Ez a meghívó lejárt – kérj újat.');return}
@@ -5038,25 +5086,51 @@ function srNetGone(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsu
   if(SR.mode==='net'&&SR.v&&SR.phase!=='over'){SR.phase='over';SR.run=false;srEngLoop(false);const o=$('#srOver');o.innerHTML='<h3>🏳 AZ ELLENFÉL KILÉPETT</h3><p>A párbaj véget ért – a harcmező a tiéd.</p><button class="btn pri" id="srBack">Ellenfélválasztás</button>';o.hidden=false;$('#srPanel').classList.add('off');$('#srBack').onclick=srMenu}
   else toast('Az ellenfél kilépett a szobából.')}
 function srNetPoll(){if(SR.mode!=='net'||!SR.inbox||!SR.inbox.length)return;const e=SR.inbox[0];
-  if(e.k==='left'){SR.inbox.shift();srNetGone()}
+  if(e.k==='pause'||e.k==='resume'){SR.inbox.shift();srPause(e.k==='pause',true);return}
+  if(e.k==='left'){SR.inbox.shift();SR.paused=null;srPzShow(false);srNetGone()}
   else if(e.k==='re'){SR.inbox.shift();if(e.seed!==SR.seed)srBegin('net',{...SR.opts.o,seed:e.seed})}
-  else if(SR.phase==='aim'&&SR.turn!==SR.me)srPlay(SR.inbox.shift(),false)}
+  else if(SR.phase==='aim'&&SR.turn!==SR.me){if(SR.paused)srPause(false,true);srPlay(SR.inbox.shift(),false)}}
 
 /* ---------- megnyitás, menü ---------- */
-function srMenu(){SR.v=null;SR.run=false;SR.mode=null;srEngLoop(false);const s=$('#srStart');if(!s)return;$('#srOver').hidden=true;$('#srPanel').classList.add('off');srMsg('');
-  const net=srNetOk(),offl=navigator.onLine===false;
+function srMenu(){SR.v=null;SR.run=false;SR.mode=null;SR.paused=null;srPzShow(false);srEngLoop(false);const s=$('#srStart');if(!s)return;{const b=$('#srPzB');if(b)b.hidden=true;const t=$('#srTurn');if(t)t.textContent='–';const r=$('#srRound');if(r)r.textContent='1'}$('#srOver').hidden=true;$('#srPanel').classList.add('off');srMsg('');
+  const sv=srSaveGet(),lvD=['kezdőknek – sokat téved','közepes – pár lövésből belövi magát','profi – gyorsan és pontosan lő'];
   s.innerHTML=`<img class="pzhfull" src="${PZH_FULL||PZH_SPRITE}" alt="" data-st="width:100%;height:auto"><h3>SHOT&amp;RUN</h3>
-   <p>Két <b>PzH 2000</b> tüzérpárbaja a csatamezőn. Felváltva lőtök: mérd be a célt, állítsd az <b>oldal- és magassági irányzékot</b>, válassz gránátot, <b>TŰZ</b> – aztán válts állást, mielőtt visszalőnek. <b>Egy életed van.</b></p>
-   <div class="srmode"><b>🤖 Gép ellen</b><div class="srlv">${SR_AI.map((a,i)=>`<button type="button" class="btn ${i===1?'pri':'line'}" data-lvl="${i}">${a.n}</button>`).join('')}</div>
-   <b>👥 Ember ellen – meghívókóddal <small>(körönként 60 mp)</small></b>${net?`<div class="srjoin"><button type="button" class="btn pri" id="srHostB">Szoba nyitása</button><input id="srCode" maxlength="5" placeholder="KÓD" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Meghívókód"><button type="button" class="btn line" id="srJoinB">Belépés</button></div><div class="srroom" id="srRoom" hidden></div>`:`<p class="srhint">${offl?'📴 Nincs internet – most gép ellen vagy ketten egy telefonon játszhatsz. Az online párbajhoz kapcsolat kell.':'Az online párbajhoz jelentkezz be a főoldalon (internet kell hozzá).'}</p>`}
-   <button type="button" class="btn line" id="srHotB">📱 Ketten egy telefonon</button></div>
+   <p class="srlead">Két <b>PzH 2000</b> tüzérpárbaja. Felváltva lőtök: mérd be a célt, irányozz, <b>TŰZ</b> – aztán válts állást!</p>
+   <div class="srcards">
+    ${sv?`<div class="srcard res"><button type="button" class="srcbtn" id="srResB"><i>▶</i><span><b>Folytatás innen</b><small>${esc(srSaveDesc(sv))}</small></span></button><button type="button" class="srdel" id="srResDel" aria-label="Mentett állás törlése">✕</button></div>`:''}
+    <div class="srcard"><button type="button" class="srcbtn" id="srCAi" aria-expanded="false"><i>🤖</i><span><b>Gép ellen</b><small>Gyakorolj a számítógép ellen</small></span></button>
+     <div class="srsub" id="srLv" hidden>${SR_AI.map((a,i)=>`<button type="button" class="srlvb${i===1?' pri':''}" data-lvl="${i}"><b>${a.n}</b><small>${lvD[i]}</small></button>`).join('')}</div></div>
+    <div class="srcard"><button type="button" class="srcbtn" id="srCNet"><i>🌐</i><span><b>Barát ellen – online</b><small>Küldj neki meghívót, ő egy koppintással belép</small></span></button></div>
+    <div class="srcard"><button type="button" class="srcbtn" id="srHotB"><i>📱</i><span><b>Ketten egy telefonon</b><small>Felváltva lőtök ugyanazon a készüléken</small></span></button></div>
+   </div>
    <details class="srhelp"><summary>📖 Kezelés és lőszerek</summary><div class="dinfo"><b>Kezelés</b><span>Indítás</span><i>MOTOR · RÁDIÓ · TORONY · MÁLHÁZÁS</i><span>Irányzék</span><i>húzd a skálát, a ± gomb 1 vonás</i><span>Rádió</span><i>szél (MET) + megfigyelő jelentése</i><span>Mozgás</span><i>körönként korlátozott táv</i><span>Sérülés</span><i>a kiesett rendszert kapcsold vissza</i>
    <b data-st="margin-top:6px">155 mm-es gránátok (60 db)</b>${SR_AMMO.map(a=>`<span>${a.n}<br><em>${a.q} db</em></span><i>${a.d}<small>${a.r}</small></i>`).join('')}</div><p class="srhint">A valós adatok nyilvános gyártói és sajtóforrásokból származnak, tájékoztató jellegűek. A játékbeli lőtáv a pályához van arányítva.</p></details>`;
-  s.hidden=false;s.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{ac();srBegin('ai',{lvl:+b.dataset.lvl})});$('#srHotB').onclick=()=>{ac();srNetLeave();srBegin('hot',{})};
-  if(net){$('#srHostB').onclick=()=>{ac();srNetHost()};$('#srJoinB').onclick=()=>{ac();srNetJoin()};$('#srCode').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'')})}
+  s.hidden=false;s.scrollTop=0;
+  $('#srCAi').onclick=()=>{const l=$('#srLv'),o=l.hidden;l.hidden=!o;$('#srCAi').setAttribute('aria-expanded',o)};
+  s.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{ac();srBegin('ai',{lvl:+b.dataset.lvl})});
+  $('#srHotB').onclick=()=>{ac();srNetLeave();srBegin('hot',{})};$('#srCNet').onclick=()=>srNetMenu();
+  if(sv){$('#srResB').onclick=()=>{ac();srResume()};$('#srResDel').onclick=()=>{if(confirm('Törlöd a mentett állást?')){srSaveDel();srMenu()}}}
   pzhFullSet()}
+// online párbaj: két nagy választás – meghívót küldök / kaptam kódot
+function srNetMenu(pre){const s=$('#srStart');if(!s)return;srNetLeave();const net=srNetOk(),offl=navigator.onLine===false;
+  s.innerHTML=`<button type="button" class="srback" id="srNB">← Vissza</button><h3>🌐 PÁRBAJ ONLINE</h3>
+   <ol class="srsteps"><li><b>1</b>Egyikőtök meghívót küld</li><li><b>2</b>A másik a linkre koppint vagy beírja a kódot</li><li><b>3</b>Indul a párbaj!</li></ol>
+   ${net?`<div class="srcards">
+    <div class="srcard"><button type="button" class="srcbtn" id="srHostB"><i>📨</i><span><b>Meghívót küldök</b><small>Kapsz egy linket és egy kódot a barátodnak</small></span></button></div>
+    <div class="srcard"><div class="srcbtn nob"><i>🔑</i><span><b>Kaptam kódot</b><small>Írd be az 5 jelű meghívókódot</small></span></div>
+     <div class="srsub"><input id="srCode" class="srcodein" maxlength="5" placeholder="KÓD" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-label="Meghívókód">
+      <div class="srrow2"><button type="button" class="btn line" id="srPaste">📋 Beillesztés</button><button type="button" class="btn pri" id="srJoinB">Belépés ▶</button></div></div></div></div>`
+   :`<p class="srwarn">${offl?'📴 Nincs internet – az online párbajhoz kapcsolat kell. Addig játszhatsz gép ellen vagy ketten egy telefonon.':'🔒 Az online párbajhoz jelentkezz be a főoldalon (internet kell hozzá).'}</p>`}`;
+  s.hidden=false;s.scrollTop=0;$('#srNB').onclick=srMenu;
+  if(!net)return;
+  $('#srHostB').onclick=()=>{ac();srNetHost()};$('#srJoinB').onclick=()=>{ac();srNetJoin()};
+  const inp=$('#srCode');inp.addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5);if(e.target.value.length===5)$('#srJoinB').focus()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){ac();srNetJoin()}});
+  $('#srPaste').onclick=async()=>{try{const t=await navigator.clipboard.readText(),m=(t||'').toUpperCase().match(/SR=([A-Z0-9]{5})/)||(t||'').toUpperCase().match(/\b([A-Z0-9]{5})\b/);if(m){inp.value=m[1];$('#srJoinB').focus()}else toast('A vágólapon nincs meghívókód.')}catch(e){toast('Nem érem el a vágólapot – írd be kézzel a kódot.');inp.focus()}};
+  if(pre){inp.value=pre;ac();srNetJoin()}}
+const srInvLink=code=>location.origin+location.pathname+'?sr='+code;
 function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr');document.body.classList.add('harcon');
-  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>⏸</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
    <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kamera: áttekintés / saját löveg">🔭</button><div class="srmsg" id="srMsg" hidden></div></div>
    <div class="srpanel off" id="srPanel">
     <div class="srrow srsws"><button type="button" data-sw="eng"><i></i>MOTOR</button><button type="button" data-sw="rad"><i></i>RÁDIÓ</button><button type="button" data-sw="tur"><i></i>TORONY</button><button type="button" data-sw="load"><i></i>MÁLHÁZÁS</button><div class="srcnt"><b id="srCnt">0/60</b><small>lőszer</small></div></div>
@@ -5066,11 +5140,11 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
     <div class="srdial"><label>OLDAL <b id="srTv"></b></label><div class="srtrow"><button type="button" data-nudge="t-">◀</button><canvas class="srtape" id="srTT"></canvas><button type="button" data-nudge="t+">▶</button></div></div>
     <div class="srrow sract"><button type="button" class="srmv" id="srBk">◀ HÁTRA</button><div class="srfuel"><i id="srFuel"></i><small>menet / kör</small></div><button type="button" class="srmv" id="srFw">ELŐRE ▶</button><button type="button" class="srfire" id="srFire">TŰZ!</button></div>
    </div></div>
-   <div class="hstart" id="srStart"></div><div class="hover" id="srOver" hidden></div>`;
+   <div class="hstart" id="srStart"></div><div class="hover" id="srOver" hidden></div><div class="srpz" id="srPz" hidden></div>`;
   for(const e of [1,.5,.2])srAtlas(e);// a modell képei már a menüben betöltődnek (offline a gyorsítótárból)
   const cv=$('#srCv');SR.cv=cv;SR.c=cv.getContext('2d');SR.v=null;SR.inbox=[];SR.net=null;srFit();
   try{SR.ro=new ResizeObserver(srFit);SR.ro.observe(cv)}catch(e){}
-  $('#srClose').onclick=srClose;$('#srFire').onclick=()=>{ac();srFire()};
+  $('#srClose').onclick=srClose;$('#srPzB').onclick=()=>{ac();SR.paused?srPause(false):srPause(true)};$('#srFire').onclick=()=>{ac();srFire()};
   $('#srPanel').addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.blur()});
   for(const el of [$('#srPanel'),cv])el.addEventListener('contextmenu',e=>e.preventDefault());// Android: hosszú nyomásra ne jöjjön fel menü
   $('#srPanel').querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>srSwitch(b.dataset.sw));
@@ -5083,12 +5157,22 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
   cv.addEventListener('pointermove',e=>{if(e.pointerId!==pid||!SR.v||SR.phase==='fly')return;const dx=e.clientX-lx,dy=e.clientY-ly;mv+=Math.abs(dx)+Math.abs(dy);if(mv<8)return;lx=e.clientX;ly=e.clientY;SR.camFree=true;SR.ovw=false;SR.cam.x=srClamp(SR.cam.x-dx/SR.cam.z,0,SR_W);SR.cam.y=srClamp(SR.cam.y-dy/SR.cam.z,0,760)});
   const up=e=>{if(e.pointerId===pid)pid=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   SR.key=e=>{if(!SR.v||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const d=e.type==='keydown',s=e.shiftKey?10:1;
+    if(SR.paused&&e.key!=='Escape'&&e.key!=='p'&&e.key!=='P')return;
     if(e.key==='a'||e.key==='A'){SR.mv=d?-1:SR.mv===-1?0:SR.mv;return}if(e.key==='d'||e.key==='D'){SR.mv=d?1:SR.mv===1?0:SR.mv;return}if(!d)return;
+    if(e.key==='Escape'||e.key==='p'||e.key==='P'){SR.paused?srPause(false):srPause(true);e.preventDefault();return}if(SR.paused)return;
     if(e.key==='ArrowUp')srDial('elev',s);else if(e.key==='ArrowDown')srDial('elev',-s);else if(e.key==='ArrowRight')srDial('trav',s);else if(e.key==='ArrowLeft')srDial('trav',-s);else if(e.key===' '||e.key==='Enter')srFire();else return;e.preventDefault()};
   addEventListener('keydown',SR.key);addEventListener('keyup',SR.key);
   srMenu();SR.lastT=performance.now();cancelAnimationFrame(SR.raf);SR.raf=requestAnimationFrame(srLoop)}
 function srClose(){if(SR.mode==='net'&&SR.v&&SR.phase!=='over'&&SR.net&&!confirm('Kilépsz a párbajból? Az ellenfeled nyer.'))return;
   try{SR.whN&&SR.whN.disconnect()}catch(e){}SR.whN=null;
-  srNetLeave();SR.run=false;SR.v=null;srEngLoop(false);cancelAnimationFrame(SR.raf);try{SR.ro&&SR.ro.disconnect()}catch(e){}if(SR.key){removeEventListener('keydown',SR.key);removeEventListener('keyup',SR.key)}clearTimeout(SR.msgT);SR.cv=null;
+  if(SR.v&&SR.mode!=='net')srSave();SR.paused=null;srNetLeave();SR.run=false;SR.v=null;srEngLoop(false);cancelAnimationFrame(SR.raf);try{SR.ro&&SR.ro.disconnect()}catch(e){}if(SR.key){removeEventListener('keydown',SR.key);removeEventListener('keyup',SR.key)}clearTimeout(SR.msgT);SR.cv=null;
   const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('rk','sr');document.body.classList.remove('harcon')}
 srLoop=medveWrap(srLoop,SR,'SHOTRUN');
+// meghívó link: …/?sr=KÓD – betöltés (és bejelentkezés) után automatikusan belép a párbajba
+const SR_INV={code:(()=>{try{return (new URLSearchParams(location.search).get('sr')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)}catch(e){return ''}})(),n:0,w:0};
+function srInvTick(){const I=SR_INV;if(I.code.length!==5||++I.n>600)return;
+  if(!AUTHREADY){setTimeout(srInvTick,500);return}
+  if(!srNetOk()){if(!I.w){I.w=1;toast('Shot&Run meghívó: jelentkezz be, utána automatikusan belépsz a párbajba.')}setTimeout(srInvTick,1000);return}
+  const code=I.code;I.code='';try{const u=new URL(location.href);u.searchParams.delete('sr');history.replaceState(history.state,'',u.pathname+u.search+u.hash)}catch(e){}
+  gameStart('shotrun');setTimeout(()=>{if(SR.cv&&!SR.v)srNetMenu(code)},250)}
+setTimeout(srInvTick,600);
