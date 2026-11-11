@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.18.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.18.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.18.2:** Shot&Run online: ha valamelyik játékos telefonhívást kap (vagy háttérbe teszi az appot, lezárja a képernyőt), a párbaj mindkét telefonon azonnal megáll, bárki köre is van – a köridő áll, az ellenfél látja, hogy hívás miatt állt meg; visszatérve a „Folytatás” gombbal megy tovább. Ha a szünetjelzés nem jutna át, az ellenfél 5 percig vár a játékosra, mielőtt a párbaj véget érne.
 
 **v4.18.1:** Shot&Run: a málházás fele annyi ideig tart (kb. 2,7 mp); a töltőautomata pneumatikus-elektromos búgással szól (villanymotor-búgás, sűrített levegő sziszegése és lüktetése, gránátonként döngölő-szisszenés, leálláskor levegő-kifúvás).
 
