@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.15.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.16.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.16.0:** Teljesen új, képregényes design: minden játékcsempén egész képet kitöltő, rajzolt akcióborító (tusvonal, akciósugarak, raszterpontok, hangszavak – a vásznon generálva, gyorsítótárazva); képregényes Bangers feliratok (SIL OFL 1.1), saját SVG ikonok emoji helyett, vastag kontúros gombok. Minden kijelzőre és kivágásra igazítva, fekvő kezdőlap; a telepített app már fekvőbe is fordul – a Shot&Run fekvőben is játszható („Fekvő mód” gomb), a többi játék álló helyzetet kér.
 
 **v4.15.0:** Új kezdőlap: görgetés nélküli, egy képernyős játékválasztó nagy csempékkel, oldalra csúsztatással (Shot&Run az első), játékszámláló (pl. 3/8 · 8 játék), lapozó pöttyök, gépen nyilak és billentyűk; a belépés, dicsőségfal, beállítások és telepítés a „Továbbiak” lapon; játék közben a háttérben lévő kezdőlap nem terheli a kirajzolást.
 
