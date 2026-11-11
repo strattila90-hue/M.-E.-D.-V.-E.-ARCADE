@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.13.0',APP_DATE='2026.11.10.';
+const APP_VER='4.13.1',APP_DATE='2026.11.10.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4729,18 +4729,13 @@ function srUpdate(dt,now){const P=SR.phase;
   const k=Math.min(1,dt*(P==='fly'?9:3.2));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*3)}
 
 /* ---------- rajzolás ---------- */
-function srDark(img){const cv=document.createElement('canvas');cv.width=img.naturalWidth;cv.height=img.naturalHeight;const c=cv.getContext('2d');c.drawImage(img,0,0);c.globalCompositeOperation='source-atop';c.fillStyle='rgba(14,11,9,.76)';c.fillRect(0,0,cv.width,cv.height);return cv}
 // PzH 2000 HU: a magyar álcafestésű (zöld – sötét kékesszürke – homok) modellképek
-let SR_BI=null,SR_BO=null;
-function srBarrelImg(){if(!SR_BI){SR_BI=new Image();SR_BI.src='img/sprite8.webp'}return SR_BI}
-function srBodyImg(){if(!SR_BO){SR_BO=new Image();SR_BO.src='img/sprite7.webp'}return SR_BO}
-// a nagy modellkép lépcsőzetesen kicsinyített másolatai: kicsiben is éles, nem szemcsés
-function srLod(img,eff){if(!img._lod){const L=[img];let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height,s=img;for(let i=0;i<2;i++){w=Math.max(1,w>>1);h=Math.max(1,h>>1);const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(s,0,0,w,h);L.push(cv);s=cv}img._lod=L}
-  return img._lod[eff<.3?2:eff<.6?1:0]}
-const srImgOk=i=>!!i&&(i.getContext?true:i.complete&&i.naturalWidth>0);
-function srDrawVeh(c,v){const k=PK,BI=srBarrelImg(),BO=srBodyImg(),eff=SR.cam.z*SR.dpr*SR_VS*PK;let bi=BI,bo=BO;
+// A modell három méretben, kész képfájlként (atlasz): test, cső, kiégett test, kiégett cső egymás alatt.
+// Szándékosan nincs memóriában tartott rajzvászon: azt a telefon háttérbe tételkor kiürítheti, és a modell eltűnne.
+const SR_ATL=[['img/sprite9.webp',1],['img/sprite10.webp',.5],['img/sprite11.webp',.25]].map(([src,s])=>({src,s,img:null}));
+function srAtlas(eff){const want=eff<.3?2:eff<.6?1:0;for(const i of [want,1,0,2]){const A=SR_ATL[i];if(!A.img){A.img=new Image();A.img.src=A.src}if(A.img.complete&&A.img.naturalWidth>0)return A}return null}
+function srDrawVeh(c,v){const k=PK,eff=SR.cam.z*SR.dpr*SR_VS*PK,AT=srAtlas(eff),as=AT?AT.s:1,dy=v.dead?248:0;
   {const gy=srGy(v.x);c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(v.x,gy+1,52,5,v.a,0,7);c.fill()}
-  if(v.dead&&srImgOk(BI)&&srImgOk(BO)){if(!SR.dk)SR.dk=[srDark(BI),srDark(BO)];bi=SR.dk[0];bo=SR.dk[1]}
   const rk=Math.sin(Math.min(1,v.rec*1.4)*Math.PI),sw=rk*9+Math.sin(v.trk*.5)*1.5;
   c.save();c.translate(v.x-v.face*rk*1.6,v.y);c.rotate(v.a);c.scale(SR_VS*v.face,SR_VS);
   // futómű
@@ -4752,9 +4747,9 @@ function srDrawVeh(c,v){const k=PK,BI=srBarrelImg(),BO=srBodyImg(),eff=SR.cam.z*
     c.save();c.translate(w.lx,22);c.rotate(v.trk/SR_VS/w.r);c.fillStyle='#1f1e1a';for(let i=0;i<5;i++){c.rotate(Math.PI*2/5);c.fillRect(-1,w.r*.2,2,w.r*.35)}c.restore()}
   // cső: a magassági szög a vízszinteshez mért (a tűzvezető kiegyenlíti a dőlést)
   const th=(v.dead?-40:v.elev)/SR_MIL,wx=Math.cos(th)*v.face,wy=-Math.sin(th),ca=Math.cos(-v.a),sa=Math.sin(-v.a),lx=(wx*ca-wy*sa)*v.face,ly=wx*sa+wy*ca;
-  c.save();c.translate(-8,-37.2);c.rotate(Math.atan2(ly,lx));c.translate(-Math.sin(Math.min(1,v.rec*1.4)*Math.PI)*34,0);if(srImgOk(bi))c.drawImage(srLod(bi,eff),6*k,-28*k,466*k,61*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.fillRect(0,-5,196,9);c.fillRect(184,-7,14,13)}
+  c.save();c.translate(-8,-37.2);c.rotate(Math.atan2(ly,lx));c.translate(-Math.sin(Math.min(1,v.rec*1.4)*Math.PI)*34,0);if(AT)c.drawImage(AT.img,0,(184+dy)*as,466*as,61*as,6*k,-28*k,466*k,61*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.fillRect(0,-5,196,9);c.fillRect(184,-7,14,13)}
   if(v.d.brl&&!v.dead){c.fillStyle='rgba(15,12,10,.6)';c.fillRect(90,-9,v.d.brl>1?46:22,9)}c.restore();
-  if(srImgOk(bo))c.drawImage(srLod(bo,eff),-PCX*k,10-PBY*k,738*k,180*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.beginPath();c.moveTo(-112,12);c.lineTo(-112,-18);c.lineTo(-114,-66);c.lineTo(-2,-66);c.lineTo(8,-22);c.lineTo(86,-18);c.lineTo(102,-2);c.lineTo(100,12);c.closePath();c.fill()}
+  if(AT)c.drawImage(AT.img,0,dy*as,738*as,180*as,-PCX*k,10-PBY*k,738*k,180*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.beginPath();c.moveTo(-112,12);c.lineTo(-112,-18);c.lineTo(-114,-66);c.lineTo(-2,-66);c.lineTo(8,-22);c.lineTo(86,-18);c.lineTo(102,-2);c.lineTo(100,12);c.closePath();c.fill()}
   if(!v.dead){// magyar hadijel: kis piros–fehér–zöld ék a torony oldalán, csúcsával előre
     c.save();c.translate(-37.5,-25);const tri=(s,col)=>{c.fillStyle=col;c.beginPath();c.moveTo(-s,-s*.8);c.lineTo(s*1.1,0);c.lineTo(-s,s*.8);c.closePath();c.fill()};tri(6,'#f4f1e6');tri(5,'#c8102e');c.save();c.translate(-1.1,0);tri(3.3,'#f4f1e6');c.restore();c.save();c.translate(-2,0);tri(1.8,'#3d7a4a');c.restore();c.restore();
     // rendszámtábla (H–7xxxx), menetlámpa
@@ -4949,7 +4944,8 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   if(e&&e.textContent!==t)e.textContent=t;if(e)e.classList.toggle('low',tl!=null&&tl<=10&&my);const r=$('#srRound');if(r&&r.textContent!==String(SR.round))r.textContent=SR.round;
   const pn=$('#srPanel'),off=!(my||P==='prep');if(pn&&pn.classList.contains('wait')!==off)pn.classList.toggle('wait',off);
   const f=$('#srFuel'),v=srCtl();if(f)f.style.width=Math.round(v.fuel/SR_FUEL*100)+'%';const fb=$('#srFire');if(fb){const rdy=my&&v.ammo[v.sel]>0;if(fb.classList.contains('rdy')!==rdy)fb.classList.toggle('rdy',rdy)}
-  if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}}
+  if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
+  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
 function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,1900/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5)});srDials()}
 
 /* ---------- online szoba (meghívókód) ---------- */
@@ -5008,8 +5004,8 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
     <div class="srrow sract"><button type="button" class="srmv" id="srBk">◀ HÁTRA</button><div class="srfuel"><i id="srFuel"></i><small>menet / kör</small></div><button type="button" class="srmv" id="srFw">ELŐRE ▶</button><button type="button" class="srfire" id="srFire">TŰZ!</button></div>
    </div></div>
    <div class="hstart" id="srStart"></div><div class="hover" id="srOver" hidden></div>`;
-  srBarrelImg();srBodyImg();// a modell képei már a menüben betöltődnek (offline a gyorsítótárból)
-  const cv=$('#srCv');SR.cv=cv;SR.c=cv.getContext('2d');SR.v=null;SR.inbox=[];SR.net=null;SR.dk=null;srFit();
+  for(const e of [1,.5,.2])srAtlas(e);// a modell képei már a menüben betöltődnek (offline a gyorsítótárból)
+  const cv=$('#srCv');SR.cv=cv;SR.c=cv.getContext('2d');SR.v=null;SR.inbox=[];SR.net=null;srFit();
   try{SR.ro=new ResizeObserver(srFit);SR.ro.observe(cv)}catch(e){}
   $('#srClose').onclick=srClose;$('#srFire').onclick=()=>{ac();srFire()};
   $('#srPanel').addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.blur()});
