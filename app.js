@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.20.0',APP_DATE='2026.11.11.';
+const APP_VER='4.20.1',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -273,7 +273,8 @@ const uplays=u=>Object.values(NF).reduce((t,k)=>t+(u[k]||0),0);
 function playCount(g){if(MODE!=='fb'||!UID||!DB||!NF[g])return;try{DB.doc('users/'+UID).update({[NF[g]]:firebase.firestore.FieldValue.increment(1),lastPlay:Date.now()}).catch(()=>{})}catch(e){}}
 function rankRows(g){const G=RANKG.find(x=>x[0]===g),f=G[2],ls=G[3],asc=G[4],nf=NF[g];
   let rows=arr('users').filter(u=>u.role!=='pending'&&(u[f]>0||u[nf]>0)).map(u=>({id:u.id,n:uname(u),v:u[f]>0?u[f]:0,c:u[nf]||0}));
-  let mine=0;try{mine=Number(localStorage.getItem(ls)||0)}catch(e){}const me=rows.find(r=>r.id===UID);
+  // bejelentkezve a szerver az egyetlen forrás (különben minden telefon mást mutatna); csak helyi módban jelenik meg a telefonon tárolt rekord
+  let mine=0;if(!(MODE==='fb'&&UID&&USERDOC)){try{mine=Number(localStorage.getItem(ls)||0)}catch(e){}}const me=rows.find(r=>r.id===UID);
   if(mine>0){if(me){if(!me.v||(asc?mine<me.v:mine>me.v))me.v=mine}else rows.push({id:UID||'_me',n:USERDOC?uname(USERDOC):'Te',v:mine,c:0,me:1})}
   rows.forEach(r=>{if(r.id===UID)r.me=1});
   rows.sort((a,b)=>((b.v>0)-(a.v>0))||(a.v&&b.v?(asc?a.v-b.v:b.v-a.v):b.c-a.c));return rows}
@@ -4271,16 +4272,20 @@ function lbApply(){const R=Math.max(0,...arr('users').map(u=>Number(u.lbReset)||
   try{for(const k of [...LS_BEST,'medve-tkft-best'])localStorage.removeItem(k);let t={};try{t=JSON.parse(localStorage.getItem(TK_KEY)||'{}')||{}}catch(e){}localStorage.setItem(TK_KEY,JSON.stringify({ver:TK_VER,uteg:t.uteg||''}));localStorage.setItem('medve-lbreset',String(R))}catch(e){}
   try{for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}
   toast('🔄 Új szezon! A ranglista nullázva – mindenki nulláról indul.');return true}
-// net nélkül elért, még fel nem töltött rekordok feltöltése
-function fbSyncLocal(){if(!USERDOC)return;const up={},now=Date.now();
-  RANKG.forEach(([g,, f, ls, asc])=>{if(g==='kassza')return;/* a Kassza-összeget a tkSync tölti fel a saját szabályai szerint */let v=0;try{v=Number(localStorage.getItem(ls)||0)}catch(e){}const cur=USERDOC[f]||0;
-    if(v>0&&(!cur||(asc?v<cur:v>cur))){up[f]=v;up[f==='harcBest'?'harcAt':f==='droneBest'?'droneAt':f+'At']=now}});
-  if(Object.keys(up).length)DB.doc('users/'+UID).update(up).catch(()=>{})}
+// kétirányú rekord-szinkron (minden szerverfrissítéskor): ami jobb a szerveren (másik telefonon érted el), azt ez a telefon is átveszi;
+// ami jobb ezen a telefonon (pl. net nélkül érted el), az feltöltődik – így minden készüléken ugyanaz a rekord látszik
+function fbSyncLocal(force){if(!USERDOC||!DB||!UID)return;const now=Date.now();if(!force&&now-(fbSyncLocal.t||0)<8000)return;fbSyncLocal.t=now;const up={};
+  RANKG.forEach(([g,, f, ls, asc])=>{if(g==='kassza')return;/* a Kassza-összeget a tkSync kezeli a saját szabályai szerint */let v=0;try{v=Number(localStorage.getItem(ls)||0)}catch(e){}if(!Number.isFinite(v)||v<0)v=0;const cur=Number(USERDOC[f])||0;
+    if(cur>0&&(!v||(asc?cur<v:cur>v))){try{localStorage.setItem(ls,String(cur))}catch(e){}}
+    else if(v>0&&(!cur||(asc?v<cur:v>cur))){up[f]=v;up[f==='harcBest'?'harcAt':f==='droneBest'?'droneAt':f+'At']=now}});
+  if(Object.keys(up).length&&navigator.onLine!==false)DB.doc('users/'+UID).update(up).catch(e=>console.warn('rekord-feltöltés',e&&e.code))}
+// tartalék: ha egy feltöltés nem sikerült, és közben nem jött szerverfrissítés, fél percenként újra összeveti
+setInterval(()=>{if(MODE==='fb'&&FB_SYNCED&&!document.hidden)fbSyncLocal()},30000);
 function fbListen(){if(UNSUB)UNSUB();FB_SYNCED=false;
   UNSUB=DB.collection('users').onSnapshot(qs=>{const o={};qs.forEach(d=>{o[d.id]={id:d.id,...d.data()}});S.users=o;USERDOC=o[UID]||null;
     if(!USERDOC&&!qs.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
       DB.doc('users/'+UID).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:Date.now()}).catch(()=>{})}
-    lbApply();if(USERDOC&&!FB_SYNCED){FB_SYNCED=true;fbSyncLocal()}
+    lbApply();if(USERDOC&&!qs.metadata.fromCache){const first=!FB_SYNCED;FB_SYNCED=true;fbSyncLocal(first)}
     liveRefresh()},err=>{console.warn(err);toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
 function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hidden){const t=ov.querySelector('[data-rg].on');if(t)rankFill(t.dataset.rg)}
   const lv=document.getElementById('arcLive');if(lv)lv.innerHTML=liveHTML();const ab=document.getElementById('authBox');if(ab&&UID)ab.innerHTML=authInner()}
