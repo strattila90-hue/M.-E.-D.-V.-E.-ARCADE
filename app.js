@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.14.0',APP_DATE='2026.11.11.';
+const APP_VER='4.15.0',APP_DATE='2026.11.11.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -316,13 +316,43 @@ function dailyGame(){const d=new Date(),n=Math.floor(new Date(d.getFullYear(),d.
 function dailyState(){let o={};try{o=JSON.parse(localStorage.getItem('medve-daily')||'{}')}catch(e){}return o}
 function dailyHTML(){const g=dailyGame(),o=dailyState(),done=o.d===dailyKey();return `<button type="button" class="dailyb${done?' done':''}" data-game="${g}"><span>📅 NAPI KIHÍVÁS</span><b>${DAILY_N[g]}</b><i>${done?'✅ teljesítve':'játssz ma egy kört!'} · 🔥 ${o.streak||0} nap</i></button>`}
 function dailyMark(k){if(k!==dailyGame())return;const o=dailyState(),d=dailyKey();if(o.d===d)return;const y=new Date(Date.now()-864e5),yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');o.streak=o.d===yd?(o.streak||0)+1:1;o.d=d;try{localStorage.setItem('medve-daily',JSON.stringify(o))}catch(e){}setTimeout(()=>toast(`📅 Napi kihívás teljesítve! 🔥 ${o.streak} napos sorozat`),1200);document.querySelectorAll('.dailyb').forEach(b=>{b.classList.add('done');const i=b.querySelector('i');if(i)i.textContent=`✅ teljesítve · 🔥 ${o.streak} nap`})}
-function gamesHTML(){const P=aniPolys(),img=k=>k==='b'?BEAR_SPRITE:k==='p'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD;
-  const seams=[];for(let r=0;r<3;r++)seams.push(P[r*2][1],P[r*2][2]);
-  return `<div class="anisel"><div class="anihd"><span>⚡ VÁLASSZ BEVETÉST</span><i>8 játék</i></div>${dailyHTML()}<div class="anistack"><div class="ani7wrap"><button type="button" class="ani ani7" data-game="kassza" aria-label="Tüzér Kassza – tap-tap pénzcsináló" data-st="--bg:linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402);--ac:#2f7a2f;--cx:50%;--cy:48%"><i class="no" data-st="left:2%;top:4%">07</i><i class="new" data-st="right:3%;top:10%">ÚJ!</i>${dailyGame()==='kassza'?'<i class="new dayb" data-st="right:3%;top:44%">📅 MA</i>':''}<div class="anic"><img src="${tkNoteCv(6).toDataURL()}" alt=""><div class="ani7t"><b>TÜZÉR KASSZA</b><span>Tap-tap pénzcsináló · ütegkassza</span></div></div></button><svg class="seam7" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,100 100,86" /></svg></div><div class="anigrid">${ANI_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const p=P[i],cx=p.reduce((a,q)=>a+q[0],0)/4,cy=p.reduce((a,q)=>a+q[1],0)/4,left=i%2===0;
-    return `<button type="button" class="ani" data-game="${g}" aria-label="${t.replace(/<br>/g,' ')} – ${sub}" data-st="--bg:${bg};--ac:${ac};--cx:${cx.toFixed(1)}%;--cy:${cy.toFixed(1)}%;clip-path:polygon(${p.map(q=>q[0].toFixed(1)+'% '+q[1].toFixed(1)+'%').join(',')})"><i class="no" data-st="${left?'left:3%':'right:3%'};top:${(p[0][1]+1).toFixed(1)}%">0${i+1}</i>${g===dailyGame()?'<i class="new dayb" data-st="'+(left?'left:26%':'right:4%')+';top:'+(p[1][1]+(nw?11:3)).toFixed(1)+'%">📅 MA</i>':''}${nw?'<i class="new" data-st="right:4%;top:'+(p[1][1]+3).toFixed(1)+'%">ÚJ!</i>':''}<div class="anic"><img class="${ik==='p'?'pzhfull':ik[0]==='g'?'gidfull':''}${ik==='g2'?' flip':''}" src="${img(ik)}" alt=""><b>${t}</b><span>${esc(sub)}</span></div></button>`}).join('')}
-    <svg class="seams" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${seams.map(q=>q.join(',')).join(' ')}" /><polyline points="0,35 ${P[0][2].join(',')} 100,29" /><polyline points="0,68 ${P[2][2].join(',')} 100,62" /></svg></div><div class="ani8wrap"><button type="button" class="ani ani7 ani8" data-game="shotrun" aria-label="Shot&amp;Run – PzH 2000 tüzérpárbaj" data-st="--bg:linear-gradient(200deg,#7a2a8a,#2a0b3a 55%,#0b0414);--ac:#ff7a1e;--cx:50%;--cy:54%"><i class="no" data-st="right:2%;bottom:4%">08</i><i class="new" data-st="left:3%;top:22%">ÚJ!</i><div class="anic"><img class="pzhfull" src="${PZH_FULL||PZH_SPRITE}" alt=""><div class="ani7t"><b>SHOT&amp;RUN</b><span>PzH 2000 párbaj · gép vagy ember ellen</span></div><img class="pzhfull flip" src="${PZH_FULL||PZH_SPRITE}" alt=""></div></button><svg class="seam7" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,14 100,0" /></svg></div></div></div>`}
-function gameStart(k){dailyMark(k);if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');document.getElementById('authBox')?.scrollIntoView({behavior:'smooth',block:'center'});return}k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():gvOpen()}
-document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('#main [data-game]');if(!g)return;e.stopPropagation();const grid=g.closest('.anigrid');
+// a kezdőlap játékválasztója: egy képernyős, oldalra csúsztatható nagy csempék (Shot&Run az első)
+const DECK_G=[['shotrun','SHOT&amp;RUN','PzH 2000 tüzérpárbaj · gép vagy barát ellen','linear-gradient(200deg,#7a2a8a,#2a0b3a 55%,#0b0414)','#ff7a1e','sr',1],
+  ['kassza','TÜZÉR KASSZA','Tap-tap pénzcsináló · ütegkassza','linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402)','#2f7a2f','k',1],
+  ...ANI_G.map(([g,t,sub,bg,ac,ik,nw])=>[g,t.replace(/<br>/g,' '),esc(sub),bg,ac,ik,nw])];
+const DECK={i:0,raf:0};let TK_NOTE_URL=null;
+function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteCv(6).toDataURL());return k==='b'?BEAR_SPRITE:k==='p'||k==='sr'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD}
+function gamesHTML(){const n=DECK_G.length,dg=dailyGame(),i0=Math.min(DECK.i,n-1),nn=x=>String(x).padStart(2,'0');
+  const tiles=DECK_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const cls=ik==='p'||ik==='sr'?'pzhfull':ik[0]==='g'?'gidfull':'';
+    const art=ik==='sr'?`<img class="pzhfull" src="${deckImg(ik)}" alt="" decoding="async"><img class="pzhfull flip" src="${deckImg(ik)}" alt="" decoding="async">`:`<img class="${cls}${ik==='g2'?' flip':''}" src="${deckImg(ik)}" alt="" decoding="async">`;
+    return `<button type="button" class="dtile${i===i0?' on':''}${ik==='sr'?' sr':''}" data-game="${g}" data-i="${i}" aria-label="${t.replace(/&amp;/g,'&')} – ${sub}" data-st="--bg:${bg};--ac:${ac}">
+      <i class="dno">${nn(i+1)}<small>/${nn(n)}</small></i><span class="dbadges">${nw?'<i class="new">ÚJ!</i>':''}${g===dg?'<i class="new dayb">📅 MA</i>':''}</span>
+      <div class="dart${ik==='sr'?' two':''}">${art}</div><div class="dtxt"><b>${t}</b><span>${sub}</span><em>▶ JÁTÉK</em></div></button>`}).join('');
+  return `<section class="deck" id="deck"><div class="deckhd"><span>⚡ VÁLASSZ BEVETÉST</span><i><b>${n} játék</b> · <em id="deckN">${i0+1}/${n}</em></i></div>
+    ${dailyHTML()}
+    <div class="deckwrap"><button type="button" class="deckar l" data-deck="-1" aria-label="Előző játék">‹</button><div class="decktrack" id="deckT">${tiles}</div><button type="button" class="deckar r" data-deck="1" aria-label="Következő játék">›</button></div>
+    <div class="deckdots" id="deckD">${DECK_G.map((x,i)=>`<button type="button" class="${i===i0?'on':''}" data-deckto="${i}" aria-label="${i+1}. játék"></button>`).join('')}</div>
+    <p class="deckhint">👈 csúsztasd oldalra a többi játékhoz 👉</p>
+    <nav class="deckbar">${FB_ON&&!UID?'<button type="button" class="pri" data-more="auth">👤 Belépés</button>':''}<button type="button" data-rank="harc">🏅 Dicsőségfal</button>${FB_ON&&UID?'<button type="button" data-chat>💬 Chat</button>':''}<button type="button" data-more="1">☰ Továbbiak</button></nav></section>`}
+function deckTiles(){const t=document.getElementById('deckT');return t?[...t.children]:[]}
+function deckSet(i){const n=DECK_G.length;i=Math.max(0,Math.min(n-1,i));const ch=i!==DECK.i;DECK.i=i;const N=document.getElementById('deckN');if(N)N.textContent=(i+1)+'/'+n;
+  deckTiles().forEach((b,k)=>b.classList.toggle('on',k===i));document.querySelectorAll('#deckD button').forEach((b,k)=>b.classList.toggle('on',k===i));return ch}
+function deckGo(i,smooth){const t=document.getElementById('deckT'),b=deckTiles()[Math.max(0,Math.min(DECK_G.length-1,i))];if(!t||!b)return;
+  t.scrollTo({left:b.offsetLeft-(t.clientWidth-b.offsetWidth)/2,behavior:smooth===false||matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});deckSet(+b.dataset.i)}
+function deckInit(){const t=document.getElementById('deckT');if(!t)return;deckFit();deckGo(DECK.i,false);
+  t.addEventListener('scroll',()=>{if(DECK.raf)return;DECK.raf=requestAnimationFrame(()=>{DECK.raf=0;const c=t.scrollLeft+t.clientWidth/2;let best=0,bd=1e9;deckTiles().forEach((b,k)=>{const d=Math.abs(b.offsetLeft+b.offsetWidth/2-c);if(d<bd){bd=d;best=k}});if(deckSet(best)){try{navigator.vibrate&&navigator.vibrate(6)}catch(e){}}})},{passive:true})}
+// a választó pontosan kitölti a képernyőt (görgetés nélkül)
+function deckFit(){const d=document.getElementById('deck');if(!d)return;const vh=(window.visualViewport&&visualViewport.height)||innerHeight,top=d.getBoundingClientRect().top+(window.scrollY||0);
+  d.style.height=Math.max(380,Math.floor(vh-top-Math.max(10,parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sab'))||0)-10))+'px'}
+addEventListener('resize',()=>{deckFit();deckGo(DECK.i,false)});
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-deck],[data-deckto]');if(!t)return;deckGo(t.dataset.deckto!=null?+t.dataset.deckto:DECK.i+(+t.dataset.deck))});
+document.addEventListener('keydown',e=>{if(!document.getElementById('deck')||document.getElementById('harc')?.hidden===false||ARC.more||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==='ArrowRight'){deckGo(DECK.i+1);e.preventDefault()}else if(e.key==='ArrowLeft'){deckGo(DECK.i-1);e.preventDefault()}else if(e.key==='Enter'&&e.target===document.body){gameStart(DECK_G[DECK.i][0])}});
+function gameStart(k){dailyMark(k);if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');arcMore('auth');return}k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():gvOpen()}
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('#main [data-game]');if(!g)return;e.stopPropagation();
+  if(g.classList.contains('dtile')&&+g.dataset.i!==DECK.i){deckGo(+g.dataset.i);return}
+  if(g.classList.contains('dtile')){g.classList.add('go');try{sndClink()}catch(x){}setTimeout(()=>{g.classList.remove('go');gameStart(g.dataset.game)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:220);return}
+  const grid=g.closest('.anigrid');
   if(grid&&!matchMedia('(prefers-reduced-motion: reduce)').matches){if(grid.classList.contains('pick'))return;grid.classList.add('pick');g.classList.add('on');try{sndClink()}catch(x){}setTimeout(()=>{grid.classList.remove('pick');g.classList.remove('on');gameStart(g.dataset.game)},380)}else gameStart(g.dataset.game)},true);
 const GID_SPRITE='img/sprite3.webp';
 const GK=136/639,GOX=346,GOY=297,GWR=13.2,GWL=[-36.5,36.5];
@@ -3946,9 +3976,10 @@ Object.assign(SONGS,{sere_t:{bpm:88,root:82.41,prog:[0,0,1,0,0,0,-1,0],crash:fal
   bass:(b,r)=>[{s:0,n:r,l:3},{s:3,n:r,l:3},{s:8,n:r,l:3},{s:11,n:r,l:3}],kick:[0,3],snare:[],hat:0}});
 /* ===== kezdőoldal ===== */
 let DEFER_INSTALL=null;
-function arcRender(){const m=document.getElementById('main');
-  m.innerHTML=`  ${dlBannerHTML()}${isInstalled()&&FB_ON&&!UID&&!DL_BANNER?`<div class="panel arc-p">${dlPasteHTML()}</div>`:''}
-  ${gamesHTML()}
+const ARC={more:null};
+function arcRender(){const m=document.getElementById('main');if(ARC.more==='auth'&&FB_ON&&UID)ARC.more=null;m.classList.add('home');
+  m.innerHTML=`${dlBannerHTML()}${gamesHTML()}
+  <div class="more" id="arcMore"${ARC.more?'':' hidden'}><div class="morebox" role="dialog" aria-label="Továbbiak"><div class="morehd"><b>☰ Továbbiak</b><button type="button" class="morex" id="moreX" aria-label="Bezárás">✕</button></div><div class="morebody" id="moreB">  ${isInstalled()&&FB_ON&&!UID&&!DL_BANNER?`<div class="panel arc-p">${dlPasteHTML()}</div>`:''}
   ${FB_ON&&UID?'':`<div class="panel arc-p authbox" id="authBox">${authInner()}</div>`}
   <div class="medalbox"><button type="button" class="medal" data-rank="harc" aria-label="Ranglista megnyitása">${MEDAL_SVG}<span class="medshine"></span></button>
    <div class="medcap"><b>DICSŐSÉGFAL</b><span>${FB_ON&&UID?'<i class="lvdot">ÉLŐ</i> ranglista':'Rekordjaim'} · mind a 8 játék · koppints a kitüntetésre</span></div>
@@ -3960,8 +3991,15 @@ function arcRender(){const m=document.getElementById('main');
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
   <div class="panel arc-p"><h3>⚡ Teljesítmény</h3><label class="swr"><span>🔋 Gyenge telefon mód<small data-st="display:block;opacity:.7;font-size:11px">kisebb felbontás, simább futás, kevesebb akku – akadozásnál magától bekapcsol</small></span><input type="checkbox" id="arcLow" ${LOWFX?'checked':''}></label></div>
   <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" data-st="margin:0 0 10px">✅ Telepítve, a kezdőképernyőről indul.</p>'+dlPasteHTML():'<p class="hint" data-st="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
-  <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p>`;
-  setTimeout(()=>{pzhFullSet();gidFullSet(); if(typeof updSetUI==='function' && UPD_WAITING) updSetUI('available'); },0)}
+  <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p></div></div></div>`;
+  applyDataStyles&&applyDataStyles(m);deckInit();
+  setTimeout(()=>{pzhFullSet();gidFullSet();deckFit(); if(typeof updSetUI==='function' && UPD_WAITING) updSetUI('available'); },0)}
+function arcMore(w){ARC.more=w||'1';const o=document.getElementById('arcMore');if(!o){arcRender();return}o.hidden=false;
+  requestAnimationFrame(()=>{const b=document.getElementById('moreB');if(w==='auth'){const a=document.getElementById('authBox');if(a&&b)b.scrollTop=a.offsetTop-12}else if(b)b.scrollTop=0})}
+function arcMoreClose(){ARC.more=null;const o=document.getElementById('arcMore');if(o)o.hidden=true}
+document.addEventListener('click',e=>{if(!e.target.closest)return;const t=e.target.closest('[data-more]');if(t){arcMore(t.dataset.more);return}
+  if(e.target.closest('#moreX')||e.target.id==='arcMore'){arcMoreClose();return}if(e.target.closest('[data-chat]')){chatOpen();return}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ARC.more&&document.getElementById('harc')?.hidden!==false)arcMoreClose()});
 document.addEventListener('change',e=>{if(e.target.id==='arcLow'){LOWFX=e.target.checked;LOWAUTO=0;try{localStorage.setItem('medve-lowfx',LOWFX?'1':'0')}catch(x){}toast(LOWFX?'🔋 Gyenge telefon mód BE – a következő játékindítástól':'Gyenge telefon mód KI')}if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
