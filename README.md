@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.20.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.20.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.20.1:** Javítva: különböző telefonokon eltérő rekordok látszottak. Bejelentkezve a ranglista már csak a szerver adatait mutatja; a rekordok kétirányúan szinkronizálódnak minden szerverfrissítéskor (a másik telefonon elért jobb rekordot ez a telefon is átveszi, a net nélkül elértet feltölti, sikertelen feltöltésnél újrapróbálja), így a játékokon belüli „Rekord” is mindenhol ugyanaz.
 
 **v4.20.0:** Ranglista nullázása (új szezon): adminként a Továbbiak → Fiók panelen a „Ranglista nullázása – új szezon” gombbal minden játék rekordja, a játékszámlálók és a Kassza-állás mindenkinél törlődik; a telefonok a helyben tárolt régi rekordjaikat is eldobják, így azok nem töltődnek vissza. Javítva: ha egy telefonon másik felhasználó lépett be, átvehette az előzőnek a Kassza-állását és -rekordját; a Kassza összegét két különböző mentés is feltöltötte – ez eltéréseket okozott a ranglistán.
 
