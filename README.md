@@ -1,11 +1,25 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.13.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.17.3** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
 
-**v4.13.2:** Shot&Run: látványosabb életerő-kijelző (szegmentált páncélsáv, találatkor villanás és rázkódás, fogyó csík, kezelők, sáv a löveg fölött).
+**v4.17.3:** Shot&Run online: a hálózati késés kiegyenlítése – a fogadó oldalon a lövés röppályájának eleje a mért késésnek megfelelően gyorsabban fut, így a két telefonon egyszerre csapódik be (400 ms késésnél eddig ~430 ms lemaradás, most ~0); ping-kijelző a fejlécben; a Firestore többfüles szinkron módja kikapcsolva (gyorsabb írás/olvasás).
+
+**v4.17.2:** Shot&Run: élethűbb rendszerhangok – dízelmotor (behúzó relé, önindító, áttekerés, beindulás, felpörgés, V8 alapjárati hurok egyenetlen gyújtással, menet közben fordulatszám és turbó), harctéri rádió (forgókapcsoló, zajzár-sistergés, torz beszédfoszlány, nyugtázó sípszó), toronyforgató (relé, szervomotor, fogaskerék-morgás, hidraulika, fémes reteszelés), málházás (töltőautomata motorja és lánca, gránátonként fémes csattanás és döngölés).
+
+**v4.17.1:** Hibajavítások: H.A.R.C. és DroneRun bezárás után bent maradó billentyűkezelők (minden megnyitással szaporodtak, és bezárva is reagáltak); a csak induláskor méretezett játékvásznak (H.A.R.C., DroneRun, Gidrán Terep/Konvoj, Tüzér Kassza) elforgatáskor és böngészősáv-változáskor újraméreteződnek; a kezdő- és eredménypanelek nem csúsznak a fejléc alá.
+
+**v4.17.0:** Shot&Run: a lövegcső is ütközik – minden gránát (SMArt, köd stb. is) fennakad rajta, a cső sérül; filmszerű kamera (a végfázisban a becsapódási pont és a cél együtt a kép közepén, lassítás, ráközelítés, a löveg nem tűnik el a kép alján); a robbanás meglöki és megbillenti a löveget, a kráter mélysége korlátozott; a pálya szélén túlra lőtt gránát is földbe csapódik; ha mindkét lövegnek elfogy a lőszere, ejtőernyős lőszerláda érkezik (4 gránát), ha az is elfogy, a több életerő nyer, egyenlőnél döntetlen. Borítók: angol, kisebb hangszavak.
+
+**v4.16.0:** Teljesen új, képregényes design: minden játékcsempén egész képet kitöltő, rajzolt akcióborító (tusvonal, akciósugarak, raszterpontok, hangszavak – a vásznon generálva, gyorsítótárazva); képregényes Bangers feliratok (SIL OFL 1.1), saját SVG ikonok emoji helyett, vastag kontúros gombok. Minden kijelzőre és kivágásra igazítva, fekvő kezdőlap; a telepített app már fekvőbe is fordul – a Shot&Run fekvőben is játszható („Fekvő mód” gomb), a többi játék álló helyzetet kér.
+
+**v4.15.0:** Új kezdőlap: görgetés nélküli, egy képernyős játékválasztó nagy csempékkel, oldalra csúsztatással (Shot&Run az első), játékszámláló (pl. 3/8 · 8 játék), lapozó pöttyök, gépen nyilak és billentyűk; a belépés, dicsőségfal, beállítások és telepítés a „Továbbiak” lapon; játék közben a háttérben lévő kezdőlap nem terheli a kirajzolást.
+
+**v4.14.0:** Shot&Run: új, nagy kártyás menü; egyszerű online párbaj (meghívó küldése megosztható linkkel – a barát egy koppintással belép –, vagy nagy kódmező beillesztés gombbal); szünet gomb játék közben (online is: a soron lévő játékos megállíthatja, a köridő áll); gép ellen és ketten egy telefonon az állás mentődik, a menüből „Folytatás innen”.
+
+**v4.13.2:** Shot&Run: látványos életerő-kijelzés (színátmenetes sáv, fehéren villanó és lefolyó friss sebzés, lüktető kritikus állapot, kezelők és rendszerek állapotjelzői, életerő-sáv a lövegek fölött), élethűbb lövéshang, sokkal hangosabb becsapódás, süvítő lövedék a röppályán.
 
 **v4.13.1:** Javítás: Shot&Run – egyes telefonokon eltűnt a PzH modellje (csak a lánctalp látszott); a modell mostantól kész képfájlokból rajzolódik.
 
