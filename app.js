@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.23.0',APP_DATE='2026.11.12.';
+const APP_VER='4.24.0',APP_DATE='2026.11.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -5341,21 +5341,36 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
     c.fillStyle='rgba(255,255,255,.12)';srRR(c,px,py+13,pw,4,2);c.fill();c.fillStyle=col;srRR(c,px,py+13,pw*f,4,2);c.fill();
     c.font='800 11px system-ui';c.textAlign='center';c.fillStyle=col;c.fillText(txt+(srMyTurn()?'':' · ellenfél'),W/2,py+10)}
   const lines=[],radio=ctl.sys.rad&&ctl.d.rad<2,blind=srInSmoke(ctl)||srInSmoke(tg);
-  if(radio){const w=SR.wind,wl=w.x*ctl.face,wc=w.z*ctl.face;lines.push(['MET  '+(Math.abs(w.x)<1?'szélcsend':(wl>0?'hátszél ':'szembeszél ')+Math.round(Math.abs(w.x)/2)+' m/s')+' · oldal '+(Math.abs(w.z)<1?'0':(wc>0?'→ ':'← ')+Math.round(Math.abs(w.z)/2)+' m/s'),'#bfe3ff'])}
-  else lines.push(['MET  nincs rádió','#ff9a8a']);
-  if(ctl.d.opt>=2)lines.push(['LRF  optika megsemmisült','#ff9a8a']);else if(blind)lines.push(['LRF  köd – nincs mérés','#ff9a8a']);
+  if(radio){const w=SR.wind,wl=w.x*ctl.face,wc=w.z*ctl.face;lines.push(['METEO    '+(Math.abs(w.x)<1?'szélcsend':(wl>0?'hátszél ':'szembeszél ')+Math.round(Math.abs(w.x)/2)+' m/s')+' · oldal '+(Math.abs(w.z)<1?'0':(wc>0?'→ ':'← ')+Math.round(Math.abs(w.z)/2)+' m/s'),'#bfe3ff'])}
+  else lines.push(['METEO    nincs rádió','#ff9a8a']);
+  if(ctl.d.opt>=2)lines.push(['TÁVMÉRŐ  optika megsemmisült','#ff9a8a']);else if(blind)lines.push(['TÁVMÉRŐ  köd – nincs mérés','#ff9a8a']);
   else{const dx=Math.abs(tg.x-ctl.x),brg=Math.atan(SR.zOff/dx)*SR_MIL,co=ctl.d.opt===1,r=co?Math.round(dx*SR_M/500)*500:Math.round(dx*SR_M/10)*10,b=co?Math.round(brg/20)*20:Math.round(brg),dh=Math.round((ctl.y-tg.y)*SR_M/10)*10;
-    lines.push([`LRF  ${n0(r)} m · irány ${b>0?'J':b<0?'B':''} ${String(Math.abs(b)).padStart(4,'0')} · Δ ${dh>=0?'+':'−'}${Math.abs(dh)} m${co?' (sérült optika)':''}`,'#9dff9d']);
+    lines.push([`TÁVMÉRŐ  ${n0(r)} m · irány ${b>0?'J':b<0?'B':''} ${String(Math.abs(b)).padStart(4,'0')} · Δ ${dh>=0?'+':'−'}${Math.abs(dh)} m${co?' (sérült optika)':''}`,'#9dff9d']);
     const tk=ctl.sel+'|'+r,ta=SR_AM[ctl.sel],hiA=srHiAm(ta);if(SR.tblK!==tk){SR.tblK=tk;SR.tbl=ta?(hiA?srTableHi(ta,r/SR_M):srTable(ta,r/SR_M)):null}
-    lines.push(['TBL  '+(SR.tbl?String(SR.tbl).padStart(4,'0')+' von '+(hiA?'(felső szögcsoport · SMArt)':'(sík terep, szélcsend)'):hiA?'felső szögcsoporttal nem érhető el':'lőtávon kívül – felső szögcsoport'),'#cfd6c0'])}
-  const R=SR.rep[ctl.i];if(R)lines.push(['OBS  '+R.txt,'#ffe08a']);
-  if(SR.flares.some(f=>f.by===ctl.i))lines.push(['FCS  megvilágított cél – becsapódás-előrejelzés aktív','#fff3b0']);
+    lines.push(['LŐTÁBLA  '+(SR.tbl?String(SR.tbl).padStart(4,'0')+' von '+(hiA?'(felső szögcsoport · SMArt)':'(sík terep, szélcsend)'):hiA?'felső szögcsoporttal nem érhető el':'lőtávon kívül – felső szögcsoport'),'#cfd6c0'])}
+  const R=SR.rep[ctl.i];if(R)lines.push(['ELTÉRÉS  '+R.txt,'#ffe08a']);
+  if(SR.flares.some(f=>f.by===ctl.i))lines.push(['CÉL      megvilágítva – becsapódás-előrejelzés aktív','#fff3b0']);
   c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width));c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,Math.min(W-8,mw+10),lines.length*14+5);
   for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,W-18);y+=14}
   // felülnézet: oldalirány, szél, utolsó becsapódás
   srRadar(c,W,ctl,tg,R,radio,blind,t)}
+// a kis kijelző üvege: sérült rádiónál egy repedés és képhiba-csíkok, megsemmisültnél pókhálósan szétrepedt, kialvó, villódzó kép
+function srCrackGlass(c,v,lvl,ix,iy,iw,ih,t){const K='k'+v.i+'_'+lvl+'_'+iw;SR.crk=SR.crk||{};let G=SR.crk[K];
+  if(!G){const r=srRng(SR.seed*7+v.i*131+lvl*17),cx=ix+iw*(lvl>=2?.35+r()*.3:.72+r()*.15),cy=iy+ih*(lvl>=2?.35+r()*.3:.2+r()*.2),n=lvl>=2?11:5,rays=[],L=Math.hypot(iw,ih);
+    for(let k=0;k<n;k++){const a=k/n*Math.PI*2+r()*.5,len=L*(lvl>=2?.5+r()*.6:.15+r()*.3),p=[[cx,cy]];let x=cx,y=cy;const seg=5+(r()*4|0);for(let j=1;j<=seg;j++){const d=len/seg,aa=a+(r()-.5)*.6;x+=Math.cos(aa)*d;y+=Math.sin(aa)*d;p.push([x,y])}rays.push(p)}
+    const rings=[];if(lvl>=2)for(const f of [.25,.5,.8])for(let k=0;k<n;k++){if(r()<.3)continue;const A=rays[k],B=rays[(k+1)%n],ia=Math.min(A.length-1,Math.round(f*(A.length-1))),ib=Math.min(B.length-1,Math.round(f*(B.length-1)));rings.push([A[ia],B[ib]])}
+    const shards=[];if(lvl>=2)for(let k=0;k<n;k++)if(r()<.45){const A=rays[k],B=rays[(k+1)%n],m=Math.min(A.length,B.length)-1,j=1+(r()*(m-1)|0);shards.push([A[j],A[j+1]||A[j],B[j+1]||B[j],B[j]])}
+    G=SR.crk[K]={cx,cy,rays,rings,shards}}
+  if(lvl>=2){// kialvó, villódzó kép
+    const fl=Math.sin(t*23)*Math.sin(t*7.3)>.55;c.fillStyle=`rgba(0,0,0,${fl?.45:.78})`;c.fillRect(ix,iy,iw,ih);
+    if(Math.random()<.35){const y=iy+Math.random()*ih;c.fillStyle='rgba(120,255,150,.18)';c.fillRect(ix,y,iw,1+Math.random()*4)}
+    c.fillStyle='rgba(255,255,255,.07)';for(const q of G.shards){c.beginPath();c.moveTo(q[0][0],q[0][1]);for(const p of q)c.lineTo(p[0],p[1]);c.closePath();c.fill()}}
+  else if(Math.random()<.06){const y=iy+Math.random()*ih;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(ix,y,iw,2+Math.random()*5)}// sérült: időnként képhiba
+  const line=(w,col,o)=>{c.strokeStyle=col;c.lineWidth=w;c.beginPath();for(const p of G.rays){c.moveTo(p[0][0]+o,p[0][1]+o);for(const q of p)c.lineTo(q[0]+o,q[1]+o)}for(const [a,b] of G.rings){c.moveTo(a[0]+o,a[1]+o);c.lineTo(b[0]+o,b[1]+o)}c.stroke()};
+  c.lineJoin='round';line(1.8,'rgba(0,0,0,.75)',0);line(.8,'rgba(235,255,240,.6)',-.6);
+  c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.arc(G.cx,G.cy,lvl>=2?2.6:1.6,0,7);c.fill()}
 // tűzvezető kis kijelzője (felülnézet): foszforzöld radarképernyő – rács, távgyűrűk, pásztázó sugár, a cső iránya, a cél, az utolsó becsapódás és a szél
-function srRadar(c,W,ctl,tg,R,radio,blind,t){const big=W>=520,sm=W<360,iw=big?104:sm?78:86,ih=big?132:sm?102:112,ix=W-iw-6,iy=60,cx=ix+iw/2,sc=.3*iw/74,top=iy+17,by=iy+ih-14,ty=top+12,rng=Math.abs(tg.x-ctl.x),see=ctl.d.opt<2&&!blind,dead=ctl.d.opt>=2;
+function srRadar(c,W,ctl,tg,R,radio,blind,t){const rd=ctl.d.rad||0,big=W>=520,sm=W<360,iw=big?104:sm?78:86,ih=big?132:sm?102:112,ix=W-iw-6,iy=60,cx=ix+iw/2,sc=.3*iw/74,top=iy+17,by=iy+ih-14,ty=top+12,rng=Math.abs(tg.x-ctl.x),see=ctl.d.opt<2&&!blind,dead=ctl.d.opt>=2;
   c.save();
   // keret és háttér
   c.fillStyle='rgba(0,0,0,.45)';srRR(c,ix+2,iy+3,iw,ih,9);c.fill();
@@ -5386,12 +5401,13 @@ function srRadar(c,W,ctl,tg,R,radio,blind,t){const big=W>=520,sm=W<360,iw=big?10
   // képcső-csíkok és sérült optika zaja
   c.fillStyle='rgba(0,0,0,.18)';for(let y=iy+(t*20%3);y<iy+ih;y+=3)c.fillRect(ix,y,iw,1);
   if(dead||blind){c.fillStyle='rgba(180,200,180,.10)';for(let k=0;k<40;k++)c.fillRect(ix+Math.random()*iw,iy+Math.random()*ih,1.5,1.5)}
+  if(rd>=1)srCrackGlass(c,ctl,rd,ix,iy,iw,ih,t);
   // fejléc és alsó adatsor
   c.fillStyle='rgba(0,0,0,.55)';c.fillRect(ix,iy,iw,top-iy);c.fillRect(ix,iy+ih-11,iw,11);
   c.restore();
-  c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='left';c.fillStyle='#9dff9d';c.fillText('FCS',ix+6,iy+11);c.textAlign='right';c.fillStyle='rgba(220,255,220,.75)';c.fillText('FELÜLNÉZET',ix+iw-6,iy+11);
-  c.font=`700 ${big?8.5:7.5}px ui-monospace,Menlo,monospace`;c.textAlign='center';c.fillStyle=see?'#cfffcf':'#ff9a8a';
-  c.fillText(dead?'OPTIKA KIESETT':blind?'KÖD – NINCS KÉP':(rng*SR_M/1000).toFixed(1).replace('.',',')+' km · '+(ctl.trav>0?'J':ctl.trav<0?'B':'')+String(Math.abs(ctl.trav)).padStart(3,'0'),cx,iy+ih-3);
+  c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='center';c.fillStyle=rd>=2?'#ff9a8a':'#9dff9d';c.fillText(rd>=2?'FELÜLNÉZET – HIBA':'FELÜLNÉZET',cx,iy+11);
+  c.font=`700 ${big?8.5:7.5}px ui-monospace,Menlo,monospace`;c.textAlign='center';c.fillStyle=see&&rd<2?'#cfffcf':'#ff9a8a';
+  c.fillText(rd>=2?'RÁDIÓ KIESETT':dead?'OPTIKA KIESETT':blind?'KÖD – NINCS KÉP':(rng*SR_M/1000).toFixed(1).replace('.',',')+' km · '+(ctl.trav>0?'J':ctl.trav<0?'B':'')+String(Math.abs(ctl.trav)).padStart(3,'0'),cx,iy+ih-3);
   // keret, sarokjelek
   c.strokeStyle='#111';c.lineWidth=2.5;srRR(c,ix,iy,iw,ih,9);c.stroke();c.strokeStyle='rgba(120,255,150,.55)';c.lineWidth=1;srRR(c,ix+2.5,iy+2.5,iw-5,ih-5,7);c.stroke();
   c.restore()}
@@ -5446,10 +5462,10 @@ function srAllOn(){if(!SR.v||!(SR.phase==='prep'||srMyTurn()))return;const v=srC
   let i=0;const step=()=>{if(!SR.v||srCtl()!==v||!(SR.phase==='prep'||srMyTurn()))return;const k=ks[i++];const on=k==='load'?v.load>=1||v.loading:v.sys[k];if(!on)srSwitch(k);if(i<ks.length)SR.allT=setTimeout(step,k==='eng'?650:420)};step()}
 /* ---------- bevezető az első játékhoz: mindig a következő teendőre mutat (kihagyható, csak egyszer) ---------- */
 const SR_TUT='srTut1',SR_TUTX={eng:['1/6 · MOTOR','Indítsd be a motort. Tipp: a ⚡ MINDENT BE egy gombbal mindent bekapcsol.'],
- rad:['2/6 · RÁDIÓ','Rádió be: tőle jönnek a szél- és lőtábla-adatok.'],tur:['3/6 · TORONY','Torony be – enélkül nem lehet irányozni és lőni.'],
+ rad:['2/6 · RÁDIÓ','Rádió be: tőle jön az időjárás (METEO) és a lőtábla.'],tur:['3/6 · TORONY','Torony be – enélkül nem lehet irányozni és lőni.'],
  load:['4/6 · MÁLHÁZÁS','Töltsd be a 60 gránátot.'],wait:['Töltés…','Mindjárt kezdődik a párbaj.'],
- elev:['5/6 · MAGASSÁG','Húzd a skálát vagy nyomd a −/+ gombot. A kép alján lévő TBL érték jó kiindulópont.',1],
- fire:['6/6 · TŰZ!','Lőj! Utána az OBS sor és a FELÜLNÉZET mutatja, mennyit tévedtél.']};
+ elev:['5/6 · MAGASSÁG','Húzd a skálát vagy nyomd a −/+ gombot. A kép alján lévő LŐTÁBLA érték jó kiindulópont.',1],
+ fire:['6/6 · TŰZ!','Lőj! Utána az ELTÉRÉS sor és a FELÜLNÉZET mutatja, mennyit tévedtél.']};
 function srTutOn(){try{return !localStorage.getItem(SR_TUT)}catch(e){return false}}
 function srTutDone(){SR.tutS='done';try{localStorage.setItem(SR_TUT,'1')}catch(e){}const el=$('#srTut');if(el)el.hidden=true;srTutHl(null);const h=$('#harc');h&&h.classList.remove('srtutsw')}
 function srTutHl(t){if(SR.tutHl&&SR.tutHl!==t)SR.tutHl.classList.remove('srhl');SR.tutHl=t;if(t)t.classList.add('srhl')}
@@ -5596,7 +5612,7 @@ function srMenu(){srLoaderHum(false,true);SR.v=null;SR.bgK=null;{const h=$('#har
     <div class="srcard"><button type="button" class="srcbtn" id="srHotB"><i class="ib-red">${ic('phone')}</i><span><b>Ketten egy telefonon</b><small>Felváltva lőtök ugyanazon a készüléken</small></span></button></div>
    </div>
    <button type="button" class="srrot cb c-dark" id="srRot">${ic('rotate')}Fekvő mód</button>
-   <details class="srhelp"><summary>📖 Kezelés és lőszerek</summary><div class="dinfo"><b>Kezelés</b><span>Indítás</span><i>MOTOR · RÁDIÓ · TORONY · MÁLHÁZÁS</i><span>Irányzék</span><i>húzd a skálát, a ± gomb 1 vonás</i><span>Rádió</span><i>szél (MET) + megfigyelő jelentése</i><span>Mozgás</span><i>körönként korlátozott táv</i><span>Köridő</span><i>120 mp – lejártakor a kör kimarad</i><span>Sérülés</span><i>a kiesett rendszert kapcsold vissza</i>
+   <details class="srhelp"><summary>📖 Kezelés és lőszerek</summary><div class="dinfo"><b>Kezelés</b><span>Indítás</span><i>MOTOR · RÁDIÓ · TORONY · MÁLHÁZÁS</i><span>Irányzék</span><i>húzd a skálát, a ± gomb 1 vonás</i><span>Rádió</span><i>szél (METEO) + megfigyelő jelentése</i><span>Mozgás</span><i>körönként korlátozott táv</i><span>Köridő</span><i>120 mp – lejártakor a kör kimarad</i><span>Sérülés</span><i>a kiesett rendszert kapcsold vissza</i>
    <b data-st="margin-top:6px">155 mm-es gránátok (60 db)</b>${SR_AMMO.map(a=>`<span>${a.n}<br><em>${a.q} db</em></span><i>${a.d}<small>${a.r}</small></i>`).join('')}</div><p class="srhint">A valós adatok nyilvános gyártói és sajtóforrásokból származnak, tájékoztató jellegűek. A játékbeli lőtáv a pályához van arányítva.</p></details>`;
   s.hidden=false;s.scrollTop=0;
   $('#srCAi').onclick=()=>{const l=$('#srLv'),o=l.hidden;l.hidden=!o;$('#srCAi').setAttribute('aria-expanded',o)};
