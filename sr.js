@@ -90,7 +90,7 @@ function srSim(sh,tg,elev,trav,am,noise){const rnd=Math.random,gs=()=>(rnd()+rnd
     else if(tg&&!tg.dead&&Math.abs(x-tg.x)<46&&y>tg.y-34&&y<tg.y+14&&Math.abs(lat-tgl)<7)type='hit';
     else if(hg<=0){type='ground';y=gy}
     else if(vy>0&&am.kind==='pff'&&hg<24)type='air';
-    else if(vy>0&&am.kind==='smart'&&hg<240)type='disp';// a röppálya csúcsa után, magasan lökődnek ki a résztöltetek
+    else if(vy>0&&am.kind==='smart'&&hg<520){type='disp';SR._dr=hg*vx/Math.max(40,Math.abs(vy))*.55}// a röppálya csúcsa után hamar, nagyon magasan lökődnek ki a résztöltetek
     else if(vy>0&&am.kind==='illum'&&hg<210)type='flare';
     pts.push(x,y)}
   if(!type)type='out';
@@ -98,7 +98,7 @@ function srSim(sh,tg,elev,trav,am,noise){const rnd=Math.random,gs=()=>(rnd()+rnd
   if((am.kind==='gps'&&gd<2||am.kind==='laser'&&srLaserOk(sh,tg))&&type!=='out'&&tg&&!tg.dead){const n=pts.length/2,ex=x,ey=y,co=am.corr*(gd?.8:1),ge=gd&&noise?gs()*14:0,gl=gd&&noise?gs()*2.5:0,sx=srClamp(tg.x+ge-ex,-co,co),sl=srClamp(tgl+gl-lat,-co*.5,co*.5);
     x=ex+sx;lat+=sl;y=srGy(x);type='ground';brl=0;if(Math.abs(x-tg.x)<46&&Math.abs(lat-tgl)<7){y=tg.y-28;type='hit'}
     for(let i=apex;i<n;i++){const u=(i-apex)/Math.max(1,n-1-apex),s=u*u*(3-2*u);pts[i*2]+=sx*s;pts[i*2+1]+=(y-ey)*s}}
-  return {pts,dt,tof:t,apex,top,m,end:{x,y,lat,type,brl},e,tr}}
+  return {pts,dt,tof:t,apex,top,m,end:{x,y,lat,type,brl,dr:type==='disp'?SR._dr:undefined},e,tr}}
 // lőtábla: alsó szögcsoportú magassági szög adott távolságra (sík terep, szélcsend) – kiinduló érték az irányzáshoz
 function srTable(am,R){const rng=e=>{const th=e/SR_MIL,dt=1/60;let x=0,y=0,vx=Math.cos(th)*am.v,vy=-Math.sin(th)*am.v,t=0;do{const sp=Math.hypot(vx,vy);let ax=-SR_K*sp*vx,ay=SR_G*(am.gk||1)-SR_K*sp*vy;if(am.kind==='vlap'&&t>.45&&t<1.35){ax+=vx/sp*95;ay+=vy/sp*95}vx+=ax*dt;vy+=ay*dt;x+=vx*dt;y+=vy*dt;t+=dt}while(y<0&&t<40);return x};
   if(rng(790)<R)return null;let lo=20,hi=790;for(let i=0;i<11;i++){const m=(lo+hi)/2;if(rng(m)<R)lo=m;else hi=m}return Math.round(hi)}
@@ -127,7 +127,7 @@ function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.z
   else if(am.kind==='smoke'){ev.smoke={x:E.x,y:E.y};ev.cr.push([E.x,8,2])}
   else if(am.kind==='illum'){if(E.type==='flare')ev.flare={x:E.x,y:E.y};else ev.dud=1;if(E.type==='hit')hit(tg,4,'barrel',true)}
   else if(am.kind==='smart'&&E.type==='hit'){blast(am.R||40,am.dmg*.8,1.4);ev.cr.push([E.x,8,3])}
-  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=3.8;for(const o of [-30,30]){const x=E.x+sh.face*46+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.5;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
+  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=7;for(const o of [-30,30]){const x=E.x+(E.dr!=null?E.dr:sh.face*46)+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.5;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
   else if(E.type==='air'){blast(am.R,am.dmg,1.2);ev.cr.push([E.x,am.R*.45,1.5*f])}
   else{blast(am.R,am.kind==='pff'?am.dmg*1.2:am.dmg,1.6);ev.cr.push([E.x,am.cr*(.6+.4*f),am.cr*.55*f])}
   if(am.kind==='laser')ev.lz=srLaserOk(sh,tg)?1:0;
@@ -348,7 +348,7 @@ function srSparks(x,y,n){srShards(x,y,n*.35,300,false);for(let i=0;i<srN(n);i++)
 function srSmokeBurst(x,y){const F=SR.fx;for(let i=0;i<srN(26);i++){const a=-Math.PI/2+(Math.random()-.5)*2.8,v=60+Math.random()*190;F.push({k:'s',x,y:y-4,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.6,r0:6,r1:30+Math.random()*30,t:2.5+Math.random()*2,t0:4.5,c:'226,226,220',al:.7,drag:1.6})}
   for(let i=0;i<srN(18);i++){const a=-Math.PI/2+(Math.random()-.5)*2.2,v=160+Math.random()*200;F.push({k:'p',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:300,t:1+Math.random()*.8,t0:1.8,c:'255,250,230',sz:1.6,tr:1})}}
 function srKill(v){v.dead=true;v.burn=99;v.hitF=1.2;v.hpGT=.9;const F=SR.fx,x=v.x,y=v.y-18;sndMega();srSndImpact(1.6);SR.shake=1.1;SR.flash=.8;try{navigator.vibrate&&navigator.vibrate([120,60,220])}catch(e){}
-  srBoomHE(x,y+18,1.7,0);srSparks(x,y,60);srShards(x,y,46,560,true);v.cook=7;srBailOut(v);
+  srBoomHE(x,y+18,1.7,0);srSparks(x,y,60);srShards(x,y,46,560,true);v.cook=7;srBailOut(v);srCineKill(v);
   for(let i=0;i<srN(40);i++){const a=-Math.PI/2+(Math.random()-.5)*.5,s=260+Math.random()*420;F.push({k:'j',x:x-v.face*18+(Math.random()-.5)*10,y:y-8,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:.7+Math.random()*1.3,t0:2,dl:Math.random()*1.4})}
   for(let i=0;i<srN(18);i++){const a=-Math.PI/2+(Math.random()-.5)*2,s=160+Math.random()*320;F.push({k:'d',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,rot:0,vr:(Math.random()-.5)*16,w:5+Math.random()*12,h:3+Math.random()*5,t:3+Math.random()*2,t0:5,c:'#1c1a16',hot:1})}}
 function srFloat(v,txt,col){SR.float.push({x:v.x,y:v.y-52-SR.float.filter(f=>f.v===v).length*13,txt,col,t:2.6,v})}
@@ -367,7 +367,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.bail=[];SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};SR.bail=[];SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -409,7 +409,7 @@ function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{cons
 function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];if(SR.slowW){SR.slowW=0;srMsg('')}
   if(!first){SR.smokes=SR.smokes.filter(s=>--s.turns>0);SR.flares=SR.flares.filter(f=>--f.turns>0)}
   v.fuel=SR_FUEL*(v.d.trk===1?.5:1);SR.camFree=false;SR.ovw=false;SR.pred=null;SR.predK='';
-  if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=SR.bail&&SR.bail.length?5.6:2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
+  if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=SR.bail&&SR.bail.length?(srCineOn()?7:5.6):2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
   if(srAmmoN(v)===0){if(srAmmoN(o)===0){if(!SR.drop){srAirdrop();return}SR.phase='dying';SR.t=.6;SR.noAmmo=true;return}srAlert(v.name+': nincs lőszer – a kör kimarad','warn');SR.turn=1-SR.turn;if(SR.turn===0)SR.round++;SR.phase='wait';SR.t=1.4;return}
   if(!(v.ammo[v.sel]>0))v.sel=(SR_AMMO.find(a=>v.ammo[a.id]>0)||{}).id;
   SR.phase='aim';SR.tlEnd=v.ai?0:Date.now()+SR_TLIM*1000;SR.tlS=999;if(v.ai)srAiPlan();srUI();srDials();srSave();
@@ -427,7 +427,7 @@ function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;const ff=!local&&SR.
   if(!local){if(Math.abs(v.x-ev.sx)>6)srMsg('⚠ '+v.name+' állást váltott!');v.x=ev.sx;if(ev.k==='shot'){v.elev=ev.elev;v.trav=ev.trav;v.sel=ev.am;if(ev.amo)v.ammo={...ev.amo};else if(v.ammo[ev.am]>0)v.ammo[ev.am]--}else if(ev.amo)v.ammo={...ev.amo}}
   SR.camFree=false;SR.ovw=false;SR.pred=null;
   if(ev.k==='skip'){srMsg(ev.to?'⏱ '+v.name+': lejárt az idő – a kör kimarad!':'⚙ '+v.name+': töltési hiba – a lövés kimarad!');srFloat(v,ev.to?'lejárt az idő':'töltési hiba','#ffd24a');srSwSnd(false);SR.phase='wait';SR.t=1.6;SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srUI();return}
-  if(!local)srAmmoNote(v,ev.am);SR.shot={ev,t:0,wh:false,n:ev.pts.length/2,ts:1,ff};SR.phase='fly';v.rec=1;v.x=srClamp(v.x-v.face*1.6,60,SR_W-60);v.av-=v.face*(1.1+Math.sin(v.elev/SR_MIL)*.9);srSndFire(v.face,ev.am);SR.shake=Math.max(SR.shake,.35);try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
+  if(!local)srAmmoNote(v,ev.am);SR.shot={ev,t:0,wh:false,n:ev.pts.length/2,ts:1,ff};SR.phase='fly';v.rec=1;v.x=srClamp(v.x-v.face*1.6,60,SR_W-60);v.av-=v.face*(1.1+Math.sin(v.elev/SR_MIL)*.9);srSndFire(v.face,ev.am);SR.shake=Math.max(SR.shake,.35);srCineFire(v,ev);try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
   const m=srMuzzle(v,v.elev),th=v.elev/SR_MIL,dx=Math.cos(th)*v.face,dy=-Math.sin(th);
   // torkolattűz és nagy, gomolygó lőporfüst: előre kilőtt füstcsóva, a csőszájfékből oldalra kicsapó gyűrű, a lökéshullám felverte por, majd lassan szétterülő felhő
   const R=Math.random,chg=srChg(v.elev),K=ev.am==='smk'||ev.am==='ill'?.8:1;
@@ -471,7 +471,7 @@ function srApply(ev){const sh=SR.v[ev.by],tg=SR.v[1-ev.by],E=ev.end;
   SR.rep[ev.by]={txt:sh.sys.rad&&sh.d.rad<2?rep:'nincs rádió – nincs megfigyelői jelentés',lat:E.lat,rf:srClamp(Math.abs(E.x-sh.x)/Math.abs(tg.x-sh.x||1),0,1.3),ok:sh.sys.rad&&sh.d.rad<2};
   if(!sh.ai&&(SR.mode!=='net'||ev.by===SR.me))srMsg('📻 Megfigyelő: '+SR.rep[ev.by].txt,4200);
   srUI()}
-function srAfterShot(ev){if(SR.v.some(v=>v.dead)){SR.phase='dying';SR.t=SR.bail&&SR.bail.length?5.6:2.8;return}
+function srAfterShot(ev){if(SR.v.some(v=>v.dead)){SR.phase='dying';SR.t=SR.bail&&SR.bail.length?(srCineOn()?7:5.6):2.8;return}
   SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srTurnStart()}
 function srEnd(){if(SR.mode!=='net')srSaveDel();SR.paused=null;srPzShow(false);SR.phase='over';SR.run=false;srEngLoop(false);const [a,b]=SR.v;let w=a.dead&&b.dead?-1:a.dead?1:b.dead?0:a.hp===b.hp?-1:a.hp>b.hp?0:1;
   const mine=SR.mode==='hot'?null:SR.me,o=$('#srOver');let h;
@@ -532,7 +532,7 @@ function srUpdate(dt,now){const P=SR.phase;
   else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,tg=SR.v[1-ev.by],near=ev.end.type==='hit'||Math.abs(ev.end.x-tg.x)<130;
     // lassítás a becsapódás előtti utolsó pillanatban, ha a cél közelébe érkezik
     S.ts=near&&T-S.t<.38?.32:1;S.t+=dt*S.ts;if(S.ff>0&&T-S.t>1.6){const x=Math.min(S.ff,dt*.9);S.t+=x;S.ff-=x}
-    if(!S.wh&&S.t>.4&&T-S.t<2.3&&ev.end.type!=='out'){S.wh=true;if(T-S.t>.3)srSndWhistle(T-S.t,SR.v[ev.by].face,ev.am)}
+    if(!S.wh&&S.t>.4&&T-S.t<2.3&&ev.end.type!=='out'){S.wh=true;if(T-S.t>.3){srSndWhistle(T-S.t,SR.v[ev.by].face,ev.am);if(srIsMine(SR.v[1-ev.by])&&ev.end.type!=='out')srSndIncoming(T-S.t)}}
     if(ev.am==='vlap'&&S.t>.45&&S.t<1.35){const p=srShotPos(S,S.t);for(let i=0;i<2;i++)SR.fx.push({k:'j',x:p.x,y:p.y,vx:-p.dx*20+(Math.random()-.5)*20,vy:-p.dy*20+(Math.random()-.5)*20,t:.5,t0:.5})}
     if(S.t>=T){srImpact(ev);SR.phase='boom';SR.t=(ev.delay||0)+2.3-Math.min(1,S.ff||0);S.ff=0}}
   else if(P==='boom'){if((SR.t-=dt)<=0)srAfterShot(SR.shot.ev)}
@@ -545,10 +545,10 @@ function srUpdate(dt,now){const P=SR.phase;
   if(!SR.camFree){
     if(SR.ovw){const [a,b]=SR.v;tx=(a.x+b.x)/2;tz=Math.min(SR.zb,W/(Math.abs(b.x-a.x)+260));ty=Math.min(a.y,b.y)-H*.12/tz}
     else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,p=srShotPos(S,S.t),left=T-S.t;
-      if(left>1.4){tx=p.x;ty=p.y+H*.08/SR.zb;tz=SR.zb*.82}
+      if(left>1.4){const pr=srClamp(S.t/Math.max(.1,T-1.4),0,1);tx=p.x;ty=p.y+H*.05/SR.zb;tz=SR.zb*(srCineOn()?1.05+.3*Math.sin(Math.PI*pr):.82)}
       else{// a végfázisban a lövedék, a becsapódási pont és (ha közel van) a cél együtt kerül a képbe – a kép közepére
         const E=ev.end,tg=SR.v[1-ev.by],pts=[[p.x,p.y],[E.x,E.y],[E.x,E.y-60]];if(Math.abs(tg.x-E.x)<520)pts.push([tg.x-50,tg.y-50],[tg.x+50,tg.y+20]);
-        const F=srFrame(pts,SR.zb*1.35),u=srClamp((1.4-left)/1.1,0,1),e=u*u*(3-2*u),f0=[p.x,p.y+H*.08/SR.zb,SR.zb*.82];tx=f0[0]+(F[0]-f0[0])*e;ty=f0[1]+(F[1]-f0[1])*e;tz=f0[2]+(F[2]-f0[2])*e}}
+        const F=srFrame(pts,SR.zb*1.35),u=srClamp((1.4-left)/1.1,0,1),e=u*u*(3-2*u),f0=[p.x,p.y+H*.05/SR.zb,SR.zb*(srCineOn()?1.05:.82)];tx=f0[0]+(F[0]-f0[0])*e;ty=f0[1]+(F[1]-f0[1])*e;tz=f0[2]+(F[2]-f0[2])*e}}
     else if(P==='boom'||P==='dying'||P==='over'){const d=SR.v.filter(v=>v.dead),pts=[];
       if(SR.subs.length){// SMArt: a kamera az ereszkedő résztölteteket és a célt követi közelről
         const tg=SR.v[1-SR.shot.ev.by];for(const s of SR.subs)if(s.cx!=null)pts.push([s.cx-40,s.cy-30],[s.cx+40,s.cy+20],[s.cx,srGy(s.cx)]);pts.push([tg.x-50,tg.y-40],[tg.x+50,tg.y+16])}
@@ -558,8 +558,9 @@ function srUpdate(dt,now){const P=SR.phase;
       const F=srFrame(pts,SR.zb*1.3),pin=1+Math.min(.12,(SR.camT=(SR.camT||0)+dt)*.04);tx=F[0];ty=F[1];tz=F[2]*pin}
     else if(P==='drop'){const [a,b]=SR.v,pts=[[a.x-60,a.y-40],[b.x+60,b.y-40]];for(const c of SR.crates||[])pts.push([c.x,c.y-30]);const F=srFrame(pts,SR.zb);tx=F[0];ty=F[1];tz=F[2]}
     else{const v=P==='prep'?srCtl():SR.v[SR.turn];tx=v.x+v.face*W*.2/SR.zb*(P==='prep'?-.6:1);ty=v.y-34;tz=SR.zb*(P==='prep'?1.3:1)}}
+  if(SR.cine&&SR.cine.f){const F=SR.cine.f(SR.cine);if(F){tx=F[0];ty=F[1];tz=F[2]}}
   if(P!=='boom'&&P!=='dying'&&P!=='over')SR.camT=0;
-  const fin=P==='fly'&&SR.shot&&(SR.shot.n-1)*SR.shot.ev.dt-SR.shot.t<1.4,k=Math.min(1,dt*(P==='fly'?(fin?5:9):P==='boom'||P==='dying'?2.4:3.2));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*(fin?3.6:2.6))}
+  const fin=P==='fly'&&SR.shot&&(SR.shot.n-1)*SR.shot.ev.dt-SR.shot.t<1.4,k=Math.min(1,dt*(SR.cine&&SR.cine.f?SR.cine.ck||4:P==='fly'?(fin?5:9):P==='boom'||P==='dying'?2.4:3.2));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*(fin?3.6:2.6))}
 // a megadott világpontokat a kép közepére keretezi: [cam.x, cam.y, zoom] (a nézet a képernyő 62%-ánál horgonyzott)
 function srFrame(pts,zmax){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const [x,y] of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
   const W=SR.W,H=SR.H,z=srClamp(Math.min(zmax,W*.7/Math.max(60,x1-x0),H*.46/Math.max(40,y1-y0)),SR.zb*.35,zmax);return [(x0+x1)/2,(y0+y1)/2+H*.14/z,z]}
@@ -823,7 +824,7 @@ function srDraw(now,dt){const c=SR.c,W=SR.W,H=SR.H,cam=SR.cam,z=cam.z,t=now/1000
   if(!LOWFX){if(!SR.vg||SR.vgK!==W+'x'+H){SR.vgK=W+'x'+H;const g=c.createRadialGradient(W/2,H*.5,Math.min(W,H)*.45,W/2,H*.5,Math.max(W,H)*.78);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.42)');SR.vg=g}c.fillStyle=SR.vg;c.fillRect(0,0,W,H)}
   if(SR.flash>0){SR.flash-=dt;c.fillStyle=`rgba(255,200,130,${Math.max(0,SR.flash)*.8})`;c.fillRect(0,0,W,H)}
   if(SR.nkF>0){c.fillStyle=`rgba(255,250,236,${SR.nkF*.6})`;c.fillRect(0,0,W,H)}
-  srHud(c,W,H,t)}
+  srHud(c,W,H,t);srCineDraw(c,W,H,t)}
 function srRR(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h)}
 // életerő-sáv: színátmenetes (zöld→sárga→piros), 10%-os osztásokkal; a friss sebzés fehéren villan, majd pirosan „lefolyik”; alacsony életerőnél pirosan lüktet
 function srHpBar(c,x,y,w,h,v,t,rtl,big){const p=srClamp((v.hpD??v.hp)/100,0,1),g=srClamp((v.hpG??v.hp)/100,0,1),hf=v.hitF||0,low=!v.dead&&v.hp<=30,hue=Math.round(p*120),r=Math.min(h/2,5),fresh=(v.hpGT||0)>0;
@@ -950,7 +951,7 @@ function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;const raw=(no
     else if(fps>56&&SR.q<qb)SR.q=Math.min(qb,SR.q+.1)}}
   srNetPoll();
   if(SR.v&&SR.paused){if(SR.tlEnd)SR.tlEnd=Date.now()+SR.paused.left;if(now-(SR.pzDT||0)>80){SR.pzDT=now;srDraw(now,0);srHudDom()}}
-  else if(SR.v){srUpdate(dt,now);
+  else if(SR.v){dt*=srCineTick(dt);srUpdate(dt,now);
     const ctl=srCtl();if(SR.phase==='aim'&&srMyTurn()&&SR.flares.some(f=>f.by===ctl.i)){const key=[ctl.x|0,ctl.elev,ctl.trav,ctl.sel].join();if(key!==SR.predK){SR.predK=key;SR.pred=srSim(ctl,SR.v[1-ctl.i],ctl.elev,ctl.trav,SR_AM[ctl.sel],false)}}else if(SR.phase==='aim')SR.pred=null;
     srDraw(now,dt);srHudDom()}
   else if(SR.bgK!==SR.W+'x'+SR.H+'@'+SR.dpr){SR.bgK=SR.W+'x'+SR.H+'@'+SR.dpr;const c=SR.c;c.setTransform(SR.dpr,0,0,SR.dpr,0,0);const sky=c.createLinearGradient(0,0,0,SR.H);sky.addColorStop(0,'#241826');sky.addColorStop(.55,'#8e4a2c');sky.addColorStop(1,'#4a2418');c.fillStyle=sky;c.fillRect(0,0,SR.W,SR.H)}
@@ -977,9 +978,9 @@ function srNudgeBind(b){const key=b.dataset.nudge[0]==='e'?'elev':'trav',d=b.dat
   b.addEventListener('pointerdown',e=>{e.preventDefault();ac();try{b.setPointerCapture(e.pointerId)}catch(x){}b.classList.add('on');n=0;srDial(key,d);tm=setTimeout(rep,340)});
   for(const k of ['pointerup','pointercancel','pointerleave'])b.addEventListener(k,stop)}
 function srSwitch(k){if(!SR.v)return;const v=srCtl();if(!(SR.phase==='prep'||srMyTurn()))return;ac();
-  if(k==='load'){if(v.load>=1){toast('A lőszer már bent van: '+srAmmoN(v)+'/60');return}if(!v.loading){v.loading=true;srSwSnd(true);srMsg('A kezelők málházzák a lőszert…',3000)}srUI();return}
+  if(k==='load'){if(v.load>=1){toast('A lőszer már bent van: '+srAmmoN(v)+'/60');return}if(!v.loading){v.loading=true;srSwSnd(true);srMsg('A kezelők málházzák a lőszert…',3000);srCineVeh('load',v)}srUI();return}
   if(v.d[k]>=2){toast('A '+SR_PN[k]+' megsemmisült – nem kapcsolható vissza.');srSwSnd(false);return}
-  v.sys[k]=!v.sys[k];srSwSnd(v.sys[k]);if(v.sys[k]){if(k==='eng'){srSndEngine();setTimeout(()=>{if(SR.v&&SR.run&&srCtl().sys.eng)srEngLoop(true,true)},1400)}else if(k==='rad')srSndRadio();else srSndTurret()}else if(k==='eng'&&!SR.v.some(x=>!x.ai&&x.sys.eng))srEngLoop(false);
+  v.sys[k]=!v.sys[k];srSwSnd(v.sys[k]);if(v.sys[k]&&(k==='eng'||k==='tur'))srCineVeh(k,v);if(v.sys[k]){if(k==='eng'){srSndEngine();setTimeout(()=>{if(SR.v&&SR.run&&srCtl().sys.eng)srEngLoop(true,true)},1400)}else if(k==='rad')srSndRadio();else srSndTurret()}else if(k==='eng'&&!SR.v.some(x=>!x.ai&&x.sys.eng))srEngLoop(false);
   SR.manW=0;srUI()}
 function srUI(){const P=$('#srPanel');if(!P||!SR.v)return;const v=srCtl();
   P.querySelectorAll('[data-sw]').forEach(b=>{const k=b.dataset.sw,on=k==='load'?v.load>=1:v.sys[k],dead=k!=='load'&&v.d[k]>=2;b.classList.toggle('on',on&&!dead);b.classList.toggle('dead',dead);b.classList.toggle('need',!on&&!dead&&!(k==='load'&&v.loading));b.classList.toggle('busy',k==='load'&&v.loading)});
@@ -988,19 +989,75 @@ function srUI(){const P=$('#srPanel');if(!P||!SR.v)return;const v=srCtl();
   $('#srAmI').textContent=v.load>=1&&SR_AM[v.sel]?SR_AM[v.sel].d+' · Valós: '+SR_AM[v.sel].r:'Málházd be a 60 db 155 mm-es gránátot.';
   $('#srDmg').innerHTML=SR_PARTS.map(([k,l])=>`<span class="l${v.d[k]}">${l}</span>`).join('')+`<span class="l${v.crew>=5?0:v.crew>=3?1:2}">KEZELŐK ${v.crew}/5</span>`+(v.burn>0?'<span class="l2">🔥 TŰZ</span>':'');
   $('#srBk').innerHTML=v.face>0?'◀ HÁTRA':'◀ ELŐRE';$('#srFw').innerHTML=v.face>0?'ELŐRE ▶':'HÁTRA ▶'}
+/* ---------- FILMES MÓD: a fontos pillanatokban szélesvásznú sávok, közeli kamera, felirat, lassítás (gép elleni és kétfős módban), filmes hangok.
+   Koppintásra átugorható; a menüben kikapcsolható. Online csak a kamera és a sávok – a játék ideje nem lassul, a köridő a jelenet alatt áll. ---------- */
+function srCineOn(){try{return localStorage.getItem('srCine')!=='0'}catch(e){return true}}
+const srIsMine=v=>!!v&&!v.ai&&(SR.mode!=='net'||v.i===SR.me);
+function srCine(o){if(!srCineOn()||!SR.v)return;o.t=0;o.slowNow=1;if(SR.cine){if((o.pri||1)>(SR.cine.pri||1)){SR.cine=o}else{SR.cineQ=(SR.cineQ||[]).filter(q=>q.kind!==o.kind);SR.cineQ.push(o)}return}SR.cine=o;o.start&&o.start(o)}
+function srCineTick(rdt){const C=SR.cine;{const on=!!C,h=SR.cv&&SR.cv.closest('#harc');if(h&&h.classList.contains('srcine')!==on)h.classList.toggle('srcine',on)}if(!C){SR.cineF=Math.max(0,(SR.cineF||0)-rdt*2.5);return 1}
+  SR.cineF=Math.min(1,(SR.cineF||0)+rdt*3);C.t+=rdt;if(C.tick)C.tick(C,rdt);
+  if(SR.tlEnd&&SR.phase==='aim')SR.tlEnd+=rdt*1000;// a köridő áll a jelenet alatt
+  const sl=C.slow?C.slow(C):1;C.slowNow=sl;
+  if(C.t>=C.T){SR.cine=null;const nx=(SR.cineQ||[]).shift();if(nx&&(!nx.ok||nx.ok())){SR.cine=nx;nx.t=0;nx.start&&nx.start(nx)}}
+  return SR.mode==='net'?1:sl}
+function srCineVeh(k,v){if(!srIsMine(v)||(v.cine=v.cine||{})[k])return;v.cine[k]=1;
+  const L={eng:['MOTORINDÍTÁS','MTU 881 Ka-500 · 1000 LE dízel',2.6],tur:['TORONY · HIDRAULIKA','pneumatikus-hidraulikus toronyhajtás',2],load:['MÁLHÁZÁS','60 × 155 mm gránát · töltőautomata',2.6]}[k];
+  srCine({kind:k,pri:1,T:L[2],cap:L[0],sub:L[1],ck:3.2,ok:()=>SR.v&&!v.dead,
+    f:()=>{const p=k==='eng'?srLocal(v,30,-14):k==='tur'?srLocal(v,-8,-34):{x:v.x-v.face*84,y:srGy(v.x-v.face*84)-14};return [p.x+v.face*8,p.y-4+SR.H*.08/(SR.zb*2.4),SR.zb*(k==='load'?2.1:2.5)]},
+    start:()=>{if(k==='eng')srSndBraam(.5,1.8);if(k==='tur')srSndHiss()},
+    tick:(C,dt)=>{if(Math.random()<dt*(k==='eng'?30:k==='tur'?14:0)){const p=k==='eng'?srLocal(v,36,-14):srLocal(v,-8+(Math.random()-.5)*30,-30);
+      SR.fx.push(k==='eng'?{k:'s',x:p.x,y:p.y,vx:-v.face*20+(Math.random()-.5)*10,vy:-30-Math.random()*20,r0:2,r1:14+Math.random()*10,t:1.6,t0:1.6,c:C.t<.9?'22,20,18':'80,76,70',al:.6,w:1}
+       :{k:'s',x:p.x,y:p.y,vx:(Math.random()-.5)*40,vy:-10-Math.random()*16,r0:1,r1:7,t:.7,t0:.7,c:'235,238,240',al:.5,w:1})}
+      if(k==='eng'&&C.t<1.2)SR.shake=Math.max(SR.shake,.08)}})}
+function srCineFire(v,ev){if(!srCineOn())return;const mine=srIsMine(v),first=!SR.cineFire;SR.cineFire=1;const am=SR_AM[ev.am];
+  if(first)srSndBraam(.7,2.4);
+  srCine({kind:'fire',pri:2,T:mine?1.25:.9,cap:'TŰZ!',sub:(am?am.n:'')+(mine?'':' · '+v.name),ck:6,hot:1,
+    f:()=>{const m=srMuzzle(v,v.elev);return [m.x-v.face*30,m.y+SR.H*.05/(SR.zb*2.3),SR.zb*2.3]},
+    slow:C=>C.t<.55?.28:C.t<1?.28+(C.t-.55)/.45*.72:1})}
+function srCineKill(v){if(!srCineOn())return;srSndBraam(1,3.6);srSndHeart();SR.sec=[{t:1.3,v},{t:2.6,v},{t:3.9,v}];
+  srCine({kind:'kill',pri:3,T:6.4,cap:'KILŐVE!',sub:v.name,ck:2.2,red:1,skip:true,
+    f:C=>{const u=srClamp((C.t-1.6)/4.8,0,1),e=u*u*(3-2*u),pts=[[v.x-60,v.y-60],[v.x+60,v.y+20]];for(const m of SR.bail||[])if(m.dl<=0)pts.push([m.x,m.y-10]);const F=srFrame(pts,SR.zb*2.2);return [F[0],F[1],F[2]*(1.18-.5*e)]},
+    slow:C=>C.t<1.7?.25:C.t<2.6?.25+(C.t-1.7)/.9*.75:1,
+    tick:(C,dt)=>{for(const q of SR.sec||[]){if(q.done||C.t<q.t)continue;q.done=1;const x=q.v.x+(Math.random()-.5)*30,y=q.v.y-20;srBoomHE(x,y+16,1.1+Math.random()*.4,0);srSparks(x,y,30);srShards(x,y,24,420,true);sndMega();SR.shake=Math.max(SR.shake,.6);SR.flash=Math.max(SR.flash,.35)}}})}
+function srCineDraw(c,W,H,t){const f=SR.cineF||0;if(f<=0)return;const C=SR.cine,e=f*f*(3-2*f),bh=Math.round(Math.min(H*.12,64)*e);
+  c.save();c.setTransform(SR.dpr,0,0,SR.dpr,0,0);c.fillStyle='#000';c.fillRect(0,0,W,bh);c.fillRect(0,H-bh,W,bh);
+  if(C&&bh>8){const a=srClamp(Math.min(C.t*3,(C.T-C.t)*3),0,1);c.globalAlpha=a;c.textAlign='center';c.textBaseline='middle';
+    const big=Math.min(bh*.62,C.kind==='kill'?40:30);c.font=`400 ${big|0}px ${SR_CFONT}`;c.lineWidth=Math.max(3,big*.14);c.strokeStyle='#000';c.lineJoin='round';
+    const col=C.red?'#ff4a3a':C.hot?'#ffd23a':'#f3ecd4',ty=H-bh/2+(C.kind==='kill'?Math.sin(t*30)*(C.t<.6?3:0):0);c.strokeText(C.cap,W/2,ty);c.fillStyle=col;c.fillText(C.cap,W/2,ty);
+    if(C.sub){c.font=`700 ${Math.max(10,bh*.26)|0}px system-ui`;c.fillStyle='rgba(243,236,212,.85)';c.fillText(C.sub,W/2,bh/2)}
+    if(C.slowNow<.9&&SR.mode!=='net'){c.font='800 10px ui-monospace,monospace';c.textAlign='right';c.fillStyle='rgba(255,210,58,.8)';c.fillText('◉ LASSÍTÁS',W-10,bh/2)}
+    c.font='700 9px system-ui';c.textAlign='left';c.fillStyle='rgba(255,255,255,.35)';if(C.skip!==false)c.fillText('koppints: tovább',10,bh/2)}
+  c.restore()}
+// filmes hangok: mély „braam” (elhangolt fűrészfogak zúgó szűrővel), szívdobogás, a saját löveg felé zuhanó gránát vészjósló süvítése, hörgés
+function srSndBraam(vol,dur){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,lp=a.createBiquadFilter(),g=a.createGain();lp.type='lowpass';lp.Q.value=6;lp.frequency.setValueAtTime(160,t);lp.frequency.exponentialRampToValueAtTime(1300,t+.35);lp.frequency.exponentialRampToValueAtTime(220,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32*vol,t+.12);g.gain.exponentialRampToValueAtTime(.0001,t+dur);lp.connect(g).connect(MASTER);
+  for(const [f,d] of [[49,0],[49.7,0],[73.4,0],[98.6,0]]){const o=a.createOscillator();o.type='sawtooth';o.frequency.value=f+d;o.connect(lp);o.start(t);o.stop(t+dur+.05)}
+  srSub(t,60,32,dur*.8,.9*vol);srNoise(t,dur*.6,.08*vol,'lowpass',900,120)}catch(e){}}
+function srSndHeart(){if(!srSnd())return;const t=AC.currentTime+.05;for(let i=0;i<5;i++){const b=t+i*.95;srThump(b,52,.6,.16);srThump(b+.26,46,.42,.14)}}
+function srSndIncoming(dur){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,e=t+dur,g=a.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,e-.15);g.gain.exponentialRampToValueAtTime(.0001,e);g.connect(MASTER);
+  for(const d of [0,7]){const o=a.createOscillator();o.type='sine';o.frequency.setValueAtTime(2600+d,t);o.frequency.exponentialRampToValueAtTime(560+d*3,e);o.connect(g);o.start(t);o.stop(e+.02)}
+  const tr=a.createOscillator(),tg=a.createGain();tr.frequency.value=11;tg.gain.value=.04;tr.connect(tg).connect(g.gain);tr.start(t);tr.stop(e)}catch(e){}}
+function srSndGroan(m){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,d=.9+Math.random()*.8,f=95+Math.random()*45,o=a.createOscillator(),fm=a.createBiquadFilter(),fm2=a.createBiquadFilter(),g=a.createGain(),pn=a.createStereoPanner?a.createStereoPanner():null,
+    vol=.3*srClamp(1.4-Math.abs(m.x-SR.cam.x)/900,.25,1),jit=a.createOscillator(),jg=a.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(f*1.15,t);o.frequency.exponentialRampToValueAtTime(f*.8,t+d);jit.type='square';jit.frequency.value=23+Math.random()*9;jg.gain.value=f*.08;jit.connect(jg).connect(o.frequency);// érdes, recsegő torokhang
+  fm.type='bandpass';fm.frequency.value=480+Math.random()*120;fm.Q.value=4;fm2.type='bandpass';fm2.frequency.value=900;fm2.Q.value=5;o.connect(fm).connect(g);o.connect(fm2).connect(g);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.18);g.gain.setValueAtTime(vol*.8,t+d*.6);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  if(pn){pn.pan.value=srClamp((m.x-SR.cam.x)*SR.cam.z/(SR.W/2||200),-1,1);g.connect(pn).connect(MASTER)}else g.connect(MASTER);
+  o.start(t);jit.start(t);o.stop(t+d+.05);jit.stop(t+d+.05);srNoise(t,d*.9,.03,'bandpass',700,400,1.5)}catch(e){}}
 /* ---------- végzetes találat: a túlélő kezelők kiugranak a lövegből – lángolva futnak, a földön gurulva oltják magukat, kúsznak, sikoltoznak ---------- */
 function srBailOut(v){const n=Math.max(2,Math.min(5,v.crew||0));SR.bail=SR.bail||[];
   for(let i=0;i<n;i++){const hatch=i===0?{x:v.x+v.face*28,y:v.y-20}:{x:v.x-v.face*(4+Math.random()*14),y:v.y-34},dir=Math.random()<.72?-v.face:v.face,burn=Math.random()<.7;
     SR.bail.push({x:hatch.x,y:hatch.y,vx:dir*(35+Math.random()*60),vy:-(95+Math.random()*70),dir,st:'air',dl:.15+i*.32+Math.random()*.2,t:0,ph:Math.random()*6,
-      fire:burn?3.5+Math.random()*3:0,char:0,sc:.1+Math.random()*.6,smk:0,roll:Math.random()<.75,hurt:Math.random()<.5})}}
+      fire:burn?3.5+Math.random()*3:0,char:0,sc:.1+Math.random()*.6,smk:0,roll:Math.random()<.6,hurt:Math.random()<.5})}}
 function srBailTick(c,dt,t){const B=SR.bail;if(!B||!B.length)return;
   for(const m of B){if(m.dl>0){m.dl-=dt;continue}m.t+=dt;m.ph+=dt*(m.st==='run'?16:m.st==='crawl'?6:m.st==='air'?20:0);
     if(m.fire>0){m.fire-=dt*(m.st==='roll'?3.2:1);m.char=Math.min(1,m.char+dt*.25);if((m.smk-=dt)<=0){m.smk=.07;SR.fx.push({k:'s',x:m.x+(Math.random()-.5)*4,y:m.y-14,vx:(Math.random()-.5)*8,vy:-26-Math.random()*16,r0:2,r1:10+Math.random()*8,t:1.4,t0:1.4,c:'58,52,46',al:.55,w:1})}}
-    if((m.sc-=dt)<=0&&m.st!=='lie'){m.sc=m.fire>0?1.1+Math.random()*1.2:2.5+Math.random()*3;srSndScream(m)}
+    if((m.sc-=dt)<=0&&!m.still){if(m.st==='crawl'||m.st==='lie'||m.st==='fall'){m.sc=1.6+Math.random()*2.4;srSndGroan(m);if(m.st==='lie'&&(m.gr=(m.gr||0)+1)>=2)m.still=1}else{m.sc=m.fire>0?1.1+Math.random()*1.2:2.5+Math.random()*3;srSndScream(m)}}
     const gy=srGy(m.x);
     if(m.st==='air'){m.vy+=420*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;if(m.y>=gy&&m.vy>0){m.y=gy;srDust(m.x,.18,2);m.st=m.fire>0||!m.hurt?'run':'crawl';m.t=0}}
     else if(m.st==='run'){const zig=m.fire>0?Math.sin(m.t*7+m.ph)*.6:0;m.x+=m.dir*(m.fire>0?52:40)*(1+zig*.4)*dt;m.y=srGy(m.x);if(m.fire>0&&Math.random()<dt*1.5)m.dir=-m.dir*(Math.random()<.3?1:-1);
-      if(m.t>(m.fire>0?1.3:.9)){m.st=m.fire>0&&m.roll?'roll':'crawl';m.t=0}}
+      if(m.t>(m.fire>0?1.3:.9)){m.st=m.fire>0&&!m.roll?'fall':m.fire>0?'roll':'crawl';m.t=0}}
+    else if(m.st==='fall'){m.x+=m.dir*18*(1-Math.min(1,m.t/.5))*dt;m.y=srGy(m.x);if(m.t>.55){m.st='lie';m.t=0;srDust(m.x,.15,2);m.sc=Math.min(m.sc,.3)}}
     else if(m.st==='roll'){m.x+=m.dir*14*dt;m.y=srGy(m.x);if(m.t>1.5){m.fire=m.fire>0&&Math.random()<.35?Math.min(m.fire,1.2):0;m.st='crawl';m.t=0}}
     else if(m.st==='crawl'){m.x+=m.dir*(m.hurt?6:10)*dt;m.y=srGy(m.x);if(m.t>5+m.ph%3&&m.fire<=0){m.st='lie';m.t=0}}
     else m.y=gy;
@@ -1011,7 +1068,8 @@ function srDrawBail1(c,m,t,ink){const s=1.75,ph=m.ph,uni=ink?'#111':m.char>.5?'#
   c.save();c.translate(m.x,m.y);c.scale(m.dir*s,s);c.lineCap='round';c.lineJoin='round';
   const limb=(x0,y0,x1,y1,col,w)=>{c.strokeStyle=col;c.lineWidth=w+(ink?1.3:0);c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke()};
   const box=(x,y,w,h,col)=>{c.fillStyle=col;ink?c.fillRect(x-.65,y-.65,w+1.3,h+1.3):c.fillRect(x,y,w,h)},dot=(x,y,r,col)=>{c.fillStyle=col;c.beginPath();c.arc(x,y,r+(ink?.65:0),0,7);c.fill()};
-  if(m.st==='air'||m.st==='run'){const a=m.st==='air',sw=Math.sin(ph)*(a?2.5:3.4),up=m.fire>0||a;
+  if(m.st==='fall'){c.rotate(Math.min(1.45,m.t/.5*1.45))}
+  if(m.st==='air'||m.st==='run'||m.st==='fall'){const a=m.st==='air',sw=Math.sin(ph)*(a?2.5:3.4),up=m.fire>0||a;
     limb(0,-6,sw,0,boot,1.6);limb(0,-6,-sw,0,boot,1.6);c.save();c.rotate(a?-.25:.18);box(-1.8,-12.2,3.6,6.8,uni);
     limb(0,-11,up?2+Math.sin(ph*1.3)*2:sw*.6,up?-16-Math.cos(ph)*1.5:-7,uni,1.4);limb(0,-11,up?-2+Math.cos(ph*1.1)*2:-sw*.6,up?-15.5-Math.sin(ph)*1.5:-7,uni,1.4);
     dot(0,-13.8,1.8,skin);if(m.char<.8&&!ink){c.fillStyle=hel;c.beginPath();c.arc(0,-14.2,2,Math.PI,0);c.fill()}
@@ -1021,7 +1079,7 @@ function srDrawBail1(c,m,t,ink){const s=1.75,ph=m.ph,uni=ink?'#111':m.char>.5?'#
     limb(-3,-1.2,-8,-1+k*1.4,boot,1.6);limb(-3,-1.2,-7.6,-.2-k*1.4,boot,1.6);box(-3.5,-3,7,2.6,uni);
     limb(2.4,-2.2,5+k*1.6,-.2,uni,1.4);limb(2.4,-2.2,4.2-k*1.6,-.1,uni,1.4);dot(5.2,-3.2,1.7,skin);if(m.char<.8&&!ink){c.fillStyle=hel;c.beginPath();c.arc(5.4,-3.6,1.9,Math.PI*1.1,Math.PI*2.1);c.fill()}}
   c.restore();if(ink)return;
-  if(m.fire>0){const prone=m.st==='crawl'||m.st==='lie'||m.st==='roll',fx=m.x,fy=m.y-(prone?4:12),hgt=prone?10:18,wid=prone?14:7;c.save();c.globalCompositeOperation='lighter';
+  if(m.fire>0){const prone=m.st==='crawl'||m.st==='lie'||m.st==='roll'||m.st==='fall',fx=m.x,fy=m.y-(prone?4:12),hgt=prone?10:18,wid=prone?14:7;c.save();c.globalCompositeOperation='lighter';
     for(let i=0;i<5;i++){const f=Math.sin(t*23+i*1.9+m.ph),ox=(i-2)*wid*.28+f*1.2,h=hgt*(.6+.4*Math.abs(Math.sin(t*17+i))),g=c.createRadialGradient(fx+ox,fy,0,fx+ox,fy-h*.4,h*.75);
       g.addColorStop(0,'rgba(255,240,170,.9)');g.addColorStop(.45,'rgba(255,140,30,.65)');g.addColorStop(1,'rgba(200,40,0,0)');c.fillStyle=g;c.beginPath();c.moveTo(fx+ox-wid*.35,fy+3);c.quadraticCurveTo(fx+ox-wid*.4,fy-h*.5,fx+ox+f*2,fy-h);c.quadraticCurveTo(fx+ox+wid*.4,fy-h*.5,fx+ox+wid*.35,fy+3);c.fill()}
     c.restore()}}
@@ -1037,14 +1095,15 @@ function srSndScream(m){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,ho
   if(pn){pn.pan.value=srClamp((m.x-SR.cam.x)*SR.cam.z/(SR.W/2||200),-1,1);out.connect(pn).connect(MASTER)}else out.connect(MASTER);
   o.start(t);lfo.start(t);o.stop(t+d+.05);lfo.stop(t+d+.05);srNoise(t,d*.8,.025,'bandpass',1900,1100,2)}catch(e){}}
 /* ---------- az üzenetek (középső üzenet, figyelmeztetés) oda kerülnek, ahol nem takarják a lövegeket és a fölöttük lévő sávokat ---------- */
-function srMsgPlace(){const now=performance.now();if(now-(SR.mpT||0)<120)return;SR.mpT=now;if(!SR.cv||!SR.v)return;
+function srMsgPlace(){const now=performance.now();if(now-(SR.mpT||0)<(SR.cine?60:120))return;SR.mpT=now;if(!SR.cv||!SR.v)return;
   const els=[$('#srMsg'),$('#srAlert')].filter(e=>e&&!e.hidden);if(!els.length)return;
   const z=SR.cam.z,W=SR.W,H=SR.H,sx=x=>(x-SR.cam.x)*z+W/2,sy=y=>(y-SR.cam.y)*z+H*.62,obs=[];
   for(const v of SR.v)obs.push([sx(v.x-62),sy(v.y-80),sx(v.x+62),sy(v.y+14)]);
   for(const m of SR.bail||[])if(m.dl<=0)obs.push([sx(m.x-14),sy(m.y-26),sx(m.x+14),sy(m.y+4)]);
+  if(SR.cine){const bh=Math.min(H*.12,64);obs.push([0,0,W,bh],[0,H-bh,W,H])}
   const base=SR.mBase||(SR.mBase={});
   for(const el of els){const id=el.id;if(base[id]==null){el.style.top='';base[id]=parseFloat(getComputedStyle(el).top)||60}
-    const w=el.offsetWidth,h=el.offsetHeight,L=W/2-w/2,R=W/2+w/2,maxY=Math.max(base[id],H-h-(srFold().d?38:SR.H<420?60:76));let best=null;
+    const w=el.offsetWidth,h=el.offsetHeight,L=W/2-w/2,R=W/2+w/2,maxY=Math.max(base[id],H-h-(srFold().d?38:SR.H<420?60:76)-(SR.cine?Math.min(H*.12,64):0));let best=null;
     for(let y=base[id];y<=maxY;y+=12){let ov=0;for(const o of obs){const ix=Math.max(0,Math.min(R,o[2])-Math.max(L,o[0])),iy=Math.max(0,Math.min(y+h,o[3])-Math.max(y,o[1]));ov+=ix*iy}
       if(!best||ov<best.ov)best={y,ov};if(ov===0)break}
     const ny=Math.round(best.y)+'px';if(el.style.top!==ny)el.style.top=ny;obs.push([L,best.y-4,R,best.y+h+4])}}
@@ -1203,13 +1262,13 @@ function srMenu(){srLoaderHum(false,true);SR.v=null;SR.bgK=null;{const h=$('#har
     <div class="srcard"><button type="button" class="srcbtn" id="srCNet"><i class="ib-blue">${ic('globe')}</i><span><b>Barát ellen – online</b><small>Küldj neki meghívót, ő egy koppintással belép</small></span></button></div>
     <div class="srcard"><button type="button" class="srcbtn" id="srHotB"><i class="ib-red">${ic('phone')}</i><span><b>Ketten egy telefonon</b><small>Felváltva lőtök ugyanazon a készüléken</small></span></button></div>
    </div>
-   <button type="button" class="srrot cb c-dark" id="srRot">${ic('rotate')}Fekvő mód</button>
+   <button type="button" class="srrot cb c-dark" id="srRot">${ic('rotate')}Fekvő mód</button><button type="button" class="srcineb cb c-dark" id="srCineB">🎬 Filmes mód: ${srCineOn()?'BE':'KI'}</button>
    <details class="srhelp"><summary>📖 Kezelés és lőszerek</summary><div class="dinfo"><b>Kezelés</b><span>Indítás</span><i>MOTOR · RÁDIÓ · TORONY · MÁLHÁZÁS</i><span>Irányzék</span><i>húzd a skálát, a ± gomb 1 vonás</i><span>Rádió</span><i>szél (METEO) + megfigyelő jelentése</i><span>GPS</span><i>a GPS-es gránátok (Excalibur, Vulcano, PGK) irányítása – sérülten pontatlan, kiesve irányítás nélkül repülnek</i><span>Mozgás</span><i>körönként korlátozott táv</i><span>Köridő</span><i>120 mp – lejártakor a kör kimarad</i><span>Sérülés</span><i>a kiesett rendszert kapcsold vissza</i>
    <b data-st="margin-top:6px">155 mm-es gránátok (60 db)</b>${SR_AMMO.map(a=>`<span>${a.n}<br><em>${a.q} db</em></span><i>${a.d}<small>${a.r}</small></i>`).join('')}</div><p class="srhint">A valós adatok nyilvános gyártói és sajtóforrásokból származnak, tájékoztató jellegűek. A játékbeli lőtáv a pályához van arányítva.</p></details>`;
   s.hidden=false;s.scrollTop=0;
   $('#srCAi').onclick=()=>{const l=$('#srLv'),o=l.hidden;l.hidden=!o;$('#srCAi').setAttribute('aria-expanded',o)};
   s.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{ac();srBegin('ai',{lvl:+b.dataset.lvl})});
-  $('#srHotB').onclick=()=>{ac();srNetLeave();srBegin('hot',{})};const rb=$('#srRot');if(rb)rb.onclick=srLandscape;$('#srCNet').onclick=()=>srNetMenu();
+  $('#srHotB').onclick=()=>{ac();srNetLeave();srBegin('hot',{})};const rb=$('#srRot');if(rb)rb.onclick=srLandscape;{const cb=$('#srCineB');if(cb)cb.onclick=()=>{const on=!srCineOn();try{localStorage.setItem('srCine',on?'1':'0')}catch(e){}cb.textContent='🎬 Filmes mód: '+(on?'BE':'KI');srClick(1)}}$('#srCNet').onclick=()=>srNetMenu();
   if(sv){$('#srResB').onclick=()=>{ac();srResume()};$('#srResDel').onclick=()=>{if(confirm('Törlöd a mentett állást?')){srSaveDel();srMenu()}}}
   pzhFullSet()}
 // online párbaj: két nagy választás – meghívót küldök / kaptam kódot
@@ -1266,7 +1325,7 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
   $('#srCam').onclick=()=>{if(SR.camFree||SR.ovw){SR.camFree=false;SR.ovw=false}else SR.ovw=true};
   let pid=null,lx=0,ly=0,mv=0;cv.addEventListener('pointerdown',e=>{pid=e.pointerId;lx=e.clientX;ly=e.clientY;mv=0;try{cv.setPointerCapture(pid)}catch(x){}});
   cv.addEventListener('pointermove',e=>{if(e.pointerId!==pid||!SR.v||SR.phase==='fly')return;const dx=e.clientX-lx,dy=e.clientY-ly;mv+=Math.abs(dx)+Math.abs(dy);if(mv<8)return;lx=e.clientX;ly=e.clientY;SR.camFree=true;SR.ovw=false;SR.cam.x=srClamp(SR.cam.x-dx/SR.cam.z,0,SR_W);SR.cam.y=srClamp(SR.cam.y-dy/SR.cam.z,0,760)});
-  const up=e=>{if(e.pointerId!==pid)return;pid=null;if(mv<8&&e.type==='pointerup'&&SR.v){const r=cv.getBoundingClientRect();srFoldTap(e.clientX-r.left,e.clientY-r.top)}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  const up=e=>{if(e.pointerId!==pid)return;pid=null;if(mv<8&&e.type==='pointerup'&&SR.cine&&SR.cine.skip!==false){SR.cine.t=SR.cine.T;return}if(mv<8&&e.type==='pointerup'&&SR.v){const r=cv.getBoundingClientRect();srFoldTap(e.clientX-r.left,e.clientY-r.top)}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   SR.key=e=>{if(!SR.v||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const d=e.type==='keydown',s=e.shiftKey?10:1;
     if(SR.paused&&e.key!=='Escape'&&e.key!=='p'&&e.key!=='P')return;
     if(e.key==='a'||e.key==='A'){SR.mv=d?-1:SR.mv===-1?0:SR.mv;return}if(e.key==='d'||e.key==='D'){SR.mv=d?1:SR.mv===1?0:SR.mv;return}if(!d)return;

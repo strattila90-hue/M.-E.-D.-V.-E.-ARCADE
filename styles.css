@@ -1614,3 +1614,5 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 /* ===== Shot&Run 4.27.0 – az üzenetek a lövegeket kikerülve, finoman csúsznak a helyükre ===== */
 #harc.sr .srmsg{transition:top .28s ease}
 #harc.sr .sralert{transition:opacity .22s,transform .22s,top .28s ease}
+.srcineb{width:100%;min-height:42px;font-size:16px;margin:0 0 12px}
+#harc.srcine .srall,#harc.srcine .srtut,#harc.srcine .srcam,#harc.srcine .srmsg{opacity:0;pointer-events:none;transition:opacity .2s}
