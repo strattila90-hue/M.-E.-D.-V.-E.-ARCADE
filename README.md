@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.26.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.27.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.27.0:** Shot&Run: a játék közbeni üzenetek (megfigyelői jelentés, „TŰZPÁRBAJ!”, figyelmeztetések) automatikusan oda csúsznak, ahol nem takarják a lövegeket, a fölöttük lévő életerő-sávot és a kiugró kezelőket; ha két üzenet van, egymást sem fedik. Végzetes találatnál a túlélő kezelők (legalább 2) kiugranak a lövegből a búvónyílásokon: sokan lángolva, kapálózva futnak, a földön gurulva oltják magukat, majd kúszva menekülnek, a sérültek rögtön kúsznak; a lángok füstölnek, az égett egyenruha megfeketedik; mindegyik sikoltozik (szintetizált, térben elhelyezett hang). A „kilőve” jelenet ilyenkor hosszabb, hogy látszódjon.
 
 **v4.26.0:** Gyorsabb indulás: a két legnagyobb játék (SERE Kitörés, Shot&Run) külön fájlba került (`sere.js`, `sr.js`), az `app.js` 1 MB-ról 562 KB-ra csökkent (tömörítve 371 → 204 KB). A kezdőlap így hamarabb megjelenik; a két játék a kezdőlap után a háttérben töltődik le (és offline is tárolódik), így a megnyitásuk ugyanolyan gyors. Shot&Run: **új, sérülhető alkatrész: GPS-vevő** – a GPS-es gránátok (Excalibur, Vulcano, PGK) sérült vevővel pontatlanabbak és gyengébben korrigálnak (közvetlen találat kb. 50% → 20%), kiesett vevővel irányítás nélkül, ballisztikusan repülnek; az adatdoboz figyelmeztet, a gép nem lő GPS-es gránátot kiesett vevővel; a FELÜLNÉZET kijelző a rádió vagy a GPS sérülésétől is megreped („GPS KIESETT”, „RÁDIÓ+GPS KIESETT”).
 
