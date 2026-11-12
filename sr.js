@@ -174,6 +174,93 @@ function srMetal(t,base,vol,dur){for(const [r,a] of [[1,1],[2.32,.6],[3.71,.42],
   srNoise(t,.03,vol*1.6,'bandpass',base*4,null,2)}
 function srThump(t,f,vol,dur){const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(f*1.6,t);o.frequency.exponentialRampToValueAtTime(f,t+.05);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(SR_DST||MASTER);o.start(t);o.stop(t+dur+.02)}
 // dízel alapjárati hurok: V8, 750/perc → 50 gyújtás/mp; egyenetlen gyújtások, szelepzörgés, mechanikai zaj – egész számú gyújtásból, hézagmentesen ismételhető
+/* ---------- élethű, mintánként kiszámolt (procedurális) hangok: egyszer készülnek el, utána gyorsítótárból szólnak ---------- */
+const SRB={};
+function srB(key,dur,fill){const c=SRB[key];if(c&&c.ac===AC)return c.b;const fs=22050,n=Math.round(dur*fs),b=AC.createBuffer(1,n,fs),d=b.getChannelData(0),R=Math.random;
+  const H={fs,n,R,
+    burst:(t0,f,a,tau,len)=>{const i0=Math.max(0,t0*fs|0),m=Math.min(n-i0,len*fs|0),w=2*Math.PI*f/fs;for(let i=0;i<m;i++)d[i0+i]+=a*Math.exp(-i/fs/tau)*Math.sin(w*i)},
+    nb:(t0,a,tau,len,k)=>{const i0=Math.max(0,t0*fs|0),m=Math.min(n-i0,len*fs|0);let y=0;for(let i=0;i<m;i++){y+=(R()*2-1-y)*k;d[i0+i]+=a*Math.exp(-i/fs/tau)*y}},
+    metal:(t0,base,a,modes)=>{for(const [r,g,tau] of modes)H.burst(t0,base*r*(1+(R()-.5)*.01),a*g,tau,tau*5)},
+    rz:(f,bw)=>{const r=Math.exp(-Math.PI*bw/fs);let a1=2*r*Math.cos(2*Math.PI*f/fs),a2=-r*r,y1=0,y2=0;const F=x=>{const y=x*(1-r)+a1*y1+a2*y2;y2=y1;y1=y;return y};F.set=(f2,bw2)=>{const r2=Math.exp(-Math.PI*bw2/fs);a1=2*r2*Math.cos(2*Math.PI*f2/fs);a2=-r2*r2};return F}};
+  fill(d,H);let m=0;for(let i=0;i<n;i++)m=Math.max(m,Math.abs(d[i]));if(m>0)for(let i=0;i<n;i++)d[i]*=.95/m;SRB[key]={b,ac:AC};return b}
+function srPlayB(b,vol,dl,pan){const a=AC,t=a.currentTime+(dl||0)+.01,s=a.createBufferSource(),g=a.createGain();s.buffer=b;g.gain.value=vol;let o=s.connect(g);if(pan&&a.createStereoPanner){const p=a.createStereoPanner();p.pan.value=pan;o=o.connect(p)}o.connect(MASTER);s.start(t);return {s,g,t}}
+// MTU V12 dízel indítása: főkapcsoló-relé, üzemanyag-szivattyú, önindító-mágneskapcsoló és fogaskerék-kapcsolódás, áttekerés (a kompressziós ütemeknél
+// az önindító lelassul), első gyújtások, beindulás, az önindító leválása és szabadonfutása, felpörgés turbósivítással, visszaállás alapjáratra
+const SR_ENG_CATCH=2.02;
+function srEngStartBuf(){return srB('engStart',3.45,(d,H)=>{const {fs,n,R,burst,nb}=H,tc=SR_ENG_CATCH;
+  nb(0,.5,.002,.01,1);burst(0,1800,.25,.012,.05);burst(0,3100,.15,.008,.04);
+  {let ph=0;for(let i=.05*fs|0;i<.6*fs;i++){const t=i/fs,u=(t-.05)/.55,env=Math.min(1,u*6)*Math.min(1,(1-u)*8);ph+=(150+60*Math.min(1,u*3))/fs;d[i]+=env*.06*(Math.sin(2*Math.PI*ph)+.5*Math.sin(4*Math.PI*ph)+.3*Math.sin(16*Math.PI*ph))}}
+  burst(.6,85,.7,.05,.25);burst(.6,720,.25,.03,.12);burst(.6,1650,.12,.02,.08);nb(.6,.35,.03,.08,.5);
+  let crk=0,stp=0,hp=0;
+  for(let i=.63*fs|0;i<(tc+.06)*fs;i++){const t=i/fs,ramp=Math.min(1,(t-.63)/.18),rpm=(150+40*Math.min(1,(t-.63)/1.2))*ramp,prev=crk;crk+=rpm/60*6/fs;
+    const L=Math.pow(Math.max(0,Math.sin(2*Math.PI*(crk%1))),3),f=ramp*(105-30*L)*(rpm/170+.2);stp+=f/fs;const sp=2*Math.PI*stp;
+    let x=0;for(let h=1;h<=7;h++)x+=Math.sin(sp*h+h)/Math.pow(h,1.1);x=x*.16+Math.sin(sp*11)*.05;const z=R()*2-1;hp=.7*hp+.3*z;x+=(z-hp)*.05;
+    d[i]+=x*(t>tc?Math.max(0,1-(t-tc)/.05):1)*(.55+.45*ramp);
+    if(Math.floor(crk)!==Math.floor(prev)&&t<tc){burst(t,42+R()*8,.45,.045,.15);nb(t,.12,.03,.08,.15);
+      if(t>1.62&&R()<(t-1.62)*1.6){burst(t+.01,70+R()*15,.9,.03,.12);nb(t+.01,.35,.012,.04,.35);burst(t+.012,600,.12,.006,.02)}}}
+  {let ph=0;for(let i=tc*fs|0;i<(tc+.35)*fs;i++){const t=i/fs-tc;ph+=(180+500*Math.min(1,t/.06)*Math.exp(-t/.2))/fs;d[i]+=.12*Math.exp(-t/.12)*Math.sin(2*Math.PI*ph)*(1+.5*Math.sin(4*Math.PI*ph))}}
+  {let fp=0,tp=0,ex=0;for(let i=tc*fs|0;i<n;i++){const t=i/fs-tc,F=t<.35?25+115*t/.35:50+90*Math.exp(-(t-.35)/.32),prev=fp;fp+=F/fs;
+    if(Math.floor(fp)!==Math.floor(prev)){const k=Math.floor(fp),a=(.75+R()*.25)*(k%2?.85:1)*(k%12===5?.75:1)*(t<.12?1.25:1)*.8;burst(i/fs,78+R()*14,a,.0065,.04);burst(i/fs,620+R()*60,a*.22,.0016,.012);nb(i/fs+.004,a*.18,.0007,.005,1)}
+    const rp=Math.min(1,F/140);tp+=(2300+2000*rp)/fs;d[i]+=.035*rp*rp*Math.sin(2*Math.PI*tp);ex+=(R()*2-1-ex)*.08;d[i]+=ex*.25*rp}}
+  {let y=0;const k=.35;for(let i=tc*fs|0;i<n;i++){y+=(d[i]-y)*k;d[i]=y}}
+  for(let i=(3.1*fs)|0;i<n;i++)d[i]*=Math.max(0,1-(i/fs-3.1)/.35)})}
+function srSndEngine(){if(!srSnd())return;srPlayB(srEngStartBuf(),.42)}
+// harctéri rádió (SINCGARS-szerű): forgókapcsoló reteszei, bekapcsoló relé, inverter-zúgás, önteszt-sípolás, frekvenciaugratásos szinkron-csipogás,
+// zajzár nyit, formánsokkal szintetizált, sávszűrt, torzított beszéd („Rádiópróba, vétel”), nyugtázó sípszó, zajzár-csattanás
+function srRadioBuf(){return srB('radio',2.35,(d,H)=>{const {fs,n,R,burst,nb,rz}=H;
+  for(const t0 of [0,.07,.14]){nb(t0,.6,.0008,.004,1);burst(t0,2400,.25,.006,.02);burst(t0,4100,.15,.004,.015)}
+  burst(.2,110,.35,.03,.1);nb(.2,.2,.004,.02,.6);
+  {let ph=0;for(let i=.22*fs|0;i<.95*fs;i++){const t=i/fs,u=(t-.22)/.73,env=Math.min(1,u*5)*Math.pow(Math.max(0,1-u),1.5);ph+=(380+40*Math.min(1,u*4))/fs;d[i]+=env*.05*(Math.sin(2*Math.PI*ph)+.4*Math.sin(4*Math.PI*ph))}}
+  for(let k=0;k<3;k++){const t0=.4+k*.11;let ph=0;for(let i=t0*fs|0;i<(t0+.06)*fs;i++){const t=i/fs-t0;ph+=1000/fs;d[i]+=.22*Math.min(1,t/.004)*Math.min(1,(.06-t)/.004)*Math.tanh(3*Math.sin(2*Math.PI*ph))}}
+  // a rádiósávban szóló rész külön készül, aztán sávszűrve, torzítva kerül a többi mellé
+  const v=new Float32Array(n);{let ph=0,f=1800;for(let i=.8*fs|0;i<1.02*fs;i++){if(i%176===0)f=[1200,1800,2400,1500][R()*4|0];ph+=f/fs;v[i]+=.35*Math.sin(2*Math.PI*ph)}}
+  const FM={a:[800,1250,2600],i:[300,2200,2900],o:[450,850,2600],e:[480,1900,2600],u:[330,800,2400]};
+  const SY=[['tr','a',.11],['st','i',.07],['','o',.12],['st','o',.11],['tr','o',.1],['st','a',.12],['pause','',.12],['fr','e',.12],['st','e',.08],['son','e',.1]];
+  const F1=rz(800,90),F2=rz(1250,110),F3=rz(2600,160);let t=1.08,gp=0,ff=[800,1250,2600];
+  for(const [c,vw,dur] of SY){const i0=t*fs|0;let cl=0;
+    if(c==='pause'){t+=dur;continue}
+    if(c==='st'){cl=.028*fs|0;for(let i=0;i<.008*fs;i++)v[i0+cl-(.008*fs|0)+i]+=(R()*2-1)*.5}
+    if(c==='fr'){cl=.05*fs|0;let y=0;for(let i=0;i<cl;i++){y+=(R()*2-1-y)*.6;v[i0+i]+=y*.35}}
+    const tgt=FM[vw],m=(dur*fs)|0;
+    for(let i=0;i<m;i++){const u=i/m,tt=t+i/fs;for(let q=0;q<3;q++)ff[q]+=(tgt[q]-ff[q])*.004;F1.set(ff[0],90);F2.set(ff[1],110);F3.set(ff[2],160);
+      const f0=(122-14*(tt-1.08))*(1+(R()-.5)*.03);gp+=f0/fs;const ph=gp%1,pulse=ph<.45?1-Math.cos(2*Math.PI*ph/.45):0;
+      let am=Math.min(1,u*8)*Math.min(1,(1-u)*6);if(c==='tr'&&u<.3)am*=.5+.5*Math.sin(2*Math.PI*26*i/fs);if(c==='son'&&u<.35)am*=.5;
+      const x=(pulse-.5)*am;v[i0+cl+i]+=F1(x)*1+F2(x)*.6+F3(x)*.3}
+    t+=dur+(cl/fs)}
+  {let ph=0;for(let i=1.98*fs|0;i<2.13*fs;i++){const tt=i/fs;ph+=(tt<2.05?1250:1650)/fs;v[i]+=.4*Math.sin(2*Math.PI*ph)}}
+  // zajzár: nyitáskor és a végén hangos sistergés, közben halk vivő-zaj
+  for(let i=1.02*fs|0;i<2.27*fs;i++){const tt=i/fs,lv=tt<1.07?.5:tt>2.14?.6:.06;v[i]+=(R()*2-1)*lv}
+  {let h=0,l1=0,l2=0,m=0;const kh=.09,kl=.55;for(let i=0;i<n;i++){h+=(v[i]-h)*kh;const x=v[i]-h;l1+=(x-l1)*kl;l2+=(l1-l2)*kl;m=Math.max(m,Math.abs(l2))}
+    h=0;l1=0;l2=0;for(let i=0;i<n;i++){h+=(v[i]-h)*kh;const x=v[i]-h;l1+=(x-l1)*kl;l2+=(l1-l2)*kl;d[i]+=.45*Math.tanh(3.2*l2/(m||1))}}})}
+function srSndRadio(){if(!srSnd())return;srPlayB(srRadioBuf(),.34)}
+// toronyhajtás: relé, a hidraulikaszivattyú villanymotorjának felfutása, 9 dugattyús szivattyú-lüktetés, nyomásmentesítő szelep sziszegése,
+// a toronyretesz kioldása, fogaskoszorú-morgás holtjáték-kattogással, megálláskor koppanás, majd a szivattyú lecsendesedik
+function srTurretBuf(){return srB('turret',1.95,(d,H)=>{const {fs,n,R,burst,nb,metal}=H;
+  nb(0,.5,.001,.006,1);burst(0,1900,.2,.01,.04);
+  let pm=0,hs=0,gr=0,tooth=0;
+  for(let i=.02*fs|0;i<n;i++){const t=i/fs,slew=t>.8&&t<1.5,fm=48*(1-Math.exp(-(t-.02)/.18))*(slew?.92:1)*(t>1.6?Math.max(.15,1-(t-1.6)/.4):1);pm+=fm/fs;const P=2*Math.PI*pm,pr=Math.min(1,Math.max(0,(t-.1)/.4));
+    let x=0;for(let h=1;h<=4;h++)x+=Math.sin(P*h)*.08/h;x+=Math.sin(P*6)*.04;x+=pr*(Math.sin(P*9)*.1+Math.sin(P*18)*.05+Math.sin(P*27)*.025)*(slew?1.3:1);
+    if(t>.55&&t<.8){const z=R()*2-1;hs+=(z-hs)*.5;x+=(z-hs)*.14*Math.sin(Math.PI*(t-.55)/.25)}
+    if(slew){const z=R()*2-1;gr+=(z-gr)*.05;const tp=tooth;tooth+=38/fs;x+=gr*.5*Math.abs(Math.sin(Math.PI*tooth));if(Math.floor(tooth)!==Math.floor(tp))burst(t,1700+R()*300,.035,.003,.012);if(R()<.0009)burst(t,2600,.08,.004,.02)}
+    d[i]+=x*(t>1.75?Math.max(0,1-(t-1.75)/.2):1)}
+  burst(.72,70,.5,.05,.2);metal(.72,520,.22,[[1,1,.15],[2.37,.55,.09],[4.25,.35,.05]]);nb(.72,.25,.006,.03,.7);
+  burst(1.5,60,.4,.06,.2);metal(1.5,430,.14,[[1,1,.2],[2.6,.5,.1],[4.9,.3,.05]])})}
+function srSndTurret(){if(!srSnd())return;srPlayB(srTurretBuf(),.36)}
+// a töltőautomata gránátonként: a tárlánc léptetésének kattogása, az átadókar hidraulikus sivítása, a hüvely csúszása, döngölés acélos csengéssel,
+// néha sűrített levegő kifúvása – négy változat, hogy ne legyen gépies az ismétlődés
+function srLoadBuf(v){return srB('load'+v,.44,(d,H)=>{const {fs,R,burst,nb,metal}=H,sp=.02+v*.003;
+  for(let k=0;k<7;k++){const t=k*sp;nb(t,.25,.0006,.004,1);burst(t,3100+R()*400,.1,.004,.015);burst(t,5200,.05,.003,.01);burst(t,180,.08,.01,.03)}
+  {let ph=0;for(let i=.1*fs|0;i<.2*fs;i++){const u=(i/fs-.1)/.1;ph+=(600+350*u)/fs;d[i]+=.06*Math.sin(Math.PI*u)*(Math.sin(2*Math.PI*ph)+.4*Math.sin(6*Math.PI*ph))}}
+  {let y=0;for(let i=.2*fs|0;i<.25*fs;i++){const z=R()*2-1;y+=(z-y)*.5;d[i]+=(z-y)*.15*Math.sin(Math.PI*(i/fs-.2)/.05)}}
+  burst(.25,58,.9,.06,.2);metal(.25,410*(1+v*.04),.4,[[1,1,.25],[2.76,.55,.14],[5.39,.3,.08],[8.88,.18,.05]]);nb(.25,.4,.004,.02,.7);
+  if(v%2){let y=0;for(let i=.3*fs|0;i<.44*fs;i++){const z=R()*2-1;y+=(z-y)*.4;d[i]+=(z-y)*.09*Math.min(1,(.44-i/fs)/.05)}}})}
+function srLoadSnd(){if(!srSnd())return;srPlayB(srLoadBuf(Math.random()*4|0),.26,0,(Math.random()-.5)*.2)}
+// a töltőautomata folyamatos búgása (pontosan 1 mp-es, hézagmentesen ismétlődő minta): villanymotor felharmonikusokkal, 9 dugattyús hidraulikaszivattyú,
+// 100 Hz-es hálózati búgás, a kompresszor 4 Hz-es lüktetése és a sűrített levegő sziszegése
+function srLoaderHumBuf(){return srB('ldrHum',1,(d,H)=>{const {fs,n,R}=H;let hs=0;
+  for(let i=0;i<n;i++){const t=i/fs,P=2*Math.PI*40*t,ch=Math.pow(Math.max(0,Math.sin(2*Math.PI*4*t)),4);let x=0;for(let h=1;h<=4;h++)x+=Math.sin(P*h+h)*.07/h;
+    x+=Math.sin(P*9)*.09+Math.sin(P*18)*.04+Math.sin(2*Math.PI*100*t)*.05+Math.sin(2*Math.PI*200*t)*.02+Math.sin(2*Math.PI*45*t)*ch*.25;
+    const z=R()*2-1;hs+=(z-hs)*.45;x+=(z-hs)*(.05+.06*ch);d[i]=x}})}
 function srDieselBuf(){if(SR.dzB&&SR.dzAC===AC)return SR.dzB;const sr=AC.sampleRate,F=50,N=60,len=Math.round(sr*N/F),b=AC.createBuffer(1,len,sr),d=b.getChannelData(0);
   const add=(t0,fn,dur)=>{const i0=Math.round(t0*sr),n=Math.round(dur*sr);for(let i=0;i<n;i++){d[(i0+i)%len]+=fn(i/sr)}};
   for(let k=0;k<N;k++){const t0=k/F+(Math.random()-.5)*.0012,a=(.72+Math.random()*.28)*(k%2?.82:1)*(k%8===3?.7:1),f=78+Math.random()*14;
@@ -182,60 +269,20 @@ function srDieselBuf(){if(SR.dzB&&SR.dzAC===AC)return SR.dzB;const sr=AC.sampleR
     add(t0+.004,t=>a*.18*Math.exp(-t/.0007)*(Math.random()*2-1),.005)}
   for(let i=0;i<len;i++)d[i]+=(Math.random()*2-1)*.025;let m=0;for(let i=0;i<len;i++)m=Math.max(m,Math.abs(d[i]));for(let i=0;i<len;i++)d[i]/=m*1.1;
   SR.dzB=b;SR.dzAC=AC;return b}
-// indítás: behúzó relé, önindító-sivítás, áttekerés (kompressziós ütemek), beindulás, felpörgés – az alapjárati hurok az srEngLoop-ban folytatódik
-function srSndEngine(){if(!srSnd())return;const t=AC.currentTime+.02;
-  srThump(t,60,.35,.12);srNoise(t,.025,.5,'bandpass',2200,null,3);
-  const o=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();o.type='sawtooth';o2.type='square';lp.type='lowpass';lp.frequency.value=1400;
-  o.frequency.setValueAtTime(150,t);o.frequency.linearRampToValueAtTime(240,t+.35);o2.frequency.setValueAtTime(452,t);o2.frequency.linearRampToValueAtTime(700,t+.35);
-  for(let i=0;i<7;i++){const ti=t+.12+i*.14;o.frequency.setValueAtTime(205+i*6,ti);o.frequency.linearRampToValueAtTime(170+i*6,ti+.07);o.frequency.linearRampToValueAtTime(215+i*6,ti+.14)}
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.05);g.gain.setValueAtTime(.06,t+1.05);g.gain.exponentialRampToValueAtTime(.0001,t+1.25);
-  const g2=AC.createGain();g2.gain.value=.25;o.connect(g);o2.connect(g2).connect(g);g.connect(lp).connect(MASTER);o.start(t);o2.start(t);o.stop(t+1.3);o2.stop(t+1.3);
-  srNoise(t+.05,1.1,.07,'bandpass',900,1300,1.5);
-  for(let i=0;i<7;i++){const ti=t+.12+i*.14;srThump(ti,38+i,.22+i*.02,.13);srNoise(ti,.09,.16,'lowpass',420,140)}
-  // gyújtás: egyre sűrűbb köhögés, majd beindul
-  [1.05,1.16,1.24,1.3,1.35,1.39].forEach((d,i)=>{srThump(t+d,44,.32,.16);srNoise(t+d,.07,.28+i*.03,'lowpass',900,180)});
-  srNoise(t+1.38,.5,.25,'bandpass',1400,500,.9)}
+
 function srEngLoop(on,start){if(!on){if(SR.eng){const E=SR.eng;SR.eng=null;try{const t=AC.currentTime;E.g.gain.cancelScheduledValues(t);E.g.gain.setTargetAtTime(.0001,t,.18);E.src.playbackRate.setTargetAtTime(.35,t,.35);E.src.stop(t+1.4);E.tb.stop(t+1.4)}catch(e){}}return}
   if(SR.eng||!srSnd())return;const a=AC,t=a.currentTime,src=a.createBufferSource(),lp=a.createBiquadFilter(),g=a.createGain(),tb=a.createOscillator(),tg=a.createGain();
   src.buffer=srDieselBuf();src.loop=true;lp.type='lowpass';lp.frequency.value=900;lp.Q.value=.7;
   tb.type='sine';tb.frequency.value=2600;tg.gain.value=.0001;tb.connect(tg).connect(MASTER);tb.start(t);
   src.connect(lp).connect(g).connect(MASTER);
-  if(start){src.playbackRate.setValueAtTime(.55,t);src.playbackRate.linearRampToValueAtTime(1.75,t+.45);src.playbackRate.setTargetAtTime(1,t+.6,.35);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.15);g.gain.setTargetAtTime(.14,t+.6,.4);
+  if(start==='xf'){src.playbackRate.value=1;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.14,t+.32);tg.gain.setTargetAtTime(.0012,t,.3)}
+  else if(start){src.playbackRate.setValueAtTime(.55,t);src.playbackRate.linearRampToValueAtTime(1.75,t+.45);src.playbackRate.setTargetAtTime(1,t+.6,.35);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.2,t+.15);g.gain.setTargetAtTime(.14,t+.6,.4);
     lp.frequency.setValueAtTime(700,t);lp.frequency.linearRampToValueAtTime(2200,t+.45);lp.frequency.setTargetAtTime(900,t+.6,.4);tb.frequency.setValueAtTime(1800,t);tb.frequency.linearRampToValueAtTime(3600,t+.5);tb.frequency.setTargetAtTime(2600,t+.6,.5);tg.gain.setValueAtTime(.0001,t);tg.gain.exponentialRampToValueAtTime(.005,t+.45);tg.gain.setTargetAtTime(.0012,t+.7,.4)}
   else{src.playbackRate.value=1;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.14,t+.6);tg.gain.setTargetAtTime(.0012,t,.3)}
   src.start(t,Math.random()*.5);SR.eng={src,g,lp,tb,tg}}
 function srEngRev(k){const E=SR.eng;if(!E)return;const t=AC.currentTime;E.src.playbackRate.setTargetAtTime(1+k*.85,t,.22);E.g.gain.setTargetAtTime(.14+k*.1,t,.2);E.lp.frequency.setTargetAtTime(900+k*1500,t,.2);E.tb.frequency.setTargetAtTime(2600+k*1400,t,.3);E.tg.gain.setTargetAtTime(.0012+k*.004,t,.3)}
-// harctéri rádió: forgókapcsoló, bekapcsolási zúgás, zajzár-sistergés, torz, sávszűrt beszédfoszlány („rádiópróba”), nyugtázó sípszó
-function srSndRadio(){if(!srSnd())return;const a=AC,t=a.currentTime+.02;
-  srNoise(t,.018,.45,'bandpass',3200,null,4);srNoise(t+.07,.018,.4,'bandpass',2600,null,4);
-  const h=a.createOscillator(),hg=a.createGain();h.type='square';h.frequency.value=100;hg.gain.setValueAtTime(.0001,t+.1);hg.gain.exponentialRampToValueAtTime(.012,t+.2);hg.gain.exponentialRampToValueAtTime(.0001,t+1.9);const hl=a.createBiquadFilter();hl.type='lowpass';hl.frequency.value=400;h.connect(hl).connect(hg).connect(MASTER);h.start(t+.1);h.stop(t+2);
-  // zajzár nyit: sistergés vibráló szűrővel
-  const n=a.createBufferSource(),nb=a.createBiquadFilter(),ng=a.createGain();n.buffer=NOISE;n.loop=true;nb.type='bandpass';nb.Q.value=.9;nb.frequency.setValueAtTime(1900,t+.2);
-  for(let i=0;i<10;i++)nb.frequency.setValueAtTime(1300+Math.random()*1400,t+.2+i*.035);ng.gain.setValueAtTime(.0001,t+.2);ng.gain.exponentialRampToValueAtTime(.16,t+.23);ng.gain.setValueAtTime(.16,t+.5);ng.gain.exponentialRampToValueAtTime(.03,t+.56);ng.gain.setValueAtTime(.03,t+1.55);ng.gain.exponentialRampToValueAtTime(.2,t+1.58);ng.gain.setValueAtTime(.2,t+1.7);ng.gain.linearRampToValueAtTime(0,t+1.71);
-  n.connect(nb).connect(ng).connect(MASTER);n.start(t+.2,Math.random()*.5);n.stop(t+1.75);
-  // beszédfoszlány: zöngés hang két formánssal, szótagonként változó magánhangzóval, rádiósávra szűrve és torzítva
-  const v=a.createOscillator(),vg=a.createGain(),f1=a.createBiquadFilter(),f2=a.createBiquadFilter(),mix=a.createGain(),bp=a.createBiquadFilter(),ws=a.createWaveShaper(),out=a.createGain();
-  v.type='sawtooth';f1.type='bandpass';f2.type='bandpass';f1.Q.value=5;f2.Q.value=7;bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=.8;
-  const cu=new Float32Array(256);for(let i=0;i<256;i++){const x=i/127.5-1;cu[i]=Math.tanh(x*3)}ws.curve=cu;out.gain.value=.1;
-  v.connect(f1).connect(mix);v.connect(f2).connect(mix);mix.connect(bp).connect(ws).connect(vg).connect(out).connect(MASTER);
-  const V=[[700,1200],[400,2100],[300,2300],[600,1000],[500,1800],[350,900]];let tt=t+.6;vg.gain.setValueAtTime(0,t);v.frequency.setValueAtTime(125,t);
-  while(tt<t+1.5){const d=.07+Math.random()*.09,[a1,a2]=V[Math.random()*V.length|0];f1.frequency.setValueAtTime(a1,tt);f2.frequency.setValueAtTime(a2,tt);v.frequency.setValueAtTime(110+Math.random()*40,tt);v.frequency.linearRampToValueAtTime(100+Math.random()*30,tt+d);
-    vg.gain.setValueAtTime(0,tt);vg.gain.linearRampToValueAtTime(.9,tt+.015);vg.gain.setValueAtTime(.9,tt+d-.02);vg.gain.linearRampToValueAtTime(Math.random()<.25?0:.15,tt+d);tt+=d+(Math.random()<.3?.06:.01)}
-  vg.gain.setValueAtTime(0,tt);v.start(t+.55);v.stop(tt+.05);
-  // nyugtázó „roger” sípszó és zajzár-csattanás
-  srTone('sine',1250,null,t+1.72,.07,.07);srTone('sine',1650,null,t+1.8,.09,.07);srNoise(t+1.71,.012,.3,'highpass',2500)}
-// toronyforgató: relé, elektromos szervomotor felfutó sivítása, fogaskerék-morgás, hidraulika-sziszegés, végén fémes reteszelés
-function srSndTurret(){if(!srSnd())return;const a=AC,t=a.currentTime+.02,T=.85;
-  srNoise(t,.02,.4,'bandpass',1800,null,4);srThump(t,90,.12,.06);
-  const m=a.createOscillator(),m2=a.createOscillator(),g=a.createGain(),lp=a.createBiquadFilter();m.type='sawtooth';m2.type='square';lp.type='lowpass';lp.frequency.value=1800;
-  m.frequency.setValueAtTime(70,t+.03);m.frequency.exponentialRampToValueAtTime(330,t+.35);m.frequency.setValueAtTime(330,t+T-.15);m.frequency.exponentialRampToValueAtTime(140,t+T);m2.frequency.setValueAtTime(140,t+.03);m2.frequency.exponentialRampToValueAtTime(660,t+.35);m2.frequency.setValueAtTime(660,t+T-.15);m2.frequency.exponentialRampToValueAtTime(280,t+T);
-  g.gain.setValueAtTime(.0001,t+.03);g.gain.exponentialRampToValueAtTime(.05,t+.2);g.gain.setValueAtTime(.05,t+T-.12);g.gain.exponentialRampToValueAtTime(.0001,t+T+.02);const g2=a.createGain();g2.gain.value=.3;
-  m.connect(g);m2.connect(g2).connect(g);g.connect(lp).connect(MASTER);m.start(t+.03);m2.start(t+.03);m.stop(t+T+.05);m2.stop(t+T+.05);
-  // fogaskerék-morgás: amplitúdóban 22 Hz-cel lüktető mély zaj
-  const n=a.createBufferSource(),nl=a.createBiquadFilter(),ng=a.createGain(),lfo=a.createOscillator(),lg=a.createGain();n.buffer=NOISE;n.loop=true;nl.type='lowpass';nl.frequency.value=320;ng.gain.value=0;lfo.frequency.value=22;lg.gain.value=.09;lfo.connect(lg).connect(ng.gain);
-  n.connect(nl).connect(ng).connect(MASTER);n.start(t+.05);n.stop(t+T);lfo.start(t+.05);lfo.stop(t+T);
-  srNoise(t+.08,T-.1,.035,'bandpass',4200,null,1.2);
-  srThump(t+T,62,.3,.2);srMetal(t+T,430,.09,.35);srNoise(t+T+.02,.12,.08,'highpass',3000)}
+
+
 // 155 mm-es lövés: éles torkolati csattanás, lőporgáz-dübörgés, csőszájfék-sziszegés, visszhang a dombokról, majd a zár és a töltőautomata zaja
 // gránáttípusonkénti hangprofil: lövés (k: töltet-hangerő, fm: mélység), röppálya (f0→f1 süvítés; rk rakéta, gl siklás, thin űrméret alatti, tb bukdácsoló), becsapódás (ik, ifm, cr: csattanás, rl: morajlás)
 const SR_SP={dm121:{k:1,fm:1,f0:2100,f1:540,ik:1,ifm:1,cr:1,rl:1},m2000:{k:1,fm:.9,f0:1850,f1:460,ik:1.15,ifm:.8,cr:.9,rl:1.35},pff:{k:1,fm:1,f0:2300,f1:640,ik:1,ifm:1,cr:1,rl:1},
@@ -367,7 +414,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.bail=[];SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};SR.bail=[];setTimeout(()=>{try{if(AC){srEngStartBuf();srRadioBuf();srTurretBuf();srLoaderHumBuf();for(let k=0;k<4;k++)srLoadBuf(k)}}catch(e){}},250);/* a hangminták előre elkészülnek, így az első kapcsoláskor sem akad */SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -392,20 +439,11 @@ function srDrawCrates(c,t){for(const k of SR.crates||[]){const sw=k.land?0:Math.
     if(!k.land){c.strokeStyle='rgba(230,230,220,.8)';c.lineWidth=.8;c.beginPath();c.moveTo(-9,-6);c.lineTo(-22,-46);c.moveTo(9,-6);c.lineTo(22,-46);c.moveTo(0,-6);c.lineTo(0,-50);c.stroke();
       c.fillStyle='#d9d2bd';c.beginPath();c.moveTo(-26,-44);c.quadraticCurveTo(0,-74,26,-44);c.closePath();c.fill();c.strokeStyle='#5a5446';c.lineWidth=1;c.stroke();c.fillStyle='#b8402e';c.fillRect(-4,-62,8,16)}
     c.fillStyle='#4a5a2a';c.fillRect(-10,-8,20,16);c.strokeStyle='#1d2410';c.lineWidth=1.4;c.strokeRect(-10,-8,20,16);c.beginPath();c.moveTo(-10,0);c.lineTo(10,0);c.stroke();c.fillStyle='#f3d77a';c.fillRect(-5,-5,10,3);c.restore()}}
-// gránátonként: pneumatikus döngölő szisszenése (sűrített levegő ki-be), majd fémes csattanás és reteszelés
-function srLoadSnd(){if(!srSnd())return;const t=AC.currentTime+.005;srNoise(t,.09,.16,'bandpass',3400,1800,1.2);srNoise(t+.07,.05,.1,'highpass',5200);srMetal(t+.06,360+Math.random()*160,.06,.2);srThump(t+.08,85+Math.random()*20,.15,.08);if(Math.random()<.4)srNoise(t+.11,.14,.07,'bandpass',2600,900,1.5)}
-// a töltőautomata pneumatikus-elektromos búgása, amíg málháznak: villanymotor (100 Hz-es hálózati búgás felharmonikusokkal,
-// felfutó fordulattal), a sűrített levegős rendszer folyamatos sziszegése és a kompresszor lüktetése
+// a töltőautomata búgása, amíg málháznak (a hangminta: srLoaderHumBuf); leálláskor nagy levegő-kifúvás
 function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{const t=AC.currentTime;L.g.gain.setTargetAtTime(.0001,t,.09);for(const x of L.st)x.stop(t+.6)}catch(e){}
     if(!quiet&&srSnd()){const t=AC.currentTime;srNoise(t+.02,.45,.22,'bandpass',3000,700,.9);srMetal(t+.08,300,.1,.4);srThump(t+.08,70,.25,.15)}}return}// leálláskor nagy levegő-kifúvás
-  if(SR.ldr||!srSnd())return;const a=AC,t=a.currentTime,g=a.createGain(),st=[];
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.25);g.connect(MASTER);
-  const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;lp.Q.value=2;lp.connect(g);
-  for(const [ty,f,v] of [['sawtooth',100,.5],['square',200,.18],['sine',50,.6],['sine',300,.12]]){const o=a.createOscillator(),og=a.createGain();o.type=ty;o.frequency.setValueAtTime(f*.45,t);o.frequency.exponentialRampToValueAtTime(f,t+.35);og.gain.value=v;o.connect(og).connect(lp);o.start(t);st.push(o)}
-  const am=a.createOscillator(),ag=a.createGain();am.frequency.value=7;ag.gain.value=.015;am.connect(ag).connect(g.gain);am.start(t);st.push(am);
-  const n=a.createBufferSource(),bp=a.createBiquadFilter(),ng=a.createGain(),pl=a.createOscillator(),pg=a.createGain();n.buffer=NOISE;n.loop=true;bp.type='bandpass';bp.frequency.value=3800;bp.Q.value=.9;ng.gain.value=.22;
-  pl.frequency.value=4;pg.gain.value=.16;pl.connect(pg).connect(ng.gain);n.connect(bp).connect(ng).connect(g);n.start(t,Math.random()*.5);pl.start(t);st.push(n,pl);
-  srNoise(t,.25,.18,'bandpass',4200,2200,1);SR.ldr={g,st}}
+  if(SR.ldr||!srSnd())return;const a=AC,t=a.currentTime,g=a.createGain(),src=a.createBufferSource();src.buffer=srLoaderHumBuf();src.loop=true;src.playbackRate.setValueAtTime(.45,t);src.playbackRate.exponentialRampToValueAtTime(1,t+.4);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.3);src.connect(g).connect(MASTER);src.start(t);srNoise(t,.25,.18,'bandpass',4200,2200,1);SR.ldr={g,st:[src]}}
 function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];if(SR.slowW){SR.slowW=0;srMsg('')}
   if(!first){SR.smokes=SR.smokes.filter(s=>--s.turns>0);SR.flares=SR.flares.filter(f=>--f.turns>0)}
   v.fuel=SR_FUEL*(v.d.trk===1?.5:1);SR.camFree=false;SR.ovw=false;SR.pred=null;SR.predK='';
@@ -980,7 +1018,7 @@ function srNudgeBind(b){const key=b.dataset.nudge[0]==='e'?'elev':'trav',d=b.dat
 function srSwitch(k){if(!SR.v)return;const v=srCtl();if(!(SR.phase==='prep'||srMyTurn()))return;ac();
   if(k==='load'){if(v.load>=1){toast('A lőszer már bent van: '+srAmmoN(v)+'/60');return}if(!v.loading){v.loading=true;srSwSnd(true);srMsg('A kezelők málházzák a lőszert…',3000);srCineVeh('load',v)}srUI();return}
   if(v.d[k]>=2){toast('A '+SR_PN[k]+' megsemmisült – nem kapcsolható vissza.');srSwSnd(false);return}
-  v.sys[k]=!v.sys[k];srSwSnd(v.sys[k]);if(v.sys[k]&&(k==='eng'||k==='tur'))srCineVeh(k,v);if(v.sys[k]){if(k==='eng'){srSndEngine();setTimeout(()=>{if(SR.v&&SR.run&&srCtl().sys.eng)srEngLoop(true,true)},1400)}else if(k==='rad')srSndRadio();else srSndTurret()}else if(k==='eng'&&!SR.v.some(x=>!x.ai&&x.sys.eng))srEngLoop(false);
+  v.sys[k]=!v.sys[k];srSwSnd(v.sys[k]);if(v.sys[k]&&(k==='eng'||k==='tur'))srCineVeh(k,v);if(v.sys[k]){if(k==='eng'){srSndEngine();setTimeout(()=>{if(SR.v&&SR.run&&srCtl().sys.eng)srEngLoop(true,'xf')},3050)}else if(k==='rad')srSndRadio();else srSndTurret()}else if(k==='eng'&&!SR.v.some(x=>!x.ai&&x.sys.eng))srEngLoop(false);
   SR.manW=0;srUI()}
 function srUI(){const P=$('#srPanel');if(!P||!SR.v)return;const v=srCtl();
   P.querySelectorAll('[data-sw]').forEach(b=>{const k=b.dataset.sw,on=k==='load'?v.load>=1:v.sys[k],dead=k!=='load'&&v.d[k]>=2;b.classList.toggle('on',on&&!dead);b.classList.toggle('dead',dead);b.classList.toggle('need',!on&&!dead&&!(k==='load'&&v.loading));b.classList.toggle('busy',k==='load'&&v.loading)});
