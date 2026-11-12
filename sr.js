@@ -599,15 +599,15 @@ function srUpdate(dt,now){const P=SR.phase;
   else if(P==='drop')srDropTick(dt);
   srEngRev(moving?1:0);SR.mvNow=moving?SR.v[SR.turn]:null;if(!SR.mv)SR.mvW=0;
   // kamera
-  const cam=SR.cam,W=SR.W,H=SR.H;let tx=cam.x,ty=cam.y,tz=cam.z;
+  const cam=SR.cam,W=SR.W,H=SR.H;let tx=cam.x,ty=cam.y,tz=cam.z,lv=null;
   if(!SR.camFree){
     const CM=SR.camMode||'auto';
     if(CM==='own'||CM==='enemy'){const me=srCtl(),v=CM==='own'?me:SR.v[1-me.i];tz=SR.zb*1.15;tx=v.x+v.face*W*(CM==='own'?.14:.06)/tz;ty=v.y-16+H*.05/tz}
-    else if(CM==='shell'&&P==='fly'){const S=SR.shot,p=srShotPos(S,S.t);tx=p.x;ty=p.y+H*.04/SR.zb;tz=SR.zb*1.45}
+    else if(CM==='shell'&&P==='fly'){const S=SR.shot,p=srShotPos(S,S.t);lv=[p.dx/S.ev.dt*(S.ts||1),p.dy/S.ev.dt*(S.ts||1)];tx=p.x;ty=p.y+H*.04/SR.zb;tz=SR.zb*1.45}
     else if(CM==='shell'&&SR.subs.length){const tg=SR.v[1-SR.shot.ev.by],pts=[[tg.x-50,tg.y-40],[tg.x+50,tg.y+16]];for(const q of SR.subs)if(q.cx!=null)pts.push([q.cx,q.cy-20],[q.cx,q.cy+20]);const F=srFrame(pts,SR.zb*1.6);tx=F[0];ty=F[1];tz=F[2]}
     else if(SR.ovw||CM==='map'){const [a,b]=SR.v;tx=(a.x+b.x)/2;tz=Math.min(SR.zb,W/(Math.abs(b.x-a.x)+260));ty=(a.y+b.y)/2-20+H*.1/tz}
     else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,p=srShotPos(S,S.t),left=T-S.t;
-      if(left>1.4){const pr=srClamp(S.t/Math.max(.1,T-1.4),0,1);tx=p.x;ty=p.y+H*.05/SR.zb;tz=SR.zb*(srCineOn()?1.05+.3*Math.sin(Math.PI*pr):.82)}
+      if(left>1.4){const pr=srClamp(S.t/Math.max(.1,T-1.4),0,1);lv=[p.dx/ev.dt*(S.ts||1),p.dy/ev.dt*(S.ts||1)];tx=p.x;ty=p.y+H*.05/SR.zb;tz=SR.zb*(srCineOn()?1.05+.3*Math.sin(Math.PI*pr):.82)}
       else{// a végfázisban a lövedék, a becsapódási pont és (ha közel van) a cél együtt kerül a képbe – a kép közepére
         const E=ev.end,tg=SR.v[1-ev.by],pts=[[p.x,p.y],[E.x,E.y],[E.x,E.y-60]];if(Math.abs(tg.x-E.x)<520)pts.push([tg.x-50,tg.y-50],[tg.x+50,tg.y+20]);
         const F=srFrame(pts,SR.zb*1.35),u=srClamp((1.4-left)/1.1,0,1),e=u*u*(3-2*u),f0=[p.x,p.y+H*.05/SR.zb,SR.zb*(srCineOn()?1.05:.82)];tx=f0[0]+(F[0]-f0[0])*e;ty=f0[1]+(F[1]-f0[1])*e;tz=f0[2]+(F[2]-f0[2])*e}}
@@ -622,7 +622,8 @@ function srUpdate(dt,now){const P=SR.phase;
     else{const v=P==='prep'?srCtl():SR.v[SR.turn];tx=v.x+v.face*W*.2/SR.zb*(P==='prep'?-.6:1);ty=v.y-34;tz=SR.zb*(P==='prep'?1.3:1)}}
   if(SR.cine&&SR.cine.f){const F=SR.cine.f(SR.cine);if(F){tx=F[0];ty=F[1];tz=F[2]}}
   if(P!=='boom'&&P!=='dying'&&P!=='over')SR.camT=0;
-  const fin=P==='fly'&&SR.shot&&(SR.shot.n-1)*SR.shot.ev.dt-SR.shot.t<1.4,k=Math.min(1,dt*(SR.cine&&SR.cine.f?SR.cine.ck||4:P==='fly'?(fin?5:9):P==='boom'||P==='dying'?2.4:3.2));cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*(fin?3.6:2.6))}
+  const fin=P==='fly'&&SR.shot&&(SR.shot.n-1)*SR.shot.ev.dt-SR.shot.t<1.4,cf=SR.cine&&SR.cine.f,rate=cf?SR.cine.ck||4:P==='fly'?(fin?5:14):P==='boom'||P==='dying'?2.4:3.2,k=Math.min(1,dt*rate);
+  if(lv&&!cf&&!SR.camFree){tx+=lv[0]/rate;ty+=lv[1]/rate}cam.x+=(tx-cam.x)*k;cam.y+=(ty-cam.y)*k;cam.z+=(tz-cam.z)*Math.min(1,dt*(fin?3.6:2.6))}
 // a megadott világpontokat a kép közepére keretezi: [cam.x, cam.y, zoom] (a nézet a képernyő 62%-ánál horgonyzott)
 function srFrame(pts,zmax){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const [x,y] of pts){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)}
   const W=SR.W,H=SR.H,z=srClamp(Math.min(zmax,W*.7/Math.max(60,x1-x0),H*.46/Math.max(40,y1-y0)),SR.zb*.35,zmax);return [(x0+x1)/2,(y0+y1)/2+H*.14/z,z]}
@@ -1073,8 +1074,9 @@ function srCineVeh(k,v){if(!srIsMine(v)||(v.cine=v.cine||{})[k])return;v.cine[k]
       if(k==='eng'&&C.t<1.2)SR.shake=Math.max(SR.shake,.08)}})}
 function srCineFire(v,ev){if(!srCineOn())return;const mine=srIsMine(v),first=!SR.cineFire;SR.cineFire=1;const am=SR_AM[ev.am];
   if(first)srSndBraam(.7,2.4);
-  srCine({kind:'fire',pri:2,T:mine?1.25:.9,cap:'TŰZ!',sub:(am?am.n:'')+(mine?'':' · '+v.name),ck:6,hot:1,
-    f:()=>{const m=srMuzzle(v,v.elev);return [m.x-v.face*30,m.y+SR.H*.05/(SR.zb*2.3),SR.zb*2.3]},
+  srCine({kind:'fire',pri:2,T:mine?1.25:.9,cap:'TŰZ!',sub:(am?am.n:'')+(mine?'':' · '+v.name),ck:10,hot:1,
+    f:C=>{const m=srMuzzle(v,v.elev),A=[m.x-v.face*30,m.y+SR.H*.05/(SR.zb*2.3),SR.zb*2.3],S=SR.shot;if(!S||SR.phase!=='fly'||C.t<.2)return A;
+      const p=srShotPos(S,S.t),u=srClamp((C.t-.2)/.35,0,1),e=u*u*(3-2*u),q=(S.ts||1)/S.ev.dt/10,B=[p.x+p.dx*q,p.y+p.dy*q+SR.H*.05/(SR.zb*1.5),SR.zb*1.5];return [A[0]+(B[0]-A[0])*e,A[1]+(B[1]-A[1])*e,A[2]+(B[2]-A[2])*e]},
     slow:C=>C.t<.55?.28:C.t<1?.28+(C.t-.55)/.45*.72:1})}
 function srCineKill(v){if(!srCineOn())return;srSndBraam(1,3.6);srSndHeart();SR.sec=[{t:1.3,v},{t:2.6,v},{t:3.9,v}];
   srCine({kind:'kill',pri:3,T:6.4,cap:'KILŐVE!',sub:v.name,ck:2.2,red:1,skip:true,
