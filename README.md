@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.29.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.30.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.30.0:** Shot&Run: a szövegek nem takarják a csatateret – a figyelmeztetések (atomcsapás, idő, lőszer) teljesen fent, a fejlécben jelennek meg, az üzenetek (megfigyelői jelentés, állapot) a kép legalján, vékony, legfeljebb kétsoros sávban; az adatdoboz és a gombok fölé csúsznak. A távcső helyett **kameranézet-váltó** (🎥): AUTO (filmszerű követés), SAJÁT löveg, TÉRKÉP (mindkét löveg), ELLENSÉG lövege, GRÁNÁT (a lövedék és a SMArt-résztöltetek követése); a választott nézet megmarad, és nem AUTO nézetben a képen is van egy nagy TŰZ gomb, így bármelyik nézetből lehet lőni. A SMArt nagyobb területet pásztáz (175 egység, oldalt is szélesebben), így jobban befogja a célt.
 
 **v4.29.2:** Shot&Run SMArt: ha a résztöltet pásztázás közben megtalálja a célt, kb. 0,6 mp-cel a befogás után azonnal tüzel – a levegőből, az aktuális magasságából (kb. 3 mp-cel a kilökés után, eddig csak a 7 mp-es ereszkedés végén); a második résztöltet 0,3 mp-cel később, a sebzés is ekkor éri a célt. Befogás nélkül végig pásztáznak, majd önmegsemmisülnek. Javítva: a gép célzója a 4.28-as magasabb kilökés óta rossz pontra irányozta a SMArt-ot (a kilökés helyére, nem oda, ahova a töltetek sodródnak), ezért szinte sosem talált.
 
