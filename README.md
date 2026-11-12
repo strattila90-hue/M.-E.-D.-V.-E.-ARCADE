@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.27.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.28.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.28.0:** Shot&Run **filmes mód** (a menüben „🎬 Filmes mód: BE/KI”, alapból bekapcsolva; jelenet közben koppintásra tovább lehet lépni): szélesvásznú fekete sávok, közeli kamera, képregényes felirat és lassítás a fontos pillanatokban – első motorindítás (fekete füstcsóva, rázkódás, mély filmes „braam”), torony bekapcsolása (hidraulika-sziszegés, pára), málházás, minden lövés (lassított torkolattűz a cső mellől, a lőszer nevével), végzetes találat („KILŐVE!”: lassítás, szívdobogás, három késleltetett másodlagos robbanás, a kamera a kiugró kezelőkkel együtt keretez, majd lassan visszahúzódik). A repülő gránátot a kamera közelebbről, enyhe ráközelítéssel követi. A SMArt sokkal hamarabb és magasabban löki ki az ejtőernyős résztölteteket, és majdnem kétszer annyi ideig pásztáznak a levegőben. Ijesztőbb hangok: a saját lövegünk felé zuhanó gránát vészjósló, lebegő süvítése; a földön kúszó és fekvő sebesültek hörgése; égő kezelők összeesése. A jelenet alatt a köridő áll; online párbajban a játék nem lassul, csak a kamera és a sávok filmesek.
 
 **v4.27.0:** Shot&Run: a játék közbeni üzenetek (megfigyelői jelentés, „TŰZPÁRBAJ!”, figyelmeztetések) automatikusan oda csúsznak, ahol nem takarják a lövegeket, a fölöttük lévő életerő-sávot és a kiugró kezelőket; ha két üzenet van, egymást sem fedik. Végzetes találatnál a túlélő kezelők (legalább 2) kiugranak a lövegből a búvónyílásokon: sokan lángolva, kapálózva futnak, a földön gurulva oltják magukat, majd kúszva menekülnek, a sérültek rögtön kúsznak; a lángok füstölnek, az égett egyenruha megfeketedik; mindegyik sikoltozik (szintetizált, térben elhelyezett hang). A „kilőve” jelenet ilyenkor hosszabb, hogy látszódjon.
 
