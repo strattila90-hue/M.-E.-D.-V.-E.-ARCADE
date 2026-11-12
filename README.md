@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.21.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.21.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.21.1:** Javítva: SERE Kitörés – a kiképző-állomás feladatainál (pl. árnyékbot, víztisztítás) a válaszgombok szövege világos témájú telefonon olvashatatlan volt (sötét betű sötét háttéren); a gombok fix világos betűt és a többi játékkal egyező képregényes stílust kaptak.
 
 **v4.21.0:** Egységes képregényes megjelenés minden játékban: ugyanaz a betűtípus (Bangers) a fejlécekben, címekben és gombokon; vastag kontúros, nagyobb (40 px) bezáró és szünet gomb; átlátszatlan kezdő- és eredménypanelek (nem üt át rajtuk a játék), a felugró ablak mögött elsötétül a kép; a hosszú leírású játékoknál (Gidrán Terep, Konvoj, SERE) az INDÍTÁS gomb mindig látszik; képregényes pedálok és kezelőgombok (GÁZ/FÉK, KÖD, DRÓN, kézifék, CTIS), olvashatóbb műszerfeliratok. Javítva: a Tüzér Kassza fejlécéből kilógó, levágott sorok (a „Hónap vége” külön címkére került); a Rába Rakodó fejlécének szétcsúszó életjelzője; kis kijelzőn a pedálok alá csúszó CTIS-gombok; a ranglista-ablak és a Továbbiak lap gombjai is az új stílust kapták.
 
