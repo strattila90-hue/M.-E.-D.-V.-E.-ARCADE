@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.21.2',APP_DATE='2026.11.12.';
+const APP_VER='4.22.0',APP_DATE='2026.11.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -5353,14 +5353,48 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
   c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width));c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,Math.min(W-8,mw+10),lines.length*14+5);
   for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,W-18);y+=14}
   // felülnézet: oldalirány, szél, utolsó becsapódás
-  const iw=74,ih=96,ix=W-iw-6,iy=60,cx=ix+iw/2,sc=.3;c.fillStyle='rgba(0,0,0,.5)';c.fillRect(ix,iy,iw,ih);c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=1;c.strokeRect(ix+.5,iy+.5,iw-1,ih-1);
-  c.font='700 7.5px system-ui';c.textAlign='center';c.fillStyle='rgba(255,255,255,.7)';c.fillText('FELÜLNÉZET',cx,iy+9);
-  const by=iy+ih-10,ty=iy+20,rng=Math.abs(tg.x-ctl.x);c.setLineDash([2,3]);c.strokeStyle='rgba(255,255,255,.3)';c.beginPath();c.moveTo(cx,by);c.lineTo(cx,ty);c.stroke();c.setLineDash([]);
-  const lx=srClamp(Math.tan(ctl.trav/SR_MIL)*rng*sc,-iw/2+3,iw/2-3);c.strokeStyle='#9dff9d';c.lineWidth=1.5;c.beginPath();c.moveTo(cx,by);c.lineTo(cx+lx,ty);c.stroke();
-  c.fillStyle='#9dff9d';c.fillRect(cx-3,by-2,6,5);
-  if(ctl.d.opt<2&&!blind){c.fillStyle='#ff5a4a';c.fillRect(cx+SR.zOff*sc-3,ty-3,6,5)}else{c.fillStyle='#ff9a8a';c.fillText('?',cx,ty+3)}
-  if(R&&R.ok){const px=cx+srClamp(R.lat*sc,-iw/2+3,iw/2-3),py=by+(ty-by)*srClamp(R.rf,0,1.15);c.strokeStyle='#ffe08a';c.lineWidth=1.5;c.beginPath();c.moveTo(px-3,py-3);c.lineTo(px+3,py+3);c.moveTo(px+3,py-3);c.lineTo(px-3,py+3);c.stroke()}
-  if(radio&&Math.abs(SR.wind.z)>=1){const d=Math.sign(SR.wind.z*ctl.face),wy=by-22;c.strokeStyle='#bfe3ff';c.lineWidth=1.5;c.beginPath();c.moveTo(cx-d*26,wy);c.lineTo(cx-d*12,wy);c.moveTo(cx-d*16,wy-3);c.lineTo(cx-d*12,wy);c.lineTo(cx-d*16,wy+3);c.stroke()}}
+  srRadar(c,W,ctl,tg,R,radio,blind,t)}
+// tűzvezető kis kijelzője (felülnézet): foszforzöld radarképernyő – rács, távgyűrűk, pásztázó sugár, a cső iránya, a cél, az utolsó becsapódás és a szél
+function srRadar(c,W,ctl,tg,R,radio,blind,t){const big=W>=520,sm=W<360,iw=big?104:sm?78:86,ih=big?132:sm?102:112,ix=W-iw-6,iy=60,cx=ix+iw/2,sc=.3*iw/74,top=iy+17,by=iy+ih-14,ty=top+12,rng=Math.abs(tg.x-ctl.x),see=ctl.d.opt<2&&!blind,dead=ctl.d.opt>=2;
+  c.save();
+  // keret és háttér
+  c.fillStyle='rgba(0,0,0,.45)';srRR(c,ix+2,iy+3,iw,ih,9);c.fill();
+  const g=c.createRadialGradient(cx,by,4,cx,by,ih*1.05);g.addColorStop(0,'#123a1c');g.addColorStop(.7,'#071a0c');g.addColorStop(1,'#030a05');c.fillStyle=g;srRR(c,ix,iy,iw,ih,9);c.fill();
+  c.save();srRR(c,ix,iy,iw,ih,9);c.clip();
+  // rács
+  c.strokeStyle='rgba(120,255,150,.08)';c.lineWidth=1;c.beginPath();for(let x=ix+(iw/2%12);x<ix+iw;x+=12){c.moveTo(x+.5,top);c.lineTo(x+.5,iy+ih)}for(let y=by;y>top;y-=12){c.moveTo(ix,y+.5);c.lineTo(ix+iw,y+.5)}c.stroke();
+  // távgyűrűk a saját löveg körül
+  c.strokeStyle='rgba(120,255,150,.2)';c.setLineDash([2,3]);for(const k of [.33,.66,1]){c.beginPath();c.arc(cx,by,(by-ty)*k,Math.PI*1.08,Math.PI*1.92);c.stroke()}c.setLineDash([]);
+  // pásztázó sugár (radar nélkül nem forog)
+  if(radio&&!dead){const a0=-Math.PI/2+Math.sin(t*1.3)*.95,Rr=(by-ty)*1.08;for(let k=0;k<6;k++){const a=a0-Math.cos(t*1.3)*k*.035;c.fillStyle=`rgba(120,255,150,${.13-k*.02})`;c.beginPath();c.moveTo(cx,by);c.arc(cx,by,Rr,a-.05,a+.05);c.fill()}}
+  // cső iránya (oldalirányzás) – dupla vonal = izzás
+  const lx=srClamp(Math.tan(ctl.trav/SR_MIL)*rng*sc,-iw/2+5,iw/2-5),ax=cx+lx;
+  c.lineCap='round';c.strokeStyle='rgba(157,255,157,.25)';c.lineWidth=4;c.beginPath();c.moveTo(cx,by);c.lineTo(ax,ty);c.stroke();
+  c.strokeStyle='#9dff9d';c.lineWidth=1.3;c.setLineDash([4,3]);c.lineDashOffset=-t*14;c.beginPath();c.moveTo(cx,by);c.lineTo(ax,ty);c.stroke();c.setLineDash([]);
+  c.beginPath();c.arc(ax,ty,3.5,0,7);c.moveTo(ax-6,ty);c.lineTo(ax+6,ty);c.moveTo(ax,ty-6);c.lineTo(ax,ty+6);c.stroke();
+  // cél
+  if(see){const tx=cx+srClamp(SR.zOff*sc,-iw/2+5,iw/2-5),p=(t*1.4)%1;c.strokeStyle=`rgba(255,90,74,${1-p})`;c.lineWidth=1.2;c.beginPath();c.arc(tx,ty,3+p*9,0,7);c.stroke();
+    const bl=.6+.4*Math.sin(t*7);c.fillStyle=`rgba(255,90,74,${bl})`;c.beginPath();c.moveTo(tx,ty-4.5);c.lineTo(tx+4.5,ty);c.lineTo(tx,ty+4.5);c.lineTo(tx-4.5,ty);c.closePath();c.fill()}
+  else{c.font='800 11px system-ui';c.textAlign='center';c.fillStyle='#ff9a8a';c.fillText('?',cx+srClamp(SR.zOff*sc,-iw/2+8,iw/2-8),ty+4)}
+  // utolsó becsapódás
+  if(R&&R.ok){const px=cx+srClamp(R.lat*sc,-iw/2+4,iw/2-4),py=by+(ty-by)*srClamp(R.rf,0,1.15);c.strokeStyle='rgba(255,224,138,.35)';c.lineWidth=1;c.beginPath();c.arc(px,py,6,0,7);c.stroke();c.strokeStyle='#ffe08a';c.lineWidth=1.6;c.beginPath();c.moveTo(px-3,py-3);c.lineTo(px+3,py+3);c.moveTo(px+3,py-3);c.lineTo(px-3,py+3);c.stroke()}
+  // saját löveg: nyílhegy
+  c.fillStyle='#9dff9d';c.strokeStyle='#04210c';c.lineWidth=1.5;c.beginPath();c.moveTo(cx,by-6);c.lineTo(cx+5,by+4);c.lineTo(cx,by+1.5);c.lineTo(cx-5,by+4);c.closePath();c.stroke();c.fill();
+  // szél
+  if(radio&&Math.abs(SR.wind.z)>=1){const d=Math.sign(SR.wind.z*ctl.face),wy=by-(by-ty)*.42,wx=cx-d*iw*.3,o=(t*18)%10;c.strokeStyle='#bfe3ff';c.lineWidth=1.5;
+    for(let k=0;k<2;k++){const sx=wx+d*(k*7+o*.5);c.globalAlpha=k?.5:.95;c.beginPath();c.moveTo(sx-d*4,wy-4);c.lineTo(sx,wy);c.lineTo(sx-d*4,wy+4);c.stroke()}c.globalAlpha=1}
+  // képcső-csíkok és sérült optika zaja
+  c.fillStyle='rgba(0,0,0,.18)';for(let y=iy+(t*20%3);y<iy+ih;y+=3)c.fillRect(ix,y,iw,1);
+  if(dead||blind){c.fillStyle='rgba(180,200,180,.10)';for(let k=0;k<40;k++)c.fillRect(ix+Math.random()*iw,iy+Math.random()*ih,1.5,1.5)}
+  // fejléc és alsó adatsor
+  c.fillStyle='rgba(0,0,0,.55)';c.fillRect(ix,iy,iw,top-iy);c.fillRect(ix,iy+ih-11,iw,11);
+  c.restore();
+  c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='left';c.fillStyle='#9dff9d';c.fillText('FCS',ix+6,iy+11);c.textAlign='right';c.fillStyle='rgba(220,255,220,.75)';c.fillText('FELÜLNÉZET',ix+iw-6,iy+11);
+  c.font=`700 ${big?8.5:7.5}px ui-monospace,Menlo,monospace`;c.textAlign='center';c.fillStyle=see?'#cfffcf':'#ff9a8a';
+  c.fillText(dead?'OPTIKA KIESETT':blind?'KÖD – NINCS KÉP':(rng*SR_M/1000).toFixed(1).replace('.',',')+' km · '+(ctl.trav>0?'J':ctl.trav<0?'B':'')+String(Math.abs(ctl.trav)).padStart(3,'0'),cx,iy+ih-3);
+  // keret, sarokjelek
+  c.strokeStyle='#111';c.lineWidth=2.5;srRR(c,ix,iy,iw,ih,9);c.stroke();c.strokeStyle='rgba(120,255,150,.55)';c.lineWidth=1;srRR(c,ix+2.5,iy+2.5,iw-5,ih-5,7);c.stroke();
+  c.restore()}
 function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;const raw=(now-SR.lastT)/1000;let dt=Math.min(.05,raw);SR.lastT=now;if(!(dt>0))dt=0;
   // adaptív minőség: akadozáskor előbb a részecskék, aztán a felbontás csökken; ha bőven van tartalék, visszaemelkedik (a készülék erejét kihasználva)
   if(raw>0&&raw<.25&&!document.hidden&&!LOWFX){const F=SR.fa||(SR.fa={n:0,s:0});F.n++;F.s+=raw;if(F.s>2){const fps=F.n/F.s,qb=SR.qb||1;SR.fa=null;
