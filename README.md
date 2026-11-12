@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.21.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.21.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.21.2:** Shot&Run csiszolás: a menü- és eredménypanel nem csúszik a fejléc alá (minden kijelzőméreten); a menüben nem látszik a felesleges „– Kör 1”; az irányzó skálák számai nem takarják a piros jelölőt és nem vágódnak le a szélén; kis kijelzőn a sérülés-címkék egy sorban, oldalra görgethetően (nem tolják le a kezelőket); olvashatóbb menet/kör kijelző, lüktető TŰZ gomb, ha lőhetsz. Optimalizálás: menüben a háttér csak egyszer rajzolódik ki (eddig másodpercenként 60-szor), szünetben kb. 12 kép/mp – kevesebb akkuhasználat és melegedés.
 
 **v4.21.1:** Javítva: SERE Kitörés – a kiképző-állomás feladatainál (pl. árnyékbot, víztisztítás) a válaszgombok szövege világos témájú telefonon olvashatatlan volt (sötét betű sötét háttéren); a gombok fix világos betűt és a többi játékkal egyező képregényes stílust kaptak.
 

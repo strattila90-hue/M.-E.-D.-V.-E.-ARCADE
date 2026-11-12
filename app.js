@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.21.1',APP_DATE='2026.11.12.';
+const APP_VER='4.21.2',APP_DATE='2026.11.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4846,7 +4846,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -5367,11 +5367,11 @@ function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;const raw=(no
     if(fps<46){if(SR.q>.6)SR.q=Math.max(.55,SR.q-.2);else if(SR.dpr>1.25){SR.qcap=SR.dpr>2?2:SR.dpr>1.5?1.5:1.25;SR._fps=null;srFit()}}
     else if(fps>56&&SR.q<qb)SR.q=Math.min(qb,SR.q+.1)}}
   srNetPoll();
-  if(SR.v&&SR.paused){if(SR.tlEnd)SR.tlEnd=Date.now()+SR.paused.left;srDraw(now,0);srHudDom()}
+  if(SR.v&&SR.paused){if(SR.tlEnd)SR.tlEnd=Date.now()+SR.paused.left;if(now-(SR.pzDT||0)>80){SR.pzDT=now;srDraw(now,0);srHudDom()}}
   else if(SR.v){srUpdate(dt,now);
     const ctl=srCtl();if(SR.phase==='aim'&&srMyTurn()&&SR.flares.some(f=>f.by===ctl.i)){const key=[ctl.x|0,ctl.elev,ctl.trav,ctl.sel].join();if(key!==SR.predK){SR.predK=key;SR.pred=srSim(ctl,SR.v[1-ctl.i],ctl.elev,ctl.trav,SR_AM[ctl.sel],false)}}else if(SR.phase==='aim')SR.pred=null;
     srDraw(now,dt);srHudDom()}
-  else{const c=SR.c;c.setTransform(SR.dpr,0,0,SR.dpr,0,0);const sky=c.createLinearGradient(0,0,0,SR.H);sky.addColorStop(0,'#241826');sky.addColorStop(.55,'#8e4a2c');sky.addColorStop(1,'#4a2418');c.fillStyle=sky;c.fillRect(0,0,SR.W,SR.H)}
+  else if(SR.bgK!==SR.W+'x'+SR.H+'@'+SR.dpr){SR.bgK=SR.W+'x'+SR.H+'@'+SR.dpr;const c=SR.c;c.setTransform(SR.dpr,0,0,SR.dpr,0,0);const sky=c.createLinearGradient(0,0,0,SR.H);sky.addColorStop(0,'#241826');sky.addColorStop(.55,'#8e4a2c');sky.addColorStop(1,'#4a2418');c.fillStyle=sky;c.fillRect(0,0,SR.W,SR.H)}
   SR.raf=requestAnimationFrame(srLoop)}
 
 /* ---------- kezelőpanel ---------- */
@@ -5379,7 +5379,7 @@ function srTapeDraw(cv,val,trav){const r=cv.getBoundingClientRect(),dpr=Math.min
   const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0e120b');g.addColorStop(.5,'#2a3320');g.addColorStop(1,'#0e120b');c.fillStyle=g;c.fillRect(0,0,w,h);
   const pp=5,m0=Math.floor(val-w/2/pp)-1,m1=Math.ceil(val+w/2/pp)+1,lo=trav?-300:0,hi=trav?300:1150;c.textAlign='center';c.font='700 9.5px ui-monospace,Menlo,monospace';
   for(let m=m0;m<=m1;m++){if(m<lo||m>hi)continue;const x=w/2+(m-val)*pp,big=m%50===0,mid=m%10===0;c.fillStyle=big?'#f3ecd4':mid?'#b9c29a':'#6f7a58';c.fillRect(x-.5,h-(big?17:mid?11:6),big?1.6:1,big?17:mid?11:6);
-    if(big)c.fillText(trav?(m>0?'J':m<0?'B':'')+Math.abs(m):String(m),x,h-21)}
+    if(big&&Math.abs(x-w/2)>15&&x>13&&x<w-13)c.fillText(trav?(m>0?'J':m<0?'B':'')+Math.abs(m):String(m),x,h-21)}
   c.fillStyle='#ff5a4a';c.fillRect(w/2-.75,0,1.5,h);c.beginPath();c.moveTo(w/2-5,0);c.lineTo(w/2+5,0);c.lineTo(w/2,7);c.fill()}
 function srDials(){if(!SR.v||!$('#srEv'))return;const v=srCtl();{const f=srChg(v.elev);$('#srEv').textContent=String(v.elev).padStart(4,'0')+' von · '+(v.elev/SR_MIL*180/Math.PI).toFixed(1).replace('.',',')+'° · töltet '+(f>=.97?6:f>=.9?5:f>=.82?4:f>=.75?3:2)}
   $('#srTv').textContent=(v.trav>0?'J ':v.trav<0?'B ':'')+String(Math.abs(v.trav)).padStart(4,'0')+' von';srTapeDraw($('#srTE'),v.elev,false);srTapeDraw($('#srTT'),v.trav,true)}
@@ -5523,7 +5523,7 @@ function srNetPoll(){srNetKeep();if(SR.mode!=='net'||!SR.inbox||!SR.inbox.length
   else if(SR.phase==='aim'&&SR.turn!==SR.me){if(SR.paused)srPause(false,true);srPlay(SR.inbox.shift(),false)}}
 
 /* ---------- megnyitás, menü ---------- */
-function srMenu(){srLoaderHum(false,true);SR.v=null;SR.run=false;SR.mode=null;SR.paused=null;srPzShow(false);srEngLoop(false);const s=$('#srStart');if(!s)return;{const b=$('#srPzB');if(b)b.hidden=true;const t=$('#srTurn');if(t)t.textContent='–';const r=$('#srRound');if(r)r.textContent='1'}$('#srOver').hidden=true;$('#srPanel').classList.add('off');srMsg('');
+function srMenu(){srLoaderHum(false,true);SR.v=null;SR.bgK=null;{const h=$('#harc');h&&h.classList.add('srm')}SR.run=false;SR.mode=null;SR.paused=null;srPzShow(false);srEngLoop(false);const s=$('#srStart');if(!s)return;{const b=$('#srPzB');if(b)b.hidden=true;const t=$('#srTurn');if(t)t.textContent='–';const r=$('#srRound');if(r)r.textContent='1'}$('#srOver').hidden=true;$('#srPanel').classList.add('off');srMsg('');
   const sv=srSaveGet(),lvD=['kezdőknek – sokat téved','közepes – pár lövésből belövi magát','profi – gyorsan és pontosan lő'];
   s.innerHTML=`<img class="pzhfull" src="${PZH_FULL||PZH_SPRITE}" alt="" data-st="width:100%;height:auto"><h3>SHOT&amp;RUN</h3>
    <p class="srlead">Két <b>PzH 2000</b> tüzérpárbaja. Felváltva lőtök: mérd be a célt, irányozz, <b>TŰZ</b> – aztán válts állást!</p>
@@ -5609,7 +5609,7 @@ function srClose(){if(SR.mode==='net'&&SR.v&&SR.phase!=='over'&&SR.net&&!confirm
   try{SR.whN&&SR.whN.disconnect()}catch(e){}SR.whN=null;
   srLoaderHum(false,true);if(SR.fs){SR.fs=0;try{document.fullscreenElement&&document.exitFullscreen().catch(()=>{})}catch(e){}}
   if(SR.v&&SR.mode!=='net')srSave();SR.paused=null;srNetLeave();SR.run=false;SR.v=null;srEngLoop(false);cancelAnimationFrame(SR.raf);srWake(false);try{SR.ro&&SR.ro.disconnect()}catch(e){}if(SR.key){removeEventListener('keydown',SR.key);removeEventListener('keyup',SR.key)}clearTimeout(SR.msgT);SR.cv=null;
-  const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('rk','sr');document.body.classList.remove('harcon')}
+  const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('rk','sr','srm');document.body.classList.remove('harcon')}
 srLoop=medveWrap(srLoop,SR,'SHOTRUN');
 // meghívó link: …/?sr=KÓD – betöltés (és bejelentkezés) után automatikusan belép a párbajba
 const SR_INV={code:(()=>{try{return (new URLSearchParams(location.search).get('sr')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5)}catch(e){return ''}})(),n:0,w:0};
