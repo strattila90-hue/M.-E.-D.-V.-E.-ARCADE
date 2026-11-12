@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.24.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.25.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.25.0:** Shot&Run: összecsukható kiegészítő kijelzők – a FELÜLNÉZET és a bal alsó adatdoboz (METEO, TÁVMÉRŐ, LŐTÁBLA, ELTÉRÉS) egy koppintással fejléccé / „▸ ADATOK” füllé csukható, újabb koppintásra kinyílik; a telefon megjegyzi a beállítást. A TÁVMÉRŐ sorban is kiírt szavak: „irány jobbra/balra”, „szint” (a Δ és a J/B helyett).
 
 **v4.24.0:** Shot&Run: a FELÜLNÉZET kis kijelző a rádió sérülésekor megreped (repedés, időnkénti képhiba), a rádió megsemmisülésekor pókhálósan szétreped, kialszik és villódzik („RÁDIÓ KIESETT”). Rövidítések helyett érthető feliratok: METEO (időjárás), TÁVMÉRŐ (lézeres távmérő, korábban LRF), LŐTÁBLA (korábban TBL), ELTÉRÉS (az utolsó becsapódás eltérése, korábban OBS), CÉL (megvilágított cél, korábban FCS).
 
