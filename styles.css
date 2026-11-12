@@ -1558,3 +1558,13 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .morebody .btn[hidden]{display:none}
 @media (orientation:landscape) and (max-height:560px){.srsws button{font-size:12.5px;letter-spacing:.02em}.srfire{font-size:20px;line-height:1}.srmv{font-size:14px}}
 @media (max-width:359px){.srsws button{font-size:12.5px;letter-spacing:.02em}}
+/* 4.21.1 – SERE kiképző-állomás: a válaszgombok szövege világos témában is olvasható (eddig sötét betű sötét háttéren) */
+#harc .btn.line{color:#f3ecd4;box-shadow:inset 0 0 0 1.5px rgba(243,236,212,.45)}
+.setrbtns .btn{font-family:var(--f-comic);font-weight:400;font-size:16px;letter-spacing:.04em;line-height:1.15;white-space:normal;min-height:46px;padding:8px 8px 6px;border:2.5px solid #111;border-radius:11px;box-shadow:3px 3px 0 #111;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+.setrbtns .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.setrbtns .btn.line{background:#2b3324;color:#f3ecd4;box-shadow:3px 3px 0 #111}
+.setrbtns .btn.pri{background:linear-gradient(180deg,#ffe36a,#ffc21a);color:#111}
+.setrbtns .btn.ok{background:#2f8a3a;color:#fff}.setrbtns .btn.bad{background:#b3261e;color:#fff}
+.setrbtns .btn:disabled{opacity:.75}
+.setrhd b{font:400 23px var(--f-comic);letter-spacing:.05em;color:#ffd23a;text-shadow:2px 2px 0 #111}
+.setrtip{font-size:14px;color:#f3ecd4}
