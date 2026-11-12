@@ -1,9 +1,13 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.25.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.26.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.26.0:** Gyorsabb indulás: a két legnagyobb játék (SERE Kitörés, Shot&Run) külön fájlba került (`sere.js`, `sr.js`), az `app.js` 1 MB-ról 562 KB-ra csökkent (tömörítve 371 → 204 KB). A kezdőlap így hamarabb megjelenik; a két játék a kezdőlap után a háttérben töltődik le (és offline is tárolódik), így a megnyitásuk ugyanolyan gyors. Shot&Run: **új, sérülhető alkatrész: GPS-vevő** – a GPS-es gránátok (Excalibur, Vulcano, PGK) sérült vevővel pontatlanabbak és gyengébben korrigálnak (közvetlen találat kb. 50% → 20%), kiesett vevővel irányítás nélkül, ballisztikusan repülnek; az adatdoboz figyelmeztet, a gép nem lő GPS-es gránátot kiesett vevővel; a FELÜLNÉZET kijelző a rádió vagy a GPS sérülésétől is megreped („GPS KIESETT”, „RÁDIÓ+GPS KIESETT”).
+
+*Fejlesztőknek:* a `sr.js` és a `sere.js` a közös segédeket az `app.js` végén lévő `export {…}` listából importálja; ha ezekben új közös függvényt használsz, vedd fel az export listába. Új fájlnál a `sw.js` SHELL listáját is bővítsd.
 
 **v4.25.0:** Shot&Run: összecsukható kiegészítő kijelzők – a FELÜLNÉZET és a bal alsó adatdoboz (METEO, TÁVMÉRŐ, LŐTÁBLA, ELTÉRÉS) egy koppintással fejléccé / „▸ ADATOK” füllé csukható, újabb koppintásra kinyílik; a telefon megjegyzi a beállítást. A TÁVMÉRŐ sorban is kiírt szavak: „irány jobbra/balra”, „szint” (a Δ és a J/B helyett).
 
