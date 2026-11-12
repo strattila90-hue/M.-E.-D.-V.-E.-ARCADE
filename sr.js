@@ -10,7 +10,7 @@ const SR_AMMO=[
  {id:'m2000',r:'Rheinmetall Denel · kb. 43–44 kg · cserélhető fenékrész: boat-tail kb. 30 km, base bleed kb. 40 km',n:'Assegai M2000 HE',d:'Repesz-romboló – nagyobb hatósugár, mélyebb kráter',q:12,v:568,R:68,dmg:38,cr:30,kind:'he'},
  {id:'pff',r:'Rheinmetall Denel · több ezer előre gyártott volfrám repesz · közelségi gyújtóval a cél fölött robban · 30/40 km',n:'Assegai M0603 PFF',d:'Előre repeszesített, a cél fölött robban – széles sáv, kevés kráter',q:8,v:560,R:115,dmg:24,cr:8,kind:'pff'},
  {id:'vlap',r:'Rheinmetall Denel · base bleed + rakétahajtómű · L52 csőből kb. 54 km (kísérleti rekord: 67 km)',n:'Assegai M2005 V-LAP',d:'Rakéta-póthajtás – laposabb, gyorsabb röppálya, kisebb töltet',q:6,v:588,R:48,dmg:28,cr:20,kind:'vlap'},
- {id:'smart',r:'GIWS (Rheinmetall/Diehl) · kb. 47 kg · 2 résztöltet ejtőernyőn, radar + infravörös szenzor, EFP páncéltörő mag felülről · L52: kb. 27,5 km',n:'DM702 SMArt 155',d:'Emelt, nyújtott röppálya; a csúcs után kilöki a 2 ejtőernyős résztöltetet, ezek radarral és infrával pásztáznak, befogás után felülről lőnek',q:4,v:560,R:0,dmg:26,cr:5,kind:'smart',search:115,gk:.8},
+ {id:'smart',r:'GIWS (Rheinmetall/Diehl) · kb. 47 kg · 2 résztöltet ejtőernyőn, radar + infravörös szenzor, EFP páncéltörő mag felülről · L52: kb. 27,5 km',n:'DM702 SMArt 155',d:'Emelt, nyújtott röppálya; a csúcs után kilöki a 2 ejtőernyős résztöltetet, ezek radarral és infrával pásztáznak, befogás után felülről lőnek',q:4,v:560,R:0,dmg:26,cr:5,kind:'smart',search:175,gk:.8},
  {id:'exc',r:'Raytheon/BAE Bofors · kb. 48 kg · GPS/INS irányítás, sikló végfázis, néhány méteres szórás · PzH 2000-ből 9–48 km között tesztelve',n:'M982 Excalibur',d:'GPS-irányított – a végfázisban a célra korrigál (kb. ±700 m)',q:3,v:560,R:52,dmg:44,cr:22,kind:'gps',corr:70},
  {id:'vul',r:'Leonardo/Diehl · űrméret alatti, szárnystabilizált, leváló vezetőelemmel · GPS/INS · gyártói adat szerint kb. 70 km',n:'Vulcano 155 GLR',d:'Irányított, űrméret alatti – nagy korrekció (±1100 m), kis töltet',q:3,v:610,R:36,dmg:30,cr:14,kind:'gps',corr:110},
  {id:'pgk',r:'Northrop Grumman (Orbital ATK) · a hagyományos HE gránát orrába csavart GPS-es irányító gyújtó kormánylapátokkal · kb. 10 m-es szórás',n:'M1156 PGK HE',d:'Irányító gyújtós repesz-romboló – kis korrekció (±300 m) az alaplőszer erejével',q:4,v:560,R:60,dmg:34,cr:26,kind:'gps',corr:30},
@@ -127,7 +127,7 @@ function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.z
   else if(am.kind==='smoke'){ev.smoke={x:E.x,y:E.y};ev.cr.push([E.x,8,2])}
   else if(am.kind==='illum'){if(E.type==='flare')ev.flare={x:E.x,y:E.y};else ev.dud=1;if(E.type==='hit')hit(tg,4,'barrel',true)}
   else if(am.kind==='smart'&&E.type==='hit'){blast(am.R||40,am.dmg*.8,1.4);ev.cr.push([E.x,8,3])}
-  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=7;ev.subV=2;for(const o of [-30,30]){const x=E.x+(E.dr!=null?E.dr:sh.face*46)+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.5;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}if(ev.subs.some(q=>q.hit)){ev.ft=2.6+Math.random()*.4;ev.delay=ev.ft}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
+  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=7;ev.subV=2;for(const o of [-30,30]){const x=E.x+(E.dr!=null?E.dr:sh.face*46)+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.75;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}if(ev.subs.some(q=>q.hit)){ev.ft=2.6+Math.random()*.4;ev.delay=ev.ft}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
   else if(E.type==='air'){blast(am.R,am.dmg,1.2);ev.cr.push([E.x,am.R*.45,1.5*f])}
   else{blast(am.R,am.kind==='pff'?am.dmg*1.2:am.dmg,1.6);ev.cr.push([E.x,am.cr*(.6+.4*f),am.cr*.55*f])}
   if(am.kind==='laser')ev.lz=srLaserOk(sh,tg)?1:0;
@@ -432,7 +432,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.bail=[];setTimeout(()=>{try{if(AC){srEngStartBuf();srRadioBuf();srTurretBuf();srLoaderHumBuf();for(let k=0;k<4;k++)srLoadBuf(k)}}catch(e){}},250);/* a hangminták előre elkészülnek, így az első kapcsoláskor sem akad */SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};setTimeout(srCamUI,0);SR.bail=[];setTimeout(()=>{try{if(AC){srEngStartBuf();srRadioBuf();srTurretBuf();srLoaderHumBuf();for(let k=0;k<4;k++)srLoadBuf(k)}}catch(e){}},250);/* a hangminták előre elkészülnek, így az első kapcsoláskor sem akad */SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -601,7 +601,11 @@ function srUpdate(dt,now){const P=SR.phase;
   // kamera
   const cam=SR.cam,W=SR.W,H=SR.H;let tx=cam.x,ty=cam.y,tz=cam.z;
   if(!SR.camFree){
-    if(SR.ovw){const [a,b]=SR.v;tx=(a.x+b.x)/2;tz=Math.min(SR.zb,W/(Math.abs(b.x-a.x)+260));ty=Math.min(a.y,b.y)-H*.12/tz}
+    const CM=SR.camMode||'auto';
+    if(CM==='own'||CM==='enemy'){const me=srCtl(),v=CM==='own'?me:SR.v[1-me.i];tz=SR.zb*1.15;tx=v.x+v.face*W*(CM==='own'?.14:.06)/tz;ty=v.y-16+H*.05/tz}
+    else if(CM==='shell'&&P==='fly'){const S=SR.shot,p=srShotPos(S,S.t);tx=p.x;ty=p.y+H*.04/SR.zb;tz=SR.zb*1.45}
+    else if(CM==='shell'&&SR.subs.length){const tg=SR.v[1-SR.shot.ev.by],pts=[[tg.x-50,tg.y-40],[tg.x+50,tg.y+16]];for(const q of SR.subs)if(q.cx!=null)pts.push([q.cx,q.cy-20],[q.cx,q.cy+20]);const F=srFrame(pts,SR.zb*1.6);tx=F[0];ty=F[1];tz=F[2]}
+    else if(SR.ovw||CM==='map'){const [a,b]=SR.v;tx=(a.x+b.x)/2;tz=Math.min(SR.zb,W/(Math.abs(b.x-a.x)+260));ty=(a.y+b.y)/2-20+H*.1/tz}
     else if(P==='fly'){const S=SR.shot,ev=S.ev,T=(S.n-1)*ev.dt,p=srShotPos(S,S.t),left=T-S.t;
       if(left>1.4){const pr=srClamp(S.t/Math.max(.1,T-1.4),0,1);tx=p.x;ty=p.y+H*.05/SR.zb;tz=SR.zb*(srCineOn()?1.05+.3*Math.sin(Math.PI*pr):.82)}
       else{// a végfázisban a lövedék, a becsapódási pont és (ha közel van) a cél együtt kerül a képbe – a kép közepére
@@ -931,8 +935,8 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
   {const sa=SR_AM[ctl.sel],g=ctl.d.gps||0;if(sa&&sa.kind==='gps'&&g)lines.push([g>=2?'GPS      kiesett – a gránát irányítás nélkül repül':'GPS      sérült – pontatlan, gyengébb irányítás',g>=2?'#ff9a8a':'#ffd24a'])}
   const R=SR.rep[ctl.i];if(R)lines.push(['ELTÉRÉS  '+R.txt,'#ffe08a']);
   if(SR.flares.some(f=>f.by===ctl.i))lines.push(['CÉL      megvilágítva – becsapódás-előrejelzés aktív','#fff3b0']);
-  if(srFold().d){c.font='400 13px '+SR_CFONT;c.textAlign='left';const tw=c.measureText('▸ ADATOK').width+16,ty=H-30;c.fillStyle='rgba(0,0,0,.6)';srRR(c,4,ty,tw,24,8);c.fill();c.strokeStyle='rgba(243,215,122,.6)';c.lineWidth=1.2;srRR(c,4.5,ty+.5,tw-1,23,8);c.stroke();c.fillStyle='#ffd23a';c.fillText('▸ ADATOK',12,ty+17);SR.hitD=[4,ty,tw,24]}
-  else{c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width)),bw=Math.min(W-8,mw+26);c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,bw,lines.length*14+5);SR.hitD=[4,y-13,bw,lines.length*14+5];
+  const mH=SR.msgH||0;if(srFold().d){c.font='400 13px '+SR_CFONT;c.textAlign='left';const tw=c.measureText('▸ ADATOK').width+16,ty=H-30-mH;c.fillStyle='rgba(0,0,0,.6)';srRR(c,4,ty,tw,24,8);c.fill();c.strokeStyle='rgba(243,215,122,.6)';c.lineWidth=1.2;srRR(c,4.5,ty+.5,tw-1,23,8);c.stroke();c.fillStyle='#ffd23a';c.fillText('▸ ADATOK',12,ty+17);SR.hitD=[4,ty,tw,24]}
+  else{c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-mH-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width)),bw=Math.min(W-8,mw+26);c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,bw,lines.length*14+5);SR.hitD=[4,y-13,bw,lines.length*14+5];
   c.fillStyle='rgba(255,210,58,.85)';c.fillText('▾',4+bw-13,y);
   for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,bw-26);y+=14}}
   // felülnézet: oldalirány, szél, utolsó becsapódás
@@ -1153,7 +1157,7 @@ function srSndScream(m){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,ho
   if(pn){pn.pan.value=srClamp((m.x-SR.cam.x)*SR.cam.z/(SR.W/2||200),-1,1);out.connect(pn).connect(MASTER)}else out.connect(MASTER);
   o.start(t);lfo.start(t);o.stop(t+d+.05);lfo.stop(t+d+.05);srNoise(t,d*.8,.025,'bandpass',1900,1100,2)}catch(e){}}
 /* ---------- az üzenetek (középső üzenet, figyelmeztetés) oda kerülnek, ahol nem takarják a lövegeket és a fölöttük lévő sávokat ---------- */
-function srMsgPlace(){const now=performance.now();if(now-(SR.mpT||0)<(SR.cine?60:120))return;SR.mpT=now;if(!SR.cv||!SR.v)return;
+function srMsgPlace(){return;const now=performance.now();if(now-(SR.mpT||0)<(SR.cine?60:120))return;SR.mpT=now;if(!SR.cv||!SR.v)return;
   const els=[$('#srMsg'),$('#srAlert')].filter(e=>e&&!e.hidden);if(!els.length)return;
   const z=SR.cam.z,W=SR.W,H=SR.H,sx=x=>(x-SR.cam.x)*z+W/2,sy=y=>(y-SR.cam.y)*z+H*.62,obs=[];
   for(const v of SR.v)obs.push([sx(v.x-62),sy(v.y-80),sx(v.x+62),sy(v.y+14)]);
@@ -1165,6 +1169,10 @@ function srMsgPlace(){const now=performance.now();if(now-(SR.mpT||0)<(SR.cine?60
     for(let y=base[id];y<=maxY;y+=12){let ov=0;for(const o of obs){const ix=Math.max(0,Math.min(R,o[2])-Math.max(L,o[0])),iy=Math.max(0,Math.min(y+h,o[3])-Math.max(y,o[1]));ov+=ix*iy}
       if(!best||ov<best.ov)best={y,ov};if(ov===0)break}
     const ny=Math.round(best.y)+'px';if(el.style.top!==ny)el.style.top=ny;obs.push([L,best.y-4,R,best.y+h+4])}}
+/* ---------- kameranézetek: AUTO (filmszerű követés), SAJÁT löveg, TÉRKÉP (mindkét löveg), ELLENSÉG lövege, GRÁNÁT (a lövedék és a résztöltetek követése).
+   A választott nézet megmarad; nem AUTO nézetben a képen is van egy TŰZ gomb, így bármelyik nézetből lőni lehet. ---------- */
+const SR_CAMS=[['auto','AUTO'],['own','SAJÁT'],['map','TÉRKÉP'],['enemy','ELLENSÉG'],['shell','GRÁNÁT']];
+function srCamUI(){const l=$('#srCamL');if(l){const c=SR_CAMS.find(c=>c[0]===(SR.camMode||'auto'));l.textContent=c?c[1]:'AUTO'}}
 /* ---------- „Mindent be” gomb: a 4 rendszer egymás után, a megszokott hangokkal ---------- */
 function srNeedSw(v){return ['eng','rad','tur'].filter(k=>!v.sys[k]&&v.d[k]<2).concat(v.load<1&&!v.loading?['load']:[])}
 function srAllOn(){if(!SR.v||!(SR.phase==='prep'||srMyTurn()))return;const v=srCtl(),ks=srNeedSw(v);if(!ks.length)return;clearTimeout(SR.allT);
@@ -1203,7 +1211,9 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   if(Date.now()-(SR.pgT||0)>1000){SR.pgT=Date.now();const pg=$('#srPing'),N=SR.net,net=SR.mode==='net'&&!!N,stall=net&&(navigator.onLine===false||N.pend>0&&Date.now()-N.wT>4000),on=net&&(!!N.rtt||stall);if(pg){pg.hidden=!on;if(on){if(stall){pg.textContent='⚠ kapcsolódás…';pg.className='srping bad'}else{const r=Math.round(N.rtt);pg.textContent=r+' ms';pg.className='srping '+(r<200?'ok':r<450?'mid':'bad')}}}
     if(SR.mode==='net'&&SR.net&&P==='aim'&&Date.now()-(SR.net.pingT||0)>20000){SR.net.pingT=Date.now();srNetPing()}}
   if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
-  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials();srTutTick();srMsgPlace()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
+  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials();srTutTick();srMsgPlace();
+  {const f2=$('#srFire2'),man=(SR.camMode||'auto')!=='auto'&&P!=='over';if(f2){if(f2.hidden===man)f2.hidden=!man;if(man){const fb=$('#srFire'),r=!!fb&&fb.classList.contains('rdy');if(f2.classList.contains('rdy')!==r)f2.classList.toggle('rdy',r)}}
+   const m=$('#srMsg'),h=m&&!m.hidden?m.offsetHeight:0;if(h!==SR.msgH){SR.msgH=h;const vw=m&&m.parentElement;if(vw)vw.style.setProperty('--srmh',h+'px')}}}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
 function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,((SR.qb||1)>=1.2?2600:1900)/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5),mBase:null});srDials()}
 
 /* ---------- online szoba (meghívókód) ---------- */
@@ -1353,8 +1363,8 @@ async function srWake(on){try{if(!on){const w=SR.wl;SR.wl=null;w&&w.release&&w.r
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&SR.cv)srWake(true)});
 const srInvLink=code=>location.origin+location.pathname+'?sr='+code;
 function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr');document.body.classList.add('harcon');
-  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span class="srping" id="srPing" hidden></span><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>${ic('pause')}</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
-   <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kamera: áttekintés / saját löveg">🔭</button><div class="srmsg" id="srMsg" hidden></div><button type="button" class="srall" id="srAll" hidden>⚡ Mindent be</button><div class="sralert" id="srAlert" hidden role="alert"></div></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="sralert" id="srAlert" hidden role="alert"></div><div class="hstat"><span class="srping" id="srPing" hidden></span><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>${ic('pause')}</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
+   <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kameranézet váltása">🎥<b id="srCamL">AUTO</b></button><button type="button" class="srfire2" id="srFire2" hidden aria-label="Tűz">TŰZ!</button><div class="srmsg" id="srMsg" hidden></div><button type="button" class="srall" id="srAll" hidden>⚡ Mindent be</button></div>
    <div class="srpanel off" id="srPanel">
     <div class="srrow srsws"><button type="button" data-sw="eng"><i></i>MOTOR</button><button type="button" data-sw="rad"><i></i>RÁDIÓ</button><button type="button" data-sw="tur"><i></i>TORONY</button><button type="button" data-sw="load"><i></i>MÁLHÁZÁS</button><div class="srcnt"><b id="srCnt">0/60</b><small>lőszer</small></div></div>
     <div class="srrow sram"><select id="srAmmo" aria-label="Lőszertípus"></select></div><div class="srami" id="srAmI"></div>
@@ -1380,7 +1390,8 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
     srUI()}};
   const hold=(id,dir)=>{const b=$(id),on=e=>{e.preventDefault();ac();try{b.setPointerCapture(e.pointerId)}catch(x){}SR.mv=dir;b.classList.add('on')},off=()=>{if(SR.mv===dir)SR.mv=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);for(const k of ['pointerup','pointercancel','pointerleave'])b.addEventListener(k,off)};
   hold('#srBk',-1);hold('#srFw',1);
-  $('#srCam').onclick=()=>{if(SR.camFree||SR.ovw){SR.camFree=false;SR.ovw=false}else SR.ovw=true};
+  $('#srCam').onclick=()=>{ac();const i=SR_CAMS.findIndex(c=>c[0]===(SR.camMode||'auto')),n=SR_CAMS[(i+1)%SR_CAMS.length];SR.camMode=n[0];SR.camFree=false;SR.ovw=false;srClick(1);srCamUI()};
+  $('#srFire2').onclick=()=>{ac();srFire()};
   let pid=null,lx=0,ly=0,mv=0;cv.addEventListener('pointerdown',e=>{pid=e.pointerId;lx=e.clientX;ly=e.clientY;mv=0;try{cv.setPointerCapture(pid)}catch(x){}});
   cv.addEventListener('pointermove',e=>{if(e.pointerId!==pid||!SR.v||SR.phase==='fly')return;const dx=e.clientX-lx,dy=e.clientY-ly;mv+=Math.abs(dx)+Math.abs(dy);if(mv<8)return;lx=e.clientX;ly=e.clientY;SR.camFree=true;SR.ovw=false;SR.cam.x=srClamp(SR.cam.x-dx/SR.cam.z,0,SR_W);SR.cam.y=srClamp(SR.cam.y-dy/SR.cam.z,0,760)});
   const up=e=>{if(e.pointerId!==pid)return;pid=null;if(mv<8&&e.type==='pointerup'&&SR.cine&&SR.cine.skip!==false){SR.cine.t=SR.cine.T;return}if(mv<8&&e.type==='pointerup'&&SR.v){const r=cv.getBoundingClientRect();srFoldTap(e.clientX-r.left,e.clientY-r.top)}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
