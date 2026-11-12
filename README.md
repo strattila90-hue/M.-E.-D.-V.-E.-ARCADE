@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.29.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.29.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.29.2:** Shot&Run SMArt: ha a résztöltet pásztázás közben megtalálja a célt, kb. 0,6 mp-cel a befogás után azonnal tüzel – a levegőből, az aktuális magasságából (kb. 3 mp-cel a kilökés után, eddig csak a 7 mp-es ereszkedés végén); a második résztöltet 0,3 mp-cel később, a sebzés is ekkor éri a célt. Befogás nélkül végig pásztáznak, majd önmegsemmisülnek. Javítva: a gép célzója a 4.28-as magasabb kilökés óta rossz pontra irányozta a SMArt-ot (a kilökés helyére, nem oda, ahova a töltetek sodródnak), ezért szinte sosem talált.
 
 **v4.29.1:** Shot&Run: mélyebb, súlyosabb motorindítás és málházás – nehéz relé- és mágneskapcsoló-csattanás, mélyen morgó 24 V-os önindító, tompán dobbanó kompressziók, dübörgő égési lökések és főtengely-dörmögés; a málházásnál nehéz láncszem-léptetés, mély hidraulikus átadókar, a 43 kg-os gránát csúszása és mély, hosszan csengő döngölés. A hangok a telefonhangszóróra vannak hangolva: a hallhatatlan legmélyebb részt kiszűrik, a mélységet dús felharmonikusok adják (így kis hangszórón is mélynek hallatszanak); a töltőautomata búgása és az alapjárat is mélyebb.
 
