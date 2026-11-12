@@ -127,7 +127,7 @@ function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.z
   else if(am.kind==='smoke'){ev.smoke={x:E.x,y:E.y};ev.cr.push([E.x,8,2])}
   else if(am.kind==='illum'){if(E.type==='flare')ev.flare={x:E.x,y:E.y};else ev.dud=1;if(E.type==='hit')hit(tg,4,'barrel',true)}
   else if(am.kind==='smart'&&E.type==='hit'){blast(am.R||40,am.dmg*.8,1.4);ev.cr.push([E.x,8,3])}
-  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=7;for(const o of [-30,30]){const x=E.x+(E.dr!=null?E.dr:sh.face*46)+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.5;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
+  else if(am.kind==='smart'){if(E.type==='disp'){ev.subs=[];ev.delay=7;ev.subV=2;for(const o of [-30,30]){const x=E.x+(E.dr!=null?E.dr:sh.face*46)+o,det=!tg.dead&&Math.abs(x-tg.x)<am.search&&Math.abs(E.lat-tgl)<am.search*.5;ev.subs.push({x,y:E.y,hit:det});if(det)hit(tg,am.dmg*(.85+Math.random()*.3),'top',true)}if(ev.subs.some(q=>q.hit)){ev.ft=2.6+Math.random()*.4;ev.delay=ev.ft}}else{ev.dud=1;ev.cr.push([E.x,6,2])}}
   else if(E.type==='air'){blast(am.R,am.dmg,1.2);ev.cr.push([E.x,am.R*.45,1.5*f])}
   else{blast(am.R,am.kind==='pff'?am.dmg*1.2:am.dmg,1.6);ev.cr.push([E.x,am.cr*(.6+.4*f),am.cr*.55*f])}
   if(am.kind==='laser')ev.lz=srLaserOk(sh,tg)?1:0;
@@ -135,7 +135,7 @@ function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.z
   return ev}
 
 /* ---------- gépi ellenfél ---------- */
-function srSolve(sh,tg,am){let best=null;const tryE=e=>{const s=srSim(sh,tg,e,0,am,false),err=s.end.type==='hit'?0:s.end.type==='out'?9999:Math.abs(s.end.x-tg.x);if(!best||err<best.err)best={e,err,s}};
+function srSolve(sh,tg,am){let best=null;const tryE=e=>{const s=srSim(sh,tg,e,0,am,false),err=s.end.type==='hit'?0:s.end.type==='out'?9999:Math.abs(s.end.x+(s.end.type==='disp'&&s.end.dr!=null?s.end.dr:0)-tg.x);/* SMArt: a résztöltetek oda sodródnak, nem a kilökés helyére */if(!best||err<best.err)best={e,err,s}};
   for(let e=srHiAm(am)?800:60;e<=1140;e+=20)tryE(e);const c=best.e;for(let e=c-18;e<=c+18;e+=3)tryE(srClamp(e,0,1150));
   const s=best.s,rng=Math.abs(s.end.x-s.m.x)||1,trav=Math.atan((SR.zOff-s.end.lat)/rng)*SR_MIL,s2=srSim(sh,tg,srClamp(best.e+10,0,1150),0,am,false);
   let slope=(s2.end.x-s.end.x)*sh.face/10;if(!isFinite(slope)||Math.abs(slope)<.25||s2.end.type==='out')slope=best.e>640?-1:1;
@@ -382,8 +382,10 @@ function srSmartEject(x,y,face){if(srSnd()){const t=AC.currentTime+.01;sndPop();
   const F=SR.fx;F.push({k:'fl',x,y,R:18,t:.1,t0:.1});for(let i=0;i<srN(10);i++)F.push({k:'s',x:x+(Math.random()-.5)*8,y:y+(Math.random()-.5)*6,vx:face*(20+Math.random()*40),vy:-6+Math.random()*12,r0:3,r1:12+Math.random()*10,t:1.6+Math.random(),t0:2.6,c:'190,184,172',al:.5,drag:1.5,w:1});
   F.push({k:'d',x,y,vx:face*60,vy:-20,rot:0,vr:9,w:6,h:2.2,t:4,t0:4,c:'#4a4f36'});F.push({k:'d',x,y,vx:face*110,vy:10,rot:0,vr:-5,w:9,h:3,t:4,t0:4,c:'#3a3f2a'});// leváló fenéklap és hüvelyrész
   for(let i=0;i<srN(8);i++){const a=Math.random()*7,v=60+Math.random()*90;F.push({k:'p',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:200,t:.4,t0:.5,c:'255,210,140',sz:1.2})}}
-function srDrawSub(c,s,t){const u=s.t/s.T,gy=srGy(s.tx),y1=gy-26,fall=u<.18?(u/.18)*.32:.32+.68*(u-.18)/.82,e=Math.min(1,u*3),ee=e*(2-e),
-    x=s.x+(s.tx-s.x)*ee+(u>.18?Math.sin(t*2.6+s.ph)*3:0),y=s.y+(y1-s.y)*fall,spin=t*9+s.ph,tilt=Math.sin(spin)*.5,h=gy-y,lock=s.hit&&u>.8,tg=s.tg;s.cx=x;s.cy=y;
+// a befogott célra tüzelő résztöltet: robbanóan formált lövedék (EFP) a résztöltet aktuális magasságából, felülről a célba
+function srEfpFire(s){const tg=s.tg,x=s.cx!=null?s.cx:s.tx,y=s.cy!=null?s.cy:srGy(s.tx)-26;srSndEfp();if(tg){srSparks(tg.x,tg.y-30,36);SR.fx.push({k:'efp',x,y,x2:tg.x+(Math.random()-.5)*20,y2:tg.y-28,t:.3,t0:.3});srBoomSmall(tg.x,tg.y-26,1.2)}SR.fx.push({k:'fl',x,y,R:26,t:.12,t0:.12});SR.shake=Math.max(SR.shake,.4)}
+function srDrawSub(c,s,t){const u=s.t/(s.D||s.T),gy=srGy(s.tx),y1=gy-26,fall=u<.18?(u/.18)*.32:.32+.68*(u-.18)/.82,e=Math.min(1,u*3),ee=e*(2-e),
+    x=s.x+(s.tx-s.x)*ee+(u>.18?Math.sin(t*2.6+s.ph)*3:0),y=s.y+(y1-s.y)*fall,spin=t*9+s.ph,tilt=Math.sin(spin)*.5,h=gy-y,lock=s.tl!=null?s.t>=s.tl:s.hit&&u>.8,tg=s.tg;s.cx=x;s.cy=y;
   // radar/IR pásztázás: a 30°-os ferde tengely körbefordul → a talajfolt oda-vissza söpör
   if(u>.25){const fx=lock&&tg&&!tg.dead?tg.x:x+Math.tan(.52)*h*Math.sin(spin),fy=lock&&tg?tg.y-24:srGy(fx),w=lock?3:Math.max(6,h*.12);
     c.fillStyle=lock?'rgba(255,40,30,.22)':'rgba(255,90,70,.1)';c.beginPath();c.moveTo(x,y+4);c.lineTo(fx-w,fy);c.lineTo(fx+w,fy);c.closePath();c.fill();
@@ -500,7 +502,7 @@ function srImpact(ev){const E=ev.end,am=SR_AM[ev.am],sh=SR.v[ev.by],tg=SR.v[1-ev
   if(E.type==='out'){}
   else if(ev.smoke){srSmokeBurst(E.x,E.y);srSndHiss();SR.smokes.push({x:E.x,y:E.y,turns:6,age:0})}
   else if(ev.flare){SR.flares.push({x:E.x,y:E.y,by:ev.by,turns:5});sndPop();srSparks(E.x,E.y,14);if(srSnd()){const t=AC.currentTime+.05;srNoise(t,.25,.35,'highpass',2000);srNoise(t+.1,2.4,.12,'bandpass',4200,2400,.8)}}
-  else if(ev.subs){srSmartEject(E.x,E.y,sh.face);ev.subs.forEach((s,i)=>SR.subs.push({x:E.x,y:E.y,tx:s.x,hit:s.hit,t:0,T:ev.delay,ph:Math.random()*6,tg,i,pk:.9+i*.17,lk:0}))}
+  else if(ev.subs){srSmartEject(E.x,E.y,sh.face);ev.subs.forEach((s,i)=>{const ft=ev.ft,k=s.hit&&ft!=null?ft+(i&&ev.subs[0].hit?.3:0):null;SR.subs.push({x:E.x,y:E.y,tx:s.x,hit:s.hit,t:0,D:ev.subV===2?7:ev.delay,T:k!=null?k+.05:ft!=null?ft+1.3:ev.delay,tf:k,tl:k!=null?k-.6:null,v2:ev.subV===2,ph:Math.random()*6,tg,i,pk:.9+i*.17,lk:0})})}
   else if(ev.dud){srBoomSmall(E.x,E.y,.7);sndThud()}
   else if(E.type==='air'){srBoomAir(E.x,E.y,am.R);srSndAir();SR.shake=Math.max(SR.shake,.3);SR.flash=.25;
     for(let i=0;i<srN(16);i++){const gx=E.x+(Math.random()-.5)*am.R*2.1;SR.fx.push({k:'s',x:gx,y:srGy(gx)-2,vx:0,vy:-14,r0:3,r1:12,t:1.2,t0:1.2,c:'120,100,70',al:.5,dl:.12+Math.random()*.25})}}
@@ -508,7 +510,7 @@ function srImpact(ev){const E=ev.end,am=SR_AM[ev.am],sh=SR.v[ev.by],tg=SR.v[1-ev
     if(E.type==='hit')srSparks(E.x,E.y,E.brl?60:40);try{navigator.vibrate&&navigator.vibrate(90)}catch(e){}}
   SR.pend={ev,t:ev.delay||0}}
 function srApply(ev){const sh=SR.v[ev.by],tg=SR.v[1-ev.by],E=ev.end;
-  if(ev.subs)for(const s of ev.subs){const sy=srGy(s.x)-26;if(s.hit){srSndEfp();srSparks(tg.x,tg.y-30,36);SR.fx.push({k:'efp',x:s.x,y:sy,x2:tg.x+(Math.random()-.5)*20,y2:tg.y-28,t:.3,t0:.3});SR.fx.push({k:'fl',x:s.x,y:sy,R:26,t:.12,t0:.12});srBoomSmall(tg.x,tg.y-26,1.2);SR.shake=.4}else{srBoomAir(s.x,sy,22);srSndAir()}}// nincs befogás: önmegsemmisítés a levegőben
+  if(ev.subs&&ev.subV!==2)for(const s of ev.subs){const sy=srGy(s.x)-26;if(s.hit){srSndEfp();srSparks(tg.x,tg.y-30,36);SR.fx.push({k:'efp',x:s.x,y:sy,x2:tg.x+(Math.random()-.5)*20,y2:tg.y-28,t:.3,t0:.3});SR.fx.push({k:'fl',x:s.x,y:sy,R:26,t:.12,t0:.12});srBoomSmall(tg.x,tg.y-26,1.2);SR.shake=.4}else{srBoomAir(s.x,sy,22);srSndAir()}}// nincs befogás: önmegsemmisítés a levegőben
   let direct=false;
   for(const h of ev.hits){const v=SR.v[h.who],a=ev.after[h.who],bd=v.d;if(h.who===tg.i&&(E.type==='hit'||ev.subs))direct=true;
     // a robbanás meglöki a löveget: kis felugrás + billenés a robbanással ellentétes irányba
@@ -567,7 +569,9 @@ function srUpdate(dt,now){const P=SR.phase;
   for(const tr of SR.trees)if(tr.burn>0){tr.burn-=dt;if(Math.random()<dt*9)SR.fx.push({k:'j',x:tr.x+(Math.random()-.5)*5,y:srGy(tr.x)-8-Math.random()*8,vx:SR.wind.x*.5,vy:-34-Math.random()*26,t:.6+Math.random()*.6,t0:1.2})}
   for(const f of SR.flares){const fl=srGy(f.x)-70;if(f.y<fl)f.y=Math.min(fl,f.y+9*dt);f.x+=SR.wind.x*.12*dt}
   for(const s of SR.smokes)s.age+=dt;
-  SR.subs=SR.subs.filter(s=>{s.t+=dt;const u=s.t/s.T;if(u>.25&&(s.pk-=dt)<=0){s.pk=.42;srSndPing(s.hit&&u>.78)}if(s.hit&&u>.8&&!s.lk){s.lk=1;srSndLock()}return s.t<s.T});
+  SR.subs=SR.subs.filter(s=>{s.t+=dt;const u=s.t/(s.D||s.T),lk=s.tl!=null?s.t>=s.tl:s.hit&&u>.8;if(u>.25&&(s.pk-=dt)<=0){s.pk=lk?.16:.42;srSndPing(lk)}if(lk&&!s.lk){s.lk=1;srSndLock()}
+    if(s.v2&&s.tf!=null&&s.t>=s.tf&&!s.fd){s.fd=1;srEfpFire(s)}
+    if(s.t<s.T)return true;if(s.v2&&!s.hit){srBoomAir(s.cx!=null?s.cx:s.tx,s.cy!=null?s.cy:srGy(s.tx)-26,22);srSndAir()}return false});
   if(SR.pend&&(SR.pend.t-=dt)<=0){const ev=SR.pend.ev;SR.pend=null;srApply(ev)}
   let moving=false;
   if(P==='prep')srPrep(dt);
