@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.22.0',APP_DATE='2026.11.12.';
+const APP_VER='4.23.0',APP_DATE='2026.11.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4846,7 +4846,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -4901,7 +4901,7 @@ function srFireVeh(v){const am=SR_AM[v.sel],tg=SR.v[1-v.i],mis=(v.d.ldr===1?.2:v
 function srFire(){if(!srMyTurn()||SR.paused)return;const v=srCtl();
   if(!v.sys.tur&&v.d.tur<2){toast('Kapcsold vissza a TORONY főkapcsolót!');return}
   if(!(v.ammo[v.sel]>0)){srAlert(srAmmoN(v)?'Ebből a lőszerből nincs több – válassz másikat!':'Kifogyott a lőszer!','warn');return}
-  SR.mv=0;srFireVeh(v)}
+  SR.mv=0;srFireVeh(v);if(SR.tutS==='fire')srTutDone()}
 function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;const ff=!local&&SR.mode==='net'?srNetLat():0;
   if(!local){if(Math.abs(v.x-ev.sx)>6)srMsg('⚠ '+v.name+' állást váltott!');v.x=ev.sx;if(ev.k==='shot'){v.elev=ev.elev;v.trav=ev.trav;v.sel=ev.am;if(ev.amo)v.ammo={...ev.amo};else if(v.ammo[ev.am]>0)v.ammo[ev.am]--}else if(ev.amo)v.ammo={...ev.amo}}
   SR.camFree=false;SR.ovw=false;SR.pred=null;
@@ -5440,6 +5440,33 @@ function srUI(){const P=$('#srPanel');if(!P||!SR.v)return;const v=srCtl();
   $('#srAmI').textContent=v.load>=1&&SR_AM[v.sel]?SR_AM[v.sel].d+' · Valós: '+SR_AM[v.sel].r:'Málházd be a 60 db 155 mm-es gránátot.';
   $('#srDmg').innerHTML=SR_PARTS.map(([k,l])=>`<span class="l${v.d[k]}">${l}</span>`).join('')+`<span class="l${v.crew>=5?0:v.crew>=3?1:2}">KEZELŐK ${v.crew}/5</span>`+(v.burn>0?'<span class="l2">🔥 TŰZ</span>':'');
   $('#srBk').innerHTML=v.face>0?'◀ HÁTRA':'◀ ELŐRE';$('#srFw').innerHTML=v.face>0?'ELŐRE ▶':'HÁTRA ▶'}
+/* ---------- „Mindent be” gomb: a 4 rendszer egymás után, a megszokott hangokkal ---------- */
+function srNeedSw(v){return ['eng','rad','tur'].filter(k=>!v.sys[k]&&v.d[k]<2).concat(v.load<1&&!v.loading?['load']:[])}
+function srAllOn(){if(!SR.v||!(SR.phase==='prep'||srMyTurn()))return;const v=srCtl(),ks=srNeedSw(v);if(!ks.length)return;clearTimeout(SR.allT);
+  let i=0;const step=()=>{if(!SR.v||srCtl()!==v||!(SR.phase==='prep'||srMyTurn()))return;const k=ks[i++];const on=k==='load'?v.load>=1||v.loading:v.sys[k];if(!on)srSwitch(k);if(i<ks.length)SR.allT=setTimeout(step,k==='eng'?650:420)};step()}
+/* ---------- bevezető az első játékhoz: mindig a következő teendőre mutat (kihagyható, csak egyszer) ---------- */
+const SR_TUT='srTut1',SR_TUTX={eng:['1/6 · MOTOR','Indítsd be a motort. Tipp: a ⚡ MINDENT BE egy gombbal mindent bekapcsol.'],
+ rad:['2/6 · RÁDIÓ','Rádió be: tőle jönnek a szél- és lőtábla-adatok.'],tur:['3/6 · TORONY','Torony be – enélkül nem lehet irányozni és lőni.'],
+ load:['4/6 · MÁLHÁZÁS','Töltsd be a 60 gránátot.'],wait:['Töltés…','Mindjárt kezdődik a párbaj.'],
+ elev:['5/6 · MAGASSÁG','Húzd a skálát vagy nyomd a −/+ gombot. A kép alján lévő TBL érték jó kiindulópont.',1],
+ fire:['6/6 · TŰZ!','Lőj! Utána az OBS sor és a FELÜLNÉZET mutatja, mennyit tévedtél.']};
+function srTutOn(){try{return !localStorage.getItem(SR_TUT)}catch(e){return false}}
+function srTutDone(){SR.tutS='done';try{localStorage.setItem(SR_TUT,'1')}catch(e){}const el=$('#srTut');if(el)el.hidden=true;srTutHl(null);const h=$('#harc');h&&h.classList.remove('srtutsw')}
+function srTutHl(t){if(SR.tutHl&&SR.tutHl!==t)SR.tutHl.classList.remove('srhl');SR.tutHl=t;if(t)t.classList.add('srhl')}
+function srTutTick(){const el=$('#srTut'),all=$('#srAll');if(!el)return;const now=performance.now();if(now-(SR.tutT||0)<180)return;SR.tutT=now;
+  const v=SR.v&&srCtl(),act=!!v&&!SR.paused&&(SR.phase==='prep'||srMyTurn());
+  if(all){const sh=act&&srNeedSw(v).length>0;if(all.hidden===sh)all.hidden=!sh}
+  if(SR.tutS==='done'||(SR.tutS==null&&!srTutOn())){SR.tutS='done';if(!el.hidden)el.hidden=true;srTutHl(null);return}
+  let k=null;if(act){const n=srNeedSw(v);k=n[0]||(v.loading?'wait':null);
+    if(!k&&srMyTurn()){if(SR.tutE==null)SR.tutE=v.elev;k=v.elev!==SR.tutE||SR.tutS==='fire'?'fire':'elev'}}
+  if(!k){if(!el.hidden)el.hidden=true;srTutHl(null);$('#harc').classList.remove('srtutsw');return}
+  SR.tutS=k;$('#harc').classList.toggle('srtutsw',k!=='elev'&&k!=='fire');const tg=k==='wait'?null:k==='elev'?$('#srTE'):k==='fire'?$('#srFire'):$(`#srPanel [data-sw="${k}"]`),[h,b,below]=SR_TUTX[k];
+  if(el.dataset.k!==k){el.dataset.k=k;el.querySelector('b').textContent=h;el.querySelector('span').textContent=b;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}
+  el.hidden=false;srTutHl(tg);
+  // a buborék a kiemelt elem fölé kerül, a nyíl rá mutat
+  const H=$('#harc').getBoundingClientRect(),bw=el.offsetWidth,bh=el.offsetHeight;let x=H.width/2-bw/2,y=H.height*.3,ax=null;
+  if(tg){const r=tg.getBoundingClientRect(),cx=r.left+r.width/2-H.left;x=srClamp(cx-bw/2,8,H.width-bw-8);y=below?Math.min(H.height-bh-8,r.bottom-H.top+14):Math.max(8,r.top-H.top-bh-14);ax=srClamp(cx-x,16,bw-16)}
+  el.style.left=x+'px';el.style.top=y+'px';el.classList.toggle('noarr',ax==null);el.classList.toggle('below',!!below);if(ax!=null)el.style.setProperty('--ax',ax+'px')}
 function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.max(0,Math.ceil((SR.tlEnd-Date.now())/1000)):null,t=P==='prep'?'Előkészítés':P==='aim'?(my?(SR.mode==='hot'?SR.v[SR.turn].name:'Te jössz'):'Ellenfél céloz')+(tl!=null?' · '+tl+' s':''):P==='fly'?'Lövés úton':P==='over'?'Vége':P==='drop'?'Utánpótlás':'Becsapódás',e=$('#srTurn');
   if(e&&e.textContent!==t)e.textContent=t;if(e)e.classList.toggle('low',tl!=null&&tl<=10&&my);const r=$('#srRound');if(r&&r.textContent!==String(SR.round))r.textContent=SR.round;
   const pn=$('#srPanel'),off=!(my||P==='prep');if(pn&&pn.classList.contains('wait')!==off)pn.classList.toggle('wait',off);
@@ -5451,7 +5478,7 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   if(Date.now()-(SR.pgT||0)>1000){SR.pgT=Date.now();const pg=$('#srPing'),N=SR.net,net=SR.mode==='net'&&!!N,stall=net&&(navigator.onLine===false||N.pend>0&&Date.now()-N.wT>4000),on=net&&(!!N.rtt||stall);if(pg){pg.hidden=!on;if(on){if(stall){pg.textContent='⚠ kapcsolódás…';pg.className='srping bad'}else{const r=Math.round(N.rtt);pg.textContent=r+' ms';pg.className='srping '+(r<200?'ok':r<450?'mid':'bad')}}}
     if(SR.mode==='net'&&SR.net&&P==='aim'&&Date.now()-(SR.net.pingT||0)>20000){SR.net.pingT=Date.now();srNetPing()}}
   if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
-  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
+  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials();srTutTick()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
 function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,((SR.qb||1)>=1.2?2600:1900)/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5)});srDials()}
 
 /* ---------- online szoba (meghívókód) ---------- */
@@ -5602,7 +5629,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&SR.cv)srW
 const srInvLink=code=>location.origin+location.pathname+'?sr='+code;
 function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr');document.body.classList.add('harcon');
   el.innerHTML=`<div class="hbar"><div class="htitle">Shot<b>&amp;Run</b></div><div class="hstat"><span class="srping" id="srPing" hidden></span><span><b id="srTurn">–</b></span><span>Kör <b id="srRound">1</b></span></div><button class="hx srpzb" id="srPzB" aria-label="Szünet" hidden>${ic('pause')}</button><button class="hx" id="srClose" aria-label="Bezárás">✕</button></div>
-   <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kamera: áttekintés / saját löveg">🔭</button><div class="srmsg" id="srMsg" hidden></div><div class="sralert" id="srAlert" hidden role="alert"></div></div>
+   <div class="srwrap"><div class="srview"><canvas id="srCv"></canvas><button type="button" class="srcam" id="srCam" aria-label="Kamera: áttekintés / saját löveg">🔭</button><div class="srmsg" id="srMsg" hidden></div><button type="button" class="srall" id="srAll" hidden>⚡ Mindent be</button><div class="sralert" id="srAlert" hidden role="alert"></div></div>
    <div class="srpanel off" id="srPanel">
     <div class="srrow srsws"><button type="button" data-sw="eng"><i></i>MOTOR</button><button type="button" data-sw="rad"><i></i>RÁDIÓ</button><button type="button" data-sw="tur"><i></i>TORONY</button><button type="button" data-sw="load"><i></i>MÁLHÁZÁS</button><div class="srcnt"><b id="srCnt">0/60</b><small>lőszer</small></div></div>
     <div class="srrow sram"><select id="srAmmo" aria-label="Lőszertípus"></select></div><div class="srami" id="srAmI"></div>
@@ -5611,11 +5638,11 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
     <div class="srdial"><label>OLDAL <b id="srTv"></b></label><div class="srtrow"><button type="button" data-nudge="t-">◀</button><canvas class="srtape" id="srTT"></canvas><button type="button" data-nudge="t+">▶</button></div></div>
     <div class="srrow sract"><button type="button" class="srmv" id="srBk">◀ HÁTRA</button><div class="srfuel"><i id="srFuel"></i><small>menet / kör</small></div><button type="button" class="srmv" id="srFw">ELŐRE ▶</button><button type="button" class="srfire" id="srFire">TŰZ!</button></div>
    </div></div>
-   <div class="hstart" id="srStart"></div><div class="hover" id="srOver" hidden></div><div class="srpz" id="srPz" hidden></div>`;
+   <div class="hstart" id="srStart"></div><div class="hover" id="srOver" hidden></div><div class="srpz" id="srPz" hidden></div><div class="srtut" id="srTut" hidden role="status"><b></b><span></span><button type="button" class="srtutx">Kihagyom</button></div>`;
   for(const e of [1,.5,.2])srAtlas(e);// a modell képei már a menüben betöltődnek (offline a gyorsítótárból)
   const cv=$('#srCv');SR.cv=cv;SR.c=cv.getContext('2d',{alpha:false})||cv.getContext('2d');SR.qb=srQBase();SR.q=SR.qb;srWake(true);SR.v=null;SR.inbox=[];SR.net=null;srFit();
   try{SR.ro=new ResizeObserver(srFit);SR.ro.observe(cv)}catch(e){}
-  $('#srClose').onclick=srClose;$('#srPzB').onclick=()=>{ac();SR.paused?srPause(false):srPause(true)};$('#srFire').onclick=()=>{ac();srFire()};
+  $('#srClose').onclick=srClose;$('#srAll').onclick=()=>{ac();srAllOn()};$('#srTut').querySelector('.srtutx').onclick=()=>srTutDone();$('#srPzB').onclick=()=>{ac();SR.paused?srPause(false):srPause(true)};$('#srFire').onclick=()=>{ac();srFire()};
   $('#srPanel').addEventListener('click',e=>{const b=e.target.closest('button');if(b)b.blur()});
   // tapintható visszajelzés minden gombnyomásra (rövid rezgés), és látható lenyomás
   $('#srPanel').addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b)return;try{navigator.vibrate&&navigator.vibrate(b.id==='srFire'?18:7)}catch(x){}b.classList.add('tap');setTimeout(()=>b.classList.remove('tap'),160)});

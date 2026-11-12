@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.22.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.23.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.23.0:** Shot&Run: **⚡ MINDENT BE** gomb – egy koppintással sorban bekapcsolja a motort, a rádiót, a tornyot és indítja a málházást (a megszokott hangokkal); csak akkor látszik, ha van még bekapcsolandó rendszer. **Bevezető az első játékhoz:** 6 lépéses, kihagyható súgóbuborék, amely mindig a következő teendőre mutat és kiemeli a gombot (MOTOR → RÁDIÓ → TORONY → MÁLHÁZÁS → MAGASSÁG → TŰZ); az első lövés után (vagy a „Kihagyom” gombra) többet nem jelenik meg.
 
 **v4.22.0:** Shot&Run: teljesen új, látványos tűzvezető kis kijelző (FELÜLNÉZET) – foszforzöld radarképernyő rácsozattal, távgyűrűkkel, pásztázó radarsugárral (csak működő rádióval), izzó, futó szaggatott irányvonallal és célkereszttel, villogó, lüktető célponttal, az utolsó becsapódás jelével, mozgó szélnyilakkal, képcső-csíkozással; alul a céltávolság km-ben és az oldalirány, köd vagy kiesett optika esetén zajos kép és figyelmeztetés. Nagyobb kijelzőn nagyobb, kis telefonon kisebb.
 
