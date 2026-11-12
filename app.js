@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.24.0',APP_DATE='2026.11.12.';
+const APP_VER='4.25.0',APP_DATE='2026.11.12.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -5345,13 +5345,15 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
   else lines.push(['METEO    nincs rádió','#ff9a8a']);
   if(ctl.d.opt>=2)lines.push(['TÁVMÉRŐ  optika megsemmisült','#ff9a8a']);else if(blind)lines.push(['TÁVMÉRŐ  köd – nincs mérés','#ff9a8a']);
   else{const dx=Math.abs(tg.x-ctl.x),brg=Math.atan(SR.zOff/dx)*SR_MIL,co=ctl.d.opt===1,r=co?Math.round(dx*SR_M/500)*500:Math.round(dx*SR_M/10)*10,b=co?Math.round(brg/20)*20:Math.round(brg),dh=Math.round((ctl.y-tg.y)*SR_M/10)*10;
-    lines.push([`TÁVMÉRŐ  ${n0(r)} m · irány ${b>0?'J':b<0?'B':''} ${String(Math.abs(b)).padStart(4,'0')} · Δ ${dh>=0?'+':'−'}${Math.abs(dh)} m${co?' (sérült optika)':''}`,'#9dff9d']);
+    lines.push([`TÁVMÉRŐ  ${n0(r)} m · irány ${b>0?'jobbra ':b<0?'balra ':''}${String(Math.abs(b)).padStart(4,'0')} · szint ${dh>=0?'+':'−'}${Math.abs(dh)} m${co?' (sérült optika)':''}`,'#9dff9d']);
     const tk=ctl.sel+'|'+r,ta=SR_AM[ctl.sel],hiA=srHiAm(ta);if(SR.tblK!==tk){SR.tblK=tk;SR.tbl=ta?(hiA?srTableHi(ta,r/SR_M):srTable(ta,r/SR_M)):null}
     lines.push(['LŐTÁBLA  '+(SR.tbl?String(SR.tbl).padStart(4,'0')+' von '+(hiA?'(felső szögcsoport · SMArt)':'(sík terep, szélcsend)'):hiA?'felső szögcsoporttal nem érhető el':'lőtávon kívül – felső szögcsoport'),'#cfd6c0'])}
   const R=SR.rep[ctl.i];if(R)lines.push(['ELTÉRÉS  '+R.txt,'#ffe08a']);
   if(SR.flares.some(f=>f.by===ctl.i))lines.push(['CÉL      megvilágítva – becsapódás-előrejelzés aktív','#fff3b0']);
-  c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width));c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,Math.min(W-8,mw+10),lines.length*14+5);
-  for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,W-18);y+=14}
+  if(srFold().d){c.font='400 13px '+SR_CFONT;c.textAlign='left';const tw=c.measureText('▸ ADATOK').width+16,ty=H-30;c.fillStyle='rgba(0,0,0,.6)';srRR(c,4,ty,tw,24,8);c.fill();c.strokeStyle='rgba(243,215,122,.6)';c.lineWidth=1.2;srRR(c,4.5,ty+.5,tw-1,23,8);c.stroke();c.fillStyle='#ffd23a';c.fillText('▸ ADATOK',12,ty+17);SR.hitD=[4,ty,tw,24]}
+  else{c.font='700 10.5px ui-monospace,Menlo,monospace';c.textAlign='left';let y=H-8-(lines.length-1)*14;const mw=Math.max(...lines.map(l=>c.measureText(l[0]).width)),bw=Math.min(W-8,mw+26);c.fillStyle='rgba(0,0,0,.5)';c.fillRect(4,y-13,bw,lines.length*14+5);SR.hitD=[4,y-13,bw,lines.length*14+5];
+  c.fillStyle='rgba(255,210,58,.85)';c.fillText('▾',4+bw-13,y);
+  for(const [s,col] of lines){c.fillStyle=col;c.fillText(s,9,y,bw-26);y+=14}}
   // felülnézet: oldalirány, szél, utolsó becsapódás
   srRadar(c,W,ctl,tg,R,radio,blind,t)}
 // a kis kijelző üvege: sérült rádiónál egy repedés és képhiba-csíkok, megsemmisültnél pókhálósan szétrepedt, kialvó, villódzó kép
@@ -5369,8 +5371,16 @@ function srCrackGlass(c,v,lvl,ix,iy,iw,ih,t){const K='k'+v.i+'_'+lvl+'_'+iw;SR.c
   const line=(w,col,o)=>{c.strokeStyle=col;c.lineWidth=w;c.beginPath();for(const p of G.rays){c.moveTo(p[0][0]+o,p[0][1]+o);for(const q of p)c.lineTo(q[0]+o,q[1]+o)}for(const [a,b] of G.rings){c.moveTo(a[0]+o,a[1]+o);c.lineTo(b[0]+o,b[1]+o)}c.stroke()};
   c.lineJoin='round';line(1.8,'rgba(0,0,0,.75)',0);line(.8,'rgba(235,255,240,.6)',-.6);
   c.fillStyle='rgba(255,255,255,.75)';c.beginPath();c.arc(G.cx,G.cy,lvl>=2?2.6:1.6,0,7);c.fill()}
+// összecsukható kiegészítő kijelzők (felülnézet, adatdoboz) – az állapot megmarad
+const SR_CFONT=getComputedStyle(document.documentElement).getPropertyValue('--f-comic').trim()||'system-ui';
+function srFold(){if(!SR.fold){try{SR.fold=JSON.parse(localStorage.getItem('srFold')||'{}')||{}}catch(e){SR.fold={}}}return SR.fold}
+function srFoldTap(x,y){const F=srFold(),inR=r=>r&&x>=r[0]&&x<=r[0]+r[2]&&y>=r[1]&&y<=r[1]+r[3];let k=inR(SR.hitM)?'m':inR(SR.hitD)?'d':null;if(!k)return false;
+  F[k]=!F[k];try{localStorage.setItem('srFold',JSON.stringify(F))}catch(e){}srClick(1);try{navigator.vibrate&&navigator.vibrate(7)}catch(e){}return true}
 // tűzvezető kis kijelzője (felülnézet): foszforzöld radarképernyő – rács, távgyűrűk, pásztázó sugár, a cső iránya, a cél, az utolsó becsapódás és a szél
-function srRadar(c,W,ctl,tg,R,radio,blind,t){const rd=ctl.d.rad||0,big=W>=520,sm=W<360,iw=big?104:sm?78:86,ih=big?132:sm?102:112,ix=W-iw-6,iy=60,cx=ix+iw/2,sc=.3*iw/74,top=iy+17,by=iy+ih-14,ty=top+12,rng=Math.abs(tg.x-ctl.x),see=ctl.d.opt<2&&!blind,dead=ctl.d.opt>=2;
+function srRadar(c,W,ctl,tg,R,radio,blind,t){const rd=ctl.d.rad||0,big=W>=520,sm=W<360,iw=big?104:sm?78:86,ix=W-iw-6,iy=60;
+  if(srFold().m){c.save();c.fillStyle='rgba(4,16,8,.85)';srRR(c,ix,iy,iw,18,7);c.fill();c.strokeStyle='#111';c.lineWidth=2.5;srRR(c,ix,iy,iw,18,7);c.stroke();c.strokeStyle=rd>=2?'rgba(255,120,100,.6)':'rgba(120,255,150,.55)';c.lineWidth=1;srRR(c,ix+2.5,iy+2.5,iw-5,13,5);c.stroke();
+    c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='center';c.fillStyle=rd>=2?'#ff9a8a':'#9dff9d';c.fillText('▸ FELÜLNÉZET',ix+iw/2,iy+12);c.restore();SR.hitM=[ix,iy,iw,18];return}
+  SR.hitM=null;const ih=big?132:sm?102:112,cx=ix+iw/2,sc=.3*iw/74,top=iy+17,by=iy+ih-14,ty=top+12,rng=Math.abs(tg.x-ctl.x),see=ctl.d.opt<2&&!blind,dead=ctl.d.opt>=2;
   c.save();
   // keret és háttér
   c.fillStyle='rgba(0,0,0,.45)';srRR(c,ix+2,iy+3,iw,ih,9);c.fill();
@@ -5405,7 +5415,7 @@ function srRadar(c,W,ctl,tg,R,radio,blind,t){const rd=ctl.d.rad||0,big=W>=520,sm
   // fejléc és alsó adatsor
   c.fillStyle='rgba(0,0,0,.55)';c.fillRect(ix,iy,iw,top-iy);c.fillRect(ix,iy+ih-11,iw,11);
   c.restore();
-  c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='center';c.fillStyle=rd>=2?'#ff9a8a':'#9dff9d';c.fillText(rd>=2?'FELÜLNÉZET – HIBA':'FELÜLNÉZET',cx,iy+11);
+  c.font=`800 ${big?8.5:7.5}px system-ui`;c.textAlign='center';c.fillStyle=rd>=2?'#ff9a8a':'#9dff9d';c.fillText('▾ '+(rd>=2?'FELÜLNÉZET – HIBA':'FELÜLNÉZET'),cx,iy+11);SR.hitM=[ix,iy,iw,ih];
   c.font=`700 ${big?8.5:7.5}px ui-monospace,Menlo,monospace`;c.textAlign='center';c.fillStyle=see&&rd<2?'#cfffcf':'#ff9a8a';
   c.fillText(rd>=2?'RÁDIÓ KIESETT':dead?'OPTIKA KIESETT':blind?'KÖD – NINCS KÉP':(rng*SR_M/1000).toFixed(1).replace('.',',')+' km · '+(ctl.trav>0?'J':ctl.trav<0?'B':'')+String(Math.abs(ctl.trav)).padStart(3,'0'),cx,iy+ih-3);
   // keret, sarokjelek
@@ -5674,7 +5684,7 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
   $('#srCam').onclick=()=>{if(SR.camFree||SR.ovw){SR.camFree=false;SR.ovw=false}else SR.ovw=true};
   let pid=null,lx=0,ly=0,mv=0;cv.addEventListener('pointerdown',e=>{pid=e.pointerId;lx=e.clientX;ly=e.clientY;mv=0;try{cv.setPointerCapture(pid)}catch(x){}});
   cv.addEventListener('pointermove',e=>{if(e.pointerId!==pid||!SR.v||SR.phase==='fly')return;const dx=e.clientX-lx,dy=e.clientY-ly;mv+=Math.abs(dx)+Math.abs(dy);if(mv<8)return;lx=e.clientX;ly=e.clientY;SR.camFree=true;SR.ovw=false;SR.cam.x=srClamp(SR.cam.x-dx/SR.cam.z,0,SR_W);SR.cam.y=srClamp(SR.cam.y-dy/SR.cam.z,0,760)});
-  const up=e=>{if(e.pointerId===pid)pid=null};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  const up=e=>{if(e.pointerId!==pid)return;pid=null;if(mv<8&&e.type==='pointerup'&&SR.v){const r=cv.getBoundingClientRect();srFoldTap(e.clientX-r.left,e.clientY-r.top)}};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   SR.key=e=>{if(!SR.v||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;const d=e.type==='keydown',s=e.shiftKey?10:1;
     if(SR.paused&&e.key!=='Escape'&&e.key!=='p'&&e.key!=='P')return;
     if(e.key==='a'||e.key==='A'){SR.mv=d?-1:SR.mv===-1?0:SR.mv;return}if(e.key==='d'||e.key==='D'){SR.mv=d?1:SR.mv===1?0:SR.mv;return}if(!d)return;
