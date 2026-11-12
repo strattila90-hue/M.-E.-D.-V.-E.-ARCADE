@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.29.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.29.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.29.1:** Shot&Run: mélyebb, súlyosabb motorindítás és málházás – nehéz relé- és mágneskapcsoló-csattanás, mélyen morgó 24 V-os önindító, tompán dobbanó kompressziók, dübörgő égési lökések és főtengely-dörmögés; a málházásnál nehéz láncszem-léptetés, mély hidraulikus átadókar, a 43 kg-os gránát csúszása és mély, hosszan csengő döngölés. A hangok a telefonhangszóróra vannak hangolva: a hallhatatlan legmélyebb részt kiszűrik, a mélységet dús felharmonikusok adják (így kis hangszórón is mélynek hallatszanak); a töltőautomata búgása és az alapjárat is mélyebb.
 
 **v4.29.0:** Shot&Run: élethűbb rendszerhangok – a hangok most mintánként, fizikai folyamatok alapján számolt hangfelvételekként készülnek (meccs elején, előre). **Motorindítás:** főkapcsoló-relé, üzemanyag-szivattyú, önindító-mágneskapcsoló és fogaskerék-kapcsolódás, áttekerés (a V12 kompressziós ütemeinél az önindító érezhetően lelassul), első gyújtások, beindulás, az önindító leválása, felpörgés turbósivítással, majd hézagmentes átmenet az alapjáratba. **Rádió:** forgókapcsoló-reteszek, bekapcsoló relé, inverter-zúgás, három önteszt-sípolás, frekvenciaugratásos szinkron-csipogás, zajzár, formánsokkal szintetizált, rádiósávra szűrt és torzított „Rádiópróba, vétel”, nyugtázó sípszó, zajzár-csattanás. **Torony:** hidraulikaszivattyú villanymotorja, 9 dugattyús szivattyú-lüktetés, nyomásmentesítő szelep, reteszkioldás, fogaskoszorú-morgás holtjáték-kattogással, megálláskor koppanás. **Málházás:** gránátonként tárlánc-léptetés, átadókar, hüvelycsúszás, döngölés acélos csengéssel, sűrített levegő (négy változat); a töltőautomata búgása villanymotorral, szivattyúval, kompresszor-lüktetéssel.
 
