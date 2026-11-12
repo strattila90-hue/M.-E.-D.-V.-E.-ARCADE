@@ -1610,3 +1610,7 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .srtut.below::after{bottom:auto;top:-13px;border-top:0;border-bottom:13px solid #111}
 .srtut.below::before{bottom:auto;top:-8px;border-top:0;border-bottom:9px solid #fff8dc}
 #harc.srtutsw .srmsg{display:none}
+
+/* ===== Shot&Run 4.27.0 – az üzenetek a lövegeket kikerülve, finoman csúsznak a helyükre ===== */
+#harc.sr .srmsg{transition:top .28s ease}
+#harc.sr .sralert{transition:opacity .22s,transform .22s,top .28s ease}

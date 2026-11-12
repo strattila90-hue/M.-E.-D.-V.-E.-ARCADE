@@ -348,7 +348,7 @@ function srSparks(x,y,n){srShards(x,y,n*.35,300,false);for(let i=0;i<srN(n);i++)
 function srSmokeBurst(x,y){const F=SR.fx;for(let i=0;i<srN(26);i++){const a=-Math.PI/2+(Math.random()-.5)*2.8,v=60+Math.random()*190;F.push({k:'s',x,y:y-4,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.6,r0:6,r1:30+Math.random()*30,t:2.5+Math.random()*2,t0:4.5,c:'226,226,220',al:.7,drag:1.6})}
   for(let i=0;i<srN(18);i++){const a=-Math.PI/2+(Math.random()-.5)*2.2,v=160+Math.random()*200;F.push({k:'p',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:300,t:1+Math.random()*.8,t0:1.8,c:'255,250,230',sz:1.6,tr:1})}}
 function srKill(v){v.dead=true;v.burn=99;v.hitF=1.2;v.hpGT=.9;const F=SR.fx,x=v.x,y=v.y-18;sndMega();srSndImpact(1.6);SR.shake=1.1;SR.flash=.8;try{navigator.vibrate&&navigator.vibrate([120,60,220])}catch(e){}
-  srBoomHE(x,y+18,1.7,0);srSparks(x,y,60);srShards(x,y,46,560,true);v.cook=7;
+  srBoomHE(x,y+18,1.7,0);srSparks(x,y,60);srShards(x,y,46,560,true);v.cook=7;srBailOut(v);
   for(let i=0;i<srN(40);i++){const a=-Math.PI/2+(Math.random()-.5)*.5,s=260+Math.random()*420;F.push({k:'j',x:x-v.face*18+(Math.random()-.5)*10,y:y-8,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:.7+Math.random()*1.3,t0:2,dl:Math.random()*1.4})}
   for(let i=0;i<srN(18);i++){const a=-Math.PI/2+(Math.random()-.5)*2,s=160+Math.random()*320;F.push({k:'d',x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,rot:0,vr:(Math.random()-.5)*16,w:5+Math.random()*12,h:3+Math.random()*5,t:3+Math.random()*2,t0:5,c:'#1c1a16',hot:1})}}
 function srFloat(v,txt,col){SR.float.push({x:v.x,y:v.y-52-SR.float.filter(f=>f.v===v).length*13,txt,col,t:2.6,v})}
@@ -367,7 +367,7 @@ function srAlert(txt,lvl){const el=$('#srAlert');if(!el)return;lvl=lvl||'info';e
 function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hidden=!txt;clearTimeout(SR.msgT);if(txt&&dur!==0)SR.msgT=setTimeout(()=>{m.hidden=true},dur||3200)}
 
 /* ---------- játékmenet ---------- */
-function srBegin(mode,o){o=o||{};SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
+function srBegin(mode,o){o=o||{};SR.bail=[];SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
   Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
@@ -409,7 +409,7 @@ function srLoaderHum(on,quiet){if(!on){const L=SR.ldr;if(L){SR.ldr=null;try{cons
 function srTurnStart(first){const v=SR.v[SR.turn],o=SR.v[1-SR.turn];if(SR.slowW){SR.slowW=0;srMsg('')}
   if(!first){SR.smokes=SR.smokes.filter(s=>--s.turns>0);SR.flares=SR.flares.filter(f=>--f.turns>0)}
   v.fuel=SR_FUEL*(v.d.trk===1?.5:1);SR.camFree=false;SR.ovw=false;SR.pred=null;SR.predK='';
-  if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
+  if(v.burn>0&&!v.dead){v.burn--;v.hp=Math.max(0,v.hp-4);v.hitF=.45;v.hpGT=.7;srFloat(v,'🔥 −4','#ff9a4a');if(v.hp<=0){srKill(v);SR.phase='dying';SR.t=SR.bail&&SR.bail.length?5.6:2.8;srUI();return}if(!v.burn)srFloat(v,'tűz eloltva','#bfe3ff')}
   if(srAmmoN(v)===0){if(srAmmoN(o)===0){if(!SR.drop){srAirdrop();return}SR.phase='dying';SR.t=.6;SR.noAmmo=true;return}srAlert(v.name+': nincs lőszer – a kör kimarad','warn');SR.turn=1-SR.turn;if(SR.turn===0)SR.round++;SR.phase='wait';SR.t=1.4;return}
   if(!(v.ammo[v.sel]>0))v.sel=(SR_AMMO.find(a=>v.ammo[a.id]>0)||{}).id;
   SR.phase='aim';SR.tlEnd=v.ai?0:Date.now()+SR_TLIM*1000;SR.tlS=999;if(v.ai)srAiPlan();srUI();srDials();srSave();
@@ -471,7 +471,7 @@ function srApply(ev){const sh=SR.v[ev.by],tg=SR.v[1-ev.by],E=ev.end;
   SR.rep[ev.by]={txt:sh.sys.rad&&sh.d.rad<2?rep:'nincs rádió – nincs megfigyelői jelentés',lat:E.lat,rf:srClamp(Math.abs(E.x-sh.x)/Math.abs(tg.x-sh.x||1),0,1.3),ok:sh.sys.rad&&sh.d.rad<2};
   if(!sh.ai&&(SR.mode!=='net'||ev.by===SR.me))srMsg('📻 Megfigyelő: '+SR.rep[ev.by].txt,4200);
   srUI()}
-function srAfterShot(ev){if(SR.v.some(v=>v.dead)){SR.phase='dying';SR.t=2.8;return}
+function srAfterShot(ev){if(SR.v.some(v=>v.dead)){SR.phase='dying';SR.t=SR.bail&&SR.bail.length?5.6:2.8;return}
   SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srTurnStart()}
 function srEnd(){if(SR.mode!=='net')srSaveDel();SR.paused=null;srPzShow(false);SR.phase='over';SR.run=false;srEngLoop(false);const [a,b]=SR.v;let w=a.dead&&b.dead?-1:a.dead?1:b.dead?0:a.hp===b.hp?-1:a.hp>b.hp?0:1;
   const mine=SR.mode==='hot'?null:SR.me,o=$('#srOver');let h;
@@ -798,7 +798,7 @@ function srDraw(now,dt){const c=SR.c,W=SR.W,H=SR.H,cam=SR.cam,z=cam.z,t=now/1000
   // tűzvezető előrejelzés (világítógránát után)
   if(SR.pred){const p=SR.pred.pts,n=p.length/2;c.strokeStyle='rgba(255,240,170,.75)';c.lineWidth=1.3;c.setLineDash([2,6]);c.beginPath();c.moveTo(p[0],p[1]);for(let i=3;i<n;i+=3)c.lineTo(p[i*2],p[i*2+1]);c.stroke();c.setLineDash([]);const e=SR.pred.end;c.strokeStyle='#ffe98a';c.lineWidth=2;c.beginPath();c.moveTo(e.x-7,e.y-7);c.lineTo(e.x+7,e.y+7);c.moveTo(e.x+7,e.y-7);c.lineTo(e.x-7,e.y+7);c.stroke()}
   if(SR.phase==='prep')for(const v of SR.v)srDrawCrew(c,v,now);
-  for(const v of SR.v)srDrawVeh(c,v);srDrawCrates(c,t);
+  for(const v of SR.v)srDrawVeh(c,v);srDrawCrates(c,t);srBailTick(c,dt,t);
   for(const v of SR.v)if(v.dead||v.burn>0){const fl=.75+.25*Math.sin(t*19+v.i*3),R=(v.dead?120:70)*fl;c.globalCompositeOperation='lighter';const g=c.createRadialGradient(v.x,v.y-18,0,v.x,v.y-18,R);g.addColorStop(0,'rgba(255,150,50,.38)');g.addColorStop(1,'rgba(255,90,20,0)');c.fillStyle=g;c.fillRect(v.x-R,v.y-18-R,R*2,R*2);c.globalCompositeOperation='source-over'}
   if(SR.phase==='aim'){const v=SR.v[SR.turn],b=Math.sin(t*6)*2;c.fillStyle='#ffd24a';c.beginPath();c.moveTo(v.x-6,v.y-66+b);c.lineTo(v.x+6,v.y-66+b);c.lineTo(v.x,v.y-57+b);c.fill()}
   // résztöltetek (SMArt)
@@ -988,6 +988,66 @@ function srUI(){const P=$('#srPanel');if(!P||!SR.v)return;const v=srCtl();
   $('#srAmI').textContent=v.load>=1&&SR_AM[v.sel]?SR_AM[v.sel].d+' · Valós: '+SR_AM[v.sel].r:'Málházd be a 60 db 155 mm-es gránátot.';
   $('#srDmg').innerHTML=SR_PARTS.map(([k,l])=>`<span class="l${v.d[k]}">${l}</span>`).join('')+`<span class="l${v.crew>=5?0:v.crew>=3?1:2}">KEZELŐK ${v.crew}/5</span>`+(v.burn>0?'<span class="l2">🔥 TŰZ</span>':'');
   $('#srBk').innerHTML=v.face>0?'◀ HÁTRA':'◀ ELŐRE';$('#srFw').innerHTML=v.face>0?'ELŐRE ▶':'HÁTRA ▶'}
+/* ---------- végzetes találat: a túlélő kezelők kiugranak a lövegből – lángolva futnak, a földön gurulva oltják magukat, kúsznak, sikoltoznak ---------- */
+function srBailOut(v){const n=Math.max(2,Math.min(5,v.crew||0));SR.bail=SR.bail||[];
+  for(let i=0;i<n;i++){const hatch=i===0?{x:v.x+v.face*28,y:v.y-20}:{x:v.x-v.face*(4+Math.random()*14),y:v.y-34},dir=Math.random()<.72?-v.face:v.face,burn=Math.random()<.7;
+    SR.bail.push({x:hatch.x,y:hatch.y,vx:dir*(35+Math.random()*60),vy:-(95+Math.random()*70),dir,st:'air',dl:.15+i*.32+Math.random()*.2,t:0,ph:Math.random()*6,
+      fire:burn?3.5+Math.random()*3:0,char:0,sc:.1+Math.random()*.6,smk:0,roll:Math.random()<.75,hurt:Math.random()<.5})}}
+function srBailTick(c,dt,t){const B=SR.bail;if(!B||!B.length)return;
+  for(const m of B){if(m.dl>0){m.dl-=dt;continue}m.t+=dt;m.ph+=dt*(m.st==='run'?16:m.st==='crawl'?6:m.st==='air'?20:0);
+    if(m.fire>0){m.fire-=dt*(m.st==='roll'?3.2:1);m.char=Math.min(1,m.char+dt*.25);if((m.smk-=dt)<=0){m.smk=.07;SR.fx.push({k:'s',x:m.x+(Math.random()-.5)*4,y:m.y-14,vx:(Math.random()-.5)*8,vy:-26-Math.random()*16,r0:2,r1:10+Math.random()*8,t:1.4,t0:1.4,c:'58,52,46',al:.55,w:1})}}
+    if((m.sc-=dt)<=0&&m.st!=='lie'){m.sc=m.fire>0?1.1+Math.random()*1.2:2.5+Math.random()*3;srSndScream(m)}
+    const gy=srGy(m.x);
+    if(m.st==='air'){m.vy+=420*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;if(m.y>=gy&&m.vy>0){m.y=gy;srDust(m.x,.18,2);m.st=m.fire>0||!m.hurt?'run':'crawl';m.t=0}}
+    else if(m.st==='run'){const zig=m.fire>0?Math.sin(m.t*7+m.ph)*.6:0;m.x+=m.dir*(m.fire>0?52:40)*(1+zig*.4)*dt;m.y=srGy(m.x);if(m.fire>0&&Math.random()<dt*1.5)m.dir=-m.dir*(Math.random()<.3?1:-1);
+      if(m.t>(m.fire>0?1.3:.9)){m.st=m.fire>0&&m.roll?'roll':'crawl';m.t=0}}
+    else if(m.st==='roll'){m.x+=m.dir*14*dt;m.y=srGy(m.x);if(m.t>1.5){m.fire=m.fire>0&&Math.random()<.35?Math.min(m.fire,1.2):0;m.st='crawl';m.t=0}}
+    else if(m.st==='crawl'){m.x+=m.dir*(m.hurt?6:10)*dt;m.y=srGy(m.x);if(m.t>5+m.ph%3&&m.fire<=0){m.st='lie';m.t=0}}
+    else m.y=gy;
+    m.x=srClamp(m.x,6,SR_W-6);srDrawBail(c,m,t)}}
+function srDrawBail(c,m,t){if(m.dl>0)return;srDrawBail1(c,m,t,true);srDrawBail1(c,m,t,false)}
+// két menet: előbb vastag fekete tuskontúr, rá a színes alak – így az alkonyati talajon is jól látszik
+function srDrawBail1(c,m,t,ink){const s=1.75,ph=m.ph,uni=ink?'#111':m.char>.5?'#4a4a38':'#6f8a48',skin=ink?'#111':m.char>.6?'#6a4a36':'#e0b48c',boot=ink?'#111':'#3a4428',hel=ink?'#111':'#4a5636';
+  c.save();c.translate(m.x,m.y);c.scale(m.dir*s,s);c.lineCap='round';c.lineJoin='round';
+  const limb=(x0,y0,x1,y1,col,w)=>{c.strokeStyle=col;c.lineWidth=w+(ink?1.3:0);c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke()};
+  const box=(x,y,w,h,col)=>{c.fillStyle=col;ink?c.fillRect(x-.65,y-.65,w+1.3,h+1.3):c.fillRect(x,y,w,h)},dot=(x,y,r,col)=>{c.fillStyle=col;c.beginPath();c.arc(x,y,r+(ink?.65:0),0,7);c.fill()};
+  if(m.st==='air'||m.st==='run'){const a=m.st==='air',sw=Math.sin(ph)*(a?2.5:3.4),up=m.fire>0||a;
+    limb(0,-6,sw,0,boot,1.6);limb(0,-6,-sw,0,boot,1.6);c.save();c.rotate(a?-.25:.18);box(-1.8,-12.2,3.6,6.8,uni);
+    limb(0,-11,up?2+Math.sin(ph*1.3)*2:sw*.6,up?-16-Math.cos(ph)*1.5:-7,uni,1.4);limb(0,-11,up?-2+Math.cos(ph*1.1)*2:-sw*.6,up?-15.5-Math.sin(ph)*1.5:-7,uni,1.4);
+    dot(0,-13.8,1.8,skin);if(m.char<.8&&!ink){c.fillStyle=hel;c.beginPath();c.arc(0,-14.2,2,Math.PI,0);c.fill()}
+    if(!ink&&(m.fire>0||a)){c.fillStyle='#111';c.beginPath();c.ellipse(.9,-13.4,.55,.75,0,0,7);c.fill()}c.restore()}// tátott szájjal sikolt
+  else if(m.st==='roll'){c.translate(0,-2.4);c.rotate(m.t*11);box(-3.4,-1.8,6.8,3.6,uni);limb(-3,0,-6.5,Math.sin(ph)*1.2,boot,1.5);dot(4.6,0,1.8,skin)}
+  else{const cr=m.st==='crawl',k=cr?Math.sin(ph):0;// hason kúszik / fekszik
+    limb(-3,-1.2,-8,-1+k*1.4,boot,1.6);limb(-3,-1.2,-7.6,-.2-k*1.4,boot,1.6);box(-3.5,-3,7,2.6,uni);
+    limb(2.4,-2.2,5+k*1.6,-.2,uni,1.4);limb(2.4,-2.2,4.2-k*1.6,-.1,uni,1.4);dot(5.2,-3.2,1.7,skin);if(m.char<.8&&!ink){c.fillStyle=hel;c.beginPath();c.arc(5.4,-3.6,1.9,Math.PI*1.1,Math.PI*2.1);c.fill()}}
+  c.restore();if(ink)return;
+  if(m.fire>0){const prone=m.st==='crawl'||m.st==='lie'||m.st==='roll',fx=m.x,fy=m.y-(prone?4:12),hgt=prone?10:18,wid=prone?14:7;c.save();c.globalCompositeOperation='lighter';
+    for(let i=0;i<5;i++){const f=Math.sin(t*23+i*1.9+m.ph),ox=(i-2)*wid*.28+f*1.2,h=hgt*(.6+.4*Math.abs(Math.sin(t*17+i))),g=c.createRadialGradient(fx+ox,fy,0,fx+ox,fy-h*.4,h*.75);
+      g.addColorStop(0,'rgba(255,240,170,.9)');g.addColorStop(.45,'rgba(255,140,30,.65)');g.addColorStop(1,'rgba(200,40,0,0)');c.fillStyle=g;c.beginPath();c.moveTo(fx+ox-wid*.35,fy+3);c.quadraticCurveTo(fx+ox-wid*.4,fy-h*.5,fx+ox+f*2,fy-h);c.quadraticCurveTo(fx+ox+wid*.4,fy-h*.5,fx+ox+wid*.35,fy+3);c.fill()}
+    c.restore()}}
+// sikoltás: torokhang (fűrészfog + két formáns szűrő), remegő, felcsapó majd elhaló hangmagasság, a kezelő helye szerint balra/jobbra
+function srSndScream(m){if(!srSnd())return;try{const a=AC,t=a.currentTime+.02,hot=m.fire>0,d=(hot?1.1:.8)+Math.random()*.8,f=(hot?520:410)*(1+Math.random()*.35),
+    o=a.createOscillator(),lfo=a.createOscillator(),lg=a.createGain(),f1=a.createBiquadFilter(),f2=a.createBiquadFilter(),g2=a.createGain(),out=a.createGain(),pn=a.createStereoPanner?a.createStereoPanner():null,
+    vol=.22*srClamp(1.4-Math.abs(m.x-SR.cam.x)/900,.25,1);
+  o.type='sawtooth';o.frequency.setValueAtTime(f*.75,t);o.frequency.exponentialRampToValueAtTime(f*1.4,t+.16);o.frequency.exponentialRampToValueAtTime(f*1.15,t+d*.6);o.frequency.exponentialRampToValueAtTime(f*.55,t+d);
+  lfo.frequency.value=5.5+Math.random()*3.5;lg.gain.value=f*.06;lfo.connect(lg).connect(o.frequency);
+  f1.type='bandpass';f1.frequency.value=800+Math.random()*150;f1.Q.value=5;f2.type='bandpass';f2.frequency.value=1250+Math.random()*350;f2.Q.value=7;g2.gain.value=.75;
+  o.connect(f1).connect(out);o.connect(f2).connect(g2).connect(out);
+  out.gain.setValueAtTime(.0001,t);out.gain.exponentialRampToValueAtTime(vol,t+.07);out.gain.setValueAtTime(vol*.85,t+d*.7);out.gain.exponentialRampToValueAtTime(.0001,t+d);
+  if(pn){pn.pan.value=srClamp((m.x-SR.cam.x)*SR.cam.z/(SR.W/2||200),-1,1);out.connect(pn).connect(MASTER)}else out.connect(MASTER);
+  o.start(t);lfo.start(t);o.stop(t+d+.05);lfo.stop(t+d+.05);srNoise(t,d*.8,.025,'bandpass',1900,1100,2)}catch(e){}}
+/* ---------- az üzenetek (középső üzenet, figyelmeztetés) oda kerülnek, ahol nem takarják a lövegeket és a fölöttük lévő sávokat ---------- */
+function srMsgPlace(){const now=performance.now();if(now-(SR.mpT||0)<120)return;SR.mpT=now;if(!SR.cv||!SR.v)return;
+  const els=[$('#srMsg'),$('#srAlert')].filter(e=>e&&!e.hidden);if(!els.length)return;
+  const z=SR.cam.z,W=SR.W,H=SR.H,sx=x=>(x-SR.cam.x)*z+W/2,sy=y=>(y-SR.cam.y)*z+H*.62,obs=[];
+  for(const v of SR.v)obs.push([sx(v.x-62),sy(v.y-80),sx(v.x+62),sy(v.y+14)]);
+  for(const m of SR.bail||[])if(m.dl<=0)obs.push([sx(m.x-14),sy(m.y-26),sx(m.x+14),sy(m.y+4)]);
+  const base=SR.mBase||(SR.mBase={});
+  for(const el of els){const id=el.id;if(base[id]==null){el.style.top='';base[id]=parseFloat(getComputedStyle(el).top)||60}
+    const w=el.offsetWidth,h=el.offsetHeight,L=W/2-w/2,R=W/2+w/2,maxY=Math.max(base[id],H-h-(srFold().d?38:SR.H<420?60:76));let best=null;
+    for(let y=base[id];y<=maxY;y+=12){let ov=0;for(const o of obs){const ix=Math.max(0,Math.min(R,o[2])-Math.max(L,o[0])),iy=Math.max(0,Math.min(y+h,o[3])-Math.max(y,o[1]));ov+=ix*iy}
+      if(!best||ov<best.ov)best={y,ov};if(ov===0)break}
+    const ny=Math.round(best.y)+'px';if(el.style.top!==ny)el.style.top=ny;obs.push([L,best.y-4,R,best.y+h+4])}}
 /* ---------- „Mindent be” gomb: a 4 rendszer egymás után, a megszokott hangokkal ---------- */
 function srNeedSw(v){return ['eng','rad','tur'].filter(k=>!v.sys[k]&&v.d[k]<2).concat(v.load<1&&!v.loading?['load']:[])}
 function srAllOn(){if(!SR.v||!(SR.phase==='prep'||srMyTurn()))return;const v=srCtl(),ks=srNeedSw(v);if(!ks.length)return;clearTimeout(SR.allT);
@@ -1026,8 +1086,8 @@ function srHudDom(){const P=SR.phase,my=srMyTurn(),tl=P==='aim'&&SR.tlEnd?Math.m
   if(Date.now()-(SR.pgT||0)>1000){SR.pgT=Date.now();const pg=$('#srPing'),N=SR.net,net=SR.mode==='net'&&!!N,stall=net&&(navigator.onLine===false||N.pend>0&&Date.now()-N.wT>4000),on=net&&(!!N.rtt||stall);if(pg){pg.hidden=!on;if(on){if(stall){pg.textContent='⚠ kapcsolódás…';pg.className='srping bad'}else{const r=Math.round(N.rtt);pg.textContent=r+' ms';pg.className='srping '+(r<200?'ok':r<450?'mid':'bad')}}}
     if(SR.mode==='net'&&SR.net&&P==='aim'&&Date.now()-(SR.net.pingT||0)>20000){SR.net.pingT=Date.now();srNetPing()}}
   if(SR.uiI!==v.i){SR.uiI=v.i;srUI();srDials()}
-  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials();srTutTick()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
-function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,((SR.qb||1)>=1.2?2600:1900)/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5)});srDials()}
+  if((SR.rdN=(SR.rdN||0)+1)%90===0)srDials();srTutTick();srMsgPlace()}// a skálák időnként újrarajzolódnak (háttérből visszatérve a telefon kiürítheti a vásznat)
+function srFit(){const cv=SR.cv;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=LOWFX?1:Math.min(SR.qcap||3,devicePixelRatio||1,((SR.qb||1)>=1.2?2600:1900)/Math.max(r.width,r.height));if(!r.width)return;cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);Object.assign(SR,{W:r.width,H:r.height,dpr,zb:srClamp(r.width/430,.78,1.5),mBase:null});srDials()}
 
 /* ---------- online szoba (meghívókód) ---------- */
 /* ---------- szünet és mentett állás („innen folytatjuk”) ---------- */
