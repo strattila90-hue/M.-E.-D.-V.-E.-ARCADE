@@ -1476,3 +1476,85 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .lbadm{margin-top:14px;padding:10px 12px;border:2px dashed rgba(255,90,70,.55);border-radius:12px;background:rgba(255,90,70,.08)}
 .lbadm b{display:block;margin-bottom:4px}.lbadm .hint{margin:0 0 8px;font-size:12px}
 .lbadm .lbrst{background:#c8102e;color:#fff;border-color:#111}
+/* ===== 4.21.0 – egységes képregényes megjelenés minden játékban (betűk, gombok, panelek) ===== */
+#harc .hbar{border-bottom:3px solid #111}
+#harc .htitle{font-family:var(--f-comic);font-weight:400;font-size:21px;line-height:1;letter-spacing:.05em;color:#fff;white-space:nowrap;-webkit-text-stroke:1.2px #111;paint-order:stroke fill;text-shadow:2px 2px 0 #111;padding-top:2px}
+#harc .htitle b{font-weight:400}
+#harc.rk .htitle{font-size:19px}
+#harc .hbar{gap:8px}
+#harc .hstat{flex:1 1 0;gap:3px 8px;font-size:11.5px;line-height:1.15;align-content:center;max-height:40px;overflow:hidden;text-shadow:0 1px 0 rgba(0,0,0,.6)}
+#harc .hstat b{font-family:var(--f-comic);font-weight:400;font-size:16px;letter-spacing:.03em;vertical-align:-1px}
+#harc.rk .hstat{gap:3px 7px}#harc.rk .hstat b{font-size:15px}
+#harc.rk:not(.se):not(.sr) .hstat{font-size:10.5px;gap:2px 6px}#harc.rk:not(.se):not(.sr) .hstat b{font-size:14px}#harc .hstat .rklv{display:inline;margin:0;font-size:12px;letter-spacing:0}
+#harc .hx{flex:0 0 40px;width:40px;height:40px;padding:0;display:grid;place-items:center;border:2.5px solid #111;border-radius:11px;background:#ff4b3a;color:#fff;font-size:17px;font-weight:900;line-height:1;box-shadow:2px 2px 0 #111;transition:transform .08s,box-shadow .08s}
+#harc .hx:active{transform:translate(2px,2px);box-shadow:0 0 0 #111}
+#harc .hx.sep,#harc .hx.srpzb{background:#ffd23a;color:#111;margin-right:2px}
+#harc .hx[hidden]{display:none}
+/* kezdő- és eredménypanelek: átlátszatlan, vastag kontúr, képregényes cím */
+#harc .hstart,#harc .hover{background:#1d0609;border:3px solid #111;border-radius:16px;box-shadow:0 0 0 2px rgba(255,90,78,.55),7px 7px 0 2px #111;padding:16px 16px 18px;line-height:1.45}
+#harc.rk .hstart,#harc.rk .hover{background:#181d11;box-shadow:0 0 0 2px rgba(201,162,39,.6),7px 7px 0 2px #111}
+#harc .hover.secap{background:rgba(8,8,10,.94)}
+/* felugró ablak (eredmény, szünet, kérdés): a mögötte lévő játék elsötétül */
+#harc .hover:not(.secap):not(.sekitp){box-shadow:0 0 0 2px rgba(255,90,78,.55),7px 7px 0 2px #111,0 0 0 200vmax rgba(0,0,0,.62)}
+#harc.rk .hover:not(.secap):not(.sekitp){box-shadow:0 0 0 2px rgba(201,162,39,.6),7px 7px 0 2px #111,0 0 0 200vmax rgba(0,0,0,.62)}
+#harc .hstart h3,#harc .hover h3{font-family:var(--f-comic);font-weight:400;font-size:33px;line-height:1.05;letter-spacing:.05em;-webkit-text-stroke:1.5px #111;paint-order:stroke fill;text-shadow:3px 3px 0 #111}
+#harc.rk .hstart h3,#harc.rk .hover h3{color:#ffd23a}
+#harc .hstart .btn,#harc .hover .btn{font-family:var(--f-comic)!important;font-weight:400!important;font-size:18px;letter-spacing:.06em;text-transform:uppercase;min-height:46px;padding:9px 16px 6px;margin:5px 3px;border:3px solid #111!important;border-radius:12px!important;box-shadow:4px 4px 0 #111!important;display:inline-flex;align-items:center;justify-content:center;gap:.4em;vertical-align:middle;transition:transform .08s,box-shadow .08s}
+#harc .hstart .btn:active,#harc .hover .btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #111!important}
+#harc .hstart .btn.pri,#harc .hover .btn.pri{background:radial-gradient(rgba(0,0,0,.14) 1.1px,transparent 1.5px) 0 0/7px 7px,linear-gradient(180deg,#ffe36a,#ffc21a)!important;color:#111!important;font-size:21px}
+#harc .hstart .btn.line,#harc .hover .btn.line{background:radial-gradient(rgba(255,255,255,.07) 1.1px,transparent 1.5px) 0 0/7px 7px,#2b3324!important;color:#f3ecd4!important}
+#harc .hstart .btn.sm,#harc .hover .btn.sm{min-height:38px;font-size:15px;padding:6px 12px 4px}
+#harc .btn[hidden]{display:none!important}
+/* hosszú leírásnál az Indítás gomb mindig látszik (a panel alján tapad) */
+#hGo,#dGo,#gtGo,#gvGo,#rkGo,#seGo{position:sticky;bottom:6px;z-index:3}
+/* játék közbeni kezelőgombok */
+#harc .dpedal{font-family:var(--f-comic);font-size:30px;letter-spacing:.06em;border:3px solid #111;-webkit-text-stroke:1px #111;paint-order:stroke fill;text-shadow:2px 2px 0 #111;box-shadow:4px 5px 0 #111,inset 0 -6px 0 rgba(0,0,0,.25)}
+#harc .dpedal small{font-size:11px;font-weight:800;-webkit-text-stroke:0;text-shadow:0 1px 0 #111;opacity:.95}
+#harc .dpedal.on{transform:translate(3px,4px) scale(.96);box-shadow:1px 1px 0 #111,inset 0 4px 0 rgba(0,0,0,.25)}
+#harc .dbtn{border:3px solid #111;border-radius:14px;box-shadow:4px 4px 0 #111,inset 0 -4px 0 rgba(0,0,0,.3)}
+#harc .dbtn b{font-family:var(--f-comic);font-weight:400;font-size:15px;letter-spacing:.04em;text-shadow:1.5px 1.5px 0 #111}
+#harc .dbtn small{font-size:9.5px;font-weight:700;opacity:.95;line-height:1.1;text-align:center}
+#harc .gths{width:62px;height:54px;border:2.5px solid #111;box-shadow:3px 3px 0 #111;background:#1e2419}
+#harc .gths b{font-family:var(--f-comic);font-weight:400;font-size:19px;letter-spacing:.04em}
+#harc .gths small{font-size:9.5px}
+#harc .gths[aria-pressed="true"]{background:#ffd23a;color:#111}
+#harc .gtctis{width:min(176px,44vw)}
+#harc .gtctis .lbl{font-size:10px}
+#harc .gtctis button{border:2.5px solid #111;box-shadow:3px 3px 0 #111;font-family:var(--f-comic);font-weight:400;font-size:19px;letter-spacing:.04em;padding:6px 2px 5px}
+#harc .gtctis button small{font-family:var(--f-body);font-size:8.5px;font-weight:800;letter-spacing:0;opacity:1}
+#harc .gtctis button.on{box-shadow:3px 3px 0 #111}
+#harc .gtgauge,#harc .gtspd{background:rgba(12,15,9,.82);border:2px solid #111}
+#harc .gtgauge .lbl{opacity:1;font-size:10px;font-weight:800;color:#cfd6c0}
+#harc .gtspd b{font-family:var(--f-comic);font-weight:400;font-size:27px}
+/* Tüzér Kassza: a fejlécbe befér mindkét sor és a hónap-kijelző */
+#harc .tkmonth{position:absolute;top:calc(56px + env(safe-area-inset-top,0px) + 21px);right:30px;z-index:6;margin:0;padding:3px 9px 2px;font-size:10.5px;font-weight:800;line-height:1.3;opacity:1;color:#f3ecd4;background:#141a0f;border:1.5px solid #6b7a4a;border-radius:999px;pointer-events:none}
+#harc .tkmonth:empty{display:none}
+.tknav button{border:2.5px solid #111;border-radius:10px;box-shadow:3px 3px 0 #111;min-height:50px}
+.tknav button b{font:400 15px var(--f-comic);letter-spacing:.06em}
+.tknav button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.tkpush{border:3px solid #111!important;box-shadow:4px 4px 0 #111!important}
+/* Shot&Run kezelőpult: képregényes betű a gombokon */
+.srsws button,.srmv,.srfire{font-family:var(--f-comic)!important;font-weight:400}
+.srsws button{font-size:14px;letter-spacing:.05em}
+.srmv{font-size:16px;letter-spacing:.05em}
+.srfire{font-size:27px;letter-spacing:.06em}
+@media (max-width:359px){#harc .htitle{font-size:19px}#harc.rk .htitle{font-size:18px}#harc .hstat{font-size:11px;gap:6px}#harc .hstat b{font-size:15px}#harc .hstart h3,#harc .hover h3{font-size:28px}}
+@media (orientation:landscape) and (max-height:560px){#harc .hx{flex-basis:32px;width:32px;height:32px;font-size:14px;border-radius:9px}#harc .htitle{font-size:19px}}
+@media (max-height:600px) and (orientation:portrait){#harc.sr .hx{flex-basis:34px;width:34px;height:34px}}
+/* keskeny kijelzőn a pedálok nem takarják a középső gombokat */
+@media (max-width:420px){#harc .dpedal{width:88px;height:88px;font-size:28px}#harc .dpedal.gas{right:10px}#harc .dpedal.brake{left:10px}#harc .gtctis{width:min(176px,calc(100vw - 206px))}}
+/* ranglista-ablak és a Továbbiak lap gombjai – ugyanaz a képregényes stílus */
+.rkbox:not(.chbox){border:3px solid #111;border-radius:16px;box-shadow:inset 0 3px 0 #c9a227,7px 7px 0 #111}
+.rkbox:not(.chbox) .rkhd b{font-family:var(--f-comic);font-weight:400;font-size:26px;letter-spacing:.05em;color:#ffd23a;-webkit-text-stroke:1.2px #111;paint-order:stroke fill;text-shadow:2px 2px 0 #111}
+.rkbox:not(.chbox) .rkhd .rkx{width:42px;height:42px;border:2.5px solid #111;border-radius:11px;background:#ff4b3a;box-shadow:2px 2px 0 #111;font-size:18px}
+.rkbox:not(.chbox) .rkhd .rkx:active{transform:translate(2px,2px);box-shadow:0 0 0 #111}
+.rkbox:not(.chbox) .rktabs{padding-bottom:12px}
+.rkbox:not(.chbox) .rktabs button{font-family:var(--f-comic);font-weight:400;font-size:16px;letter-spacing:.05em;border:2.5px solid #111;border-radius:10px;background:#2b3324;color:#f3ecd4;box-shadow:2px 2px 0 #111;padding:8px 12px 5px}
+.rkbox:not(.chbox) .rktabs button.on{background:#ffd23a;color:#111;border-color:#111}
+.morebody .btn{font-family:var(--f-comic);font-weight:400;font-size:17px;letter-spacing:.06em;text-transform:uppercase;min-height:44px;padding:8px 16px 5px;border:3px solid #111;border-radius:12px;box-shadow:3px 3px 0 #111;display:inline-flex;align-items:center;justify-content:center;gap:.35em;margin:3px 4px 5px 0;transition:transform .08s,box-shadow .08s}
+.morebody .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.morebody .btn.line{background:#fff;color:#111;box-shadow:3px 3px 0 #111}
+.morebody .btn.sm{min-height:38px;font-size:15px;padding:6px 12px 4px}
+.morebody .btn[hidden]{display:none}
+@media (orientation:landscape) and (max-height:560px){.srsws button{font-size:12.5px;letter-spacing:.02em}.srfire{font-size:20px;line-height:1}.srmv{font-size:14px}}
+@media (max-width:359px){.srsws button{font-size:12.5px;letter-spacing:.02em}}
