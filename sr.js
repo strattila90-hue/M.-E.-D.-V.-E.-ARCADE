@@ -4,6 +4,7 @@ import {$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,P
    Pálya és modell a DroneRunból. 1 világegység = 10 m. Szögek vonásban (6400 = teljes kör).
    Minden véletlen a lövő gépén dől el, az eredmény eseményként megy át a másik félhez (online mód). */
 const SR={};
+const SR_EMIN=-44,SR_EMAX=1155;// csőemelkedés a toronyhoz (testhez) mérve: −2,5° … +65°
 const SR_W=2600,SR_DX=3,SR_G=120,SR_K=.00007,SR_VS=.42,SR_MIL=6400/(2*Math.PI),SR_M=10,SR_FUEL=90,SR_TLIM=120;
 const SR_AMMO=[
  {id:'dm121',r:'Rheinmetall · kb. 43,5 kg · csónakfarú (boat-tail) · L52 csőből kb. 30 km',n:'DM121 HE',d:'Repesz-romboló (Rheinmetall) – alaplőszer, közepes kráter',q:14,v:560,R:60,dmg:34,cr:26,kind:'he'},
@@ -56,7 +57,11 @@ function srRest(v){const H=[];for(let d=-38;d<=38;d+=9.5){const p=[v.x+d,srGy(v.
 const srAmmoN=v=>SR_AMMO.reduce((s,a)=>s+(v.ammo[a.id]||0),0);
 const srReady=v=>v.sys.eng&&v.sys.rad&&v.sys.tur&&v.load>=1;
 function srLocal(v,lx,ly){const X=lx*SR_VS*v.face,Y=ly*SR_VS,c=Math.cos(v.a),s=Math.sin(v.a);return {x:v.x+X*c-Y*s,y:v.y+X*s+Y*c}}
-function srMuzzle(v,e){const th=e/SR_MIL,L=199*SR_VS,p=srLocal(v,-8,-37.2);return {x:p.x+Math.cos(th)*L*v.face,y:p.y-Math.sin(th)*L}}
+// a cső a testhez rögzített: a terep dőlése a csövet is megdönti (a világhoz mért szög = emelkedés + a test bólintása)
+// a cél oldalirányú (mélységi) eltolása: közelről a két löveg egy vonalba kerül, így közvetlen irányzással is eltalálható
+const srZ=()=>{const d=SR.v?Math.abs(SR.v[0].x-SR.v[1].x):999;return SR.zOff*srClamp((d-90)/500,0,1)};
+const srPitch=(v,a)=>-(a==null?v.a:a)*v.face;
+function srMuzzle(v,e,a){const th=e/SR_MIL+srPitch(v,a),L=199*SR_VS,p=srLocal(v,-8,-37.2);return {x:p.x+Math.cos(th)*L*v.face,y:p.y-Math.sin(th)*L}}
 // felső szögcsoport (800 vonás fölött): a tűzvezető automatikusan csökkentett töltetet választ
 const srChg=e=>e<=800?1:1-.3*(e-800)/350;
 const srDisp=v=>1+(v.d.brl===1?1.2:v.d.brl===2?3:0)+(5-v.crew)*.15;
@@ -74,8 +79,8 @@ function srSegD(ax,ay,bx,by,cx,cy,dx,dy){const ux=bx-ax,uy=by-ay,vx=dx-cx,vy=dy-
 function srSim(sh,tg,elev,trav,am,noise){const rnd=Math.random,gs=()=>(rnd()+rnd()+rnd()+rnd()-2)*.87;
   let e=elev,tr=trav,vk=1;
   if(noise){const d=srDisp(sh);e+=gs()*3*d;tr+=gs()*2*d+gs()*5*sh.d.tur;vk=1+gs()*.004*d-(sh.d.brl>1?.04:0)}
-  e=srClamp(e,0,1150);const v0=am.v*srChg(e)*vk;
-  const th=e/SR_MIL,m=srMuzzle(sh,e),tl=Math.tan(tr/SR_MIL),wc=SR.wind.z*sh.face,tgl=SR.zOff,dt=1/60,pts=[m.x,m.y];
+  e=srClamp(e,SR_EMIN,SR_EMAX);const v0=am.v*srChg(e)*vk,ra=srRest(sh).a;
+  const th=e/SR_MIL+srPitch(sh,ra),m=srMuzzle(sh,e,ra),tl=Math.tan(tr/SR_MIL),wc=SR.wind.z*sh.face,tgl=srZ(),dt=1/60,pts=[m.x,m.y];
   let x=m.x,y=m.y,vx=Math.cos(th)*v0*sh.face,vy=-Math.sin(th)*v0,t=0,lat=0,type=null,apex=0,top=y,brl=0;
   const B0=tg&&!tg.dead?srLocal(tg,-8,-37.2):null,B1=B0?srMuzzle(tg,tg.elev):null;
   for(let i=0;i<2400&&!type;i++){
@@ -101,10 +106,10 @@ function srSim(sh,tg,elev,trav,am,noise){const rnd=Math.random,gs=()=>(rnd()+rnd
   return {pts,dt,tof:t,apex,top,m,end:{x,y,lat,type,brl,dr:type==='disp'?SR._dr:undefined},e,tr}}
 // lőtábla: alsó szögcsoportú magassági szög adott távolságra (sík terep, szélcsend) – kiinduló érték az irányzáshoz
 function srTable(am,R){const rng=e=>{const th=e/SR_MIL,dt=1/60;let x=0,y=0,vx=Math.cos(th)*am.v,vy=-Math.sin(th)*am.v,t=0;do{const sp=Math.hypot(vx,vy);let ax=-SR_K*sp*vx,ay=SR_G*(am.gk||1)-SR_K*sp*vy;if(am.kind==='vlap'&&t>.45&&t<1.35){ax+=vx/sp*95;ay+=vy/sp*95}vx+=ax*dt;vy+=ay*dt;x+=vx*dt;y+=vy*dt;t+=dt}while(y<0&&t<40);return x};
-  if(rng(790)<R)return null;let lo=20,hi=790;for(let i=0;i<11;i++){const m=(lo+hi)/2;if(rng(m)<R)lo=m;else hi=m}return Math.round(hi)}
+  if(rng(790)<R)return null;let lo=SR_EMIN,hi=790;for(let i=0;i<11;i++){const m=(lo+hi)/2;if(rng(m)<R)lo=m;else hi=m}return Math.round(hi)}
 // felső szögcsoportú lőtábla (800 vonás fölött, csökkentett töltettel) – a SMArt-ot így lövik: magas, nyújtott, meredeken érkező röppálya
 function srTableHi(am,R){const rng=e=>{const th=e/SR_MIL,dt=1/60,v=am.v*srChg(e);let x=0,y=0,vx=Math.cos(th)*v,vy=-Math.sin(th)*v,t=0;do{const sp=Math.hypot(vx,vy);vx+=-SR_K*sp*vx*dt;vy+=(SR_G*(am.gk||1)-SR_K*sp*vy)*dt;x+=vx*dt;y+=vy*dt;t+=dt}while(y<0&&t<40);return x};
-  if(rng(800)<R)return null;let lo=800,hi=1150;if(rng(hi)>R)return null;for(let i=0;i<11;i++){const m=(lo+hi)/2;if(rng(m)>R)lo=m;else hi=m}return Math.round(lo)}
+  if(rng(800)<R)return null;let lo=800,hi=SR_EMAX;if(rng(hi)>R)return null;for(let i=0;i<11;i++){const m=(lo+hi)/2;if(rng(m)>R)lo=m;else hi=m}return Math.round(lo)}
 const srHiAm=am=>am&&am.kind==='smart';
 // találati zónák szerinti részegység-sérülés
 const SR_ZONE={barrel:['brl','brl','tur','opt'],front:['eng','eng','eng','trk','trk','opt','brl'],rear:['tur','tur','ldr','ldr','rad','gps','trk','crew','crew'],top:['tur','tur','opt','opt','rad','gps','gps','ldr','crew','crew','eng'],near:['trk','trk','trk','opt','opt','rad','rad','gps','brl','crew']};
@@ -117,7 +122,7 @@ function srHurt(st,dmg,zone,direct){const parts=[];dmg=Math.round(dmg);if(dmg<=0
   return {dmg,parts,cook}}
 const srState=v=>({hp:v.hp,crew:v.crew,burn:v.burn,d:{...v.d}});
 // a lövés teljes kimenetele (a lövő gépén): kráterek, sérülések, következő szél
-function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.zOff,st=[srState(SR.v[0]),srState(SR.v[1])];
+function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=srZ(),st=[srState(SR.v[0]),srState(SR.v[1])];
   const ev={k:'shot',by:si,am:am.id,elev:sh.elev,trav:sh.trav,sx:Math.round(sh.x*10)/10,pts:sim.pts,dt:sim.dt,apex:sim.apex,end:{x:E.x,y:E.y,lat:E.lat,type:E.type,brl:E.brl?1:0},cr:[],hits:[],delay:0};
   const rngF=srClamp((E.x-sh.x)/((tg.x-sh.x)||1),0,1.2),off=Math.abs(E.lat-tgl*rngF),f=srClamp(1-off/90,.25,1);ev.f=f;
   const latOf=v=>v===tg?E.lat-tgl:E.lat,dist=v=>Math.hypot(Math.max(0,Math.abs(E.x-v.x)-34),latOf(v));
@@ -136,8 +141,8 @@ function srResolve(si,sim,am){const sh=SR.v[si],tg=SR.v[1-si],E=sim.end,tgl=SR.z
 
 /* ---------- gépi ellenfél ---------- */
 function srSolve(sh,tg,am){let best=null;const tryE=e=>{const s=srSim(sh,tg,e,0,am,false),err=s.end.type==='hit'?0:s.end.type==='out'?9999:Math.abs(s.end.x+(s.end.type==='disp'&&s.end.dr!=null?s.end.dr:0)-tg.x);/* SMArt: a résztöltetek oda sodródnak, nem a kilökés helyére */if(!best||err<best.err)best={e,err,s}};
-  for(let e=srHiAm(am)?800:60;e<=1140;e+=20)tryE(e);const c=best.e;for(let e=c-18;e<=c+18;e+=3)tryE(srClamp(e,0,1150));
-  const s=best.s,rng=Math.abs(s.end.x-s.m.x)||1,trav=Math.atan((SR.zOff-s.end.lat)/rng)*SR_MIL,s2=srSim(sh,tg,srClamp(best.e+10,0,1150),0,am,false);
+  for(let e=srHiAm(am)?800:SR_EMIN;e<=SR_EMAX;e+=20)tryE(e);const c=best.e;for(let e=c-18;e<=c+18;e+=3)tryE(srClamp(e,SR_EMIN,SR_EMAX));
+  const s=best.s,rng=Math.abs(s.end.x-s.m.x)||1,trav=Math.atan((srZ()-s.end.lat)/rng)*SR_MIL,s2=srSim(sh,tg,srClamp(best.e+10,SR_EMIN,SR_EMAX),0,am,false);
   let slope=(s2.end.x-s.end.x)*sh.face/10;if(!isFinite(slope)||Math.abs(slope)<.25||s2.end.type==='out')slope=best.e>640?-1:1;
   return {elev:best.e,trav,slope,rng}}
 function srAiPlan(){const me=SR.v[SR.turn],tg=SR.v[1-SR.turn],A=SR.ai,L=SR_AI[SR.lvl];
@@ -152,7 +157,7 @@ function srAiPlan(){const me=SR.v[SR.turn],tg=SR.v[1-SR.turn],A=SR.ai,L=SR_AI[SR
   q.push({k:'aim',am:id},{k:'fire'});A.q=q;A.wait=1.1}
 function srAiAim(me,tg,id){const A=SR.ai,L=SR_AI[SR.lvl],am=SR_AM[id],so=srSolve(me,tg,am),gs=()=>(Math.random()+Math.random()+Math.random()-1.5)*1.15;
   const blind=(srInSmoke(tg)||srInSmoke(me)?3:1)*(me.d.opt?1.6:1),sr=Math.max(16,L.r*Math.pow(L.k,A.n))*blind,sl=Math.max(4,L.l*Math.pow(L.k,A.n))*blind;
-  me.sel=id;A.te=Math.round(srClamp(so.elev+gs()*sr/so.slope,20,1150));A.tt=Math.round(srClamp(so.trav+gs()*sl/so.rng*SR_MIL,-300,300));A.n++}
+  me.sel=id;A.te=Math.round(srClamp(so.elev+gs()*sr/so.slope,SR_EMIN,SR_EMAX));A.tt=Math.round(srClamp(so.trav+gs()*sl/so.rng*SR_MIL,-300,300));A.n++}
 
 /* ---------- hangok ---------- */
 // hangos események (lövés, becsapódás) közös busza: lágy telítés → kompresszor → erősítés, így torzítás nélkül szólhat sokkal hangosabban
@@ -484,7 +489,7 @@ function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;const ff=!local&&SR.
   SR.camFree=false;SR.ovw=false;SR.pred=null;
   if(ev.k==='skip'){srMsg(ev.to?'⏱ '+v.name+': lejárt az idő – a kör kimarad!':'⚙ '+v.name+': töltési hiba – a lövés kimarad!');srFloat(v,ev.to?'lejárt az idő':'töltési hiba','#ffd24a');srSwSnd(false);SR.phase='wait';SR.t=1.6;SR.wind=ev.wind;SR.turn=1-ev.by;if(SR.turn===0)SR.round++;srUI();return}
   if(!local)srAmmoNote(v,ev.am);SR.shot={ev,t:0,wh:false,n:ev.pts.length/2,ts:1,ff};SR.phase='fly';v.rec=1;v.x=srClamp(v.x-v.face*1.6,60,SR_W-60);v.av-=v.face*(1.1+Math.sin(v.elev/SR_MIL)*.9);srSndFire(v.face,ev.am);SR.shake=Math.max(SR.shake,.35);try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
-  const m=srMuzzle(v,v.elev),th=v.elev/SR_MIL,dx=Math.cos(th)*v.face,dy=-Math.sin(th);
+  const m=srMuzzle(v,v.elev),th=v.elev/SR_MIL+srPitch(v),dx=Math.cos(th)*v.face,dy=-Math.sin(th);
   // torkolattűz és nagy, gomolygó lőporfüst: előre kilőtt füstcsóva, a csőszájfékből oldalra kicsapó gyűrű, a lökéshullám felverte por, majd lassan szétterülő felhő
   const R=Math.random,chg=srChg(v.elev),K=ev.am==='smk'||ev.am==='ill'?.8:1;
   SR.fx.push({k:'fl',x:m.x+dx*8,y:m.y+dy*8,R:46,t:.1,t0:.1});SR.fx.push({k:'lt',x:m.x,y:m.y,R:200,t:.35,t0:.35});
@@ -496,7 +501,7 @@ function srPlay(ev,local){const v=SR.v[ev.by];SR.turn=ev.by;const ff=!local&&SR.
   srDust(v.x+v.face*20,1.2,20);srDust(v.x-v.face*30,.8,10);v.smk=6;if(ev.am==='vul')for(let i=0;i<3;i++)SR.fx.push({k:'d',x:m.x+dx*14,y:m.y+dy*14,vx:dx*(150+Math.random()*80)+(Math.random()-.5)*90,vy:dy*150+(Math.random()-.5)*90,rot:0,vr:(Math.random()-.5)*20,w:5,h:1.6,t:1.6,t0:1.6,c:'#5a5f66'});
   srUI()}
 function srShotPos(S,t){const ev=S.ev,f=Math.min(S.n-1,t/ev.dt),i=Math.min(S.n-2,f|0),u=f-i,p=ev.pts;return {x:p[i*2]*(1-u)+p[i*2+2]*u,y:p[i*2+1]*(1-u)+p[i*2+3]*u,dx:p[i*2+2]-p[i*2],dy:p[i*2+3]-p[i*2+1],i}}
-function srImpact(ev){const E=ev.end,am=SR_AM[ev.am],sh=SR.v[ev.by],tg=SR.v[1-ev.by],dep=(E.lat-SR.zOff)*sh.face;
+function srImpact(ev){const E=ev.end,am=SR_AM[ev.am],sh=SR.v[ev.by],tg=SR.v[1-ev.by],dep=(E.lat-srZ())*sh.face;
   SR.last[ev.by]={pts:ev.pts,apex:ev.apex,by:ev.by,base:sh.y};
   for(const [x,r,d] of ev.cr)srCrater(x,r,d);
   if(E.type==='out'){}
@@ -523,7 +528,7 @@ function srApply(ev){const sh=SR.v[ev.by],tg=SR.v[1-ev.by],E=ev.end;
     if(v.hp<=0&&!v.dead)srKill(v)}
   let rep;if(E.type==='out')rep='a lövedék elhagyta a harcmezőt';else if(direct&&E.brl)rep='🎯 TALÁLAT A LÖVEGCSÖVÖN!';else if(direct)rep='🎯 TALÁLAT A CÉLON!';
   else if(ev.smoke)rep='ködgránát célban';else if(ev.flare)rep='világítótest a cél fölött';
-  else{const dr=(E.x-tg.x)*sh.face,dl=E.lat-SR.zOff;rep=`${srM(Math.abs(dr))} m ${dr>0?'HOSSZÚ':'RÖVID'} · ${srM(Math.abs(dl))} m ${dl>0?'JOBBRA':'BALRA'}`}
+  else{const dr=(E.x-tg.x)*sh.face,dl=E.lat-srZ();rep=`${srM(Math.abs(dr))} m ${dr>0?'HOSSZÚ':'RÖVID'} · ${srM(Math.abs(dl))} m ${dl>0?'JOBBRA':'BALRA'}`}
   SR.rep[ev.by]={txt:sh.sys.rad&&sh.d.rad<2?rep:'nincs rádió – nincs megfigyelői jelentés',lat:E.lat,rf:srClamp(Math.abs(E.x-sh.x)/Math.abs(tg.x-sh.x||1),0,1.3),ok:sh.sys.rad&&sh.d.rad<2};
   if(!sh.ai&&(SR.mode!=='net'||ev.by===SR.me))srMsg('📻 Megfigyelő: '+SR.rep[ev.by].txt,4200);
   srUI()}
@@ -546,7 +551,7 @@ function srMove(v,dir,dt){const o=SR.v[1-v.i];if(!(v.sys.eng&&v.d.eng<2)){if(!v.
   if(v.fuel<=0){if(!v.ai&&!SR.mvW){SR.mvW=1;toast('Ebben a körben nem mehetsz tovább.')}return false}
   const sl=(srGy(v.x+dir*16)-srGy(v.x))/16;if(sl<-1.1)return false;
   const st=Math.min(v.fuel,34*srClamp(1+sl*.6,.35,1.3)*(v.d.eng?.6:1)*dt),nx=srClamp(v.x+dir*st,60,SR_W-60);
-  if(Math.abs(nx-o.x)<320&&Math.abs(nx-o.x)<Math.abs(v.x-o.x))return false;
+  if(Math.abs(nx-o.x)<92&&Math.abs(nx-o.x)<Math.abs(v.x-o.x))return false;// a két löveg szinte összeérhet
   if(nx===v.x)return false;v.trk+=(nx-v.x)*v.face;v.fuel-=Math.abs(nx-v.x);v.x=nx;
   if(Math.random()<dt*20)SR.fx.push({k:'g',x:v.x-dir*(30+Math.random()*14),vx:-dir*(16+Math.random()*26),r0:3,r1:11+Math.random()*8,h:1+Math.random()*4,t:1.3,t0:1.3});
   if(Math.random()<dt*7)SR.fx.push({k:'p',x:v.x-dir*40,y:srGy(v.x-dir*40)-1,vx:-dir*(30+Math.random()*50),vy:-40-Math.random()*50,g:420,t:.6,t0:.6,c:'84,64,38',sz:1.4});
@@ -646,8 +651,8 @@ function srDrawVeh(c,v){const k=PK,eff=SR.cam.z*SR.dpr*SR_VS*PK,AT=srAtlas(eff),
   for(const w of D_WHEELS){c.fillStyle='#2b2a26';c.beginPath();c.arc(w.lx,22,w.r,0,7);c.fill();c.fillStyle=v.dead?'#2e2c28':'#55534a';c.beginPath();c.arc(w.lx,22,w.r*.62,0,7);c.fill();
     c.save();c.translate(w.lx,22);c.rotate(v.trk/SR_VS/w.r);c.fillStyle='#1f1e1a';for(let i=0;i<5;i++){c.rotate(Math.PI*2/5);c.fillRect(-1,w.r*.2,2,w.r*.35)}c.restore()}
   // cső: a magassági szög a vízszinteshez mért (a tűzvezető kiegyenlíti a dőlést)
-  const th=(v.dead?-40:v.elev)/SR_MIL,wx=Math.cos(th)*v.face,wy=-Math.sin(th),ca=Math.cos(-v.a),sa=Math.sin(-v.a),lx=(wx*ca-wy*sa)*v.face,ly=wx*sa+wy*ca;
-  c.save();c.translate(-8,-37.2);c.rotate(Math.atan2(ly,lx));c.translate(-Math.sin(Math.min(1,v.rec*1.4)*Math.PI)*34,0);if(AT)c.drawImage(AT.img,0,(184+dy)*as,466*as,61*as,6*k,-28*k,466*k,61*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.fillRect(0,-5,196,9);c.fillRect(184,-7,14,13)}
+  const th=(v.dead?-40:v.elev)/SR_MIL;
+  c.save();c.translate(-8,-37.2);c.rotate(-th);c.translate(-Math.sin(Math.min(1,v.rec*1.4)*Math.PI)*34,0);if(AT)c.drawImage(AT.img,0,(184+dy)*as,466*as,61*as,6*k,-28*k,466*k,61*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.fillRect(0,-5,196,9);c.fillRect(184,-7,14,13)}
   if(v.d.brl&&!v.dead){c.fillStyle='rgba(15,12,10,.6)';c.fillRect(90,-9,v.d.brl>1?46:22,9)}c.restore();
   if(AT)c.drawImage(AT.img,0,dy*as,738*as,180*as,-PCX*k,10-PBY*k,738*k,180*k);else{c.fillStyle=v.dead?'#191714':'#546644';c.beginPath();c.moveTo(-112,12);c.lineTo(-112,-18);c.lineTo(-114,-66);c.lineTo(-2,-66);c.lineTo(8,-22);c.lineTo(86,-18);c.lineTo(102,-2);c.lineTo(100,12);c.closePath();c.fill()}
   if(!v.dead){// magyar hadijel: kis piros–fehér–zöld ék a torony oldalán, csúcsával előre
@@ -814,11 +819,29 @@ function srDrawFx(c,dt){const F0=SR.fx;SR.fx=[];// a rajzolás közben keletkez�
       if(Math.random()<dt*5*a)SR.fx.push({k:'s',x:f.x+(Math.random()-.5)*f.r,y:gy-2,vx:0,vy:-16-Math.random()*14,r0:2,r1:9+Math.random()*8,t:2.4,t0:2.4,c:'46,40,36',al:.4,w:1})}
     else if(f.k==='efp'){c.globalCompositeOperation='lighter';c.strokeStyle=`rgba(255,240,200,${a})`;c.lineWidth=4*a+1;c.beginPath();c.moveTo(f.x,f.y);c.lineTo(f.x2,f.y2);c.stroke();c.globalCompositeOperation='source-over'}
     return true});SR.fx=kept.concat(SR.fx);const mx=Math.round(1400*(SR.q||1));if(SR.fx.length>mx)SR.fx.splice(0,SR.fx.length-mx)}
-function srDrawShell(c,p,id){const am=SR_AM[id];c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx));
-  const g=c.createRadialGradient(0,0,0,0,0,16);g.addColorStop(0,'rgba(255,220,150,.55)');g.addColorStop(1,'rgba(255,160,60,0)');c.fillStyle=g;c.fillRect(-16,-16,32,32);
-  c.fillStyle=am.kind==='smoke'?'#8fb7a2':am.kind==='illum'?'#e9e2c8':am.kind==='gps'||am.kind==='laser'?'#3f4a56':am.kind==='smart'?'#4a4f36':'#3E4A1E';c.beginPath();c.moveTo(-6,-2.2);c.lineTo(3,-2.2);c.quadraticCurveTo(7,-1.6,9,0);c.quadraticCurveTo(7,1.6,3,2.2);c.lineTo(-6,2.2);c.closePath();c.fill();
-  c.fillStyle='#E8C547';c.fillRect(-2,-2.2,1.6,4.4);c.fillStyle='#b9772f';c.fillRect(-6,-2.2,1.2,4.4);
-  if(am.kind==='gps'||am.kind==='laser'){c.fillStyle='#22282e';c.fillRect(-6.5,-4.6,2.6,9.2);c.fillRect(3,-3.6,1.6,7.2)}if(am.kind==='laser'){c.fillStyle='#ff3b30';c.beginPath();c.arc(8.4,0,1.2,0,7);c.fill()}c.restore()}
+// 155 mm-es gránát oldalnézetben: ogiva gyújtóval, festett test jelölősávval, réz vezetőöv, csónakfar; a tengelye körül pörög
+// (a festett jelölések és a vezetőöv rovátkái körbefutnak, a fény felülről esik), és enyhén nutál a röppálya érintője körül
+function srDrawShell(c,p,id,t){const am=SR_AM[id]||{},k=am.kind,sp=(t||0)*30+(p.i||0)*.3,nu=Math.sin((t||0)*9)*.05;
+  c.save();c.translate(p.x,p.y);c.rotate(Math.atan2(p.dy,p.dx)+nu);
+  {const g=c.createRadialGradient(0,0,0,0,0,15);g.addColorStop(0,'rgba(255,220,150,.45)');g.addColorStop(1,'rgba(255,160,60,0)');c.fillStyle=g;c.fillRect(-15,-15,30,30)}
+  if(k!=='vlap'){c.globalCompositeOperation='lighter';const g=c.createRadialGradient(-7.5,0,0,-7.5,0,4);g.addColorStop(0,'rgba(255,200,110,.9)');g.addColorStop(1,'rgba(255,90,20,0)');c.fillStyle=g;c.beginPath();c.arc(-7.5,0,4,0,7);c.fill();c.globalCompositeOperation='source-over'}// fenékgázgenerátor izzása
+  const R=2.4,body=k==='smoke'?'#7d9f8c':k==='illum'?'#d8d0b4':k==='gps'||k==='laser'?'#3f4a56':k==='smart'?'#4a4f36':'#4a5628',band=k==='smoke'?'#e8e4d8':k==='illum'?'#f4f1e6':k==='smart'?'#d43a2a':'#E8C547';
+  const path=()=>{c.beginPath();c.moveTo(-7,-R*.78);c.lineTo(-5.6,-R);c.lineTo(3.2,-R);c.bezierCurveTo(6.4,-R,8.6,-1.1,9.6,-.5);c.lineTo(10.4,-.5);c.lineTo(10.4,.5);c.lineTo(9.6,.5);c.bezierCurveTo(8.6,1.1,6.4,R,3.2,R);c.lineTo(-5.6,R);c.lineTo(-7,R*.78);c.closePath()};
+  path();c.fillStyle=body;c.fill();c.save();path();c.clip();
+  c.fillStyle=band;c.fillRect(1.2,-R,1.5,R*2);// jelölősáv (töltet szerint)
+  // pörgő festett jelölések: a henger palástján körbefutó csíkok, csak az elülső oldalon látszanak
+  for(let j=0;j<3;j++){const ph=sp+j*Math.PI*2/3,cy=Math.sin(ph)*R,vis=Math.cos(ph);if(vis<=0)continue;c.fillStyle=`rgba(10,10,8,${.45*vis})`;c.fillRect(-4.6,cy-.35-.25*vis,5.2,.7+.5*vis)}
+  {const g=c.createLinearGradient(0,-R,0,R);g.addColorStop(0,'rgba(255,255,240,.55)');g.addColorStop(.32,'rgba(255,255,240,.08)');g.addColorStop(.7,'rgba(0,0,0,.18)');g.addColorStop(1,'rgba(0,0,0,.55)');c.fillStyle=g;c.fillRect(-8,-R,19,R*2)}// hengeres árnyékolás
+  c.restore();
+  // réz vezetőöv rovátkákkal, amelyek a pörgéssel futnak
+  c.fillStyle='#b8733a';c.fillRect(-5.2,-R-.25,1.5,R*2+.5);c.fillStyle='rgba(60,30,10,.7)';for(let j=0;j<5;j++){const y=Math.sin(sp*1+j*1.257)*R;if(Math.cos(sp+j*1.257)>0)c.fillRect(-5.2,y-.18,1.5,.36)}
+  // gyújtó: fémes orr
+  {const g=c.createLinearGradient(0,-1,0,1);g.addColorStop(0,'#e6e8ea');g.addColorStop(1,'#6c7074');c.fillStyle=g;c.beginPath();c.moveTo(7.8,-.95);c.lineTo(10.6,-.45);c.lineTo(10.6,.45);c.lineTo(7.8,.95);c.closePath();c.fill()}
+  if(k==='gps'||k==='laser'){// kormányszárnyak: pörgés közben felváltva látszanak (fenékrész lassabban forog)
+    for(let j=0;j<4;j++){const ph=(t||0)*6+j*Math.PI/2,y=Math.sin(ph);if(Math.cos(ph)<-.2)continue;c.fillStyle='#22282e';c.fillRect(-7,y*R-.4+(y>0?0:-2.6*Math.abs(y)),2.4,.8+2.6*Math.abs(y))}
+    for(let j=0;j<2;j++){const y=Math.sin((t||0)*6+j*Math.PI);c.fillStyle='#2c333a';c.fillRect(4.6,y*R*.9-.3+(y>0?0:-1.8*Math.abs(y)),1.4,.6+1.8*Math.abs(y))}}
+  if(k==='laser'){c.fillStyle='#ff3b30';c.beginPath();c.arc(10.2,0,.9,0,7);c.fill()}
+  c.strokeStyle='rgba(0,0,0,.6)';c.lineWidth=.45;path();c.stroke();c.restore()}
 function srDrawArc(c,L,col,al){const p=L.pts,n=p.length/2;c.strokeStyle=col;c.globalAlpha=al;c.lineWidth=1.4;c.setLineDash([5,5]);c.beginPath();c.moveTo(p[0],p[1]);for(let i=2;i<n;i+=2)c.lineTo(p[i*2],p[i*2+1]);c.lineTo(p[n*2-2],p[n*2-1]);c.stroke();c.setLineDash([]);
   const ai=Math.min(n-1,L.apex),ax=p[ai*2],ay=p[ai*2+1];c.fillStyle=col;c.font='700 9px system-ui';c.textAlign='center';c.fillText('▲ '+srM(Math.max(0,L.base-ay))+' m',ax,ay-6);c.globalAlpha=1}
 function srDraw(now,dt){const c=SR.c,W=SR.W,H=SR.H,cam=SR.cam,z=cam.z,t=now/1000;
@@ -870,10 +893,11 @@ function srDraw(now,dt){const c=SR.c,W=SR.W,H=SR.H,cam=SR.cam,z=cam.z,t=now/1000
   // lézeres célmegjelölés (Copperhead): villogó fénypont a célon a röppálya végén
   if(SR.phase==='fly'&&SR.shot.ev.lz){const S=SR.shot,T=(S.n-1)*S.ev.dt,tg=SR.v[1-S.ev.by];if(T-S.t<2.4&&!tg.dead&&Math.sin(t*28)>-.3){c.globalCompositeOperation='lighter';const g=c.createRadialGradient(tg.x,tg.y-24,0,tg.x,tg.y-24,14);g.addColorStop(0,'rgba(255,60,40,.95)');g.addColorStop(1,'rgba(255,0,0,0)');c.fillStyle=g;c.fillRect(tg.x-14,tg.y-38,28,28);c.globalCompositeOperation='source-over'}}
   // lövedék és röppálya
-  if(SR.phase==='fly'){const S=SR.shot,p=srShotPos(S,S.t),P=S.ev.pts,n=p.i+1;
-    c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1.2;c.beginPath();c.moveTo(P[0],P[1]);for(let i=1;i<=n;i++)c.lineTo(P[i*2],P[i*2+1]);c.lineTo(p.x,p.y);c.stroke();
-    const k0=Math.max(0,n-26);for(let i=k0;i<n;i++){const a=(i-k0)/26;c.strokeStyle=`rgba(255,${190+a*50|0},${110+a*90|0},${a*.85})`;c.lineWidth=1+a*2.6;c.beginPath();c.moveTo(P[i*2],P[i*2+1]);c.lineTo(P[i*2+2],P[i*2+3]);c.stroke()}
-    srDrawShell(c,p,S.ev.am)}
+  if(SR.phase==='fly'){const S=SR.shot,p=srShotPos(S,S.t),P=S.ev.pts,n=p.i;// csak a lövedék MÖGÖTT: a már megtett pontokig, majd pontosan a gránát fenekéig
+    const sl=Math.hypot(p.dx,p.dy)||1,bx=p.x-p.dx/sl*6,by=p.y-p.dy/sl*6;
+    c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1.2;c.beginPath();c.moveTo(P[0],P[1]);for(let i=1;i<=n;i++)c.lineTo(P[i*2],P[i*2+1]);c.lineTo(bx,by);c.stroke();
+    const k0=Math.max(0,n-26);for(let i=k0;i<=n;i++){const a=(i+1-k0)/27,ex=i<n?P[i*2+2]:bx,ey=i<n?P[i*2+3]:by;c.strokeStyle=`rgba(255,${190+a*50|0},${110+a*90|0},${a*.85})`;c.lineWidth=1+a*2.6;c.beginPath();c.moveTo(P[i*2],P[i*2+1]);c.lineTo(ex,ey);c.stroke()}
+    srDrawShell(c,p,S.ev.am,t)}
   // köd
   for(const s of SR.smokes){const a=Math.min(1,s.age/1.5)*Math.min(1,s.turns/2);for(let i=0;i<(LOWFX?9:16);i++){const h=Math.abs(Math.sin(i*12.9898)*43758.5453%1),h2=Math.abs(Math.sin(i*78.233)*43758.5453%1),x=s.x+(h-.5)*290+Math.sin(t*.4+i)*12,y=srGy(x)-12-h2*78+Math.sin(t*.6+i*2)*5;c.fillStyle=`rgba(${218+h*22|0},${218+h*22|0},${212+h*20|0},${.22*a})`;c.beginPath();c.arc(x,y,30+h2*26,0,7);c.fill()}}
   srDrawFx(c,dt);
@@ -929,10 +953,11 @@ function srHud(c,W,H,t){const ctl=srCtl(),tg=SR.v[1-ctl.i],bw=Math.min(176,W*.4)
   if(radio){const w=SR.wind,wl=w.x*ctl.face,wc=w.z*ctl.face;lines.push(['METEO    '+(Math.abs(w.x)<1?'szélcsend':(wl>0?'hátszél ':'szembeszél ')+Math.round(Math.abs(w.x)/2)+' m/s')+' · oldal '+(Math.abs(w.z)<1?'0':(wc>0?'→ ':'← ')+Math.round(Math.abs(w.z)/2)+' m/s'),'#bfe3ff'])}
   else lines.push(['METEO    nincs rádió','#ff9a8a']);
   if(ctl.d.opt>=2)lines.push(['TÁVMÉRŐ  optika megsemmisült','#ff9a8a']);else if(blind)lines.push(['TÁVMÉRŐ  köd – nincs mérés','#ff9a8a']);
-  else{const dx=Math.abs(tg.x-ctl.x),brg=Math.atan(SR.zOff/dx)*SR_MIL,co=ctl.d.opt===1,r=co?Math.round(dx*SR_M/500)*500:Math.round(dx*SR_M/10)*10,b=co?Math.round(brg/20)*20:Math.round(brg),dh=Math.round((ctl.y-tg.y)*SR_M/10)*10;
+  else{const dx=Math.abs(tg.x-ctl.x),brg=Math.atan(srZ()/dx)*SR_MIL,co=ctl.d.opt===1,r=co?Math.round(dx*SR_M/500)*500:Math.round(dx*SR_M/10)*10,b=co?Math.round(brg/20)*20:Math.round(brg),dh=Math.round((ctl.y-tg.y)*SR_M/10)*10;
     lines.push([`TÁVMÉRŐ  ${n0(r)} m · irány ${b>0?'jobbra ':b<0?'balra ':''}${String(Math.abs(b)).padStart(4,'0')} · szint ${dh>=0?'+':'−'}${Math.abs(dh)} m${co?' (sérült optika)':''}`,'#9dff9d']);
     const tk=ctl.sel+'|'+r,ta=SR_AM[ctl.sel],hiA=srHiAm(ta);if(SR.tblK!==tk){SR.tblK=tk;SR.tbl=ta?(hiA?srTableHi(ta,r/SR_M):srTable(ta,r/SR_M)):null}
-    lines.push(['LŐTÁBLA  '+(SR.tbl?String(SR.tbl).padStart(4,'0')+' von '+(hiA?'(felső szögcsoport · SMArt)':'(sík terep, szélcsend)'):hiA?'felső szögcsoporttal nem érhető el':'lőtávon kívül – felső szögcsoport'),'#cfd6c0'])}
+    const pm=Math.round(srPitch(ctl,srRest(ctl).a)*SR_MIL),tv=SR.tbl?srClamp(SR.tbl-pm,SR_EMIN,SR_EMAX):0;
+    lines.push(['LŐTÁBLA  '+(SR.tbl?(tv<0?'−':'')+String(Math.abs(tv)).padStart(4,'0')+' von '+(hiA?'(felső szögcsoport · SMArt':'(sík terep, szélcsend')+(Math.abs(pm)>=3?', dőlés '+(pm>0?'+':'−')+Math.abs(pm):'')+')':hiA?'felső szögcsoporttal nem érhető el':'lőtávon kívül – felső szögcsoport'),'#cfd6c0'])}
   {const sa=SR_AM[ctl.sel],g=ctl.d.gps||0;if(sa&&sa.kind==='gps'&&g)lines.push([g>=2?'GPS      kiesett – a gránát irányítás nélkül repül':'GPS      sérült – pontatlan, gyengébb irányítás',g>=2?'#ff9a8a':'#ffd24a'])}
   const R=SR.rep[ctl.i];if(R)lines.push(['ELTÉRÉS  '+R.txt,'#ffe08a']);
   if(SR.flares.some(f=>f.by===ctl.i))lines.push(['CÉL      megvilágítva – becsapódás-előrejelzés aktív','#fff3b0']);
@@ -984,9 +1009,9 @@ function srRadar(c,W,ctl,tg,R,radio,blind,t){const rdR=ctl.d.rad||0,rdG=ctl.d.gp
   c.strokeStyle='#9dff9d';c.lineWidth=1.3;c.setLineDash([4,3]);c.lineDashOffset=-t*14;c.beginPath();c.moveTo(cx,by);c.lineTo(ax,ty);c.stroke();c.setLineDash([]);
   c.beginPath();c.arc(ax,ty,3.5,0,7);c.moveTo(ax-6,ty);c.lineTo(ax+6,ty);c.moveTo(ax,ty-6);c.lineTo(ax,ty+6);c.stroke();
   // cél
-  if(see){const tx=cx+srClamp(SR.zOff*sc,-iw/2+5,iw/2-5),p=(t*1.4)%1;c.strokeStyle=`rgba(255,90,74,${1-p})`;c.lineWidth=1.2;c.beginPath();c.arc(tx,ty,3+p*9,0,7);c.stroke();
+  if(see){const tx=cx+srClamp(srZ()*sc,-iw/2+5,iw/2-5),p=(t*1.4)%1;c.strokeStyle=`rgba(255,90,74,${1-p})`;c.lineWidth=1.2;c.beginPath();c.arc(tx,ty,3+p*9,0,7);c.stroke();
     const bl=.6+.4*Math.sin(t*7);c.fillStyle=`rgba(255,90,74,${bl})`;c.beginPath();c.moveTo(tx,ty-4.5);c.lineTo(tx+4.5,ty);c.lineTo(tx,ty+4.5);c.lineTo(tx-4.5,ty);c.closePath();c.fill()}
-  else{c.font='800 11px system-ui';c.textAlign='center';c.fillStyle='#ff9a8a';c.fillText('?',cx+srClamp(SR.zOff*sc,-iw/2+8,iw/2-8),ty+4)}
+  else{c.font='800 11px system-ui';c.textAlign='center';c.fillStyle='#ff9a8a';c.fillText('?',cx+srClamp(srZ()*sc,-iw/2+8,iw/2-8),ty+4)}
   // utolsó becsapódás
   if(R&&R.ok){const px=cx+srClamp(R.lat*sc,-iw/2+4,iw/2-4),py=by+(ty-by)*srClamp(R.rf,0,1.15);c.strokeStyle='rgba(255,224,138,.35)';c.lineWidth=1;c.beginPath();c.arc(px,py,6,0,7);c.stroke();c.strokeStyle='#ffe08a';c.lineWidth=1.6;c.beginPath();c.moveTo(px-3,py-3);c.lineTo(px+3,py+3);c.moveTo(px+3,py-3);c.lineTo(px-3,py+3);c.stroke()}
   // saját löveg: nyílhegy
@@ -1023,13 +1048,13 @@ function srLoop(now){const cv=SR.cv;if(!cv||!cv.isConnected)return;const raw=(no
 /* ---------- kezelőpanel ---------- */
 function srTapeDraw(cv,val,trav){const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1),w=Math.round(r.width),h=Math.round(r.height);if(!w)return;if(cv.width!==w*dpr||cv.height!==h*dpr){cv.width=w*dpr;cv.height=h*dpr}
   const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0e120b');g.addColorStop(.5,'#2a3320');g.addColorStop(1,'#0e120b');c.fillStyle=g;c.fillRect(0,0,w,h);
-  const pp=5,m0=Math.floor(val-w/2/pp)-1,m1=Math.ceil(val+w/2/pp)+1,lo=trav?-300:0,hi=trav?300:1150;c.textAlign='center';c.font='700 9.5px ui-monospace,Menlo,monospace';
+  const pp=5,m0=Math.floor(val-w/2/pp)-1,m1=Math.ceil(val+w/2/pp)+1,lo=trav?-300:SR_EMIN,hi=trav?300:SR_EMAX;c.textAlign='center';c.font='700 9.5px ui-monospace,Menlo,monospace';
   for(let m=m0;m<=m1;m++){if(m<lo||m>hi)continue;const x=w/2+(m-val)*pp,big=m%50===0,mid=m%10===0;c.fillStyle=big?'#f3ecd4':mid?'#b9c29a':'#6f7a58';c.fillRect(x-.5,h-(big?17:mid?11:6),big?1.6:1,big?17:mid?11:6);
     if(big&&Math.abs(x-w/2)>15&&x>13&&x<w-13)c.fillText(trav?(m>0?'J':m<0?'B':'')+Math.abs(m):String(m),x,h-21)}
   c.fillStyle='#ff5a4a';c.fillRect(w/2-.75,0,1.5,h);c.beginPath();c.moveTo(w/2-5,0);c.lineTo(w/2+5,0);c.lineTo(w/2,7);c.fill()}
-function srDials(){if(!SR.v||!$('#srEv'))return;const v=srCtl();{const f=srChg(v.elev);$('#srEv').textContent=String(v.elev).padStart(4,'0')+' von · '+(v.elev/SR_MIL*180/Math.PI).toFixed(1).replace('.',',')+'° · töltet '+(f>=.97?6:f>=.9?5:f>=.82?4:f>=.75?3:2)}
+function srDials(){if(!SR.v||!$('#srEv'))return;const v=srCtl();{const f=srChg(v.elev);$('#srEv').textContent=(v.elev<0?'−':'')+String(Math.abs(v.elev)).padStart(4,'0')+' von · '+(v.elev/SR_MIL*180/Math.PI).toFixed(1).replace('.',',').replace('-','−')+'° · töltet '+(f>=.97?6:f>=.9?5:f>=.82?4:f>=.75?3:2)}
   $('#srTv').textContent=(v.trav>0?'J ':v.trav<0?'B ':'')+String(Math.abs(v.trav)).padStart(4,'0')+' von';srTapeDraw($('#srTE'),v.elev,false);srTapeDraw($('#srTT'),v.trav,true)}
-function srDial(key,d){if(!SR.v||!(srMyTurn()||SR.phase==='prep'))return;const v=srCtl(),lo=key==='trav'?-300:0,hi=key==='trav'?300:1150,b=v[key],n=srClamp(b+d,lo,hi);if(n===b)return;v[key]=n;
+function srDial(key,d){if(!SR.v||!(srMyTurn()||SR.phase==='prep'))return;const v=srCtl(),lo=key==='trav'?-300:SR_EMIN,hi=key==='trav'?300:SR_EMAX,b=v[key],n=srClamp(b+d,lo,hi);if(n===b)return;v[key]=n;
   srClick(Math.floor(b/100)!==Math.floor(n/100)?2:Math.floor(b/10)!==Math.floor(n/10)?1:0);srDials()}
 function srTapeBind(cv,key){let px=0,pt=0,acc=0,id=null;
   cv.addEventListener('pointerdown',e=>{e.preventDefault();ac();id=e.pointerId;try{cv.setPointerCapture(id)}catch(x){}px=e.clientX;pt=e.timeStamp;acc=0});
@@ -1083,7 +1108,7 @@ function srHcStart(ev){if(!srCineOn()||!SR.v)return;const E=ev.end,tg=SR.v[1-ev.
   if(!best)return;const {h,v,dr}=best,A=ev.after[h.who],ca=Math.cos(v.a),sa=Math.sin(v.a),f=v.face;
   const toL=(x,y)=>{const dx=x-v.x,dy=y-v.y;return [(dx*ca+dy*sa)/(SR_VS*f),(-dx*sa+dy*ca)/SR_VS]},dirL=(dx,dy)=>srNrm((dx*ca+dy*sa)*f,-dx*sa+dy*ca);
   const n=ev.pts.length,Ds=n>=4?dirL(ev.pts[n-2]-ev.pts[n-4],ev.pts[n-1]-ev.pts[n-3]):[f,.5];
-  const th=v.elev/SR_MIL,wx=Math.cos(th)*f,wy=-Math.sin(th),c2=Math.cos(-v.a),s2=Math.sin(-v.a),phi=Math.atan2(wx*s2+wy*c2,(wx*c2-wy*s2)*f);
+  const phi=-v.elev/SR_MIL;
   let mode,P,D=Ds,S=Ds;
   if(ev.subs){mode='efp';P=[-58+Math.random()*40,-66];D=S=srNrm((Math.random()-.5)*.25,1)}
   else if(dr&&E.brl){mode='brl';const q=toL(E.x,E.y),u=srClamp((q[0]+8)*Math.cos(phi)+(q[1]+37.2)*Math.sin(phi),40,180);P=[-8+Math.cos(phi)*u,-37.2+Math.sin(phi)*u]}
@@ -1493,7 +1518,7 @@ function srOpen(){const el=$('#harc');el.hidden=false;el.classList.add('rk','sr'
   $('#srPanel').querySelectorAll('[data-nudge]').forEach(srNudgeBind);srTapeBind($('#srTE'),'elev');srTapeBind($('#srTT'),'trav');
   $('#srAmmo').onchange=e=>{const v=srCtl();if(SR.v&&v.ammo[e.target.value]>0){v.sel=e.target.value;srSwSnd(true);
     // SMArt: a tűzvezető felső szögcsoportra áll (emelt, nyújtott röppálya – a résztöltetek a csúcs után, magasan válnak le)
-    const am=SR_AM[v.sel];if(srHiAm(am)&&v.elev<800&&srMyTurn()){const tg=SR.v[1-v.i],ok=v.d.opt<2&&!srInSmoke(v)&&!srInSmoke(tg),e2=ok?srTableHi(am,Math.abs(tg.x-v.x)):null;v.elev=e2||960;srClick(2);srDials();srMsg('🎯 SMArt: felső szögcsoport – '+String(v.elev).padStart(4,'0')+' vonás'+(ok?'':' (becsült)'),3200)}
+    const am=SR_AM[v.sel];if(srHiAm(am)&&v.elev<800&&srMyTurn()){const tg=SR.v[1-v.i],ok=v.d.opt<2&&!srInSmoke(v)&&!srInSmoke(tg),e2=ok?srTableHi(am,Math.abs(tg.x-v.x)):null;v.elev=srClamp(e2?e2-Math.round(srPitch(v,srRest(v).a)*SR_MIL):960,SR_EMIN,SR_EMAX);srClick(2);srDials();srMsg('🎯 SMArt: felső szögcsoport – '+String(v.elev).padStart(4,'0')+' vonás'+(ok?'':' (becsült)'),3200)}
     srUI()}};
   const hold=(id,dir)=>{const b=$(id),on=e=>{e.preventDefault();ac();try{b.setPointerCapture(e.pointerId)}catch(x){}SR.mv=dir;b.classList.add('on')},off=()=>{if(SR.mv===dir)SR.mv=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);for(const k of ['pointerup','pointercancel','pointerleave'])b.addEventListener(k,off)};
   hold('#srBk',-1);hold('#srFw',1);
