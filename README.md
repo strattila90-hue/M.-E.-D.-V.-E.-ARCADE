@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.30.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.31.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.31.0:** Shot&Run filmes mód: már csak a **gránát becsapódásakor** és a **löveg kilövésekor** (kezelők kiugrása) indul – a motorindítás, torony, málházás és lövés jelenetei megszűntek. Becsapódáskor rövid, lassított közeli kép a robbanásról („TALÁLAT!”, „REPESZTALÁLAT”, „BECSAPÓDÁS” a távolsággal). **Találat-kamera** (War Thunder-szerű röntgenkép): találatkor a kép sarkában lassítva látszik a löveg belseje – a gránát nyomjelző csíkja, az átütés villanása és izzó lyuka, a belső robbanás, a szétszóródó repeszek, a sorban elszíneződő részegységek (motor, töltőautomata a gránátokkal, toronyhajtás, cső, rádió, GPS, optika, futómű – sárga: sérült, piros→fekete: megsemmisült) és az öt kezelő (a kiesők pirosan felvillannak, majd elfeketednek); lőszerberobbanásnál az egész belső tér lángba borul. Alul a sérülések listája (−ÉP, alkatrészek, kiesett kezelők), felül „ÁTÜTÉS” / „KILŐVE” / „LŐSZERBEROBBANÁS”, saját hangokkal. A játékot nem állítja meg, online is látszik, koppintásra bezárul. **Élethűbb halál:** a kiugró kezelők egy része elvérzik (egyre lassabban kúszik, majd mozdulatlan marad), tántorogva, a sebét szorítva térdre rogy és előrebukik, utolsó rángásokkal; a test alatt lassan terjedő vértócsa, a sisak leesik; a magát el nem oltó, lángoló kezelő összeesik és bennég – a kiégett test összehúzódott testtartásban sokáig füstöl; a másodlagos robbanások élettelenül, pörögve sodorják el a közeli testeket.
 
 **v4.30.1:** Shot&Run: javítva a lövés utáni kamera-lemaradás – a filmes lövés-jelenet a torkolattűz után 0,2 mp-cel átúszik a kilőtt gránátra (eddig 1,25 mp-ig a csövön maradt, és a gránát kirepült a képből), a követés gyorsabb, és a gránát sebességének irányába előre tart, így nincs állandó lemaradás (mérve: legnagyobb eltérés a kép közepétől 750 → 108 képpont).
 
