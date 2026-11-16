@@ -5,6 +5,8 @@
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
 
+**v4.34.1:** Élesítési javítás: a 4.33 és a 4.34 a Vercelen csak előnézetként épült meg, az éles oldal a 4.32-n maradt. Ettől a verziótól a frissítések közvetlenül a `main` ágra kerülnek, hogy az éles telepítés magától elinduljon. Tartalmi változás nincs a 4.34.0-hoz képest.
+
 **v4.34.0:** Tüzér Kassza: **új kincshegy** a háttérben – a csíkos piramis helyett változatos elemekből épülő, megvilágított halom: érmeoszlopok, bankjegyköteg-falak, pénzeszsákok, aranyrudak, pénzzel teli ládák, drágakövek, nyitott kincsesláda, zsugorfóliás raklapok, páncélszekrény, a csúcson az üteg színes zászlaja, a legnagyobb összegeknél korona. Az összeggel együtt nő, és egyre újabb elemek jelennek meg rajta; az Ütegek fülön minden üteg saját zászlós halmot kap. **Látványosabb koppintás:** a pénz rugózva benyomódik és a koppintás irányába billen, lökéshullám-gyűrű és szikrák a koppintás helyén, a megkeresett pénz ívben a zsebbe repül (a köteg megugrik), a számok kipattannak; a pénz mögött forgó sugárkoszorú, ami a kombóval erősödik; **kombó-sáv** (sárga → narancs → piros, MAX-nál villog); telitalálatnál villanás és képernyőrázkódás. Betoláskor a pénz a kincshegyre repül, a hegy megugrik és szikrázik. Az effektek előre kirajzolt rétegekből és kötegelt rajzolásból mennek, gyenge telefon módban kevesebb belőlük.
 
 **v4.33.0:** Tüzér Kassza: **élő ranglista-futóverseny a főképernyőn** – a zseb alatt a legtöbbet befizető bajtársak mini katonái futnak egymás mellett, a ranglista élő adatai szerint (jobbra, a célnál az első, koronával). Mindenki fölött jól olvasható névtábla a helyezéssel, alatta a befizetett összeg; a katona színe az üteg színe, a sajátod sárga névtáblát kap. Ha valaki előz, a katonája előrefut. Ha nem vagy a legjobbak között, az utolsó helyen a saját katonád látszik a valódi helyezéseddel. **Új 💵 Bankók fül:** a teljes pénznem-gyűjtemény külön oldalon – nagy számláló, hány féle van meg eddig (pl. 12 / 23), csoportonként (érmék, bankjegyek, rendfokozat-jegyek, csúcsjegyek), a következő pénznemnél a pénzverde-ár, a hátralévő szolgálati idő és haladásjelző. **Akadásmentes futás:** a Kassza képkockánkénti munkája kb. a felére-harmadára csökkent – a bázis álló része, a sprite-ok, a pénz árnyéka, a névtáblák és a pixelszöveg előre kirajzolt rétegből jön; a ranglista- és ütegadatok másodpercenként egyszer számolódnak (nem képkockánként); a fejléc számlálói ~6×/mp frissülnek; gyenge telefon módban kevesebb a fényeffekt és a konfetti.
@@ -109,6 +111,9 @@ Az online párbajhoz a `firestore.rules` új `srRooms` szabályát közzé kell 
 6. **Domain:** *Authentication → Settings → Authorized domains → Add domain* → a Vercel-cím
    (pl. `medve-arcade.vercel.app`).
 7. Töltsd fel a módosított fájlokat a GitHub-repóba; a Vercel magától újra kiteszi.
+   Az éles oldalt (`medvearcade.vercel.app`) a `main` ágra **közvetlenül feltöltött** módosítás frissíti.
+   Ha egy módosítás csak *Preview*-ként jelenik meg a Vercel *Deployments* listájában, ott a ⋯ menü
+   *Promote to Production* pontjával léptethető élesbe.
 
 ## Admin teendők (Firebase konzolból)
 
