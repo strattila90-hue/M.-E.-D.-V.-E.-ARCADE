@@ -1638,3 +1638,30 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .srfire2[hidden]{display:none}
 #harc.sr .srall{bottom:calc(8px + var(--srmh,0px))}
 #harc.srcine .srfire2{opacity:0;pointer-events:none}
+/* v4.31: Tüzér Kassza – ajándék fül, szerencsekerék, szabályok */
+.tknav{grid-template-columns:repeat(5,1fr);gap:4px}
+.tknav button b{font-size:10.5px;letter-spacing:.04em}
+@media (max-width:360px){.tknav button b{font-size:9px;letter-spacing:0}}
+.tknav [data-tk=gift]{background:linear-gradient(#c62828,#6d0f12)}
+.tkrules{margin:10px 0;background:rgba(0,0,0,.35);border:2px solid #c9a227;border-radius:10px;padding:6px 10px;text-align:left;color:#f3ecd4}
+.tkrules summary{cursor:pointer;font:400 14px var(--f-display);letter-spacing:.05em;color:#f3d77a;padding:4px 0}
+.tkrules ul{margin:6px 0 4px;padding-left:18px;font:12px/1.45 system-ui,sans-serif}
+.tkrules li{margin:4px 0}
+.tkseen{margin:6px 0 8px;padding:7px 10px;border-radius:9px;background:rgba(46,125,50,.25);border:1px solid #2e7d32;font-size:12px}
+.tkseen.pend{background:rgba(201,162,39,.18);border-color:#c9a227}
+.tkdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:6px 0 10px}
+.tkday{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 1px;border-radius:9px;background:#1d2416;border:2px solid #3a4826;text-align:center;min-width:0}
+.tkday i{font:700 9px system-ui;font-style:normal;opacity:.75}
+.tkday b{font-size:20px;line-height:1.1}
+.tkday small{font:800 9px system-ui;color:#f3d77a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tkday em{font:8px/1.1 system-ui;font-style:normal;opacity:.8;min-height:9px}
+.tkday.done{opacity:.5}
+.tkday.now{border-color:#ffd24a;background:linear-gradient(#5a3f05,#2a1c04);box-shadow:0 0 12px rgba(255,210,74,.6);animation:tkp .8s infinite alternate}
+.tkday.big{border-color:#7fd6e8}
+.tkbig{display:block;width:100%;padding:12px;border:2.5px solid #111;border-radius:12px;box-shadow:3px 3px 0 #111;background:linear-gradient(#ffe169,#c98a06);color:#2a1c04;font:400 18px var(--f-display);letter-spacing:.06em}
+.tkbig.spin{background:linear-gradient(#ff5a5a,#a3121a);color:#fff;text-shadow:1px 1px 0 #000}
+.tkbig:disabled{background:#3a4030;color:#a8ae98;font-size:14px;text-shadow:none;animation:none}
+.tkbig:not(:disabled){animation:tkp .9s infinite alternate}
+.tkbig:active:not(:disabled){transform:translateY(2px);box-shadow:1px 1px 0 #111}
+.tkwheel{display:flex;justify-content:center;margin:4px 0 10px}
+.tkwheel canvas{width:min(280px,78vw);height:auto;aspect-ratio:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
