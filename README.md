@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.37.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.38.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.38.0:** Tüzér Kassza: a koppintható pénz körül a csillogó, mozgó fénykoszorú (forgó fénysugarak, ragyogás, villogó izzósor) helyett **forgó kaszinó-rulettkerék**: piros-fekete zsebek, zöld nulla, arany elválasztók és szegecsek, fa perem, ellentétes irányban futó fehér golyó. A kerék a kombóval gyorsul, Golden Ticket alatt pörög; bankjegynél perspektívában, asztalon fekvőnek látszik. **Gyorsabb:** a kerék egyszer rajzolódik ki gyorsítótárba, képkockánként csak egy forgatott kép + a golyó (a korábbi nagy felületű fényösszeadás helyett) – 6× lassított processzorral mérve kb. 22 → 26–29 képkocka/mp; gyenge készüléken (automatikus kímélő mód) a kerék áll, csak a golyó fut. A pénz neve és a kombósáv a kerék fölé/alá került, hogy ne takarja a perem.
 
 **v4.37.1:** Tüzér Kassza: a fejléc 🏆 számlálója mostantól az **egész üteg közös kasszáját** mutatja (minden ütegtárs befizetése együtt, élőben), nem csak a sajátodat; a saját részed a számlálóra mutatva (címke) és az Ütegek fülön látszik. Az ütegtársak adatai a Kassza nyitva tartása alatt külön, csak az adott ütegre szűrt figyelővel frissülnek. A szabálymagyarázat ennek megfelelően frissült.
 
