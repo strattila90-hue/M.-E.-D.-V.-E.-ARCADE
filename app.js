@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.36.0',APP_DATE='2026.11.16.';
+const APP_VER='4.37.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1519,7 +1519,7 @@ const tkPlain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 // katonai háttér: olajzöld páncéllemez, szegecsek, terepminta, sablonfelirat, figyelmeztető csík, jelzőfények
 function tkFlush(){TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={};TK.gl={};TK.psc={};TK.nsc=null;TK.bsc=null;TK.rsc={};TK.rlc={};TK.nu={};TK.glw=null;TK.bcv=null}
 function tkCacheCheck(now){if(now-(TK._cchk||0)<2000)return;TK._cchk=now;try{const b=TK.bgc;if(b&&b.cv){const d=b.cv.getContext('2d').getImageData(2,2,1,1).data;if(d[3]===0)tkFlush()}}catch(e){tkFlush()}}
-addEventListener('visibilitychange',()=>{if(!document.hidden)tkFlush()});addEventListener('pageshow',tkFlush);
+addEventListener('visibilitychange',()=>{if(!document.hidden)tkFlush();else if(TK.run)tkSync('now')});addEventListener('pagehide',()=>{if(TK.run)tkSync('now')});addEventListener('pageshow',tkFlush);
 function tkBg(c,W,H,now){const rush=TK.rush>0;if(!TK.bgc||TK.bgc.w!==W||TK.bgc.h!==H){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
     const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#46553a');g.addColorStop(.5,'#323f27');g.addColorStop(1,'#1a2213');x.fillStyle=g;x.fillRect(0,0,W,H);
     let sd=11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
@@ -1712,12 +1712,12 @@ function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)r
   if(typeof d.tkFt==='number'&&d.tkFt>(TK.synced||0)){const un=Math.max(0,TK.given-(TK.synced||0));TK.given=Math.max(TK.given,d.tkFt+un);TK.synced=d.tkFt}
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
-function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();if(!force&&now-(TK.syncT||0)<45000)return;const ownS=JSON.stringify(TK.own);
+function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();/* mentési időköz: a futóversenyen állók 30 mp, a többiek 2 perc, hónapzárás előtti 10 percben 15 mp; bezáráskor/háttérbe tételkor azonnal ('now') */const lim=budMonthEnd()-now<6e5?15000:TK.raceTop&&TK.raceTop.has(UID)?30000:120000;if(force!=='now'&&now-(TK.syncT||0)<lim)return;const ownS=JSON.stringify(TK.own);
   if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;if(typeof USERDOC==='undefined'||!USERDOC)return;if(lbPending()){lbAck();return}TK.syncT=now;let g=Number.isFinite(TK.given)?TK.given:0;const u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
   const wk=TK.wk;let wg=Number.isFinite(TK.wg)?TK.wg:0;if(!wk)return;
   // a szerver szabálya: a befizetés csak a valós (szerver)idővel arányosan nőhet, a havi összeg pedig csak a valódi befizetéssel – ezt itt is betartjuk, a maradék a következő mentéssel megy
   const D=USERDOC,sFt=Number(D.tkFt)||0,cap=tkCap(D);if(g>cap)g=Math.floor(cap);if(g<sFt)g=sFt;const wb=D.tkWk===wk?(Number(D.tkWg)||0):0;if(wg>wb+(g-sFt)){wg=Math.max(wb,wb+(g-sFt));if(g>=TK.given)TK.wg=wg}
-  const up={tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now};if(g!==sFt)up.tkSt=firebase.firestore.FieldValue.serverTimestamp();
+  const up={tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now};/* új játékosnál (még nincs tkFt a szerveren) a 0-s első mentéshez is kell a szerveridő, különben a szabály elutasítja */if(g!==sFt||D.tkFt===undefined)up.tkSt=firebase.firestore.FieldValue.serverTimestamp();
   TK.flight={g,wg,t:now,p:performance.now()};DB.doc('users/'+UID).update(up).then(()=>{TK.flight=null;TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{TK.flight=null;console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
     if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{const sd=x.exists?x.data():{};if(x.exists){tkAdopt(sd);TK.syncT=0}if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');const srv=Object.fromEntries(['tkFt','tkWk','tkWg','tkUteg','tkAt','tkSt','tkOwnF'].map(k=>[k,sd[k]===undefined?'(nincs)':sd[k]]));try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u+' | kliens '+JSON.stringify({tkFt:g,tkWk:wk,tkWg:wg,tkOwnF:own,tkAt:now,clk:CLK.ok})+' | szerver '+JSON.stringify(srv)),'kassza')}catch(_){}}}).catch(()=>{})}})}catch(e){}}
 // a firestore.rules tükre: az utolsó befizetés óta eltelt valós idővel arányosan ennyi lehet most a befizetés (2% / mp, legalább 10 millió Ft / mp, +2 perc ráhagyás)
@@ -1749,7 +1749,7 @@ function tkRulesHTML(){return `<details class="tkrules"><summary>📜 Szabályok
 <li><b>💰 Zseb:</b> a koppintás, az automata termelés és minden ajándék ide kerül. A zseb csak a tiéd: <b>mások nem látják, a ranglistán nem számít</b>.</li>
 <li><b>⇡ Ütegbe tolás:</b> a zseb teljes tartalma átkerül a 🏆 ütegkasszába. <b>Csak ez az összeg látszik másoknak</b> és a ranglistán – ugyanannyi, mint a 🏆 számláló a fejlécben. Visszavenni és elkölteni nem lehet.</li>
 <li><b>Vásárlás</b> (Fejlesztés, Pénzverde, Piac) mindig a zsebből megy; az elköltött pénz nem kerül a ranglistára. Előbb vásárolj, aztán tolj be – vagy fordítva, ahogy a stratégiád kívánja.</li>
-<li><b>Mentés:</b> befizetés után pár másodperc, mire mindenki telefonján frissül. Amíg a 🏆 mellett ⏳ látszik, a mentés úton van; ✓ esetén a szerveren is pontosan ennyi áll.</li>
+<li><b>Mentés:</b> befizetés után pár másodperc, mire mindenki telefonján frissül. Amíg a 🏆 mellett ⏳ látszik, a mentés úton van (a szerverre legfeljebb 2 percenként megy fel, a futóverseny élmezőnyében 30 mp-enként, bezáráskor azonnal); ✓ esetén a szerveren is pontosan ennyi áll.</li>
 <li><b>Havi verseny:</b> minden hónap 1-jén 0:00-kor a havi összeg nullázódik, az összesített megmarad. A nyertes üteg tagjai trófeát kapnak.</li>
 <li><b>Átigazolás:</b> a befizetéseid veled jönnek – az üteg összege mindig a tagjai befizetéseinek összege.</li>
 <li><b>Több telefon</b> ugyanazzal a fiókkal: a befizetések összeadódnak, nem vesznek el és nem duplázódnak.</li></ul></details>`}
@@ -1889,8 +1889,8 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
   if(!TK.uteg)tkStartScreen();else $('#tkStart').hidden=true;
   playCount('kassza');tkMusic(true);TK.last=performance.now();TK.raf=requestAnimationFrame(tkLoop);TK.saveI=setInterval(()=>{tkSave();tkSync()},5000)}
 function tkStartScreen(){const s=$('#tkStart');s.hidden=false;s.innerHTML=`<h3>Tüzér Kassza</h3><p>Koppints a pénzre – minden koppintás pénzt nyomtat. A zsebedben gyűlő pénzt <b>húzd felfelé</b>: bekerül az <b>ütegkasszába</b>, ez számít a ranglistán. A <b>Pénzverdében</b> gyárthatod le a következő pénznemet (1 → 10 → 100 … 1 milliárd Ft, majd a rendfokozat-jegyek: Őrmestertől Alezredesig, Osztályparancsnoki, Tüzér Rettenet és a legfelső, a <b>Szent Borbála-jegy</b> – oda kb. fél év eljutni), a <b>Piacon</b> NATO-szintű felszerelést, drónt, járművet és bázisfejlesztést veszel – mind látszik a bázisodon. A <b>🎁 Ajándék</b> fülön napi doboz és szerencsekerék vár, időnként ejtőernyős csomag is érkezik.</p>${tkRulesHTML()}<div class="dinfo"><b>Melyik ütegbe gyűjtesz?</b></div><div class="tkutegs">${TK_UTEG.map(u=>`<button type="button" class="tkbtn tkubtn" data-u="${u}" data-st="--uc:${tkUC(u)[0]};--ut:${tkUC(u)[1]}">${u}</button>`).join('')}</div><p class="hint">Később az Ütegek fülön átigazolhatsz.</p>`;
-  s.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{TK.uteg=b.dataset.u;tkSave();tkSync(true);s.hidden=true;toast(`🏆 ${TK.uteg} – gyűjtsünk!`)})}
-function tkClose(){try{if(TK.spin)tkSpinEnd();tkMusic(false);TK.run=false;clearInterval(TK.saveI);tkSave();tkSync(true)}catch(e){}gClose(TK)}
+  s.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{TK.uteg=b.dataset.u;tkSave();tkSync('now');s.hidden=true;toast(`🏆 ${TK.uteg} – gyűjtsünk!`)})}
+function tkClose(){try{if(TK.spin)tkSpinEnd();tkMusic(false);TK.run=false;clearInterval(TK.saveI);tkSave();tkSync('now')}catch(e){}gClose(TK)}
 // ---- bevitel ----
 function tkDown(e){e.preventDefault();const r=TK.cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;TK.ptr[e.pointerId]={x,y,t:performance.now()};
   const Dr=TK.drop;if(Dr&&!Dr.open&&Math.hypot(x-Dr.x,y-(Dr.y+26))<48){tkDropOpen();return}
@@ -1928,7 +1928,7 @@ function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=T
   const mb=s.querySelector('[data-mint]');if(mb)mb.onclick=tkMint;
   s.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>{const u=TK_UPG.find(q=>q.id===b.dataset.ub),c=tkUpgCost(u);if(TK.pocket<c||TK.upg[u.id]>=u.max)return;TK.pocket-=c;TK.upg[u.id]++;tkJingle(3,false);tkSheetRender()});
   s.querySelectorAll('[data-gb]').forEach(b=>b.onclick=()=>{const g=TK_GEAR.find(q=>q.id===b.dataset.gb),q=tkQ(g),c=tkBulk(g,q);if(TK.pocket<c)return;TK.pocket-=c;TK.own[g.id]=(TK.own[g.id]||0)+q;TK.newBuy={g,t:0};tkKaching();toast(`🛒 Beszerezve: ${q}× ${g.n}`);tkSave();tkSync(true);tkSheetRender()});s.querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{TK.qty=b.dataset.qty==='max'?'max':+b.dataset.qty;tkSheetRender()});
-  s.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();TK.uteg=b.dataset.mv;tkSave();tkSync(true);toast(`Átigazoltál: ${TK.uteg} – a befizetéseid veled jönnek`);tkSheetRender()});
+  s.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();TK.uteg=b.dataset.mv;tkSave();tkSync('now');toast(`Átigazoltál: ${TK.uteg} – a befizetéseid veled jönnek`);tkSheetRender()});
   s.querySelectorAll('[data-uo]').forEach(b=>b.onclick=()=>{TK.open[b.dataset.uo]=!TK.open[b.dataset.uo];tkSheetRender()});s.querySelectorAll('[data-uth]').forEach(b=>b.onclick=()=>{TK.uth=true;tkSheetRender()});s.querySelectorAll('[data-utw]').forEach(b=>b.onclick=()=>{TK.uth=false;TK.utw=b.dataset.utw==='1';tkSheetRender()});s.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=()=>tkDmClaim(+b.dataset.dmc));
   {const dg=s.querySelector('[data-daily]');if(dg)dg.onclick=tkDailyClaim;const sp=s.querySelector('[data-spin]');if(sp)sp.onclick=tkSpinStart;const wc=s.querySelector('#tkWheel');if(wc)tkWheelDraw(wc,performance.now())}
   s.querySelectorAll('canvas[data-pile]').forEach(cv=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(tkPileCv(Number(cv.dataset.pile),120,70,cv.dataset.u||''),0,0)})}
@@ -3098,8 +3098,8 @@ function fbListen(){fbStop();FB_SYNCED=false;const uid=UID;
     liveSoon()},err=>{console.warn(err);toast('A fiók most nem érhető el ('+(err.code||'hiba')+')')});
   lbWatch()}
 // a lista-figyelő csak akkor fut, ha a lista látszik; rövid játék miatt nem kapcsol ki-be (20 mp türelmi idő)
-function lbWant(){if(MODE!=='fb'||!UID||!DB||document.hidden)return false;if(!inGame())return true;return typeof TK!=='undefined'&&TK.run&&TK.sheet==='uteg'}
-function lbWatch(){try{if(MODE!=='fb'||!UID||!DB){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;return}const want=lbWant(),now=Date.now();
+function lbWant(){if(MODE!=='fb'||!UID||!DB||document.hidden)return false;if(!inGame())return true;return typeof TK!=='undefined'&&TK.run&&(TK.sheet==='uteg'||!!TK.raceFb)}
+function lbWatch(){try{raceWatch();if(MODE!=='fb'||!UID||!DB){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;return}const want=lbWant(),now=Date.now();
   if(want){LB_OFF_T=0;if(!LB_ON)lbSub();return}if(!LB_ON)return;if(!LB_OFF_T){LB_OFF_T=now;return}if(now-LB_OFF_T>20000){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;LB_OFF_T=0}}catch(e){}}
 function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
   UNSUB=DB.collection('users').onSnapshot(qs=>{if(uid!==UID)return;
@@ -3107,6 +3107,15 @@ function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
     // utána csak a változott dokumentumokat dolgozzuk fel – nem építjük újra a teljes listát minden mentésnél
     let reset=false;qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){delete S.users[id];return}const d={id,...c.doc.data()};if(d.lbReset&&(!S.users[id]||S.users[id].lbReset!==d.lbReset))reset=true;S.users[id]=d});
     if(reset)lbApply();liveSoon()},err=>{console.warn(err);LB_ON=false;UNSUB=null;toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
+// ÉLŐ FUTÓVERSENY a Kasszában: csak a verseny élmezőnye (első 8) figyelt valós időben – a kis katonák így élőben futnak,
+// de a szerveren csak az élmezőny mentései sokszorozódnak, nem mindenkié. Havi nézethez összetett index kell (users: tkWk ↑, tkWg ↓);
+// ha még nincs meg, átmenetileg a teljes lista-figyelő pótolja (drágább, de a verseny akkor is élő marad).
+let RACE_UN=null,RACE_KEY='';
+function raceWatch(){try{const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run,cur=on?tkWeek():'',key=on?(TK.utw?'w|'+cur:'t'):'';
+  if(key===RACE_KEY)return;if(RACE_UN){RACE_UN();RACE_UN=null}RACE_KEY=key;if(!key){if(typeof TK!=='undefined')TK.raceTop=null;return}
+  const uid=UID,U=DB.collection('users'),q=TK.utw?U.where('tkWk','==',cur).orderBy('tkWg','desc').limit(8):U.orderBy('tkFt','desc').limit(8);
+  RACE_UN=q.onSnapshot(qs=>{if(uid!==UID)return;const top=new Set();qs.forEach(d=>{top.add(d.id);if(d.id!==uid)S.users[d.id]={id:d.id,...d.data()}});TK.raceTop=top;TK.raceFb=false;TK.stc=null},
+    e=>{console.warn('élő futóverseny',e&&e.code,e&&e.message);TK.raceFb=true;lbWatch()})}catch(e){}}
 setInterval(lbWatch,3000);document.addEventListener('visibilitychange',()=>{lbWatch();if(!document.hidden&&LIVE_DUE)liveSoon()});
 // a kijelző frissítése összevonva, legfeljebb 1,5 mp-enként; játék közben és háttérben elhalasztva (visszatéréskor frissül)
 const tkSheetOpen=()=>typeof TK!=='undefined'&&TK.run&&!!TK.sheet;

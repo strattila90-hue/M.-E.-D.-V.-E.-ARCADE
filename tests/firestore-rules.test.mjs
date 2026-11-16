@@ -81,6 +81,12 @@ const expect = (name, got, want) => { const ok = (got < 300) === want; if (!ok) 
   expect('full profile: rank change', await write(doc3, U3, { rank: 'Őrvezető' }), true);
   expect('full profile: still rejects a lower record', await write(doc3, U3, { harcBest: 10, harcAt: Date.now() }), false);
   expect('full profile: still rejects absurd Kassza jump', await write(doc3, U3, { tkFt: 1e15, tkWk: cur, tkWg: 1e15, tkAt: Date.now() }, { srvTs: ['tkSt'] }), false);
+  // új Kassza-játékos: ütegválasztás befizetés előtt (tkFt: 0) – az app ilyenkor is küldi a szerveridőt (tkSt), különben elutasítás
+  const uid4 = 'n' + Date.now(), U4 = userTok(uid4), doc4 = 'users/' + uid4;
+  await write(doc4, U4, { name: 'Ujonc', rank: '', nick: uid4, createdAt: Date.now() }, { create: true });
+  expect('new player: play counter', await write(doc4, U4, { tkN: 1, lastPlay: Date.now() }), true);
+  expect('new player: first Kassza sync with tkFt 0 and server tkSt', await write(doc4, U4, { tkFt: 0, tkUteg: '1. üteg', tkOwnF: {}, tkWk: cur, tkWg: 0, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
+  expect('new player: later deposit', await write(doc4, U4, { tkFt: 5000, tkWk: cur, tkWg: 5000, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error('ERR', e); process.exit(1); });
