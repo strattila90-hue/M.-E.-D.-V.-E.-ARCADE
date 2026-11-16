@@ -19,7 +19,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.32.0',APP_DATE='2026.11.16.';
+const APP_VER='4.33.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1478,13 +1478,15 @@ const TK_SPR={
  blast:['.......#........','..#...###...#...','...#.##+##.#....','....#+++++#.....','.####+++++####..','....#+++++#.....','...#.##+##.#....','..#...###...#...','.......#........'],
  tower:['......####......','.....#.##.#.....','.....######.....','.....#+##+#.....','.....######.....','.....##++##.....','....########....','....###++###....','...##########...'],
  star:['.......#........','......###.......','.....#####......','############....','..#########.....','...#######......','..####.####.....','.###.....###....','.#.........#....']};
+// képkockánként rajzolt pixelszöveg: betűnként előre kirajzolt kis vászon (nem 15 fillRect / betű)
+function tkTxtF(c,s,x,y,col,k){const G=TK.gl||(TK.gl={});let cx=x;for(const ch of s){const key=ch+col+k;let g=G[key];if(g===undefined){const b=TK_F[ch]||TK_F[' '];if(b.indexOf('1')<0)g=null;else{g=document.createElement('canvas');g.width=3*k;g.height=5*k;const q=g.getContext('2d');q.fillStyle=col;for(let i=0;i<15;i++)if(b[i]==='1')q.fillRect((i%3)*k,Math.floor(i/3)*k,k,k)}G[key]=g}if(g)c.drawImage(g,cx,y);cx+=4*k}}
 function tkSpr(c,name,x,y,col,hi,k){const S=TK_SPR[name];if(!S)return;k=k||1;for(let r=0;r<S.length;r++)for(let q=0;q<S[r].length;q++){const ch=S[r][q];if(ch==='.')continue;c.fillStyle=ch==='+'?hi:col;c.fillRect(x+q*k,y+r*k,k,k)}}
 const TK_BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
 function tkHex(h){const n=parseInt(h.slice(1),16);return [n>>16&255,n>>8&255,n&255]}
 function tkMixC(a,b,k){const A=tkHex(a),B=tkHex(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*k)).join(',')})`}
 const tkPlain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 // katonai háttér: olajzöld páncéllemez, szegecsek, terepminta, sablonfelirat, figyelmeztető csík, jelzőfények
-function tkFlush(){TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={}}
+function tkFlush(){TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={};TK.gl={};TK.psc={};TK.nsc=null;TK.bsc=null;TK.rsc={};TK.rlc={};TK.nu={};TK.glw=null;TK.bcv=null}
 function tkCacheCheck(now){if(now-(TK._cchk||0)<2000)return;TK._cchk=now;try{const b=TK.bgc;if(b&&b.cv){const d=b.cv.getContext('2d').getImageData(2,2,1,1).data;if(d[3]===0)tkFlush()}}catch(e){tkFlush()}}
 addEventListener('visibilitychange',()=>{if(!document.hidden)tkFlush()});addEventListener('pageshow',tkFlush);
 function tkBg(c,W,H,now){const rush=TK.rush>0;if(!TK.bgc||TK.bgc.w!==W||TK.bgc.h!==H){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
@@ -1582,9 +1584,11 @@ const TK_PS={
  loter:['................','.....kkkkkk.....','....kwwwwwwk....','...kwrrrrrrwk...','...kwrwwwwrwk...','...kwrwrrwrwk...','...kwrwrrwrwk...','...kwrwwwwrwk...','...kwrrrrrrwk...','....kwwwwwwk....','.....kkkkkk.....','.......kk.......'],
  ifv:['................','.......kkkk.....','.....kkgggkkkkkk','..kkkgGGGGgk....','.kgGGGGGGGGGgk..','kgggggggggggggk.','kddddddddddddk..','kdkdkdkdkdkdkd..','.kkkkkkkkkkkk...','................','................','................']};
 TK_PAL.T='#d8c49a';
-function tkPS(c,name,x,y,k){const S=TK_PS[name];if(!S)return;for(let r=0;r<S.length;r++){const row=S[r];for(let q=0;q<16;q++){const ch=row[q];if(!ch||ch==='.'||ch===' ')continue;c.fillStyle=TK_PAL[ch]||'#f0f';c.fillRect(x+q*k,y+r*k,k,k)}}}
+// a sprite egyszer rajzolódik ki egy kis vászonra, utána egyetlen drawImage (korábban képkockánként ~150 fillRect / sprite)
+function tkPSC(name){const P=TK.psc||(TK.psc={});if(P[name])return P[name];const S=TK_PS[name];if(!S)return null;const cv=document.createElement('canvas');cv.width=16;cv.height=S.length;const c=cv.getContext('2d');for(let r=0;r<S.length;r++){const row=S[r];for(let q=0;q<16;q++){const ch=row[q];if(!ch||ch==='.'||ch===' ')continue;c.fillStyle=TK_PAL[ch]||'#f0f';c.fillRect(q,r,1,1)}}return P[name]=cv}
+function tkPS(c,name,x,y,k){const cv=tkPSC(name);if(cv)c.drawImage(cv,x,y,16*k,cv.height*k)}
 // ---- a többi játék valódi jármű-sziluettjei, pixelesítve (kéttónusú metszet) ----
-function tkSilLoad(){if(TK.silImg)return;TK.silImg={};for(const k of ['pzh','gidran','raba']){if(!SIL[k])continue;const im=new Image();im.onload=()=>{TK.silPx={};TK.nc={};TK.pc={}};
+function tkSilLoad(){if(TK.silImg)return;TK.silImg={};for(const k of ['pzh','gidran','raba']){if(!SIL[k])continue;const im=new Image();im.onload=()=>{TK.silPx={};TK.nc={};TK.pc={};TK.nsc=null;TK.bsc=null;TK.nu={}};
   im.src='data:image/svg+xml;utf8,'+encodeURIComponent(SIL[k].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#000"'));TK.silImg[k]=im}}
 function tkSilPx(name,w,h,dk,md,lt){const key=[name,w,h,dk,md,lt].join('|');TK.silPx=TK.silPx||{};if(TK.silPx[key])return TK.silPx[key];const im=TK.silImg&&TK.silImg[name];if(!im||!im.complete||!im.naturalWidth)return null;
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');const ar=im.naturalWidth/im.naturalHeight;let dw=w,dh=w/ar;if(dh>h){dh=h;dw=h*ar}c.drawImage(im,(w-dw)/2,h-dh,dw,dh);
@@ -1676,7 +1680,8 @@ function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK
   const wk=TK.wk,wg=Number.isFinite(TK.wg)?TK.wg:0;TK.flight={g,wg,t:now};DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.flight=null;TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{TK.flight=null;console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
     if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{const sd=x.exists?x.data():{};if(x.exists){tkAdopt(sd);TK.syncT=0}if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');const srv=Object.fromEntries(['tkFt','tkWk','tkWg','tkUteg','tkAt','tkOwnF'].map(k=>[k,sd[k]===undefined?'(nincs)':sd[k]]));try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u+' | kliens '+JSON.stringify({tkFt:g,tkWk:wk,tkWg:wg,tkOwnF:own,tkAt:now})+' | szerver '+JSON.stringify(srv)),'kassza')}catch(_){}}}).catch(()=>{})}})}catch(e){}}
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
-function tkMult(){const ach=TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0);return (1+ach*.03)*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
+// az érdem-szorzó számítása drága (minden érdem végigszámolása) – 300 ms-ig gyorsítótárból jön, képkockánként többször is kell
+function tkMult(){const n=performance.now();if(!(TK._mu&&n-TK._muT<300)){TK._muT=n;TK._mu=1+TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0)*.03}return TK._mu*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
 const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*.5*tkMult();
 const TK_HUF0=395;const tkGP=g=>Math.round(g.p*(TK.huf||TK_HUF0));const tkGInc=g=>g.p*TK_HUF0/3000;
 const tkGearInc=()=>TK_GEAR.reduce((s,g)=>s+(TK.own[g.id]||0)*tkGInc(g),0)*tkMult();
@@ -1695,7 +1700,7 @@ function tkHangarHTML(){const owned=TK_GEAR.filter(g=>(TK.own[g.id]||0)>0);let s
     return `<div class="tkstack"><div class="tkpile2">${stack}</div><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>becsült érték: ${tkFmt(v)} Ft · +${tkFmtR(inc)} Ft/mp</small></div></div>`}).join('');
   return `<h4 data-st="margin-top:12px">🏭 Üteg-hangár</h4>`+(owned.length?`<div class="tkhangar">${cards}</div><p class="hint">Hangár összértéke: <b>${tkFmt(sumV)} Ft</b> · termelés: <b>${tkFmtR(sumP)} Ft/mp</b></p>`:'<p class="hint">A hangár üres. Vásárolj eszközöket a Piacon – itt halmozódnak fel.</p>')}
 
-function tkEarn(v,x,y,show){if(!v)return;TK.pocket+=v;TK.earned+=v;if(show)TK.pop.push({x,y,t:0,s:'+'+tkFmt(v),crit:show==='crit'})}
+function tkEarn(v,x,y,show){if(!v)return;TK.pocket+=v;TK.earned+=v;TK.pkD=1;if(show)TK.pop.push({x,y,t:0,s:'+'+tkFmt(v),crit:show==='crit'})}
 // ---- szabályok: mi látszik másoknak ----
 function tkRulesHTML(){return `<details class="tkrules"><summary>📜 Szabályok – mi számít, mit látnak mások?</summary><ul>
 <li><b>💰 Zseb:</b> a koppintás, az automata termelés és minden ajándék ide kerül. A zseb csak a tiéd: <b>mások nem látják, a ranglistán nem számít</b>.</li>
@@ -1760,13 +1765,13 @@ function tkDropOpen(){const D=TK.drop;if(!D)return;D.open=1;TK.drop=null;const r
   tkConfetti(D.x,D.y+20,50);tkFanfare(false);toast(`🪂 Ajándékcsomag: ${m}`);tkSave()}
 // ---- konfetti, izzósor, reflektor (kaszinós fények) ----
 const TK_CF=['#ffd24a','#ff3b5c','#3bd1ff','#7dff6a','#ffffff','#c77dff','#ff9a2e'];
-function tkConfetti(x,y,n,big){TK.conf=TK.conf||[];for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(big?260:180)*(.3+Math.random());TK.conf.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(big?260:160),r:Math.random()*6,vr:(Math.random()-.5)*14,c:TK_CF[i%TK_CF.length],w:3+Math.random()*4,h:5+Math.random()*5,t:0,coin:Math.random()<.25})}if(TK.conf.length>320)TK.conf.splice(0,TK.conf.length-320)}
+function tkConfetti(x,y,n,big){TK.conf=TK.conf||[];if(LOWFX)n=Math.ceil(n/2);for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(big?260:180)*(.3+Math.random());TK.conf.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-(big?260:160),r:Math.random()*6,vr:(Math.random()-.5)*14,c:TK_CF[i%TK_CF.length],w:3+Math.random()*4,h:5+Math.random()*5,t:0,coin:Math.random()<.25})}{const mx=LOWFX?90:220;if(TK.conf.length>mx)TK.conf.splice(0,TK.conf.length-mx)}}
 function tkConfDraw(c,dt){if(!TK.conf||!TK.conf.length)return;TK.conf=TK.conf.filter(p=>{p.t+=dt;p.vy+=420*dt;p.vx*=1-dt*1.2;p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=p.vr*dt;c.save();c.translate(p.x,p.y);c.rotate(p.r);c.globalAlpha=Math.max(0,Math.min(1,2.4-p.t));
   if(p.coin){c.fillStyle='#e8b923';c.beginPath();c.ellipse(0,0,5,5*Math.abs(Math.cos(p.r)),0,0,7);c.fill();c.fillStyle='#fff4b0';c.fillRect(-1,-1,2,2)}else{c.fillStyle=p.c;c.fillRect(-p.w/2,-p.h/2*Math.abs(Math.cos(p.r*1.3)),p.w,p.h*Math.abs(Math.cos(p.r*1.3))+.5)}c.restore();return p.t<2.4&&p.y<TK.H+20});c.globalAlpha=1}
 function tkBulbCv(on){TK.bcv=TK.bcv||{};const k=on?'on':'off';if(TK.bcv[k])return TK.bcv[k];const cv=document.createElement('canvas');cv.width=cv.height=20;const c=cv.getContext('2d');
   if(on){const g=c.createRadialGradient(10,10,0,10,10,10);g.addColorStop(0,'rgba(255,250,215,1)');g.addColorStop(.3,'rgba(255,214,90,.9)');g.addColorStop(1,'rgba(255,170,40,0)');c.fillStyle=g;c.fillRect(0,0,20,20)}else{c.fillStyle='#6b4a12';c.beginPath();c.arc(10,10,2.6,0,7);c.fill();c.fillStyle='rgba(255,230,160,.35)';c.fillRect(9,8.5,1.2,1.2)}return TK.bcv[k]=cv}
-function tkBulbRect(c,x,y,w,h,now,sp){const pts=[],st=sp||13;for(let q=0;q<=w;q+=st)pts.push([x+q,y]);for(let q=st;q<=h;q+=st)pts.push([x+w,y+q]);for(let q=w-st;q>=0;q-=st)pts.push([x+q,y+h]);for(let q=h-st;q>0;q-=st)pts.push([x,y+q]);tkBulbs(c,pts,now)}
-function tkBulbs(c,pts,now){const ph=Math.floor(now/(TK.rush>0?70:140)),on=tkBulbCv(1),off=tkBulbCv(0);pts.forEach(([x,y],i)=>{const lit=(i+ph)%3!==0;c.drawImage(off,x-10,y-10);if(lit){c.globalCompositeOperation='lighter';c.drawImage(on,x-10,y-10);c.globalCompositeOperation='source-over'}})}
+function tkBulbRect(c,x,y,w,h,now,sp){const key=x+'|'+y+'|'+w+'|'+h;let R=TK.brc;if(!R||R.key!==key){const pts=[],st=sp||13;for(let q=0;q<=w;q+=st)pts.push([x+q,y]);for(let q=st;q<=h;q+=st)pts.push([x+w,y+q]);for(let q=w-st;q>=0;q-=st)pts.push([x+q,y+h]);for(let q=h-st;q>0;q-=st)pts.push([x,y+q]);R=TK.brc={key,pts}}tkBulbs(c,R.pts,now)}
+function tkBulbs(c,pts,now){const ph=Math.floor(now/(TK.rush>0?70:140)),on=tkBulbCv(1),off=tkBulbCv(0),n=pts.length;for(let i=0;i<n;i++)c.drawImage(off,pts[i][0]-10,pts[i][1]-10);c.globalCompositeOperation='lighter';for(let i=0;i<n;i++)if((i+ph)%3!==0)c.drawImage(on,pts[i][0]-10,pts[i][1]-10);c.globalCompositeOperation='source-over'}
 function tkSpots(c,W,H,now){c.save();c.globalCompositeOperation='lighter';for(const [bx,ph] of [[W*.08,0],[W*.92,2.1]]){const a=Math.PI/2+Math.sin(now/2600+ph)*.55,L=H*.95,s=.16;c.fillStyle=TK.rush>0?'rgba(255,200,90,.09)':'rgba(255,230,170,.055)';c.beginPath();c.moveTo(bx,0);c.lineTo(bx+Math.cos(a-s)*L,Math.sin(a-s)*L);c.lineTo(bx+Math.cos(a+s)*L,Math.sin(a+s)*L);c.closePath();c.fill()}c.restore()}
 // ejtőernyős ajándékcsomag
 function tkDropTick(dt,W,H){TK.dropT-=dt;if(TK.dropT<=0&&!TK.drop){TK.drop={x:W*(.18+Math.random()*.64),y:-90,t:0,land:0};TK.dropT=60+Math.random()*60;if(SOUND&&ac()){const t=AC.currentTime;[880,1174.7].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+k*.12);g.gain.exponentialRampToValueAtTime(.04,t+k*.12+.01);g.gain.exponentialRampToValueAtTime(.0001,t+k*.12+.5);o.connect(g).connect(MASTER);o.start(t+k*.12);o.stop(t+k*.12+.55)})}}
@@ -1777,6 +1782,51 @@ function tkDropDraw(c,now){const D=TK.drop;if(!D)return;const sw=D.land?0:Math.s
   c.beginPath();c.ellipse(-6,-3,6,4,-.5,0,7);c.ellipse(6,-3,6,4,.5,0,7);c.fill();c.fillStyle='#b8860b';c.fillRect(-2,-5,4,5);c.strokeStyle='#14140f';c.lineWidth=1.5;c.strokeRect(-15,0,30,22);
   const a=.55+.45*Math.sin(now/200);c.globalCompositeOperation='lighter';c.fillStyle=`rgba(255,220,120,${(a*.25).toFixed(2)})`;c.beginPath();c.arc(0,11,30,0,7);c.fill();c.globalCompositeOperation='source-over';c.restore();
   c.fillStyle=`rgba(255,240,180,${a.toFixed(2)})`;c.font='900 11px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('🎁 AJÁNDÉK – KOPPINTS!',D.x,D.y+(D.land?-12:-40))}
+// ---- elrendezés: a futóverseny-sáv a zseb alatt, alatta a koppintható pénz ----
+function tkLay(W,H){const L=TK.lay,isC=TK_DEN[TK.den].t==='c';if(L&&L.W===W&&L.H===H&&L.isC===isC)return L;
+  const ar=isC?1:.5,ry=97,rk=H>=640?3:2,rh=H>=470?(rk===3?81:71):0;let bw=Math.min(W*.8,isC?190:360),cy=H*.36;
+  if(rh){const top=ry+rh+34,mx=H*.46;cy=Math.max(cy,top+bw*ar/2);if(cy>mx){bw=Math.max(isC?96:190,(mx-top)*2/ar);cy=top+bw*ar/2}}
+  return TK.lay={W,H,isC,ry,rh,rk,bw,bh:bw*ar,cy}}
+// ---- élő ranglista-futóverseny: a legtöbbet befizetők mini katonái, rangsor szerint (elöl, jobbra az első) ----
+const TK_RUN=[['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','uuuuuus.','.uuuuu..','..dddd..','.dd..dd.','kk....kk'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','.usuuu..','.uuuuu..','..dddd..','..dddd..','...kk...'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','suuuuuu.','.uuuuu..','..dddd..','.dd..dd.','.kk...kk'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','.uusuu..','.uuuuu..','..dddd..','..dddd..','..kk....']];
+function tkRunCv(col,k){const R=TK.rsc||(TK.rsc={}),key=col+k;if(R[key])return R[key];const fw=8*k+2,cv=document.createElement('canvas');cv.width=fw*4;cv.height=10*k+2;const c=cv.getContext('2d'),pal={h:'#2f3a1f',s:'#e8b98a',k:'#14140f',d:'#3a3528',u:col};
+  TK_RUN.forEach((F,f)=>{const ox=f*fw+1;// sötét körvonal, hogy a pályán jól elváljon
+    c.fillStyle='rgba(10,10,6,.85)';for(let r=0;r<10;r++)for(let q=0;q<8;q++)if(F[r][q]!=='.')c.fillRect(ox+q*k-1,r*k,k+2,k+2);
+    for(let r=0;r<10;r++)for(let q=0;q<8;q++){const ch=F[r][q];if(ch==='.')continue;c.fillStyle=pal[ch];c.fillRect(ox+q*k,1+r*k,k,k)}
+    c.fillStyle='rgba(255,255,255,.28)';c.fillRect(ox+2*k,1,2*k,k)});cv.fw=fw;return R[key]=cv}
+// névtábla előre kirajzolva (éles, olvasható betű; képkockánként csak egy drawImage)
+function tkRunLab(r,maxW){const key=r.rank+'|'+r.name+'|'+(r.me?1:0)+'|'+r.uteg+'|'+maxW+'|'+TK.dpr;const C=TK.rlc||(TK.rlc={});if(C[key])return C[key];const ks=Object.keys(C);if(ks.length>40)for(const k of ks)delete C[k];
+  const d=TK.dpr||1,cv=document.createElement('canvas'),c=cv.getContext('2d'),font='800 11px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif';c.font=font;const pre=r.rank+'. ';let nm=String(r.name||'?').trim()||'?';
+  const fit=()=>c.measureText(pre+nm).width+13<=maxW;if(!fit()){while(nm.length>2&&!fit())nm=nm.slice(0,-2).trimEnd()+'…'}
+  const w=Math.ceil(c.measureText(pre+nm).width)+13,h=15;cv.width=Math.ceil(w*d);cv.height=Math.ceil(h*d);c.setTransform(d,0,0,d,0,0);c.font=font;c.textBaseline='middle';
+  c.fillStyle=r.me?'#ffd24a':'rgba(12,16,8,.92)';c.fillRect(0,0,w,h);c.fillStyle=tkUC(r.uteg)[0];c.fillRect(0,0,4,h);c.strokeStyle=r.me?'#14140f':'rgba(255,255,255,.28)';c.lineWidth=1;c.strokeRect(.5,.5,w-1,h-1);
+  c.fillStyle=r.me?'#14140f':r.rank===1?'#ffe08a':'#ffffff';c.fillText(pre+nm,8,h/2+.5);cv.cw=w;cv.ch=h;return C[key]=cv}
+function tkRaceData(n){const f=TK.utw?'tkW':'tkGive',isMe=u=>u.id==='me'||(typeof UID!=='undefined'&&UID&&u.id===UID);
+  const all=tkUsers().filter(u=>u[f]>0||isMe(u)).sort((a,b)=>(b[f]||0)-(a[f]||0)),mi=all.findIndex(isMe);let pick=all.slice(0,n);if(mi>=n)pick=all.slice(0,n-1).concat([all[mi]]);
+  return {total:all.length,list:pick.map(u=>({id:u.id,name:u.name||u.nick||'?',uteg:u.tkUteg||'',g:u[f]||0,gs:tkShort(u[f]||0),rank:all.indexOf(u)+1,me:isMe(u)}))}}
+function tkRace(c,W,L,now,dt){const R=TK.stc&&TK.stc.race;if(!R||!L.rh)return;const y=L.ry,h=L.rh,k=L.rk,fw=8*k+2,fh=10*k+2,ty=y+36,fy=ty+10*k+1,n=TK.stc.raceN,sw=(W-34)/n,P=TK.rpos||(TK.rpos={});
+  // sáv + futópálya
+  c.fillStyle='rgba(8,11,5,.6)';c.fillRect(0,y,W,h);c.fillStyle='#c9a227';c.fillRect(0,y,W,1);c.fillRect(0,y+h-1,W,1);
+  c.fillStyle='#7d6c45';c.fillRect(0,ty,W,fy-ty+3);c.fillStyle='#665735';c.fillRect(0,fy,W,3);c.fillStyle='rgba(255,244,200,.2)';const sh=(now/14)%22;for(let x=-sh;x<W;x+=22)c.fillRect(x,ty+4*k,10,1);
+  // cél-kockák jobbra
+  {const fx=W-12;for(let r=0;r<5;r++)for(let q=0;q<2;q++){c.fillStyle=(r+q)%2?'#14140f':'#f2f2ea';c.fillRect(fx+q*5,ty+r*4,5,4)}}
+  // „ÉLŐ” jelzés
+  {const a=.45+.55*Math.abs(Math.sin(now/420));c.fillStyle=`rgba(255,70,60,${a.toFixed(2)})`;c.fillRect(5,ty+3,5,5);c.fillStyle='rgba(20,20,12,.7)';c.font='900 8.5px system-ui,sans-serif';c.textAlign='left';c.fillText(TK.utw?'ÉLŐ · HAVI':'ÉLŐ',13,ty+9)}
+  const list=R.list,maxW=Math.floor(Math.min(sw*1.6,W-12));c.textAlign='center';
+  for(let i=list.length-1;i>=0;i--){const r=list[i],j=n-1-i,tx=6+sw*(j+.5);let p=P[r.id];if(!p)p=P[r.id]={x:-24-i*14,ph:(r.rank*1.7)%4};p.seen=now;p.x+=(tx-p.x)*Math.min(1,dt*2.6);
+    const mv=Math.abs(tx-p.x)>2,fr=Math.floor(now/(mv?70:r.rank===1?95:120)+p.ph)%4,bob=fr%2?-1:0,x=Math.round(p.x),spr=tkRunCv(tkUC(r.uteg)[0],k),yh=fy-fh+1+bob,hx=x-fw/2+1+4*k;
+    // por a talpak mögött
+    c.fillStyle='rgba(235,220,180,.5)';if(fr%2===0){c.fillRect(x-fw/2-4,fy-3,3,2);c.fillRect(x-fw/2-9,fy-6,2,2)}else c.fillRect(x-fw/2-6,fy-4,2,2);
+    c.fillStyle='rgba(0,0,0,.3)';c.fillRect(x-fw/2+2,fy-1,fw-4,2);
+    c.drawImage(spr,fr*fw,0,fw,fh,x-fw/2,yh,fw,fh);
+    if(r.rank===1){c.fillStyle='#14140f';c.fillRect(hx-2*k-2,yh-2*k-2,4*k+4,2*k+2);c.fillStyle='#ffd24a';c.fillRect(hx-2*k-1,yh-k-1,4*k+2,k);c.fillRect(hx-2*k-1,yh-2*k-1,k,k);c.fillRect(hx-k/2,yh-2*k-1,k,k);c.fillRect(hx+k+1,yh-2*k-1,k,k)}
+    // névtábla: két sorban felváltva, hogy ne takarják egymást
+    const lab=tkRunLab(r,maxW),top=i%2===0,ly=y+(top?3:19),lx=Math.max(4,Math.min(W-4-lab.cw,Math.round(x-lab.cw/2)));
+    if(top){c.fillStyle=r.me?'rgba(255,210,74,.9)':'rgba(255,255,255,.4)';c.fillRect(hx,ly+lab.ch,1,Math.max(0,yh-(r.rank===1?2*k+2:0)-(ly+lab.ch)))}
+    c.drawImage(lab,lx,ly,lab.cw,lab.ch);
+    c.fillStyle=r.me?'#ffd24a':'#f3ecd4';c.font='800 9.5px system-ui,sans-serif';c.fillText(r.gs+' Ft',Math.max(26,Math.min(W-30,x)),y+h-3)}
+  if(R.total<2){c.fillStyle='rgba(243,236,212,.8)';c.font='700 10px system-ui,sans-serif';c.textAlign='left';c.fillText(typeof MODE!=='undefined'&&MODE==='fb'?'Még senki más nem fizetett be – te vezetsz!':'Lépj be: itt futnak majd a ranglista szereplői',8,y+30);c.textAlign='center'}
+  if(now-(TK.rgc||0)>5000){TK.rgc=now;for(const k in P)if(now-P[k].seen>4000)delete P[k]}}
 // ---- megnyitás ----
 function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');tkLoad();tkSilLoad();tkRate();tkResSub();
   el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Kassza</b></div><div class="tkhs"><div class="tkchip p" title="Zseb – még be nem fizetett pénzed"><i>💰</i><span>ZSEB</span><b id="tkPocket">0</b><em>Ft</em></div><div class="tkchip u" id="tkUChip" title="Az ütegkasszába befizetett összeged"><i>🏆</i><span id="tkUN">ÜTEG</span><b id="tkGiven">0</b><em>Ft</em></div><div class="tkmonth" id="tkMonth"></div></div><button class="hx" id="tkClose" aria-label="Bezárás">✕</button></div>
@@ -1784,14 +1834,14 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
     <div class="tkinfo" id="tkInfo"></div>
     <button type="button" class="tkmint" id="tkMint" hidden></button>
     <button type="button" class="tkpush" id="tkPush">⇡ ÜTEGBE TOL<small>vagy húzd felfelé</small></button>
-    <nav class="tknav"><button type="button" data-tk="upg">🔧<b>Fejlesztés</b></button><button type="button" data-tk="gear">🛒<b>Piac</b></button><button type="button" data-tk="gift">🎁<b>Ajándék</b></button><button type="button" data-tk="ach">🎖️<b>Érdemek</b></button><button type="button" data-tk="uteg">🏆<b>Ütegek</b></button></nav>
+    <nav class="tknav"><button type="button" data-tk="upg">🔧<b>Fejlesztés</b></button><button type="button" data-tk="gear">🛒<b>Piac</b></button><button type="button" data-tk="den">💵<b>Bankók</b></button><button type="button" data-tk="gift">🎁<b>Ajándék</b></button><button type="button" data-tk="ach">🎖️<b>Érdemek</b></button><button type="button" data-tk="uteg">🏆<b>Ütegek</b></button></nav>
     <div class="tksheet" id="tkSheet" hidden></div></div>
    <div class="hstart" id="tkStart"></div>`;
   $('#tkClose').onclick=tkClose;$('#tkPush').onclick=()=>tkPush();$('#tkMint').onclick=tkMint;
   el.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>tkSheet(b.dataset.tk));
-  Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.wheelA=TK.wheelA||-Math.PI/2-Math.PI/8;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};
+  Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.wheelA=TK.wheelA||-Math.PI/2-Math.PI/8;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
   const cv=TK.cv;cv.addEventListener('pointerdown',tkDown);cv.addEventListener('pointerup',tkUp);cv.addEventListener('pointercancel',tkUp);
-  TK.key=e=>{if(e.type==='keydown'&&(e.key===' '||e.key==='Enter')){e.preventDefault();tkTap(TK.W/2,TK.H*.36)}if(e.type==='keydown'&&e.key==='ArrowUp')tkPush()};addEventListener('keydown',TK.key);addEventListener('keyup',TK.key);
+  TK.key=e=>{if(e.type==='keydown'&&(e.key===' '||e.key==='Enter')){e.preventDefault();tkTap(TK.W/2,tkLay(TK.W,TK.H).cy)}if(e.type==='keydown'&&e.key==='ArrowUp')tkPush()};addEventListener('keydown',TK.key);addEventListener('keyup',TK.key);
   const away=Math.min(4*3600,(Date.now()-(TK.lastT||Date.now()))/1000),inc=tkGearInc()+tkAutoInc();if(away>60&&inc>0){const v=inc*away*.25;TK.pocket+=v;TK.earned+=v;setTimeout(()=>toast(`💤 Távollétedben a hadtáp termelt: ${tkFmt(v)} Ft`),600)}
   if(!TK.uteg)tkStartScreen();else $('#tkStart').hidden=true;
   playCount('kassza');tkMusic(true);TK.last=performance.now();TK.raf=requestAnimationFrame(tkLoop);TK.saveI=setInterval(()=>{tkSave();tkSync()},5000)}
@@ -1807,12 +1857,12 @@ function tkUp(e){const p=TK.ptr[e.pointerId];delete TK.ptr[e.pointerId];if(!p)re
 function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>now-t<1000);if(TK.tapsSec.length>=15)return;TK.tapsSec.push(now);
   TK.combo=now-TK.lastTap<330?Math.min(10+TK.upg.combo*4,TK.combo+1):Math.max(0,TK.combo-3);TK.lastTap=now;TK.taps++;
   const crit=Math.random()<Math.min(.2,TK.upg.crit*.01);if(crit)TK.crits=(TK.crits||0)+1;TK.bestCombo=Math.max(TK.bestCombo||0,TK.combo);const v=tkTapV()*(1+TK.combo*(.01+TK.upg.combo*.005))*(crit?5:1);tkEarn(v,x,y-30,crit?'crit':1);
-  TK.bump=1;for(let i=0;i<(crit?5:1);i++)TK.fx.push({x:TK.W/2+(Math.random()-.5)*60,y:TK.H*.36,vx:(Math.random()-.5)*160,vy:-240-Math.random()*180,t:0,i:TK.den,r:Math.random()*6});
+  TK.bump=1;for(let i=0;i<(crit?5:1);i++)TK.fx.push({x:TK.W/2+(Math.random()-.5)*60,y:tkLay(TK.W,TK.H).cy,vx:(Math.random()-.5)*160,vy:-240-Math.random()*180,t:0,i:TK.den,r:Math.random()*6});
   if(crit)tkConfetti(x,y-20,14);tkJingle(TK.den,crit);if(crit&&navigator.vibrate)try{navigator.vibrate(18)}catch(e){}}
 function tkPush(){const v=Math.floor(TK.pocket);if(v<1){toast('A zsebed üres – koppints a pénzre!');return}if(!TK.uteg){tkStartScreen();return}
-  TK.pocket-=v;TK.given+=v;{tkRoll(tkWeek());TK.wg+=v}TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
+  TK.pocket-=v;TK.given+=v;TK.pkD=1;{tkRoll(tkWeek());TK.wg+=v}TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
   toast(`⇡ ${tkFmt(v)} Ft az ütegkasszába – ${TK.uteg}`);tkSave();tkSync(true)}
-function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;const c=tkMintCost(n),wt=tkMintWait(n);if(wt>0){toast(`🎖️ Előléptetés: még ${tkLeftTxt(wt)} szolgálati idő kell a(z) ${TK_DEN[n].n} legyártásához`);return}if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.denT=Date.now();TK.newDen={i:n,t:0};TK.sig='';tkKaching();tkConfetti(TK.W/2,TK.H*.36,70,1);
+function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;const c=tkMintCost(n),wt=tkMintWait(n);if(wt>0){toast(`🎖️ Előléptetés: még ${tkLeftTxt(wt)} szolgálati idő kell a(z) ${TK_DEN[n].n} legyártásához`);return}if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.denT=Date.now();TK.newDen={i:n,t:0};TK.sig='';tkKaching();tkConfetti(TK.W/2,tkLay(TK.W,TK.H).cy,70,1);
   if(SOUND&&ac()){const t=AC.currentTime;[523.25,659.25,783.99].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.05,t+.3+k*.09);g.gain.exponentialRampToValueAtTime(.001,t+.3+k*.09+.2);o.connect(g).connect(MASTER);o.start(t+.3+k*.09);o.stop(t+.3+k*.09+.22)})}tkSave();tkSheetRender()}
 // ---- fülek ----
 function tkSheet(id){const s=$('#tkSheet');if(!s.hidden&&TK.sheet===id){s.hidden=true;TK.sheet=null;return}TK.sheet=id;TK.sig='';s.hidden=false;TK.open=TK.open||{};tkSheetRender();s.scrollTop=0}
@@ -1821,11 +1871,12 @@ function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=T
     `<h4 data-st="margin-top:12px">🔧 Fejlesztések</h4>`+TK_UPG.map(u=>{const lv=TK.upg[u.id],c=tkUpgCost(u),mx=lv>=u.max;return `<div class="tkrow"><div><b>${u.n}</b> <i>${lv}. szint</i><small>${u.d}</small></div><button type="button" data-ub="${u.id}" ${mx||TK.pocket<c?'disabled':''}>${mx?'MAX':tkFmt(c)+' Ft'}</button></div>`}).join('')+`<p class="hint">Koppintás: <b>${tkFmt(tkTapV())} Ft</b> · Automata: <b>${tkFmtR(tkAutoInc())} Ft/mp</b> · Ütegszellem: <b>×${(1+.1*Math.log10(1+TK.given)).toFixed(2)}</b></p>`}
   if(id==='gear')h=`<h4>🛒 Piac – NATO-szintű beszerzések</h4><p class="hint">Árak: nyilvános piaci, gyártói és sajtóadatokon alapuló <b>becslések</b> euróban, élő árfolyamon forintra váltva (1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft). Minden eszköz termel és megjelenik a bázisodon.</p><div class="tkseg">${[1,10,100,1000,'max'].map(q=>`<button type="button" data-qty="${q}" class="${(TK.qty||1)===q?'on':''}">${q==='max'?'MAX':'×'+q}</button>`).join('')}</div>`+TK_CAT.map(([ck,cn])=>`<div class="tkcat">${cn}</div>`+TK_GEAR.filter(g=>g.c===ck).map(g=>{const n=TK.own[g.id]||0,q=tkQ(g),c=tkBulk(g,q);return `<div class="tkrow${g.gold?' gold':''}"><img class="tkic" src="${tkIconURL(g)}" alt=""><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>kb. ${tkFmt(g.p)} € ≈ ${tkFmt(tkGP(g))} Ft · ${g.src}<br>+${tkFmtR(tkGInc(g)*tkMult())} Ft/mp</small></div><button type="button" data-gb="${g.id}" ${TK.pocket<c?'disabled':''}>${q>1?'×'+q+'<br>':''}${tkFmt(c)} Ft</button></div>`}).join('')).join('');
   if(id==='ach')h=tkDmHTML()+`<h4 data-st="margin-top:12px">🎖️ Érdemek – szintenként fejlődnek</h4><p class="hint">Minden elért fokozat +3% az összes bevételre.</p>`+TK_ACH.map(a=>{const l=tkAchLvl(a),v=a.m(),nx=a.t[l];return `<div class="tkrow"><div><b>${a.ic} ${a.n}</b> <i data-st="color:${l?TK_MED[l-1]:'#888'}">${l?['I','II','III','IV','V'][l-1]+'. fokozat':'még nincs'}</i><small>${nx!=null?`Következő: ${tkFmt(v)} / ${tkFmt(nx)}`:'Legmagasabb fokozat elérve!'}</small><span class="tkbar"><i data-st="width:${nx!=null?Math.min(100,v/nx*100):100}%"></i></span></div><span class="tkmed">${[0,1,2,3,4].map(k=>`<i data-st="background:${k<l?TK_MED[k]:'#333'}"></i>`).join('')}</span></div>`}).join('')+
-    `<h4 data-st="margin-top:12px">💵 Pénznemek</h4><div class="tkdens">${TK_DEN.map((d,i)=>`<div class="${i<=TK.den?'':'lock'}"><img src="${tkNoteCv(i).toDataURL()}" alt=""><b>${i<=TK.den?d.n:'???'}</b><small>${tkFmt(d.v)} Ft${i<=TK.den?' · '+d.m:' · pénzverde: '+tkFmt(tkMintCost(i))+' Ft'+(d.wd?' + '+d.wd+' nap szolgálat':'')}</small></div>`).join('')}</div>`;
+    `<p class="hint">💵 A pénznemek gyűjteménye külön oldalra került: lent a <b>Bankók</b> fül.</p>`;
   if(id==='uteg'&&TK.uth){h=tkSegHTML()+tkHistHTML()}else if(id==='uteg'){const U=tkUtegStats(),TR=tkTrophies();h=`<h4>🏆 Ütegek kasszája</h4>${tkSegHTML()}${tkSeenHTML()}<p class="hint">${TK.utw?`Ebben a hónapban (${tkWeek()}) befizetett összeg – <b>minden hónap 1-jén 0:00-kor nullázódik</b>, még ${tkWeekLeft()}.`:'A szezon kezdete óta befizetett összeg.'} Koppints egy ütegre: megmutatja, mivel rendelkezik.</p><div class="tkuteglist">${U.map((u,k)=>`<div class="tkucard${u.n===TK.uteg?' me':''}" data-uo="${u.n}" data-st="--uc:${tkUC(u.n)[0]};--ut:${tkUC(u.n)[1]}"><canvas data-pile="${u.sum}" width="120" height="70"></canvas><div><b>${k+1}. ${k===0&&TK.utw&&u.wsum>0?'🥇 ':''}<em class="tkuchip">${u.n}</em>${u.n===TK.uteg?' (te)':''}</b><span>${tkFmt(TK.utw?u.wsum:u.sum)} Ft</span><small data-st="display:block">${TK.utw?'összesen: '+tkFmt(u.sum)+' Ft':'e hónapban: '+tkFmt(u.wsum)+' Ft'}</small><small>${u.m} fő${u.top?' · legbőkezűbb: '+esc(u.top):''}<br>Eszközök: ${tkFmt(u.items)} db · ${tkFmt(u.val)} Ft értékben</small></div>${u.n!==TK.uteg?`<button type="button" class="tkbtn sm" data-mv="${u.n}">Átigazolok</button>`:''}</div>${TK.open&&TK.open[u.n]?`<div class="tkhold">${u.list.length?u.list.map(([g,c])=>`<span><img src="${tkIconURL(g)}" alt="">${esc(g.n)} <b>× ${tkFmt(c)}</b></span>`).join(''):'<em>Még nincs beszerzésük.</em>'}</div>`:''}`).join('')}</div>
     <h4 data-st="margin-top:10px">🎖️ Legbőkezűbb bajtársak${TK.utw?' – e hónapban':''}</h4>${tkTopGivers().map((u,k)=>`<div class="tkrow${u.me?' me':''}"><div><b>${k<3?['🥇','🥈','🥉'][k]:k+1+'.'} ${esc(u.name)}${u.me?' (te)':''}${TR[u.id]?' 🏆×'+TR[u.id]:''}</b><small>${tkChip(u.uteg)}</small></div><b>${tkFmt(u.g)} Ft</b></div>`).join('')||'<p class="hint">Még senki nem adott – légy az első!</p>'}`}
   if(id==='uteg')h+=tkRulesHTML();if(id==='uteg')h+=tkHangarHTML();
   if(id==='gift')h=tkGiftHTML();
+  if(id==='den')h=tkDenHTML();
   s.innerHTML=`<button type="button" class="tkx" data-tkx>✕</button>`+h;s.querySelector('[data-tkx]').onclick=()=>{s.hidden=true;TK.sheet=null};
   const mb=s.querySelector('[data-mint]');if(mb)mb.onclick=tkMint;
   s.querySelectorAll('[data-ub]').forEach(b=>b.onclick=()=>{const u=TK_UPG.find(q=>q.id===b.dataset.ub),c=tkUpgCost(u);if(TK.pocket<c||TK.upg[u.id]>=u.max)return;TK.pocket-=c;TK.upg[u.id]++;tkJingle(3,false);tkSheetRender()});
@@ -1853,6 +1904,15 @@ function tkHistHTML(){const H=tkHistory(),T=tkTrophies(),mine=(typeof UID!=='und
   return `<h4>🏆 Hónapok és trófeák</h4><p class="hint">Minden hónap végén a legtöbbet befizető üteg nyer. A győztes üteg akkori tagjai <b>trófeát</b> kapnak – ezt mindenki látja.</p><p class="hint">Te: <b>${mine} 🏆</b></p>`+(H.length?H.map(h=>`<div class="tkrow"><div><b>${h.m}</b> <em class="tkuchip">${esc(h.winner)}</em><small>${h.trophy.map(t=>'🏆 '+esc(t.name)).join(' · ')||'–'}</small></div><b>${tkFmt(h.sum)} Ft</b></div>`).join(''):'<p class="hint">Még nincs lezárult hónap. Az első lezárás a következő hónap elején lesz.</p>')}
 function tkTopGivers(){const f=TK.utw?'tkW':'tkGive';return tkUsers().filter(u=>u[f]>0).sort((a,b)=>b[f]-a[f]).slice(0,10).map(u=>({id:u.id,name:u.name||u.nick||'?',uteg:u.tkUteg,g:u[f],me:u.id===UID||u.id==='me'}))}
 function tkEquiv(v){const g=TK_GEAR.filter(q=>!q.gold&&tkGP(q)<=v).sort((a,b)=>a.p-b.p).pop();if(!g)return 'még egy MRE-re sem elég';const n=Math.floor(v/tkGP(g));return `≈ ${tkFmt(n)} db ${g.n.replace(/ \(.*\)/,'').replace(/,.*$/,'')} ára`}
+// ---- Bankók oldal: a teljes gyűjtemény, mennyi van meg eddig ----
+const TK_DGRP=[['🪙 Érmék',0,2],['💵 Bankjegyek',3,9],['🎖️ Rendfokozat-jegyek',10,19],['👑 Csúcsjegyek',20,22]];
+function tkNoteURL(i){const N=TK.nu||(TK.nu={});if(N[i])return N[i];const cv=tkNoteCv(i),u=cv.toDataURL();if(TK.nc&&TK.nc[i]===cv)N[i]=u;return u}
+function tkDenHTML(){const have=TK.den+1,all=TK_DEN.length,nx=TK.den+1;
+  const card=(d,i)=>{const got=i<=TK.den,cur=i===TK.den,next=i===nx,wt=next?tkMintWait(i):0;
+    return `<div class="${got?'got':'lock'}${cur?' cur':''}${next?' next':''}"><span class="no">${i+1}.</span>${cur?'<em class="tg">EZT NYOMOD</em>':next?'<em class="tg nx">KÖVETKEZŐ</em>':got?'<em class="tg ok">✓ MEGVAN</em>':''}<img src="${tkNoteURL(i)}" alt="" loading="lazy"><b>${got||next?d.n:'???'}</b><small>${tkFmt(d.v)} Ft${got?' · '+d.m:'<br>🏦 '+tkFmt(tkMintCost(i))+' Ft'+(d.wd?' + '+d.wd+' nap szolgálat':'')}</small>${next?`<span class="tkbar"><i data-st="width:${Math.min(100,TK.pocket/tkMintCost(i)*100).toFixed(1)}%"></i></span>${wt>0?`<small>⏳ még ${tkLeftTxt(wt)}</small>`:''}`:''}</div>`};
+  return `<h4>💵 Bankók – gyűjtemény</h4><div class="tkdsum"><b>${have}<i> / ${all}</i></b><div><span>féle pénznem van meg eddig${have<all?` · még ${all-have} hátra`:' – mind megvan! 🙏'}</span><span class="tkbar"><i data-st="width:${(have/all*100).toFixed(1)}%"></i></span><small>${TK_DGRP.map(([n,a,b])=>`${n.split(' ')[0]} ${Math.max(0,Math.min(b,TK.den)-a+1)}/${b-a+1}`).join(' · ')}</small></div></div>`+
+    TK_DGRP.map(([n,a,b])=>`<div class="tkcat">${n} <i>${Math.max(0,Math.min(b,TK.den)-a+1)} / ${b-a+1}</i></div><div class="tkdens">${TK_DEN.slice(a,b+1).map((d,k)=>card(d,a+k)).join('')}</div>`).join('')+
+    `<p class="hint">Új pénznemet a <b>🔧 Fejlesztés</b> fülön, a Pénzverdében gyárthatsz. A rendfokozat-jegyekhez szolgálati idő is kell.</p>`}
 // ---- pénzhalom (domb), részletes pixelkép ----
 function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'x'+h+':'+Math.floor(n*4);if(TK.pc[key])return TK.pc[key];
   const P=2,cw=Math.ceil(w/P),ch=Math.ceil(h/P),lo=document.createElement('canvas');lo.width=cw;lo.height=ch;const c=lo.getContext('2d');let sd=7;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647;
@@ -1876,63 +1936,80 @@ function tkPileCv(total,w,h){TK.pc=TK.pc||{};const n=Math.log10(total+1),key=w+'
   if(total>=1e12){const tx=Math.round(cx)-4,ty=ch-2-ph-13;c.fillStyle='#6e4a04';c.fillRect(tx,ty,9,5);c.fillStyle='#e0aa22';c.fillRect(tx+1,ty+1,7,3);c.fillStyle='#fff';c.fillRect(tx+2,ty+1,1,1)}
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x2=cv.getContext('2d');x2.imageSmoothingEnabled=false;x2.drawImage(lo,0,0,cw*P,ch*P);cv.ph=(ph+2)*P;cv.sparks=sparks;return TK.pc[key]=cv}
 // ---- bázis-jelenet: minden megvásárolt eszköz látszik ----
-function tkBase(c,W,H,now){const gy=H*.735,own=TK.own;
-  // talaj, horizont
+// a bázis álló része (talaj, út, épületek, járművek, halmok) egyszer rajzolódik ki egy rétegre; csak beszerzéskor frissül
+function tkBaseSt(c,W,H){const gy=H*.735,own=TK.own;let sx=6;
   const g=c.createLinearGradient(0,gy-6,0,H);g.addColorStop(0,'#55603c');g.addColorStop(.25,'#3d4a2a');g.addColorStop(1,'#1c2414');c.fillStyle=g;c.fillRect(0,gy-6,W,H-gy+6);
   c.fillStyle='rgba(0,0,0,.25)';for(let x=0;x<W;x+=6)c.fillRect(x,gy-6+((x*7)%5),2,2);
-  // út
-  if(own.ut){c.fillStyle='#4a4a46';c.fillRect(0,gy+18,W,22);c.fillStyle='#2a2a26';c.fillRect(0,gy+18,W,2);c.fillRect(0,gy+38,W,2);c.fillStyle='#f3d77a';for(let x=(now/30)%40-40;x<W;x+=40)c.fillRect(x,gy+28,18,2);
+  if(own.ut){c.fillStyle='#4a4a46';c.fillRect(0,gy+18,W,22);c.fillStyle='#2a2a26';c.fillRect(0,gy+18,W,2);c.fillRect(0,gy+38,W,2);c.fillStyle='#f3d77a';for(let x=-10;x<W;x+=40)c.fillRect(x,gy+28,18,2);
     c.fillStyle='rgba(243,236,212,.7)';c.font='bold 9px sans-serif';c.textAlign='right';c.fillText(`ÚJ ÚT · ${own.ut} km`,W-6,gy+48)}
   // hátsó sor: bázis-infrastruktúra
-  const base=TK_GEAR.filter(q=>q.z==='base'&&own[q.id]);let bx=6;for(const q of base){tkPS(c,q.ic,bx,gy-24,2);if(q.id==='star')TK._sx=bx;if(own[q.id]>1){c.fillStyle='#ffe08a';c.font='bold 9px sans-serif';c.textAlign='left';c.fillText('×'+own[q.id],bx+20,gy-26)}bx+=34;if(bx>W-34)break}
-  if(own.star){const sx=Math.min(bx,W-30);c.fillStyle='rgba(127,200,232,.6)';for(let i=0;i<3;i++){const r=6+((now/400+i*.33)%1)*14;c.beginPath();c.arc((TK._sx||6)+16,gy-24,r,Math.PI*1.1,Math.PI*1.4);c.strokeStyle=`rgba(127,200,232,${.6-((now/400+i*.33)%1)*.6})`;c.lineWidth=1.5;c.stroke()}}
+  const base=TK_GEAR.filter(q=>q.z==='base'&&own[q.id]);let bx=6;for(const q of base){tkPS(c,q.ic,bx,gy-24,2);if(q.id==='star')sx=bx;if(own[q.id]>1){c.fillStyle='#ffe08a';c.font='bold 9px sans-serif';c.textAlign='left';c.fillText('×'+own[q.id],bx+20,gy-26)}bx+=34;if(bx>W-34)break}
   // első sor: járművek (pixelesített valódi sziluettek)
   const veh=TK_GEAR.filter(q=>q.z==='veh'&&own[q.id]);let vx=W-8;for(const q of veh.slice().reverse()){const vw=q.ic==='ifv'?32:72;vx-=vw;if(vx<4)break;const vy=gy+(own.ut?14:4);if(q.ic==='ifv')tkPS(c,'ifv',vx,vy-4,2);else{const sp=tkSilPx(q.ic.slice(4),36,16,q.gold?'#6e4a04':'#1e2614',q.gold?'#e0aa22':'#55663a',q.gold?'#fff4b0':'#9fb27a');if(sp)c.drawImage(sp,vx,vy-8,72,32);else tkSpr(c,q.ic.slice(4),vx,vy,'#4b5a32','#14140f',2)}
     if(own[q.id]>1){c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('×'+own[q.id],vx+vw/2,vy-10)}vx-=4}
   // lőszer és felszerelés halmok a bal elöl
   let ax=6;const ay=gy+(own.ut?44:26);for(const q of TK_GEAR.filter(q=>(q.z==='ammo'||q.z==='kit')&&own[q.id])){const n=Math.min(3,own[q.id]);for(let i=0;i<n;i++)tkPS(c,q.ic,ax+i*3,ay-i*4,1.5);if(own[q.id]>1){c.fillStyle='#ffe08a';c.font='bold 9px sans-serif';c.textAlign='left';c.fillText('×'+tkFmt(own[q.id]),ax,ay+22)}ax+=28;if(ax>vx-20)break}
-  // drónok az égen
-  const dr=TK_GEAR.filter(q=>q.z==='sky'&&own[q.id]);dr.forEach((q,i)=>{const n=Math.min(3,own[q.id]);for(let j=0;j<n;j++){const t=now/1000+i*1.7+j*2.3,x=(W*.12+((i*97+j*61+t*(14+i*6))%(W*.8))),y=H*.115+i*14+Math.sin(t*1.8+j)*6;c.save();c.translate(x,y);tkPS(c,q.ic,-16,-12,q.id==='tb2'||q.id==='puma'?2:1.5);c.restore()}});
+  return sx}
+function tkBase(c,W,H,now){const gy=H*.735,own=TK.own,y0=Math.floor(gy-44),d=TK.dpr||1;
+  if(!TK.bsc||now-TK.bsc.t>400||(TK.newBuy&&!TK.newBuy.t)){const sig=JSON.stringify(own)+'|'+W+'|'+H+'|'+d;if(TK.bsc&&TK.bsc.sig===sig)TK.bsc.t=now;else{const cv=(TK.bsc&&TK.bsc.cv)||document.createElement('canvas');cv.width=Math.max(1,Math.round(W*d));cv.height=Math.max(1,Math.round((H-y0)*d));const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,-y0*d);x.imageSmoothingEnabled=false;const sx=tkBaseSt(x,W,H);
+      TK.bsc={cv,sig,t:now,sx,dr:TK_GEAR.filter(q=>q.z==='sky'&&own[q.id]).map(q=>({ic:q.ic,n:Math.min(3,own[q.id]),k:q.id==='tb2'||q.id==='puma'?2:1.5}))}}}
+  const B=TK.bsc;c.drawImage(B.cv,0,y0,W,H-y0);
+  if(own.star){for(let i=0;i<3;i++){const k=(now/400+i*.33)%1;c.beginPath();c.arc(B.sx+16,gy-24,6+k*14,Math.PI*1.1,Math.PI*1.4);c.strokeStyle=`rgba(127,200,232,${(.6-k*.6).toFixed(2)})`;c.lineWidth=1.5;c.stroke()}}
+  // drónok a bázis fölött köröznek
+  for(let i=0;i<B.dr.length;i++){const q=B.dr[i];for(let j=0;j<q.n;j++){const t=now/1000+i*1.7+j*2.3,x=W*.12+((i*97+j*61+t*(14+i*6))%(W*.8)),y=gy-62-i*13+Math.sin(t*1.8+j)*6;tkPS(c,q.ic,x-16,y-12,q.k)}}
   // új beszerzés kiemelése
   if(TK.newBuy){const N=TK.newBuy;N.t+=1/60;const a=Math.min(1,N.t*3,(3-N.t)*2);if(a>0){c.globalAlpha=a;c.fillStyle='rgba(0,0,0,.65)';c.fillRect(W/2-120,gy-70,240,34);c.fillStyle='#ffe08a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('BESZEREZVE: '+N.g.n.toUpperCase(),W/2,gy-48);c.globalAlpha=1}if(N.t>3)TK.newBuy=null}}
+// a koppintható pénz az árnyékával együtt előre kirajzolva (a képkockánkénti shadowBlur nagyon drága telefonon)
+function tkNoteSh(i,bw,bh){const img=tkNoteCv(i),d=TK.dpr||1,key=i+'|'+Math.round(bw)+'|'+d;if(TK.nsc&&TK.nsc.key===key)return TK.nsc.cv;if(!(TK.nc&&TK.nc[i]===img))return null;
+  const pad=30,cv=document.createElement('canvas');cv.width=Math.ceil((bw+pad*2)*d);cv.height=Math.ceil((bh+pad*2)*d);const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.imageSmoothingEnabled=false;x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=16;x.shadowOffsetX=5;x.shadowOffsetY=9;x.drawImage(img,pad,pad,bw,bh);cv.pad=pad;TK.nsc={key,cv};return cv}
+function tkGlow(rush){const G=TK.glw||(TK.glw={}),k=rush?1:0;if(G[k])return G[k];const cv=document.createElement('canvas');cv.width=cv.height=96;const x=cv.getContext('2d'),g=x.createRadialGradient(48,48,0,48,48,48);g.addColorStop(0,rush?'rgba(255,200,80,.22)':'rgba(255,215,120,.12)');g.addColorStop(1,'rgba(255,215,120,0)');x.fillStyle=g;x.fillRect(0,0,96,96);return G[k]=cv}
 // ---- fő ciklus ----
-function tkLoop(now){const cv=$('#tkCv');if(!cv||!TK.run)return;const c=cv.getContext('2d');let dt=Math.min(.1,(now-TK.last)/1000);TK.last=now;if(GP)dt=0;if(!TK._mc||now-TK._mc>1000){TK._mc=now;const mc=$('#tkMonth');if(mc)mc.textContent='📅 Hónap vége: '+tkWeekLeft()}const W=TK.W,H=TK.H;
+function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.ctx=cv.getContext('2d')),E=TK.el||{};let dt=Math.min(.1,(now-TK.last)/1000);TK.last=now;if(GP)dt=0;const W=TK.W,H=TK.H,L=tkLay(W,H);
   const inc=tkAutoInc()+tkGearInc();if(inc>0){TK.pocket+=inc*dt;TK.earned+=inc*dt}
-  if(TK.rush>0)TK.rush=Math.max(0,TK.rush-dt);TK.goldT-=dt;if(TK.goldT<=0&&!TK.gold){TK.gold={x:-40,y:H*.2+Math.random()*H*.12,t:0,vx:60+Math.random()*30};TK.goldT=140+Math.random()*120}
+  if(TK.rush>0)TK.rush=Math.max(0,TK.rush-dt);TK.goldT-=dt;if(TK.goldT<=0&&!TK.gold){TK.gold={x:-40,y:L.cy-L.bh*.35+Math.random()*L.bh*.7,t:0,vx:60+Math.random()*30};TK.goldT=140+Math.random()*120}
   if(TK.gold){const G=TK.gold;G.t+=dt;G.x+=G.vx*dt;G.y+=Math.sin(G.t*3)*30*dt;if(G.x>W+60)TK.gold=null}
   tkDropTick(dt,W,H);tkSpinTick(dt);
   if(now-TK.lastTap>900)TK.combo=Math.max(0,TK.combo-dt*8);TK.bump=Math.max(0,TK.bump-dt*7);
-  c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#1d2612';c.fillRect(0,0,W,H);tkCacheCheck(now);tkBg(c,W,H,now);tkSpots(c,W,H,now);
+  // ranglista- és ütegadatok: másodpercenként egyszer számoljuk újra (nem képkockánként)
+  let S=TK.stc;if(!S||now-S.t>1000||S.g!==TK.given||S.u!==TK.uteg||S.w!==W||S.utw!==TK.utw){const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given},race=tkRaceData(W>=430?6:W>=330?5:4);
+    S=TK.stc={t:now,g:TK.given,u:TK.uteg,w:W,utw:TK.utw,sum:U.sum,lab:`${(TK.uteg||'Üteg').toUpperCase()} KASSZÁJA · ${tkFmt(U.sum)} Ft`,eq:tkEquiv(U.sum),race,raceN:Math.max(3,race.list.length),cap:`${tkFmt(TK_DEN[TK.den].v)} Ft · koppintás: ${tkFmt(tkTapV())} Ft`,den:TK.den}}
+  if(S.den!==TK.den){S.t=0}
+  c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.imageSmoothingEnabled=false;c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#1d2612';c.fillRect(0,0,W,H);tkCacheCheck(now);tkBg(c,W,H,now);if(!LOWFX)tkSpots(c,W,H,now);
   // az üteg pénzhalma (domb) a bázis mögött
-  const U=tkUtegStats().find(u=>u.n===TK.uteg)||{sum:TK.given};const pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(U.sum,pw,phh);c.drawImage(pile,(W-pw)/2,H*.735-phh+4);{const ox=(W-pw)/2,oy=H*.735-phh+4;for(const s of pile.sparks||[]){const a=.5+.5*Math.sin(now/260+s.p);if(a<.5)continue;c.fillStyle=`rgba(255,250,220,${a.toFixed(2)})`;c.fillRect(ox+s.x-1,oy+s.y,3,1);c.fillRect(ox+s.x,oy+s.y-1,1,3)}}
-  if(U.sum>=1e3){for(let i=0;i<5;i++){const t=now/700+i*1.9,x=W/2+Math.sin(i*7.1)*pw*.25,y=H*.735-(pile.ph||0)*(.4+.5*Math.abs(Math.sin(i*3.3)))+4,a=Math.max(0,Math.sin(t));c.fillStyle=`rgba(255,250,210,${a})`;c.fillRect(x,y,2,2);c.fillRect(x-2,y+0.5,6,1);c.fillRect(x+.5,y-2,1,6)}}
+  const gy=H*.735,pw=Math.round(Math.min(W*.96,440)),phh=Math.round(H*.3),pile=tkPileCv(S.sum,pw,phh);c.drawImage(pile,(W-pw)/2,gy-phh+4);{const ox=(W-pw)/2,oy=gy-phh+4;c.fillStyle='rgba(255,250,220,.8)';for(const s of pile.sparks||[]){if(Math.sin(now/260+s.p)<.2)continue;c.fillRect(ox+s.x-1,oy+s.y,3,1);c.fillRect(ox+s.x,oy+s.y-1,1,3)}}
+  if(S.sum>=1e3){for(let i=0;i<5;i++){const t=now/700+i*1.9,x=W/2+Math.sin(i*7.1)*pw*.25,y=gy-(pile.ph||0)*(.4+.5*Math.abs(Math.sin(i*3.3)))+4,a=Math.max(0,Math.sin(t));if(a<.05)continue;c.fillStyle=`rgba(255,250,210,${a.toFixed(2)})`;c.fillRect(x,y,2,2);c.fillRect(x-2,y+0.5,6,1);c.fillRect(x+.5,y-2,1,6)}}
   tkBase(c,W,H,now);
-  {const ly=H*.735-(pile.ph||0)-16;c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(W/2-150,ly-12,300,30);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-150,ly-12,6,30);c.fillRect(W/2+144,ly-12,6,30);c.fillRect(W/2-150,ly+16,300,2)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(`${(TK.uteg||'Üteg').toUpperCase()} KASSZÁJA · ${tkFmt(U.sum)} Ft`,W/2,ly);c.fillStyle='rgba(243,236,212,.85)';c.font='bold 9.5px sans-serif';c.fillText(tkEquiv(U.sum),W/2,ly+13)}
+  {const ly=Math.max(gy-(pile.ph||0)-16,L.cy+L.bh/2+46);c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(W/2-150,ly-12,300,30);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-150,ly-12,6,30);c.fillRect(W/2+144,ly-12,6,30);c.fillRect(W/2-150,ly+16,300,2)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(S.lab,W/2,ly);c.fillStyle='rgba(243,236,212,.85)';c.font='bold 9.5px sans-serif';c.fillText(S.eq,W/2,ly+13)}
+  // élő ranglista-futóverseny
+  tkRace(c,W,L,now,dt);
   // aktuális pénz (koppintási cél)
-  const D=TK_DEN[TK.den],img=tkNoteCv(TK.den),isC=D.t==='c',bw=Math.min(W*.8,isC?190:360),bh=bw*img.height/img.width,bs=1+TK.bump*.06,cx=W/2,cy=H*.36;
-  {const rx=bw/2+20,ry=bh/2+18,nb=Math.round((rx+ry)*.22),pts=[];for(let i=0;i<nb;i++){const a=i/nb*Math.PI*2;pts.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry])}c.save();c.globalCompositeOperation='lighter';const hg=c.createRadialGradient(cx,cy,0,cx,cy,rx*1.1);hg.addColorStop(0,TK.rush>0?'rgba(255,200,80,.22)':'rgba(255,215,120,.12)');hg.addColorStop(1,'rgba(255,215,120,0)');c.fillStyle=hg;c.fillRect(cx-rx*1.2,cy-ry*1.6,rx*2.4,ry*3.2);c.restore();tkBulbs(c,pts,now)}
-  c.save();c.translate(cx,cy);c.rotate(Math.sin(now/1400)*.03);c.scale(bs,bs);c.shadowColor='rgba(0,0,0,.6)';c.shadowBlur=16;c.shadowOffsetX=5;c.shadowOffsetY=9;c.drawImage(img,-bw/2,-bh/2,bw,bh);c.shadowColor='transparent';c.shadowBlur=0;c.shadowOffsetX=0;c.shadowOffsetY=0;
+  const D=TK_DEN[TK.den],bw=L.bw,bh=L.bh,bs=1+TK.bump*.06,cx=W/2,cy=L.cy;
+  {const rx=bw/2+20,ry=bh/2+18;let B=TK.bec;if(!B||B.cx!==cx||B.cy!==cy||B.rx!==rx){const nb=Math.round((rx+ry)*.22),pts=[];for(let i=0;i<nb;i++){const a=i/nb*Math.PI*2;pts.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry])}B=TK.bec={cx,cy,rx,pts}}
+    if(!LOWFX){c.globalCompositeOperation='lighter';c.imageSmoothingEnabled=true;c.drawImage(tkGlow(TK.rush>0),cx-rx*1.1,cy-rx*1.1,rx*2.2,rx*2.2);c.imageSmoothingEnabled=false;c.globalCompositeOperation='source-over'}tkBulbs(c,B.pts,now)}
+  c.save();c.translate(cx,cy);c.rotate(Math.sin(now/1400)*.03);c.scale(bs,bs);{const sh=tkNoteSh(TK.den,bw,bh);if(sh)c.drawImage(sh,-bw/2-sh.pad,-bh/2-sh.pad,bw+sh.pad*2,bh+sh.pad*2);else c.drawImage(tkNoteCv(TK.den),-bw/2,-bh/2,bw,bh)}
   if(D.t==='g'||TK.rush>0){const sh=((now/900)%1.6)-.3;c.globalCompositeOperation='lighter';const gg=c.createLinearGradient(-bw/2+sh*bw,0,-bw/2+sh*bw+bw*.25,0);gg.addColorStop(0,'rgba(255,255,255,0)');gg.addColorStop(.5,'rgba(255,250,200,.4)');gg.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=gg;c.fillRect(-bw/2,-bh/2,bw,bh);c.globalCompositeOperation='source-over'}c.restore();
-  c.fillStyle='#f3d77a';c.font='900 18px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(D.n.toUpperCase(),cx,cy-bh/2-12);c.fillStyle='rgba(243,236,212,.75)';c.font='bold 11px sans-serif';c.fillText(`${tkFmt(D.v)} Ft · koppintás: ${tkFmt(tkTapV())} Ft`,cx,cy+bh/2+18);
-  TK.fx=TK.fx.filter(f=>{f.t+=dt;f.vy+=600*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.r+=dt*6;const im=tkNoteCv(f.i),s=(TK_DEN[f.i].t==='c'?28:52);c.save();c.translate(f.x,f.y);c.rotate(f.r);c.globalAlpha=Math.max(0,1-f.t*1.2);c.drawImage(im,-s/2,-s*im.height/im.width/2,s,s*im.height/im.width);c.restore();c.globalAlpha=1;return f.t<.9});
-  TK.pop=TK.pop.filter(p=>{p.t+=dt;c.globalAlpha=Math.max(0,1-p.t*1.1);c.fillStyle=p.crit?'#ff5a4a':p.gift?'#7dff6a':'#ffe08a';c.font=`900 ${p.crit||p.gift?20:15}px Anton, Impact, sans-serif`;c.fillText(p.s+(p.crit?' TELITALÁLAT!':''),p.x,p.y-p.t*60);c.globalAlpha=1;return p.t<.9});if(TK.pop.length>30)TK.pop.splice(0,TK.pop.length-30);
+  c.textAlign='center';if(TK.rush>0){c.fillStyle='#ffe08a';c.font='900 14px Anton, Impact, sans-serif';c.fillText(`🎫 GOLDEN TICKET · DUPLA BEVÉTEL · ${Math.ceil(TK.rush)} mp`,cx,cy-bh/2-12)}else{c.fillStyle='#f3d77a';c.font='900 18px Anton, Impact, sans-serif';c.fillText(S.capN||(S.capN=D.n.toUpperCase()),cx,cy-bh/2-12)}
+  if(TK.combo>=3){c.fillStyle='#ffd24a';c.font='900 13px Anton, Impact, sans-serif';c.fillText(`KOMBÓ ${Math.floor(TK.combo)} · ×${(1+TK.combo*(.01+TK.upg.combo*.005)).toFixed(2)}`,cx,cy+bh/2+19)}else{c.fillStyle='rgba(243,236,212,.75)';c.font='bold 11px sans-serif';c.fillText(S.cap,cx,cy+bh/2+18)}
+  if(TK.fx.length){let k=0;for(const f of TK.fx){f.t+=dt;if(f.t>=.9)continue;TK.fx[k++]=f;f.vy+=600*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.r+=dt*6;const im=tkNoteCv(f.i),s=(TK_DEN[f.i].t==='c'?28:52),hh=s*im.height/im.width,co=Math.cos(f.r),si=Math.sin(f.r);c.setTransform(TK.dpr*co,TK.dpr*si,-TK.dpr*si,TK.dpr*co,TK.dpr*f.x,TK.dpr*f.y);c.globalAlpha=Math.max(0,1-f.t*1.2);c.drawImage(im,-s/2,-hh/2,s,hh)}TK.fx.length=k;c.setTransform(TK.dpr,0,0,TK.dpr,0,0);c.globalAlpha=1}
+  if(TK.pop.length){let k=0,fs=0;for(const p of TK.pop){p.t+=dt;if(p.t>=.9)continue;TK.pop[k++]=p;c.globalAlpha=Math.max(0,1-p.t*1.1);c.fillStyle=p.crit?'#ff5a4a':p.gift?'#7dff6a':'#ffe08a';const z=p.crit||p.gift?20:15;if(z!==fs){fs=z;c.font=`900 ${z}px Anton, Impact, sans-serif`}c.fillText(p.crit?p.s+' TELITALÁLAT!':p.s,p.x,p.y-p.t*60)}TK.pop.length=k;c.globalAlpha=1;if(k>30)TK.pop.splice(0,k-30)}
   tkDropDraw(c,now);
   // zseb-köteg
-  const pk=Math.min(12,Math.ceil(Math.log10(TK.pocket+1)*1.4)),px=W*.5,py=H*.9;if(TK.pocket>=1){const di=TK_DEN.reduce((m,d,i)=>i<=TK.den&&d.v<=TK.pocket?i:m,0),im=tkNoteCv(di),sw=TK_DEN[di].t==='c'?24:48;for(let i=0;i<pk;i++)c.drawImage(im,px-sw/2+(i%2)*2,py-i*3,sw,sw*im.height/im.width);
-    const a=.5+.5*Math.sin(now/250);c.fillStyle=`rgba(255,224,138,${a})`;c.font='bold 16px sans-serif';c.fillText('⇡',px,py-pk*3-6)}
-  {const tx=tkPlain(tkFmt(TK.pocket)+' FT').replace(/\u00a0/g,' '),k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);tkBulbRect(c,x0-16,y0-20,w+32,5*k+32,now,12);
-    c.fillStyle='#c9a227';c.font='900 9px sans-serif';c.textAlign='center';c.fillText('ZSEB',W/2,y0-4);tkTxt(c,tx,x0+k,y0+k,'#3a2a04',k);tkTxt(c,tx,x0,y0,TK.rush>0?'#fff4b0':'#ffe08a',k)}
-  if(TK.combo>=3){c.fillStyle='#ffd24a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(`KOMBÓ ${Math.floor(TK.combo)} · ×${(1+TK.combo*(.01+TK.upg.combo*.005)).toFixed(2)}`,W/2,104)}
-  if(TK.rush>0){c.fillStyle='#ffe08a';c.font='900 14px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(`🎫 GOLDEN TICKET · DUPLA BEVÉTEL · ${Math.ceil(TK.rush)} mp`,W/2,H*.2)}
-  if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=70;c.save();c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);c.shadowColor='#ffd24a';c.shadowBlur=18;c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
+  const pk=Math.min(12,Math.ceil(Math.log10(TK.pocket+1)*1.4)),px=W*.5,py=H*.9;if(TK.pocket>=1){let di=0;for(let i=TK.den;i>0;i--)if(TK_DEN[i].v<=TK.pocket){di=i;break}const im=tkNoteCv(di),sw=TK_DEN[di].t==='c'?24:48,sh2=sw*im.height/im.width;for(let i=0;i<pk;i++)c.drawImage(im,px-sw/2+(i%2)*2,py-i*3,sw,sh2);
+    const a=.5+.5*Math.sin(now/250);c.fillStyle=`rgba(255,224,138,${a.toFixed(2)})`;c.font='bold 16px sans-serif';c.fillText('⇡',px,py-pk*3-6)}
+  // zseb-számláló: a szöveg legfeljebb ~12×/mp frissül (koppintáskor azonnal), a rajz betű-gyorsítótárból megy
+  if(TK.pkD||now-(TK.pkT||0)>80||TK.pkS==null){TK.pkT=now;TK.pkD=0;const v=Math.floor(TK.pocket);if(v!==TK.pkV||TK.pkS==null){TK.pkV=v;TK.pkS=tkPlain(tkFmt(v)+' FT').replace(/[  ]/g,' ')}}
+  {const tx=TK.pkS,k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);tkBulbRect(c,x0-16,y0-20,w+32,5*k+32,now,12);
+    c.fillStyle='#c9a227';c.font='900 9px sans-serif';c.textAlign='center';c.fillText('ZSEB',W/2,y0-4);tkTxtF(c,tx,x0+k,y0+k,'#3a2a04',k);tkTxtF(c,tx,x0,y0,TK.rush>0?'#fff4b0':'#ffe08a',k)}
+  if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=70;c.save();c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);if(!LOWFX){c.shadowColor='#ffd24a';c.shadowBlur=18}c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
   if(TK.newDen){const N=TK.newDen;N.t+=dt;const a=Math.min(1,N.t*3,(3.2-N.t)*2);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(0,0,0,.65)';c.fillRect(0,H*.13,W,60);c.fillStyle='#ffcf3a';c.font='900 20px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('ÚJ PÉNZNEM: '+TK_DEN[N.i].n.toUpperCase(),W/2,H*.13+26);c.fillStyle='#f3ecd4';c.font='bold 11px sans-serif';c.fillText(TK_DEN[N.i].m,W/2,H*.13+44);c.globalAlpha=1;if(N.t>3.2)TK.newDen=null}
-  if(TK.flyUp){const F=TK.flyUp;F.t+=dt;const k=F.t/.8,im=tkNoteCv(TK.den),sw=TK_DEN[TK.den].t==='c'?36:60;for(let i=0;i<6;i++){c.globalAlpha=Math.max(0,1-k);c.drawImage(im,W/2-sw/2+Math.sin(i*2+k*6)*30,py-k*(py-H*.08)-i*10,sw,sw*im.height/im.width)}c.globalAlpha=1;if(F.t>.8)TK.flyUp=null}
+  if(TK.flyUp){const F=TK.flyUp;F.t+=dt;const k=F.t/.8,im=tkNoteCv(TK.den),sw=TK_DEN[TK.den].t==='c'?36:60;c.globalAlpha=Math.max(0,1-k);for(let i=0;i<6;i++)c.drawImage(im,W/2-sw/2+Math.sin(i*2+k*6)*30,py-k*(py-H*.08)-i*10,sw,sw*im.height/im.width);c.globalAlpha=1;if(F.t>.8)TK.flyUp=null}
   tkConfDraw(c,dt);
-  // HUD + pénzverde-gomb
-  const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set('#tkPocket',tkShort(TK.pocket));set('#tkGiven',tkShort(TK.given));{const un=({'1. üteg':'1. ÜTEG','2. üteg':'2. ÜTEG','3. üteg':'3. ÜTEG','Kiképző üteg':'KIK. Ü.','Törzsüteg':'TÖRZS','Felderítő':'FELD.','Szakjavító':'SZJ.'})[TK.uteg]||'ÜTEG';const pend=typeof MODE!=='undefined'&&MODE==='fb'&&UID&&TK.given>(Number(USERDOC&&USERDOC.tkFt)||0);set('#tkUN',un+(pend?' ⏳':''));const ch=$('#tkUChip');if(ch&&ch.dataset.u!==(TK.uteg||'')){ch.dataset.u=TK.uteg||'';const c=tkUC(TK.uteg);ch.style.setProperty('--uc',c[0]);ch.style.setProperty('--ut',c[1])}}
-  set('#tkInfo',`1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft${TK.hufLive?' (élő, EKB '+TK.hufD+')':TK.hufD==='becsült'?' (becsült)':' ('+TK.hufD+')'}${inc>0?' · ⚙️ '+tkFmtR(inc)+' Ft/mp':''}`);
-  const nx=TK.den+1,mb=$('#tkMint');if(mb){const can=nx<TK_DEN.length&&TK.pocket>=tkMintCost(nx)&&tkMintWait(nx)<=0;if(mb.hidden===can)mb.hidden=!can;const tx=can?`🏦 PÉNZVERDE: ${TK_DEN[nx].n}`:'';if(mb.textContent!==tx)mb.textContent=tx}
-  if((TK.uiT=(TK.uiT||0)+dt)>.4){TK.uiT=0;{const D=tkDM(),can=D.list.some(q=>!q.done&&tkDmProg(q)>=q.goal),nb=document.querySelector('.tknav [data-tk=ach]');if(nb)nb.classList.toggle('badge',can);const gb=document.querySelector('.tknav [data-tk=gift]');if(gb)gb.classList.toggle('badge',tkGiftCan());if(TK.sheet==='gift'){const sl=$('#tkSpinLeft');if(sl)sl.textContent=tkLeftTxt(TK_SPIN_CD-(Date.now()-(TK.spinT||0)));else if(!TK.spin&&tkSpinCan()&&$('#tkSheet [data-spin]:disabled'))tkSheetRender()}}if(TK.sheet==='upg'||TK.sheet==='gear'){const sig=TK.sheet+TK.den+JSON.stringify(TK.upg)+JSON.stringify(TK.own)+(TK.den+1<TK_DEN.length&&TK.pocket>=tkMintCost(TK.den+1)?1:0)+(TK.den+1<TK_DEN.length&&tkMintWait(TK.den+1)>0?Math.ceil(tkMintWait(TK.den+1)/6e4):0)+TK_UPG.map(u=>TK.pocket>=tkUpgCost(u)?1:0).join('')+TK_GEAR.map(g=>TK.pocket>=tkGearCost(g)?1:0).join('');if(sig!==TK.sig){TK.sig=sig;const st=$('#tkSheet').scrollTop;tkSheetRender();$('#tkSheet').scrollTop=st}}}
+  // HUD + pénzverde-gomb: a DOM-ot ~6×/mp frissítjük, nem képkockánként
+  if(now-(TK.hudT||0)>160){TK.hudT=now;const set=(e,v)=>{if(e&&e.textContent!==v)e.textContent=v};set(E.pocket,tkShort(TK.pocket));set(E.given,tkShort(TK.given));{const un=({'1. üteg':'1. ÜTEG','2. üteg':'2. ÜTEG','3. üteg':'3. ÜTEG','Kiképző üteg':'KIK. Ü.','Törzsüteg':'TÖRZS','Felderítő':'FELD.','Szakjavító':'SZJ.'})[TK.uteg]||'ÜTEG';const pend=typeof MODE!=='undefined'&&MODE==='fb'&&UID&&TK.given>(Number(USERDOC&&USERDOC.tkFt)||0);set(E.un,un+(pend?' ⏳':''));const ch=E.chip;if(ch&&ch.dataset.u!==(TK.uteg||'')){ch.dataset.u=TK.uteg||'';const uc=tkUC(TK.uteg);ch.style.setProperty('--uc',uc[0]);ch.style.setProperty('--ut',uc[1])}}
+    set(E.info,`1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft${TK.hufLive?' (élő, EKB '+TK.hufD+')':TK.hufD==='becsült'?' (becsült)':' ('+TK.hufD+')'}${inc>0?' · ⚙️ '+tkFmtR(inc)+' Ft/mp':''}`);
+    const nx=TK.den+1,mb=E.mint;if(mb){const can=nx<TK_DEN.length&&TK.pocket>=tkMintCost(nx)&&tkMintWait(nx)<=0;if(mb.hidden===can)mb.hidden=!can;const tx=can?`🏦 PÉNZVERDE: ${TK_DEN[nx].n}`:'';if(mb.textContent!==tx)mb.textContent=tx}
+    if(!TK._mc||now-TK._mc>1000){TK._mc=now;set(E.month,'📅 Hónap vége: '+tkWeekLeft())}}
+  if((TK.uiT=(TK.uiT||0)+dt)>.4){TK.uiT=0;const sh=E.sheet;{const D=tkDM(),can=D.list.some(q=>!q.done&&tkDmProg(q)>=q.goal);if(E.navAch)E.navAch.classList.toggle('badge',can);if(E.navGift)E.navGift.classList.toggle('badge',tkGiftCan());if(TK.sheet==='gift'){const sl=$('#tkSpinLeft');if(sl)sl.textContent=tkLeftTxt(TK_SPIN_CD-(Date.now()-(TK.spinT||0)));else if(!TK.spin&&tkSpinCan()&&$('#tkSheet [data-spin]:disabled'))tkSheetRender()}}if(sh&&(TK.sheet==='upg'||TK.sheet==='gear'||TK.sheet==='den')){const mw=TK.den+1<TK_DEN.length?tkMintWait(TK.den+1):0,sig=TK.sheet==='den'?'den'+TK.den+(TK.den+1<TK_DEN.length?Math.min(50,Math.floor(TK.pocket/tkMintCost(TK.den+1)*50)):0)+'|'+Math.ceil(mw/6e4):TK.sheet+TK.den+JSON.stringify(TK.upg)+JSON.stringify(TK.own)+(TK.den+1<TK_DEN.length&&TK.pocket>=tkMintCost(TK.den+1)?1:0)+(mw>0?Math.ceil(mw/6e4):0)+TK_UPG.map(u=>TK.pocket>=tkUpgCost(u)?1:0).join('')+TK_GEAR.map(g=>TK.pocket>=tkGearCost(g)?1:0).join('');if(sig!==TK.sig){TK.sig=sig;const st=sh.scrollTop;tkSheetRender();sh.scrollTop=st}}}
   if(TK.sheet==='gift'){const wc=$('#tkWheel');if(wc)tkWheelDraw(wc,now)}
   TK.raf=requestAnimationFrame(tkLoop)}
 
