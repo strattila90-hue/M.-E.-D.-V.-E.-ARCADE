@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.35.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.36.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.36.0:** **Több száz egyidejű játékosra optimalizálva.** Eddig minden telefon valós időben figyelte a teljes játékoslistát: bármelyik játékos mentése azonnal letöltődött mindenki telefonjára, és minden alkalommal újrarajzolta a ranglistát – sok játékosnál ez a telefonon akadást, a szerveren megsokszorozódó olvasást okozott. Most: (1) a saját fiók valós időben figyelt, a teljes lista viszont csak akkor, ha látszik (menü, ranglista, Kassza Ütegek fül) – **játék közben és háttérben szünetel**, visszatéréskor csak a változások jönnek le; (2) a beérkező változásokból csak a módosult játékosok frissülnek, nem épül újra a teljes lista; (3) a kijelző frissítése összevonva, legfeljebb 1,5 mp-enként, játék közben elhalasztva; (4) a Kassza automatikus mentése 20 helyett 45 mp-enként (bezáráskor, vásárláskor, befizetéskor azonnal). Terheléses teszt (300 szimulált játékos, emulátor): játék közben a telefon a többiek mentéseiből semmit nem kap és nem dolgoz fel (korábban mindet), a menüben a feldolgozási idő kb. hetedére csökkent. A szabályok nem változtak a 4.35.2-höz képest.
 
 **v4.35.2:** **Javítva: „Ranglista-mentés elutasítva” (tkSync permission-denied, KAS-9086).** Ok: a Firestore egy kérésben legfeljebb 1000 kifejezést értékel ki; a `firestore.rules` felhasználói szabálya minden mentésnél az összes (kb. 30) mezőt újra összehasonlította, ami egy régóta játszó, teljesen kitöltött fióknál túllépte a korlátot – így a szerver minden mentést (Kassza-befizetés, rekord, játékszámláló, rendfokozat) elutasított, pedig az adat helyes volt. Most az érintett mezők halmaza egyszer készül el, és a mentés által nem érintett mezőcsoportok (rekordok, számlálók, Kassza) ellenőrzése egy lépésben kimarad. Az ellenőrzések tartalma nem változott. Új regressziós teszt: teljesen kitöltött fiók. **Teendő:** a `firestore.rules`-t újra közzé kell tenni (Firebase konzol → Firestore → Rules → Publish); az app kódja nem változott, a beragadt mentések a közzététel után maguktól feltöltődnek.
 

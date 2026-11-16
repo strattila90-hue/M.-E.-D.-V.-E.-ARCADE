@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.35.2',APP_DATE='2026.11.16.';
+const APP_VER='4.36.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1712,7 +1712,7 @@ function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)r
   if(typeof d.tkFt==='number'&&d.tkFt>(TK.synced||0)){const un=Math.max(0,TK.given-(TK.synced||0));TK.given=Math.max(TK.given,d.tkFt+un);TK.synced=d.tkFt}
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
-function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
+function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();if(!force&&now-(TK.syncT||0)<45000)return;const ownS=JSON.stringify(TK.own);
   if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;if(typeof USERDOC==='undefined'||!USERDOC)return;if(lbPending()){lbAck();return}TK.syncT=now;let g=Number.isFinite(TK.given)?TK.given:0;const u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
   const wk=TK.wk;let wg=Number.isFinite(TK.wg)?TK.wg:0;if(!wk)return;
   // a szerver szabálya: a befizetés csak a valós (szerver)idővel arányosan nőhet, a havi összeg pedig csak a valódi befizetéssel – ezt itt is betartjuk, a maradék a következő mentéssel megy
@@ -3084,12 +3084,35 @@ function fbSyncLocal(force){if(!USERDOC||!DB||!UID)return;if(lbPending()){lbAppl
   if(Object.keys(up).length&&navigator.onLine!==false)DB.doc('users/'+UID).update(up).catch(e=>console.warn('rekord-feltöltés',e&&e.code))}
 // tartalék: ha egy feltöltés nem sikerült, és közben nem jött szerverfrissítés, fél percenként újra összeveti
 setInterval(()=>{if(MODE==='fb'&&FB_SYNCED&&!document.hidden)fbSyncLocal()},30000);
-function fbListen(){if(UNSUB)UNSUB();FB_SYNCED=false;
-  UNSUB=DB.collection('users').onSnapshot(qs=>{const o={};qs.forEach(d=>{o[d.id]={id:d.id,...d.data()}});S.users=o;USERDOC=o[UID]||null;
-    if(!USERDOC&&!qs.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
-      DB.doc('users/'+UID).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:srvNow()}).catch(()=>{})}
-    lbApply();if(USERDOC&&!qs.metadata.fromCache){const first=!FB_SYNCED;FB_SYNCED=true;fbSyncLocal(first)}
-    liveRefresh()},err=>{console.warn(err);toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
+// SKÁLÁZÁS (több száz egyidejű játékos): a saját fiók valós időben figyelt (kis forgalom), a teljes játékoslista viszont csak akkor,
+// ha látszik (menü, ranglista, Ütegek fül). Játék közben és háttérben a lista-figyelő szünetel: így más játékosok mentései nem
+// terhelik a telefont (nincs akadás), és a szerveren sem sokszorozódnak az olvasások. Visszatéréskor csak a változások töltődnek le.
+let UNSUB_ME=null,LB_ON=false,LB_OFF_T=0,LIVE_T=0,LIVE_DUE=false;
+const inGame=()=>{try{return GP_RUN()||!!(typeof SE!=='undefined'&&SE.run)||!!(typeof SR!=='undefined'&&SR.run)}catch(e){return false}};
+function fbStop(){if(UNSUB){UNSUB();UNSUB=null}if(UNSUB_ME){UNSUB_ME();UNSUB_ME=null}LB_ON=false}
+function fbListen(){fbStop();FB_SYNCED=false;const uid=UID;
+  UNSUB_ME=DB.doc('users/'+uid).onSnapshot(x=>{if(uid!==UID)return;if(x.exists){USERDOC={id:x.id,...x.data()};S.users[uid]=USERDOC}else{USERDOC=null;delete S.users[uid]}
+    if(!USERDOC&&!x.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
+      DB.doc('users/'+uid).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:srvNow()}).catch(()=>{})}
+    lbApply();if(USERDOC&&!x.metadata.fromCache){const first=!FB_SYNCED;FB_SYNCED=true;fbSyncLocal(first)}
+    liveSoon()},err=>{console.warn(err);toast('A fiók most nem érhető el ('+(err.code||'hiba')+')')});
+  lbWatch()}
+// a lista-figyelő csak akkor fut, ha a lista látszik; rövid játék miatt nem kapcsol ki-be (20 mp türelmi idő)
+function lbWant(){if(MODE!=='fb'||!UID||!DB||document.hidden)return false;if(!inGame())return true;return typeof TK!=='undefined'&&TK.run&&TK.sheet==='uteg'}
+function lbWatch(){try{if(MODE!=='fb'||!UID||!DB){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;return}const want=lbWant(),now=Date.now();
+  if(want){LB_OFF_T=0;if(!LB_ON)lbSub();return}if(!LB_ON)return;if(!LB_OFF_T){LB_OFF_T=now;return}if(now-LB_OFF_T>20000){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;LB_OFF_T=0}}catch(e){}}
+function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
+  UNSUB=DB.collection('users').onSnapshot(qs=>{if(uid!==UID)return;
+    if(first){first=false;const o={};if(S.users[uid])o[uid]=S.users[uid];qs.forEach(d=>{if(d.id!==uid)o[d.id]={id:d.id,...d.data()}});S.users=o;lbApply();liveSoon();return}
+    // utána csak a változott dokumentumokat dolgozzuk fel – nem építjük újra a teljes listát minden mentésnél
+    let reset=false;qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){delete S.users[id];return}const d={id,...c.doc.data()};if(d.lbReset&&(!S.users[id]||S.users[id].lbReset!==d.lbReset))reset=true;S.users[id]=d});
+    if(reset)lbApply();liveSoon()},err=>{console.warn(err);LB_ON=false;UNSUB=null;toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
+setInterval(lbWatch,3000);document.addEventListener('visibilitychange',()=>{lbWatch();if(!document.hidden&&LIVE_DUE)liveSoon()});
+// a kijelző frissítése összevonva, legfeljebb 1,5 mp-enként; játék közben és háttérben elhalasztva (visszatéréskor frissül)
+const tkSheetOpen=()=>typeof TK!=='undefined'&&TK.run&&!!TK.sheet;
+function liveSoon(){LIVE_DUE=true;if(!LIVE_T)LIVE_T=setTimeout(liveRun,1500)}
+function liveRun(){LIVE_T=0;if(!LIVE_DUE)return;if(document.hidden||(inGame()&&!tkSheetOpen())){LIVE_T=setTimeout(liveRun,3000);return}
+  LIVE_DUE=false;try{liveRefresh()}catch(e){console.warn(e)}}
 function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hidden){const t=ov.querySelector('[data-rg].on');if(t)rankFill(t.dataset.rg)}
   const lv=document.getElementById('arcLive');if(lv)lv.innerHTML=liveHTML();const ab=document.getElementById('authBox');if(ab&&UID)ab.innerHTML=authInner()}
 function liveHTML(){return RANKG.map(([g,t,f,,asc,fmt])=>{const rows=arr('users').filter(u=>u[f]>0).sort((a,b)=>asc?a[f]-b[f]:b[f]-a[f]).slice(0,3);
@@ -3134,7 +3157,7 @@ if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.fires
     try{DB.enablePersistence().catch(()=>{})}catch(e){}
     AUTH.onAuthStateChanged(u=>{AUTHREADY=true;AUTHTAB='login';
       if(u){UID=u.uid;MODE='fb';fbOwnLocal(u.uid);fbListen();chatListen()}
-      else{if(UNSUB){UNSUB();UNSUB=null}chatStop();UID=null;USERDOC=null;MODE='local';S.users={}}
+      else{fbStop();chatStop();UID=null;USERDOC=null;MODE='local';S.users={}}
       if(document.getElementById('harc')?.hidden!==false)arcRender();dlAfterAuth()})}
   catch(e){console.warn('Firebase init hiba',e);FB_ON=false;AUTHREADY=true}}
 
