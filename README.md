@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.37.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.37.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.37.1:** Tüzér Kassza: a fejléc 🏆 számlálója mostantól az **egész üteg közös kasszáját** mutatja (minden ütegtárs befizetése együtt, élőben), nem csak a sajátodat; a saját részed a számlálóra mutatva (címke) és az Ütegek fülön látszik. Az ütegtársak adatai a Kassza nyitva tartása alatt külön, csak az adott ütegre szűrt figyelővel frissülnek. A szabálymagyarázat ennek megfelelően frissült.
 
 **v4.37.0:** **Élő futóverseny a Kasszában + kevesebb mentés.** A Kassza tetején futó kis katonák (a legtöbbet befizetők) újra élőben versenyeznek: a Kassza külön, valós időben figyeli a verseny élmezőnyét (első 8), így a többiek katonái a mentéseik beérkezésekor azonnal előrelépnek – közben a teljes játékoslistát továbbra sem kell figyelni. **Mentési időköz:** aki a futóverseny élmezőnyében áll, 30 mp-enként ment (hogy a verseny élő legyen), mindenki más legfeljebb 2 percenként; a hónap utolsó 10 percében 15 mp-enként; bezáráskor és háttérbe tételkor azonnal. A befizetés, vásárlás, ajándék már nem ment külön-külön azonnal, hanem összevonva – egy aktív játékosnál ez a korábbi percenkénti 10–20 mentés helyett legfeljebb 0,5–2. **Javítva:** új játékos ütegválasztása az első befizetés előtt („Ranglista-mentés elutasítva”) – az első, 0 Ft-os mentésből hiányzott a szerveridő. **Teendő (egyszer):** a havi verseny nézethez összetett index kell: Firebase konzol → Firestore Database → Indexes → Composite → Create index: Collection ID `users`, mezők `tkWk` Ascending, `tkWg` Descending, Query scope: Collection → Create (pár perc alatt elkészül; a leírása a `firestore.indexes.json`-ban is megvan). Amíg nincs meg, a havi nézet a drágább teljes lista-figyelővel működik, a verseny akkor is élő.
 

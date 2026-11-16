@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.37.0',APP_DATE='2026.11.16.';
+const APP_VER='4.37.1',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1747,9 +1747,9 @@ function tkEarn(v,x,y,show){if(!v)return;TK.pocket+=v;TK.earned+=v;TK.pkD=1;if(s
 // ---- szabályok: mi látszik másoknak ----
 function tkRulesHTML(){return `<details class="tkrules"><summary>📜 Szabályok – mi számít, mit látnak mások?</summary><ul>
 <li><b>💰 Zseb:</b> a koppintás, az automata termelés és minden ajándék ide kerül. A zseb csak a tiéd: <b>mások nem látják, a ranglistán nem számít</b>.</li>
-<li><b>⇡ Ütegbe tolás:</b> a zseb teljes tartalma átkerül a 🏆 ütegkasszába. <b>Csak ez az összeg látszik másoknak</b> és a ranglistán – ugyanannyi, mint a 🏆 számláló a fejlécben. Visszavenni és elkölteni nem lehet.</li>
+<li><b>⇡ Ütegbe tolás:</b> a zseb teljes tartalma átkerül a 🏆 ütegkasszába. <b>Csak ez az összeg látszik másoknak</b> és a ranglistán. A fejléc 🏆 számlálója az <b>egész üteged közös kasszáját</b> mutatja (minden ütegtárs befizetése együtt); a saját részed az Ütegek fülön látszik. Visszavenni és elkölteni nem lehet.</li>
 <li><b>Vásárlás</b> (Fejlesztés, Pénzverde, Piac) mindig a zsebből megy; az elköltött pénz nem kerül a ranglistára. Előbb vásárolj, aztán tolj be – vagy fordítva, ahogy a stratégiád kívánja.</li>
-<li><b>Mentés:</b> befizetés után pár másodperc, mire mindenki telefonján frissül. Amíg a 🏆 mellett ⏳ látszik, a mentés úton van (a szerverre legfeljebb 2 percenként megy fel, a futóverseny élmezőnyében 30 mp-enként, bezáráskor azonnal); ✓ esetén a szerveren is pontosan ennyi áll.</li>
+<li><b>Mentés:</b> a befizetésed legfeljebb kb. 2 percenként megy fel a szerverre (a futóverseny élmezőnyében 30 mp-enként, bezáráskor azonnal), utána frissül mindenki telefonján. Amíg a 🏆 mellett ⏳ látszik, a saját befizetésed mentése úton van; ✓ esetén a szerveren is pontosan annyi áll.</li>
 <li><b>Havi verseny:</b> minden hónap 1-jén 0:00-kor a havi összeg nullázódik, az összesített megmarad. A nyertes üteg tagjai trófeát kapnak.</li>
 <li><b>Átigazolás:</b> a befizetéseid veled jönnek – az üteg összege mindig a tagjai befizetéseinek összege.</li>
 <li><b>Több telefon</b> ugyanazzal a fiókkal: a befizetések összeadódnak, nem vesznek el és nem duplázódnak.</li></ul></details>`}
@@ -1872,7 +1872,7 @@ function tkRace(c,W,L,now,dt){const R=TK.stc&&TK.stc.race;if(!R||!L.rh)return;co
   if(now-(TK.rgc||0)>5000){TK.rgc=now;for(const k in P)if(now-P[k].seen>4000)delete P[k]}}
 // ---- megnyitás ----
 function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');tkLoad();tkSilLoad();tkRate();tkResSub();
-  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Kassza</b></div><div class="tkhs"><div class="tkchip p" title="Zseb – még be nem fizetett pénzed"><i>💰</i><span>ZSEB</span><b id="tkPocket">0</b><em>Ft</em></div><div class="tkchip u" id="tkUChip" title="Az ütegkasszába befizetett összeged"><i>🏆</i><span id="tkUN">ÜTEG</span><b id="tkGiven">0</b><em>Ft</em></div><div class="tkmonth" id="tkMonth"></div></div><button class="hx" id="tkClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Kassza</b></div><div class="tkhs"><div class="tkchip p" title="Zseb – még be nem fizetett pénzed"><i>💰</i><span>ZSEB</span><b id="tkPocket">0</b><em>Ft</em></div><div class="tkchip u" id="tkUChip" title="Az üteged közös kasszája (minden ütegtárs befizetése együtt)"><i>🏆</i><span id="tkUN">ÜTEG</span><b id="tkGiven">0</b><em>Ft</em></div><div class="tkmonth" id="tkMonth"></div></div><button class="hx" id="tkClose" aria-label="Bezárás">✕</button></div>
    <div class="dwrap tkwrap"><canvas id="tkCv"></canvas>
     <div class="tkinfo" id="tkInfo"></div>
     <button type="button" class="tkmint" id="tkMint" hidden></button>
@@ -2108,7 +2108,7 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
   if(TK.flyUp){const F=TK.flyUp;F.t+=dt;const k=F.t/.8,im=tkNoteCv(TK.den),sw=TK_DEN[TK.den].t==='c'?36:60;c.globalAlpha=Math.max(0,1-k);const ty=gy-(pile.ph||0)*.6;c.globalAlpha=Math.max(0,Math.min(1,(1-k)*4));for(let i=0;i<8;i++){const kk=Math.max(0,Math.min(1,k*1.25-i*.03)),e=kk*kk*(3-2*kk);c.drawImage(im,W/2-sw/2+Math.sin(i*2+kk*5)*46*(1-e),py+(ty-py)*e-Math.sin(e*3.14)*60,sw*(1-e*.4),sw*(1-e*.4)*im.height/im.width)}c.globalAlpha=1;if(F.t>.8){TK.flyUp=null;TK.pileB=1;const m=LOWFX?10:26;for(let i=0;i<m;i++){const a=-Math.random()*3.1416,v=120+Math.random()*260;TK.sp.push({x:W/2+(Math.random()-.5)*60,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,d:.4+Math.random()*.4,h:i%4===0})}}}
   tkConfDraw(c,dt);
   // HUD + pénzverde-gomb: a DOM-ot ~6×/mp frissítjük, nem képkockánként
-  if(now-(TK.hudT||0)>160){TK.hudT=now;const set=(e,v)=>{if(e&&e.textContent!==v)e.textContent=v};set(E.pocket,tkShort(TK.pocket));set(E.given,tkShort(TK.given));{const un=({'1. üteg':'1. ÜTEG','2. üteg':'2. ÜTEG','3. üteg':'3. ÜTEG','Kiképző üteg':'KIK. Ü.','Törzsüteg':'TÖRZS','Felderítő':'FELD.','Szakjavító':'SZJ.'})[TK.uteg]||'ÜTEG';const pend=typeof MODE!=='undefined'&&MODE==='fb'&&UID&&TK.given>(Number(USERDOC&&USERDOC.tkFt)||0);set(E.un,un+(pend?' ⏳':''));const ch=E.chip;if(ch&&ch.dataset.u!==(TK.uteg||'')){ch.dataset.u=TK.uteg||'';const uc=tkUC(TK.uteg);ch.style.setProperty('--uc',uc[0]);ch.style.setProperty('--ut',uc[1])}}
+  if(now-(TK.hudT||0)>160){TK.hudT=now;const set=(e,v)=>{if(e&&e.textContent!==v)e.textContent=v};set(E.pocket,tkShort(TK.pocket));{/* a 🏆 számláló az üteg közös kasszáját mutatja (minden ütegtárs befizetése), a saját rész a címkében */const tot=TK.stc&&TK.stc.u===TK.uteg?Math.max(TK.stc.sum||0,TK.given):TK.given;set(E.given,tkShort(tot));const ti=`${TK.uteg||'Üteg'} kasszája összesen: ${tkFmt(tot)} Ft – ebből te: ${tkFmt(TK.given)} Ft`;if(E.chip&&E.chip.title!==ti)E.chip.title=ti}{const un=({'1. üteg':'1. ÜTEG','2. üteg':'2. ÜTEG','3. üteg':'3. ÜTEG','Kiképző üteg':'KIK. Ü.','Törzsüteg':'TÖRZS','Felderítő':'FELD.','Szakjavító':'SZJ.'})[TK.uteg]||'ÜTEG';const pend=typeof MODE!=='undefined'&&MODE==='fb'&&UID&&TK.given>(Number(USERDOC&&USERDOC.tkFt)||0);set(E.un,un+(pend?' ⏳':''));const ch=E.chip;if(ch&&ch.dataset.u!==(TK.uteg||'')){ch.dataset.u=TK.uteg||'';const uc=tkUC(TK.uteg);ch.style.setProperty('--uc',uc[0]);ch.style.setProperty('--ut',uc[1])}}
     set(E.info,`1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft${TK.hufLive?' (élő, EKB '+TK.hufD+')':TK.hufD==='becsült'?' (becsült)':' ('+TK.hufD+')'}${inc>0?' · ⚙️ '+tkFmtR(inc)+' Ft/mp':''}`);
     const nx=TK.den+1,mb=E.mint;if(mb){const can=nx<TK_DEN.length&&TK.pocket>=tkMintCost(nx)&&tkMintWait(nx)<=0;if(mb.hidden===can)mb.hidden=!can;const tx=can?`🏦 PÉNZVERDE: ${TK_DEN[nx].n}`:'';if(mb.textContent!==tx)mb.textContent=tx}
     if(!TK._mc||now-TK._mc>1000){TK._mc=now;set(E.month,'📅 Hónap vége: '+tkWeekLeft())}}
@@ -3110,8 +3110,14 @@ function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
 // ÉLŐ FUTÓVERSENY a Kasszában: csak a verseny élmezőnye (első 8) figyelt valós időben – a kis katonák így élőben futnak,
 // de a szerveren csak az élmezőny mentései sokszorozódnak, nem mindenkié. Havi nézethez összetett index kell (users: tkWk ↑, tkWg ↓);
 // ha még nincs meg, átmenetileg a teljes lista-figyelő pótolja (drágább, de a verseny akkor is élő marad).
-let RACE_UN=null,RACE_KEY='';
-function raceWatch(){try{const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run,cur=on?tkWeek():'',key=on?(TK.utw?'w|'+cur:'t'):'';
+let RACE_UN=null,RACE_KEY='',UT_UN=null,UT_KEY='';
+// az üteg közös kasszájához az ütegtársak (egy üteg, ~1/7 játékos) is élőben figyeltek, amíg a Kassza nyitva van
+function utegWatch(){try{const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run&&!!TK.uteg,key=on?TK.uteg:'';
+  if(key===UT_KEY)return;if(UT_UN){UT_UN();UT_UN=null}UT_KEY=key;if(!key)return;const uid=UID;
+  UT_UN=DB.collection('users').where('tkUteg','==',key).onSnapshot(qs=>{if(uid!==UID)return;
+    qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){/* átigazolt: az új ütegét a teljes lista hozza */if(S.users[id]&&S.users[id].tkUteg===key)S.users[id]=Object.assign({},S.users[id],{tkUteg:null});return}S.users[id]={id,...c.doc.data()}});TK.stc=null},
+    e=>{console.warn('ütegtársak',e&&e.code,e&&e.message)})}catch(e){}}
+function raceWatch(){try{utegWatch();const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run,cur=on?tkWeek():'',key=on?(TK.utw?'w|'+cur:'t'):'';
   if(key===RACE_KEY)return;if(RACE_UN){RACE_UN();RACE_UN=null}RACE_KEY=key;if(!key){if(typeof TK!=='undefined')TK.raceTop=null;return}
   const uid=UID,U=DB.collection('users'),q=TK.utw?U.where('tkWk','==',cur).orderBy('tkWg','desc').limit(8):U.orderBy('tkFt','desc').limit(8);
   RACE_UN=q.onSnapshot(qs=>{if(uid!==UID)return;const top=new Set();qs.forEach(d=>{top.add(d.id);if(d.id!==uid)S.users[d.id]={id:d.id,...d.data()}});TK.raceTop=top;TK.raceFb=false;TK.stc=null},
