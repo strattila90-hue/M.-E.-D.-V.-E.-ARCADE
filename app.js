@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.35.0',APP_DATE='2026.11.16.';
+const APP_VER='4.35.1',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -1713,7 +1713,7 @@ function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)r
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
 function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
-  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;if(typeof USERDOC==='undefined'||!USERDOC)return;TK.syncT=now;let g=Number.isFinite(TK.given)?TK.given:0;const u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
+  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;if(typeof USERDOC==='undefined'||!USERDOC)return;if(lbPending()){lbAck();return}TK.syncT=now;let g=Number.isFinite(TK.given)?TK.given:0;const u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
   const wk=TK.wk;let wg=Number.isFinite(TK.wg)?TK.wg:0;if(!wk)return;
   // a szerver szabálya: a befizetés csak a valós (szerver)idővel arányosan nőhet, a havi összeg pedig csak a valódi befizetéssel – ezt itt is betartjuk, a maradék a következő mentéssel megy
   const D=USERDOC,sFt=Number(D.tkFt)||0,cap=tkCap(D);if(g>cap)g=Math.floor(cap);if(g<sFt)g=sFt;const wb=D.tkWk===wk?(Number(D.tkWg)||0):0;if(wg>wb+(g-sFt)){wg=Math.max(wb,wb+(g-sFt));if(g>=TK.given)TK.wg=wg}
@@ -3057,20 +3057,27 @@ function fbOwnLocal(uid){let o=null;try{o=localStorage.getItem('medve-owner')}ca
    Csak admin indíthatja: minden felhasználó dokumentumából törli a rekordokat, a játékszámlálókat és a Kassza-állást,
    és mindenkinél beírja a nullázás idejét (lbReset). Minden telefon ebből tudja meg, hogy a helyben tárolt régi
    rekordjait el kell dobnia – így azok nem töltődnek vissza a szerverre, és a régi eltérések is eltűnnek. */
-const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','tkSt','lastPlay'];
+const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','tkSt','lastPlay','lbSeen'];
 async function lbResetAll(){if(USERDOC?.role!=='admin'){toast('Ehhez admin jog kell.');return}if(!navigator.onLine){toast('Ehhez internet kell.');return}
   const w=prompt('Minden játék ranglistája, a játékszámlálók és a Kassza-állás MINDENKINÉL törlődik. Nem vonható vissza.\nÍrd be: NULLÁZÁS');if((w||'').trim().toUpperCase()!=='NULLÁZÁS'){toast('Nullázás megszakítva.');return}
   const del=firebase.firestore.FieldValue.delete(),now=srvNow(),ids=Object.keys(S.users||{});let done=0;
   try{for(let i=0;i<ids.length;i+=400){const b=DB.batch();for(const id of ids.slice(i,i+400)){const u={lbReset:now};for(const f of LB_FIELDS)if(S.users[id]&&f in S.users[id])u[f]=del;b.update(DB.doc('users/'+id),u)}await b.commit();done+=Math.min(400,ids.length-i)}
     toast('✅ Ranglista nullázva ('+done+' játékos) – új szezon indult.');lbApply()}catch(e){console.warn('lbReset',e);toast('A nullázás nem sikerült: '+(e.code||e.message||e))}}
 // a nullázás átvétele ezen a telefonon: helyi rekordok és a Kassza-állás törlése (a választott üteg megmarad)
-function lbApply(){const R=Math.max(0,...arr('users').map(u=>Number(u.lbReset)||0));if(!R)return false;let mark=0;try{mark=Number(localStorage.getItem('medve-lbreset')||0)}catch(e){}if(mark>=R)return false;
+// A nullázást az azonosítója (időbélyege) alapján vesszük át: ha az eltér a telefonon utoljára átvettől, a helyi állás törlődik.
+// (Korábban "újabb-e" alapján ment – egy előreállított naptárú telefon jövőbeli jelzése miatt az új nullázás elmaradt.)
+function lbApply(){const R=Math.max(0,...arr('users').map(u=>Number(u.lbReset)||0));if(!R)return false;let mark=0;try{mark=Number(localStorage.getItem('medve-lbreset')||0)}catch(e){}if(mark===R){lbAck();return false}
+  try{if(typeof TK!=='undefined'&&TK.run&&typeof tkClose==='function'){TK.saveI&&clearInterval(TK.saveI);try{if(TK.spin)TK.spin=null;tkMusic(false)}catch(e){}TK.run=false;try{gClose(TK)}catch(e){}}}catch(e){}
   try{for(const k of [...LS_BEST,'medve-tkft-best'])localStorage.removeItem(k);let t={};try{t=JSON.parse(localStorage.getItem(TK_KEY)||'{}')||{}}catch(e){}localStorage.setItem(TK_KEY,JSON.stringify({ver:TK_VER,uteg:t.uteg||''}));localStorage.setItem('medve-lbreset',String(R))}catch(e){}
   try{for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}
-  toast('🔄 Új szezon! A ranglista nullázva – mindenki nulláról indul.');return true}
+  lbAck();toast('🔄 Új szezon! A ranglista nullázva – mindenki nulláról indul.');return true}
+// a szerver csak akkor fogad el új eredményt, ha ez a fiók nyugtázta a nullázást (a telefon helyi állása már törölve van)
+function lbAck(){try{const D=USERDOC;if(!D||!D.lbReset||D.lbSeen===D.lbReset||!DB||!UID)return;let mark=0;try{mark=Number(localStorage.getItem('medve-lbreset')||0)}catch(e){}if(mark!==Number(D.lbReset))return;
+  if(lbAck.t&&performance.now()-lbAck.t<10000)return;lbAck.t=performance.now();DB.doc('users/'+UID).update({lbSeen:D.lbReset}).catch(e=>console.warn('lbSeen',e&&e.code))}catch(e){}}
+const lbPending=()=>{const D=typeof USERDOC!=='undefined'?USERDOC:null;return !!(D&&D.lbReset&&D.lbSeen!==D.lbReset)};
 // kétirányú rekord-szinkron (minden szerverfrissítéskor): ami jobb a szerveren (másik telefonon érted el), azt ez a telefon is átveszi;
 // ami jobb ezen a telefonon (pl. net nélkül érted el), az feltöltődik – így minden készüléken ugyanaz a rekord látszik
-function fbSyncLocal(force){if(!USERDOC||!DB||!UID)return;const now=Date.now();if(!force&&now-(fbSyncLocal.t||0)<8000)return;fbSyncLocal.t=now;const up={};
+function fbSyncLocal(force){if(!USERDOC||!DB||!UID)return;if(lbPending()){lbApply();lbAck();return}const now=srvNow();if(!force&&now-(fbSyncLocal.t||0)<8000)return;fbSyncLocal.t=now;const up={};
   RANKG.forEach(([g,, f, ls, asc])=>{if(g==='kassza')return;/* a Kassza-összeget a tkSync kezeli a saját szabályai szerint */let v=0;try{v=Number(localStorage.getItem(ls)||0)}catch(e){}if(!Number.isFinite(v)||v<0)v=0;const cur=Number(USERDOC[f])||0;
     if(cur>0&&(!v||(asc?cur<v:cur>v))){try{localStorage.setItem(ls,String(cur))}catch(e){}}
     else if(v>0&&(!cur||(asc?v<cur:v>cur))){up[f]=v;up[f==='harcBest'?'harcAt':f==='droneBest'?'droneAt':f+'At']=now}});

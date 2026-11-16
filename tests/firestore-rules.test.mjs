@@ -61,6 +61,14 @@ const expect = (name, got, want) => { const ok = (got < 300) === want; if (!ok) 
   expect('admin seeds past-month standing', await write(doc, ADMIN, { tkWk: '2026-01', tkWg: 500 }), true);
   expect('reject archiving more than the server standing', await write(`tkRes/2026-01_${uid}`, U, { m: '2026-01', uid, name: 'Tesztelo', uteg: '1. üteg', g: 1e9, ts: now }, { create: true }), false);
   expect('accept archiving the real past-month standing', await write(`tkRes/2026-01_${uid}`, U, { m: '2026-01', uid, name: 'Tesztelo', uteg: '1. üteg', g: 500, ts: now }, { create: true }), true);
+  // admin nullázás: amíg a fiók nem nyugtázta (lbSeen), nem tölthet fel semmit – a telefon régi állása nem jöhet vissza
+  const R = Date.now();
+  expect('admin resets season (lbReset, tkFt deleted)', await write(doc, ADMIN, { lbReset: R }, { del: ['tkFt', 'tkSt', 'tkWk', 'tkWg'] }), true);
+  expect('reject re-upload before acknowledging reset', await write(doc, U, { harcBest: 900, harcAt: Date.now() }), false);
+  expect('reject wrong acknowledgement', await write(doc, U, { lbSeen: R - 1 }), false);
+  expect('accept acknowledgement (lbSeen = lbReset)', await write(doc, U, { lbSeen: R }), true);
+  expect('reject huge stale Kassza total after reset (1.29e18)', await write(doc, U, { tkFt: 1.29e18, tkWk: cur, tkWg: 1.29e18, tkAt: Date.now() }, { srvTs: ['tkSt'] }), false);
+  expect('accept fresh small Kassza total after reset', await write(doc, U, { tkFt: 500, tkWk: cur, tkWg: 500, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error('ERR', e); process.exit(1); });

@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.35.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.35.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.35.1:** **Javítva: az admin ranglista-nullázás nem törölt mindenkinél.** Ok: a telefonok a nullázást csak akkor vették át, ha „újabb” volt a náluk utoljára átvettnél – egy korábbi, előreállított naptárú telefonról indított nullázás jövőbeli jelzése miatt az új nullázást régebbinek látták, nem törölték a helyi állást, és visszatöltötték a régi összegeket. Most a nullázást az azonosítója alapján veszi át minden telefon (ha eltér, törlődik a helyi állás; a nyitott Kassza előbb bezárul, mentés nélkül). **Szerveroldali védelem:** nullázás után a fiók semmit nem tölthet fel, amíg a telefonja nem nyugtázta a nullázást (`lbSeen`), így régi helyi állás nem kerülhet vissza a ranglistára. **Teendő:** a `firestore.rules`-t újra közzé kell tenni, majd adminként **még egyszer nullázni** (Továbbiak → Fiók → Ranglista nullázása).
 
 **v4.35.0:** **Csalás elleni szerveridő, egységes pontozás, kímélőbb grafika.**
 - **A telefon naptára/órája nem számít többé.** Eddig a naptár átállításával újra lehetett nyitni a napi ajándékot, pörgetni a szerencsekereket, lerövidíteni az előléptetési várakozást, és a hónap is máskor nullázódott – ezért mutattak a telefonok különböző eredményt. Most a játék a **szerver pontos idejét** használja (a telefon óráját csak ezzel korrigálva), a napok és hónapok **mindenkinél magyar idő szerint** váltanak. Ha a telefon órája játék közben ugrik, a pontos időt újra lekéri. Net nélkül az időhöz kötött jutalmak (napi doboz, kerék, napi küldetés, előléptetés) zárva vannak, amíg a pontos idő meg nem jön; a sima játék net nélkül is megy.
