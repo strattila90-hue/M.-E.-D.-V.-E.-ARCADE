@@ -1665,3 +1665,23 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .tkbig:active:not(:disabled){transform:translateY(2px);box-shadow:1px 1px 0 #111}
 .tkwheel{display:flex;justify-content:center;margin:4px 0 10px}
 .tkwheel canvas{width:min(280px,78vw);height:auto;aspect-ratio:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+
+/* v4.33: Tüzér Kassza – hat fül (új: Bankók), Bankók gyűjtemény-oldal */
+.tknav{grid-template-columns:repeat(6,1fr);gap:3px;padding-left:4px;padding-right:4px}
+.tknav button{min-width:0;padding-left:0;padding-right:0}
+.tknav button b{font-size:9.5px;letter-spacing:0;white-space:nowrap}
+@media (max-width:360px){.tknav button b{font-size:8.5px}}
+.tknav [data-tk=den]{background:linear-gradient(#3f8f4a,#1c4a24)}
+.tkdsum{display:flex;align-items:center;gap:12px;background:#1d2416;border:2px solid #c9a227;border-radius:12px;padding:10px 12px;margin:2px 0 4px}
+.tkdsum>b{font:400 38px/1 var(--f-display,Anton,Impact,sans-serif);color:#ffd24a;white-space:nowrap}.tkdsum>b i{font-style:normal;font-size:18px;color:#c9d6a8}
+.tkdsum>div{flex:1;min-width:0}.tkdsum span{display:block;font-size:12.5px;font-weight:700}.tkdsum small{display:block;font-size:10.5px;opacity:.8;margin-top:4px}
+.tkdsum .tkbar{height:8px;margin-top:6px}.tkdsum .tkbar i{background:linear-gradient(90deg,#c9a227,#ffe08a)}
+.tkcat i{font-style:normal;float:right;color:#ffd24a}
+.tkdens>div{position:relative;border:1px solid #2f3b22;padding-top:18px}
+.tkdens>div.got{border-color:#4a5a2c}.tkdens>div.cur{border:2px solid #ffd24a;background:#2a2f14}.tkdens>div.next{border:2px dashed #6fc3e8}
+.tkdens .no{position:absolute;left:6px;top:3px;font:800 10px system-ui,sans-serif;opacity:.6}
+.tkdens .tg{position:absolute;right:5px;top:3px;font:800 9px system-ui,sans-serif;font-style:normal;padding:1px 5px;border-radius:5px;background:#ffd24a;color:#14140f}
+.tkdens .tg.ok{background:none;color:#9dff9d;padding:1px 0}.tkdens .tg.nx{background:#6fc3e8}
+.tkdens .next img{filter:brightness(.45) saturate(.5)}
+.tkdens .tkbar{margin:5px 4px 2px}.tkdens .tkbar i{background:#6fc3e8}
+.tkdens img{height:76px;width:auto;max-width:100%;object-fit:contain}
