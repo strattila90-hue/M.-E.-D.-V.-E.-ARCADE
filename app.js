@@ -17,9 +17,40 @@ function gpSet(on){GP=!!on&&GP_RUN()&&!$('#harc').hidden;let ov=$('#gpOv');
 document.addEventListener('visibilitychange',()=>{if(document.hidden)gpSet(true)});
 
 let LOWFX=false,LOWAUTO=1;try{const v=localStorage.getItem('medve-lowfx');LOWFX=v==='1';LOWAUTO=v!=='0'}catch(e){}
+/* ===== Megbízható idő: a SZERVER órája számít, nem a telefoné =====
+   A telefon naptárának/órájának vagy időzónájának átállítása nem ad ajándékot, nem rövidíti a várakozást és nem nullázza a hónapot.
+   A pontos időt a saját szerverünk válaszának Date fejlécéből vesszük; a telefon óráját csak ezzel a különbséggel korrigálva használjuk.
+   Ha a telefon órája közben ugrik (átállították, vagy aludt a készülék), a pontos időt újra lekérjük – addig az időhöz kötött
+   jutalmak zárva vannak. A napok és hónapok mindenkinél magyar idő (Europe/Budapest) szerint váltanak, így minden telefonon ugyanaz látszik. */
+const CLK={off:0,ok:false,busy:false,d:0,cb:[]};
+try{const o=JSON.parse(localStorage.getItem('medve-clk')||'null');if(o&&Number.isFinite(o.off))CLK.off=o.off}catch(e){}
+const srvNow=()=>Date.now()+CLK.off;
+function clkSync(){if(CLK.busy||navigator.onLine===false)return;CLK.busy=true;const t0=Date.now(),p0=performance.now();
+  fetch(location.origin+'/manifest.webmanifest?clk='+Math.random().toString(36).slice(2),{method:'HEAD',cache:'no-store'}).then(r=>{const rtt=performance.now()-p0,s=Date.parse(r.headers.get('date')||'');if(!Number.isFinite(s)||rtt>10000)throw 0;
+    // a Date fejléc egész másodpercre van levágva: +500 ms, a kérés közepére számolva
+    CLK.off=s+500-(t0+rtt/2);CLK.ok=true;CLK.d=Date.now()-performance.now();try{localStorage.setItem('medve-clk',JSON.stringify({off:CLK.off}))}catch(e){}
+    const cb=CLK.cb;CLK.cb=[];cb.forEach(f=>{try{f()}catch(e){}})}).catch(()=>{}).finally(()=>{CLK.busy=false})}
+// lefut, amint a pontos idő megvan (azonnal, ha már megvan)
+function clkReady(f){if(CLK.ok){f();return}CLK.cb.push(f);clkSync()}
+// óraugrás figyelése: a telefon órája és a monoton belső óra eltérése hirtelen változik → újra kell a szerver ideje
+function clkCheck(){if(!CLK.ok)return;const d=Date.now()-performance.now();if(Math.abs(d-CLK.d)>3000){CLK.ok=false;clkSync()}}
+setInterval(()=>{clkCheck();if(!CLK.ok)clkSync()},2000);setInterval(()=>{if(CLK.ok){CLK.ok=false;clkSync()}},10*60e3);
+addEventListener('online',clkSync);document.addEventListener('visibilitychange',()=>{if(!document.hidden){clkCheck();if(!CLK.ok)clkSync()}});
+clkSync();
+const BUDF=(()=>{try{return new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Budapest',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}catch(e){return null}})();
+// magyar idő szerinti {y,m,d,h,mi} a megadott (szerver)időpontban
+function budParts(t){t=t==null?srvNow():t;if(BUDF){const p={};for(const x of BUDF.formatToParts(new Date(t)))p[x.type]=+x.value;return {y:p.year,m:p.month,d:p.day,h:p.hour%24,mi:p.minute}}
+  const d=new Date(t+36e5);return {y:d.getUTCFullYear(),m:d.getUTCMonth()+1,d:d.getUTCDate(),h:d.getUTCHours(),mi:d.getUTCMinutes()}}
+const bp2=n=>String(n).padStart(2,'0');
+const budDay=t=>{const p=budParts(t);return p.y+'-'+bp2(p.m)+'-'+bp2(p.d)};
+const budMonth=t=>{const p=budParts(t);return p.y+'-'+bp2(p.m)};
+// napok sorszáma (magyar naptári nap szerint)
+const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/864e5)};
+// a következő hónap 1-je 0:00 (magyar idő) szerveridőben
+function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.34.1',APP_DATE='2026.11.16.';
+const APP_VER='4.35.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -262,7 +293,7 @@ function harcDie(){HARC.dead=true;HARC.run=false;rockStop(1.5);HARC.deathT=0;HAR
   {const x=HARC.bx,y=HARC.H-26-BH*.5;for(let i=0;i<150;i++){const a=-Math.PI/2+(Math.random()-.5)*2.9,v=120+Math.random()*520;HARC.blood.push({x:x+(Math.random()-.5)*40,y:y+(Math.random()-.5)*40,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:1.5+Math.random()*4,t:3})}for(let i=0;i<14;i++){const a=-Math.PI/2+(Math.random()-.5)*2.2,v=200+Math.random()*350;HARC.blood.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:3+Math.random()*5,t:3,ch:1})}
    for(let i=0;i<30;i++)HARC.parts.push({x,y,vx:(Math.random()-.5)*420,vy:-Math.random()*380,t:.6});HARC.drips=Array.from({length:9},(_,i)=>({x:(i+.3+Math.random()*.5)*HARC.W/9,len:0,sp:40+Math.random()*120,w:4+Math.random()*8,d:.15+Math.random()*1.2}));HARC.flash=.6;HSC.boo=4}
   const sc=HARC.caught;let best=harcBest(),rec=false;if(sc>best){best=sc;rec=true;try{localStorage.setItem('medve-harc-best',String(sc))}catch(e){}}
-  if(MODE==='fb'&&UID&&sc>(USERDOC?.harcBest||0)){try{DB.doc('users/'+UID).update({harcBest:sc,harcAt:Date.now()}).catch(()=>{})}catch(e){}}
+  if(MODE==='fb'&&UID&&sc>(USERDOC?.harcBest||0)){try{DB.doc('users/'+UID).update({harcBest:sc,harcAt:srvNow()}).catch(()=>{})}catch(e){}}
   $('#hBest')&&($('#hBest').textContent=best);
   setTimeout(()=>{const o=$('#hOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💀 A medve elesett</h3><p>Elkapott gránát: <b class="hred">${sc} db</b><br>Elért szint: <b>${HARC.lvl+1}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p><button class="btn pri" id="hAgain">↻ Újra</button> <button class="btn line" data-rank="harc">🏆 Rekordjaim</button> <button class="btn line" id="hQuit">Kilépés</button>${harcBoard()}`;$('#hAgain').onclick=()=>harcStart();$('#hQuit').onclick=harcClose},3400)}
 const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' db'],['drone','DroneRun','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkhBest','medve-rkh-best',false,v=>rkM(v)],['sere','SERE','sereBest','medve-sere-best',false,v=>seFmt(v)],['kassza','Kassza','tkFt','medve-tkft-best',false,v=>tkFmt(v)+' Ft']];
@@ -270,7 +301,7 @@ const NF={harc:'harcN',drone:'droneN',terep:'gtN',konvoj:'gkN',rakodo:'rkN',sere
 const uname=u=>(u.rank?u.rank+' ':'')+(u.name||'?');
 const uplays=u=>Object.values(NF).reduce((t,k)=>t+(u[k]||0),0);
 // minden indítás számít: a játékos felkerül a listára akkor is, ha még nincs érvényes eredménye
-function playCount(g){if(MODE!=='fb'||!UID||!DB||!NF[g])return;try{DB.doc('users/'+UID).update({[NF[g]]:firebase.firestore.FieldValue.increment(1),lastPlay:Date.now()}).catch(()=>{})}catch(e){}}
+function playCount(g){if(MODE!=='fb'||!UID||!DB||!NF[g])return;try{DB.doc('users/'+UID).update({[NF[g]]:firebase.firestore.FieldValue.increment(1),lastPlay:srvNow()}).catch(()=>{})}catch(e){}}
 function rankRows(g){const G=RANKG.find(x=>x[0]===g),f=G[2],ls=G[3],asc=G[4],nf=NF[g];
   let rows=arr('users').filter(u=>u.role!=='pending'&&(u[f]>0||u[nf]>0)).map(u=>({id:u.id,n:uname(u),v:u[f]>0?u[f]:0,c:u[nf]||0}));
   // bejelentkezve a szerver az egyetlen forrás (különben minden telefon mást mutatna); csak helyi módban jelenik meg a telefonon tárolt rekord
@@ -312,11 +343,11 @@ const MEDAL_SVG=`<svg viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" a
 <path d="M0 -17L4.9 -6.7L16 -5.3L7.8 2.3L9.9 13.3L0 8L-9.9 13.3L-7.8 2.3L-16 -5.3L-4.9 -6.7Z" fill="url(#mg)" stroke="#6a4a0c" stroke-width="1"/>
 <text y="23" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="8" letter-spacing="1" fill="#f3d77a">MEDVE</text></g></svg>`;
 const DAILY_G=['harc','drone','terep','konvoj','rakodo','sere','kassza'],DAILY_N={harc:'M.E.D.V.E. H.A.R.C.',drone:'DroneRun',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó',sere:'SERE Kitörés',kassza:'Tüzér Kassza'};
-function dailyKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function dailyGame(){const d=new Date(),n=Math.floor(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()/864e5);return DAILY_G[[3,0,5,1,6,2,4][n%7]]}
+function dailyKey(){return budDay()}
+function dailyGame(){const n=budDayN()-1;return DAILY_G[[3,0,5,1,6,2,4][n%7]]}
 function dailyState(){let o={};try{o=JSON.parse(localStorage.getItem('medve-daily')||'{}')}catch(e){}return o}
 function dailyHTML(){const g=dailyGame(),o=dailyState(),done=o.d===dailyKey();return `<button type="button" class="dailyb${done?' done':''}" data-game="${g}"><span>${ic('cal')}NAPI KIHÍVÁS</span><b>${DAILY_N[g]}</b><i>${done?'✅ teljesítve':'játssz ma egy kört!'} · 🔥 ${o.streak||0} nap</i></button>`}
-function dailyMark(k){if(k!==dailyGame())return;const o=dailyState(),d=dailyKey();if(o.d===d)return;const y=new Date(Date.now()-864e5),yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');o.streak=o.d===yd?(o.streak||0)+1:1;o.d=d;try{localStorage.setItem('medve-daily',JSON.stringify(o))}catch(e){}setTimeout(()=>toast(`📅 Napi kihívás teljesítve! 🔥 ${o.streak} napos sorozat`),1200);document.querySelectorAll('.dailyb').forEach(b=>{b.classList.add('done');const i=b.querySelector('i');if(i)i.textContent=`✅ teljesítve · 🔥 ${o.streak} nap`})}
+function dailyMark(k){if(!CLK.ok||k!==dailyGame())return;const o=dailyState(),d=dailyKey();if(o.d===d)return;const yd=budDay(srvNow()-864e5);o.streak=o.d===yd?(o.streak||0)+1:1;o.d=d;try{localStorage.setItem('medve-daily',JSON.stringify(o))}catch(e){}setTimeout(()=>toast(`📅 Napi kihívás teljesítve! 🔥 ${o.streak} napos sorozat`),1200);document.querySelectorAll('.dailyb').forEach(b=>{b.classList.add('done');const i=b.querySelector('i');if(i)i.textContent=`✅ teljesítve · 🔥 ${o.streak} nap`})}
 // saját, képregényes ikonok (kitöltés: currentColor, vastag fekete kontúr) – emoji helyett
 const IC_P={play:'<path d="M7 4v16l13-8z"/>',medal:'<path d="M7.5 2h9l-2.5 6.5h-4z"/><circle cx="12" cy="15" r="6.6"/><path d="M12 11l1.3 2.6 2.8.4-2 2 .5 2.8L12 17.5l-2.6 1.3.5-2.8-2-2 2.8-.4z" fill="#fff"/>',
  user:'<circle cx="12" cy="7.8" r="4.6"/><path d="M3.3 21c.8-4.8 4.3-7.3 8.7-7.3s7.9 2.5 8.7 7.3z"/>',chat:'<path d="M3 5.5A2.5 2.5 0 015.5 3h13A2.5 2.5 0 0121 5.5v8a2.5 2.5 0 01-2.5 2.5H10.5L5 20.5V16A2 2 0 013 14z"/>',
@@ -397,12 +428,12 @@ function gidGlass(c,dark){
   pane([[15.4,-44.6],[24.9,-32.2],[22.6,-31.6],[13.2,-43.9]]);
   if(!dark){c.strokeStyle='rgba(255,255,255,.35)';c.lineWidth=.7;[[-44,-38.5,-40,-42.3],[-28,-38.5,-23,-42.3],[-7,-38.5,-2,-42.3],[16.6,-41.2,22,-34]].forEach(([a,b,cc,d])=>{c.beginPath();c.moveTo(a,b);c.lineTo(cc,d);c.stroke()})}}
 function gidFullSet(){const go=()=>document.querySelectorAll('img.gidfull').forEach(i=>{i.src=GID_FULL});if(GID_FULL)return go();const im=gidImg();const mk=()=>{try{const S=3,x0=-GOX*GK-2,x1=(im.naturalWidth-GOX)*GK+2,y0=-GOY*GK-2,y1=GWR+3;const cv=document.createElement('canvas');cv.width=Math.round((x1-x0)*S);cv.height=Math.round((y1-y0)*S);const c=cv.getContext('2d');c.scale(S,S);c.translate(-x0,-y0);gidDraw(c,0,0,0,null,0);GID_FULL=cv.toDataURL('image/png');go()}catch(e){}};if(im.complete&&im.naturalWidth)mk();else im.addEventListener('load',mk,{once:true})}
-function gCanvas(id){const cv=$(id);const dpr=LOWFX?1:Math.min(2,devicePixelRatio||1);const r=cv.getBoundingClientRect();cv.width=r.width*dpr;cv.height=r.height*dpr;return {cv,W:r.width,H:r.height,dpr}}
+function gCanvas(id){const cv=$(id);const dpr=LOWFX?1:Math.min(1.5,devicePixelRatio||1);const r=cv.getBoundingClientRect();cv.width=r.width*dpr;cv.height=r.height*dpr;return {cv,W:r.width,H:r.height,dpr}}
 function gHold(id,obj,k){const b=$(id);if(!b)return;const on=e=>{e.preventDefault();b.setPointerCapture?.(e.pointerId);obj[k]=1;b.classList.add('on')},off=()=>{obj[k]=0;b.classList.remove('on')};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off)}
 function gBoard(field,asc,fmt){const us=arr('users').filter(u=>u[field]>0).sort((a,b)=>asc?a[field]-b[field]:b[field]-a[field]).slice(0,5);if(!us.length)return '';
   return `<div class="hboard"><div class="lbl">Ranglista</div>${us.map((u,i)=>`<div><span>${['🥇','🥈','🥉','4.','5.'][i]} ${esc((u.rank?u.rank+' ':'')+u.name)}</span><b>${fmt?fmt(u[field]):n0(u[field])}</b></div>`).join('')}</div>`}
 function gSave(field,val,lsKey,lower){let best=0;try{best=Number(localStorage.getItem(lsKey)||0)}catch(e){}const rec=!best||(lower?val<best:val>best);if(rec){best=val;try{localStorage.setItem(lsKey,String(val))}catch(e){}}
-  const cur=USERDOC?.[field]||0;if(MODE==='fb'&&UID&&(!cur||(lower?val<cur:val>cur))){try{DB.doc('users/'+UID).update({[field]:val,[field+'At']:Date.now()}).catch(()=>{})}catch(e){}}return {best,rec}}
+  const cur=USERDOC?.[field]||0;if(MODE==='fb'&&UID&&(!cur||(lower?val<cur:val>cur))){try{DB.doc('users/'+UID).update({[field]:val,[field+'At']:srvNow()}).catch(()=>{})}catch(e){}}return {best,rec}}
 function gClose(st){gpSet(false);st.run=false;rockStop(.3);cancelAnimationFrame(st.raf);gEngStop(st);if(st===GT){gtSirenSnd(false);gtWinchSnd(false)}if(st===GV)gvHeliSndStop();if(st.key){removeEventListener('keydown',st.key);removeEventListener('keyup',st.key)}const el=$('#harc');el.hidden=true;el.innerHTML='';document.body.classList.remove('harcon')}
 function gEngStart(st){if(!SOUND||!ac()||st.snd)return;const a=AC,dst=typeof hOut==='function'?hOut():MASTER;const gn=v=>{const g=a.createGain();g.gain.value=v;return g};const bq=(t,f,q,gv)=>{const b=a.createBiquadFilter();b.type=t;b.frequency.value=f;if(q!=null)b.Q.value=q;if(gv!=null)b.gain.value=gv;return b};
   const out=gn(0),shp=a.createWaveShaper(),cu=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/512-1;cu[i]=Math.tanh(x*3.4)}shp.curve=cu;const drive=gn(.65);
@@ -1229,7 +1260,7 @@ function drDie(why){if(DR.dead)return;DR.dead=true;DR.run=false;DR.sa=[];const T
   for(let i=0;i<26;i++){const p=drToWorld((Math.random()-.5)*150,-40);const a=-Math.PI/2+(Math.random()-.5)*2.4,v=260+Math.random()*480;DR.fx.push({x:p.x,y:p.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:3,t0:3,deb:1,rot:0,vr:(Math.random()-.5)*22,w:4+Math.random()*12,h:3+Math.random()*7})}
   sndMega();drSoundStop();drHydro(false);try{navigator.vibrate&&navigator.vibrate([300,80,200,60,500,100,300])}catch(e){}
   const dist=Math.floor(T.dist/20),score=dist+DR.kills*100+(DR.fmN||0)*500;let best=drBest(),rec=false;if(score>best){best=score;rec=true;try{localStorage.setItem('medve-drone-best',String(score))}catch(e){}}
-  if(MODE==='fb'&&UID&&score>(USERDOC?.droneBest||0)){try{DB.doc('users/'+UID).update({droneBest:score,droneAt:Date.now()}).catch(()=>{})}catch(e){}}
+  if(MODE==='fb'&&UID&&score>(USERDOC?.droneBest||0)){try{DB.doc('users/'+UID).update({droneBest:score,droneAt:srvNow()}).catch(()=>{})}catch(e){}}
   $('#dBest')&&($('#dBest').textContent=best);
   setTimeout(()=>{const o=$('#dOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💥 ${esc(why)}</h3><p>Megtett táv: <b>${dist} m</b><br>Lelőtt drón: <b>${DR.kills}</b> × 100<br>${DR.fmN?`MRSI tűzfeladat: <b>${DR.fmN}</b> × 500<br>`:''}Pontszám: <b class="hred">${score}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p><button class="btn pri" id="dAgain">↻ Újra</button> <button class="btn line" data-rank="drone">🏆 Rekordjaim</button> <button class="btn line" id="dQuit">Kilépés</button>${drBoard()}`;$('#dAgain').onclick=droneStart;$('#dQuit').onclick=droneClose;musStop(2.5)},3900)}
 function drBattleBg(c,W,H,sc,dt,now){const t=now/1000,hz=H*.6,off=DR.camX*.5*sc,sp=150;
@@ -1405,7 +1436,7 @@ const TK_DEN=[
  {n:'Szent Borbála-jegy',v:1e22,c:'#f0c040',d:'#5a3a00',l:'#fffbe0',e:'tower',t:'g',ab:'SB',wd:40,sn:'SZENT BORBALA',m:'A tüzérek védőszentje – Borbála tornya, aranyfólia'}];
 const tkMintCost=i=>TK_DEN[i].v*250*(i>=10?Math.pow(2,i-9):1);
 // előléptetési várakozás: a rendfokozat-jegyekhez az előző pénznem legyártása óta eltelt szolgálati idő kell
-const tkMintWait=i=>{const D=TK_DEN[i];if(!D||!D.wd)return 0;return Math.max(0,(TK.denT||0)+D.wd*864e5-Date.now())};// a következő pénznem legyártása (pénzverde)
+const tkMintWait=i=>{const D=TK_DEN[i];if(!D||!D.wd)return 0;return Math.max(0,(TK.denT||0)+D.wd*864e5-srvNow())};// a következő pénznem legyártása (pénzverde)
 // piac – nyilvános piaci, gyártói és sajtóadatokon alapuló BECSÜLT árak (€ = Ft)
 const TK_CAT=[['ell','🍲 Ellátás'],['fel','🦺 Felszerelés'],['dron','🛸 Drónok'],['lsz','💥 Lőszer'],['jar','🚛 Járművek'],['baz','🏗️ NATO-bázis']];
 // valódi mértékegység a tételekhez (a bolt és a hangár ezt mutatja)
@@ -1637,48 +1668,60 @@ const tkFt=v=>{const r=TK.huf||0;if(!r)return '';const f=v*r;return f<1e9?Math.r
 function tkRate(){try{const o=JSON.parse(localStorage.getItem('medve-eurhuf')||'null');if(o){TK.huf=o.r;TK.hufD=o.d;TK.hufLive=false}}catch(e){}if(!TK.huf){TK.huf=395;TK.hufD='becsült';TK.hufLive=false}
   if(!navigator.onLine)return;fetch('https://api.frankfurter.app/latest?from=EUR&to=HUF',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.rates&&j.rates.HUF){TK.huf=j.rates.HUF;TK.hufD=j.date;TK.hufLive=true;try{localStorage.setItem('medve-eurhuf',JSON.stringify({r:TK.huf,d:TK.hufD}))}catch(e){}}}).catch(()=>{})}
 // ---- heti verseny + napi küldetések ----
-function tkWeek(d){d=d?new Date(d):new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function tkWeek(d){return budMonth(d||undefined)}
 // havi lezárás: az előző hónap összegét a közös tkRes gyűjteménybe írjuk, mielőtt helyben nullázódik
-function tkArchive(m,g,u){const name=(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Ismeretlen';const data={m,uid:UID,name:String(name).slice(0,20),uteg:u||TK.uteg,g:Math.max(0,Math.floor(Number(g)||0)),ts:Date.now()};
+function tkArchive(m,g,u){const D=typeof USERDOC!=='undefined'?USERDOC:null,name=(D&&D.name)||'Ismeretlen';
+  // a szerver csak a ranglistán (szerveren) álló havi összeget fogadja el
+  if(D&&D.tkWk!==m)return;if(D)g=Math.min(Number(g)||0,Number(D.tkWg)||0);const data={m,uid:UID,name:String(name).slice(0,20),uteg:u||TK.uteg,g:Math.max(0,Math.floor(Number(g)||0)),ts:srvNow()};if(!(data.g>0))return;
   if(!UID||!DB||!navigator.onLine){TK.pendArch=data;return}
   DB.collection('tkRes').doc(m+'_'+UID).set(data).catch(()=>{})}
-function tkRoll(w){if(TK.wk===w)return;if(TK.wk&&(TK.wg||0)>0&&TK.uteg)tkArchive(TK.wk,TK.wg,TK.uteg);TK.wk=w;TK.wg=0;TK.wgSynced=0}
+function tkRoll(w){if(TK.wk===w||!CLK.ok)return;if(!TK.wk){TK.wk=w;return}if(w<TK.wk)return;if((TK.wg||0)>0&&TK.uteg)tkArchive(TK.wk,TK.wg,TK.uteg);TK.wk=w;TK.wg=0;TK.wgSynced=0}
 function tkResSub(){if(!UID||!DB||TK.resUnsub)return;TK.resUnsub=DB.collection('tkRes').onSnapshot(qs=>{TK.res=[];qs.forEach(d=>TK.res.push(d.data()));if(TK.sheet==='uteg')tkSheetRender()},e=>console.warn('tkRes',e&&e.message))}
-function tkWeekLeft(){const n=new Date(),end=new Date(n.getFullYear(),n.getMonth()+1,1),h=Math.ceil((end-n)/36e5);return h>48?Math.ceil(h/24)+' nap':h+' óra'}
-const tkToday=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function tkWeekLeft(){const h=Math.max(0,Math.ceil((budMonthEnd()-srvNow())/36e5));return h>48?Math.ceil(h/24)+' nap':h+' óra'}
+const tkToday=()=>budDay();
 const TK_DMT=[
  {k:'tap',n:v=>`Koppints ${v}-szor`,g:()=>[300,500,800][Math.floor(Math.random()*3)],m:()=>TK.taps},
  {k:'push',n:v=>`Tolj be az ütegbe ${tkFmt(v)} Ft-ot`,g:()=>Math.max(1000,TK_DEN[TK.den].v*600),m:()=>TK.given},
  {k:'buy',n:v=>`Vásárolj ${v} eszközt a Piacon`,g:()=>2+Math.floor(Math.random()*3),m:()=>Object.values(TK.own||{}).reduce((a,b)=>a+b,0)},
  {k:'crit',n:v=>`Érj el ${v} telitalálatot`,g:()=>5,m:()=>TK.crits||0},
  {k:'combo',n:v=>`Vigyél fel ${v}-es kombót`,g:()=>10,m:()=>TK.bestCombo||0,abs:1}];
-function tkDM(){const d=tkToday();if(TK.dm&&TK.dm.d===d)return TK.dm;const pool=TK_DMT.slice().sort(()=>Math.random()-.5).slice(0,3);
+function tkDM(){if(TK.dm&&!CLK.ok)return TK.dm;const d=tkToday();if(TK.dm&&TK.dm.d===d)return TK.dm;const pool=TK_DMT.slice().sort(()=>Math.random()-.5).slice(0,3);
   TK.dm={d,list:pool.map(t=>({k:t.k,goal:t.g(),base:t.abs?0:t.m(),done:0}))};TK.bestCombo=0;tkSave();return TK.dm}
 function tkDmProg(q){const t=TK_DMT.find(x=>x.k===q.k);return Math.max(0,t.m()-q.base)}
 const tkDmRw=()=>Math.max(500,TK_DEN[TK.den].v*300);
-function tkDmClaim(i){const D=tkDM(),q=D.list[i];if(!q||q.done||tkDmProg(q)<q.goal)return;q.done=1;const rw=tkDmRw();TK.pocket+=rw;TK.earned+=rw;tkKaching();toast(`📅 Napi küldetés teljesítve: +${tkFmt(rw)} Ft`);
-  if(D.list.every(x=>x.done)&&TK.lastDm!==D.d){const y=new Date(Date.now()-864e5);const yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');TK.streak=TK.lastDm===yd?(TK.streak||0)+1:1;TK.lastDm=D.d;const b=rw*2*Math.min(7,TK.streak);TK.pocket+=b;toast(`🔥 Mind a 3 kész! ${TK.streak}. napos sorozat: +${tkFmt(b)} Ft bónusz`)}tkSave();tkSheetRender()}
+function tkDmClaim(i){if(!CLK.ok){clkSync();toast('🌐 Pontos idő kell – kapcsolódj a netre.');return}const D=tkDM(),q=D.list[i];if(!q||q.done||tkDmProg(q)<q.goal||D.d!==tkToday())return;q.done=1;const rw=tkDmRw();TK.pocket+=rw;TK.earned+=rw;tkKaching();toast(`📅 Napi küldetés teljesítve: +${tkFmt(rw)} Ft`);
+  if(D.list.every(x=>x.done)&&TK.lastDm!==D.d){const yd=tkYday();TK.streak=TK.lastDm===yd?(TK.streak||0)+1:1;TK.lastDm=D.d;const b=rw*2*Math.min(7,TK.streak);TK.pocket+=b;toast(`🔥 Mind a 3 kész! ${TK.streak}. napos sorozat: +${tkFmt(b)} Ft bónusz`)}tkSave();tkSheetRender()}
 function tkDmHTML(){const D=tkDM();return `<h4>📅 Napi küldetések</h4><p class="hint">Éjfélkor újak jönnek. Mind a 3 teljesítése sorozat-bónuszt ad (most: ${TK.streak||0} nap).</p>`+D.list.map((q,i)=>{const t=TK_DMT.find(x=>x.k===q.k),p=Math.min(q.goal,tkDmProg(q)),ok=p>=q.goal;return `<div class="tkrow"><div><b>${q.done?'✅':'🎯'} ${t.n(q.goal)}</b><small>${tkFmt(p)} / ${tkFmt(q.goal)} · jutalom: ${tkFmt(tkDmRw())} Ft</small><span class="tkbar"><i data-st="width:${Math.min(100,p/q.goal*100)}%"></i></span></div><button type="button" data-dmc="${i}" ${q.done||!ok?'disabled':''}>${q.done?'KÉSZ':'Átvesz'}</button></div>`}).join('')}
 // ---- állapot ----
 function tkLoad(){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}catch(e){}let mig=false;if(s&&s.uteg!==undefined&&s.ver!==TK_VER){mig=true;s={uteg:s.uteg}}
-  Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:Date.now(),synced:0,wgSynced:null,dm:null,wk:'',wg:0,streak:0,lastDm:'',gift:{d:'',n:0},spinT:0,spins:0,gifts:0,denT:0},s);TK.gift=Object.assign({d:'',n:0},TK.gift||{});TK.flight=null;TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
+  Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:0,synced:0,wgSynced:null,dm:null,wk:'',wg:0,streak:0,lastDm:'',gift:{d:'',n:0},spinT:0,spins:0,gifts:0,denT:0},s);TK.gift=Object.assign({d:'',n:0},TK.gift||{});TK.flight=null;TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
   // A mentett állapot hibás számot is tartalmazhat (null, NaN, szöveg). Ezt nem küldjük a szervernek.
   for(const k of ['pocket','given','earned','taps','den','tickets','wg','streak','spinT','spins','gifts','denT']){const x=Number(TK[k]);TK[k]=Number.isFinite(x)?x:0}
   tkAdopt();
   if(mig)setTimeout(()=>toast('🔄 Új szezon: mostantól forintban megy – a ranglista és a mentés nulláról indul.'),900)}
-function tkSave(){try{TK.lastT=Date.now();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','wgSynced','dm','wk','wg','streak','lastDm','crits','bestCombo','gift','spinT','spins','gifts','denT'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
+// a pontos idő megérkezésekor: a régi (telefon órájával mentett, jövőbeli) időpontok helyreállítása + távolléti termelés
+function tkClockFix(){if(!TK.run)return;const now=srvNow(),td=tkToday();if((TK.spinT||0)>now)TK.spinT=now;if((TK.denT||0)>now)TK.denT=now;if(TK.gift&&TK.gift.d>td)TK.gift.d=td;if(TK.dm&&TK.dm.d>td)TK.dm=null;if(TK.lastDm>td)TK.lastDm=td;if(TK.wk>tkWeek())TK.wk=tkWeek();
+  const lt=TK.lastT||0;TK.lastT=now;if(lt>0&&lt<now){const away=Math.min(4*3600,(now-lt)/1000),inc=tkGearInc()+tkAutoInc();if(away>60&&inc>0){const v=inc*away*.25;TK.pocket+=v;TK.earned+=v;setTimeout(()=>toast(`💤 Távollétedben a hadtáp termelt: ${tkFmt(v)} Ft`),600)}}
+  tkAdopt();tkSave();if(TK.sheet)tkSheetRender()}
+function tkSave(){try{if(CLK.ok)TK.lastT=srvNow();if(TK.given>0)localStorage.setItem('medve-tkft-best',String(Math.floor(TK.given)));const o={};for(const k of ['ver','pocket','given','earned','taps','den','tickets','upg','own','uteg','lastT','synced','wgSynced','dm','wk','wg','streak','lastDm','crits','bestCombo','gift','spinT','spins','gifts','denT'])o[k]=TK[k];localStorage.setItem(TK_KEY,JSON.stringify(o))}catch(e){}}
 // szerveren lévő (másik eszközről befizetett) értékek átvétele – különben a szabály (csak nőhet) elutasítja a mentést
 function tkAdopt(d){try{d=d||(typeof USERDOC!=='undefined'?USERDOC:null);if(!d)return;if(!TK.uteg&&d.tkUteg)TK.uteg=d.tkUteg;
   if(TK.wgSynced==null)TK.wgSynced=TK.wg||0;if(TK.synced==null)TK.synced=TK.given||0;const w=tkWeek();tkRoll(w);
   // amíg a saját mentésünk úton van, a helyi gyorsítótár már az új értéket mutatja – ezt nem szabad még egyszer hozzáadni
-  if(TK.flight&&Date.now()-TK.flight.t<15000)return;TK.flight=null;
+  if(TK.flight&&performance.now()-TK.flight.p<15000)return;TK.flight=null;
   if(typeof d.tkFt==='number'&&d.tkFt>(TK.synced||0)){const un=Math.max(0,TK.given-(TK.synced||0));TK.given=Math.max(TK.given,d.tkFt+un);TK.synced=d.tkFt}
   if(d.tkWk===w&&typeof d.tkWg==='number'&&d.tkWg>(TK.wgSynced||0)){const un=Math.max(0,(TK.wg||0)-(TK.wgSynced||0));TK.wg=Math.max(TK.wg||0,d.tkWg+un);TK.wgSynced=d.tkWg}
   if(d.tkOwnF&&typeof d.tkOwnF==='object')for(const [k,v] of Object.entries(d.tkOwnF))if(typeof v==='number'&&v>(TK.own[k]||0)&&TK_GEAR.some(g=>g.id===k))TK.own[k]=v}catch(e){}}
-function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;const now=Date.now();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
-  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;TK.syncT=now;const g=Number.isFinite(TK.given)?TK.given:0,u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
-  const wk=TK.wk,wg=Number.isFinite(TK.wg)?TK.wg:0;TK.flight={g,wg,t:now};DB.doc('users/'+UID).update({tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now}).then(()=>{TK.flight=null;TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{TK.flight=null;console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
-    if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{const sd=x.exists?x.data():{};if(x.exists){tkAdopt(sd);TK.syncT=0}if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');const srv=Object.fromEntries(['tkFt','tkWk','tkWg','tkUteg','tkAt','tkOwnF'].map(k=>[k,sd[k]===undefined?'(nincs)':sd[k]]));try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u+' | kliens '+JSON.stringify({tkFt:g,tkWk:wk,tkWg:wg,tkOwnF:own,tkAt:now})+' | szerver '+JSON.stringify(srv)),'kassza')}catch(_){}}}).catch(()=>{})}})}catch(e){}}
+function tkSync(force){try{if(TK.pendArch&&UID&&DB&&navigator.onLine){const p=TK.pendArch;TK.pendArch=null;tkArchive(p.m,p.g,p.uteg)}if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB||!navigator.onLine||!TK.uteg)return;if(!CLK.ok){clkSync();return}const now=srvNow();tkAdopt();if(!force&&now-(TK.syncT||0)<20000)return;const ownS=JSON.stringify(TK.own);
+  if(TK.given<=(TK.synced||0)&&TK.utegSynced===TK.uteg&&TK.ownSynced===ownS&&(TK.wgSynced||0)>=(TK.wg||0))return;if(typeof USERDOC==='undefined'||!USERDOC)return;TK.syncT=now;let g=Number.isFinite(TK.given)?TK.given:0;const u=TK.uteg,own={};for(const [k,v] of Object.entries(TK.own))if(v>0)own[k]=v;
+  const wk=TK.wk;let wg=Number.isFinite(TK.wg)?TK.wg:0;if(!wk)return;
+  // a szerver szabálya: a befizetés csak a valós (szerver)idővel arányosan nőhet, a havi összeg pedig csak a valódi befizetéssel – ezt itt is betartjuk, a maradék a következő mentéssel megy
+  const D=USERDOC,sFt=Number(D.tkFt)||0,cap=tkCap(D);if(g>cap)g=Math.floor(cap);if(g<sFt)g=sFt;const wb=D.tkWk===wk?(Number(D.tkWg)||0):0;if(wg>wb+(g-sFt)){wg=Math.max(wb,wb+(g-sFt));if(g>=TK.given)TK.wg=wg}
+  const up={tkFt:g,tkUteg:u,tkOwnF:own,tkWk:wk,tkWg:wg,tkAt:now};if(g!==sFt)up.tkSt=firebase.firestore.FieldValue.serverTimestamp();
+  TK.flight={g,wg,t:now,p:performance.now()};DB.doc('users/'+UID).update(up).then(()=>{TK.flight=null;TK.synced=g;TK.utegSynced=u;TK.ownSynced=ownS;TK.wgSynced=wg;TK.syncErr=0;tkSave()}).catch(e=>{TK.flight=null;console.warn('tk sync',e&&e.message);TK.syncErr=(TK.syncErr||0)+1;
+    if(e&&e.code==='permission-denied'){DB.doc('users/'+UID).get().then(x=>{const sd=x.exists?x.data():{};if(x.exists){tkAdopt(sd);TK.syncT=0}if(TK.syncErr===3){toast('⚠️ Ranglista-mentés elutasítva – szólj az adminnak (Firebase szabályok).');const srv=Object.fromEntries(['tkFt','tkWk','tkWg','tkUteg','tkAt','tkSt','tkOwnF'].map(k=>[k,sd[k]===undefined?'(nincs)':sd[k]]));try{medveErr&&medveErr(new Error('tkSync permission-denied: '+u+' | kliens '+JSON.stringify({tkFt:g,tkWk:wk,tkWg:wg,tkOwnF:own,tkAt:now,clk:CLK.ok})+' | szerver '+JSON.stringify(srv)),'kassza')}catch(_){}}}).catch(()=>{})}})}catch(e){}}
+// a firestore.rules tükre: az utolsó befizetés óta eltelt valós idővel arányosan ennyi lehet most a befizetés (2% / mp, legalább 10 millió Ft / mp, +2 perc ráhagyás)
+function tkCap(d){const o=Number(d&&d.tkFt)||0,t=d&&d.tkSt;if(t===undefined)return o>0?1e30:1e12*.97;/* úton lévő mentés: a szerveridő még nincs meg */if(!t||typeof t.toMillis!=='function')return o;const st=t.toMillis();const el=Math.max(0,(srvNow()-st)/1000);return Math.min(1e30,o+(el+120)*Math.max(1e7,o*.02)*.97)}
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
 // az érdem-szorzó számítása drága (minden érdem végigszámolása) – 300 ms-ig gyorsítótárból jön, képkockánként többször is kell
 function tkMult(){const n=performance.now();if(!(TK._mu&&n-TK._muT<300)){TK._muT=n;TK._mu=1+TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0)*.03}return TK._mu*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
@@ -1714,12 +1757,12 @@ function tkSeenHTML(){if(typeof MODE==='undefined'||MODE!=='fb'||!UID)return '<p
   return `<p class="tkseen${pend?' pend':''}">${pend?'⏳':'✓'} Rólad a ranglistán (mások ezt látják): <b>${tkFmt(srv)} Ft</b>${pend?` · mentésre vár: ${tkFmt(TK.given-srv)} Ft`:''}</p>`}
 // ---- ajándékok: napi doboz, szerencsekerék, ejtőernyős csomag ----
 const tkGiftBase=()=>Math.max(500,TK_DEN[TK.den].v*300,(tkGearInc()+tkAutoInc())*90);
-const tkYday=()=>{const y=new Date(Date.now()-864e5);return y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0')};
+const tkYday=()=>budDay(srvNow()-864e5);
 const TK_DAILY=[{k:2,t:'💰'},{k:4,t:'💰'},{k:6,t:'💰 + 🎫 15 mp'},{k:9,t:'💰 + 🎡'},{k:12,t:'💰 + 🛒'},{k:16,t:'💰 + 🎫 20 mp'},{k:30,t:'💎 + 🎫 30 mp + 🎡🎡'}];
 function tkDailyDay(){return TK.gift.d===tkYday()?(TK.gift.n%7)+1:1}
-const tkDailyCan=()=>TK.gift.d!==tkToday();
+const tkDailyCan=()=>CLK.ok&&TK.gift.d<tkToday();
 const TK_SPIN_CD=3*3600e3;
-const tkSpinCan=()=>!TK.spin&&((TK.spins||0)>0||Date.now()-(TK.spinT||0)>=TK_SPIN_CD);
+const tkSpinCan=()=>CLK.ok&&!TK.spin&&((TK.spins||0)>0||srvNow()-(TK.spinT||0)>=TK_SPIN_CD);
 const tkGiftCan=()=>tkDailyCan()||tkSpinCan();
 function tkLeftTxt(ms){ms=Math.max(0,ms);if(ms>=864e5){const d=Math.floor(ms/864e5);return `${d} nap ${Math.floor(ms%864e5/36e5)} ó`}const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),sc=Math.floor(ms%6e4/1e3);return h?`${h} ó ${m} p`:`${m}:${String(sc).padStart(2,'0')}`}
 function tkFreeGear(maxV){const ok=TK_GEAR.filter(g=>!g.gold&&tkGearCost(g)<=maxV);const g=ok.length?ok[Math.floor(Math.random()*ok.length)]:TK_GEAR.filter(g=>!g.gold).sort((a,b)=>a.p-b.p)[0];if(!g)return null;TK.own[g.id]=(TK.own[g.id]||0)+1;TK.newBuy={g,t:0};return g}
@@ -1732,7 +1775,7 @@ function tkDailyClaim(){if(!tkDailyCan())return;const n=tkDailyDay(),R=TK_DAILY[
   TK.gift={d:tkToday(),n};tkConfetti(TK.W/2,TK.H*.3,n===7?120:60,n===7);tkFanfare(n===7);toast(`🎁 ${n}. napi ajándék: +${tkFmt(v)} Ft${ex}`);tkSave();tkSync(true);tkSheetRender()}
 // szerencsekerék: 8 mező, súlyozott sorsolás
 const TK_WHEEL=[{l:'×3',s:'💰',w:22,c:'#b3141f'},{l:'ARANYLÁZ',s:'🎫',w:12,c:'#14140f'},{l:'×8',s:'💰',w:16,c:'#b3141f'},{l:'FEJLESZTÉS',s:'🔧',w:10,c:'#14140f'},{l:'JACKPOT',s:'💎',w:3,c:'#0e7a3a'},{l:'ESZKÖZ',s:'🛒',w:10,c:'#14140f'},{l:'×15',s:'💰',w:9,c:'#b3141f'},{l:'+1 PÖRGETÉS',s:'🍀',w:8,c:'#14140f'}];
-function tkSpinStart(){if(!tkSpinCan())return;if((TK.spins||0)>0&&Date.now()-(TK.spinT||0)<TK_SPIN_CD)TK.spins--;else TK.spinT=Date.now();
+function tkSpinStart(){if(!tkSpinCan())return;if((TK.spins||0)>0&&srvNow()-(TK.spinT||0)<TK_SPIN_CD)TK.spins--;else TK.spinT=srvNow();
   const tot=TK_WHEEL.reduce((a,b)=>a+b.w,0);let r=Math.random()*tot,i=0;for(;i<TK_WHEEL.length-1;i++){r-=TK_WHEEL[i].w;if(r<0)break}
   const seg=Math.PI*2/TK_WHEEL.length,a0=TK.wheelA||0,tgt=-Math.PI/2-(i+.5)*seg+(Math.random()-.5)*seg*.7,d=((tgt-a0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
   TK.spin={i,a0,a1:a0+Math.PI*2*6+d,t:0,dur:4.6,last:Math.floor(a0/seg)};tkSave();tkSheetRender()}
@@ -1752,13 +1795,13 @@ function tkWheelDraw(cv,now){const c=cv.getContext('2d'),S=cv.width,r=S/2-14,cx=
   const nb=24,ph=Math.floor(now/(TK.spin?70:260));for(let i=0;i<nb;i++){const a=i/nb*Math.PI*2,x=cx+Math.cos(a)*(r+6),y=cy+Math.sin(a)*(r+6),on=(i+ph)%2===0;c.fillStyle=on?'#fffbe0':'#7a5a10';c.beginPath();c.arc(x,y,3,0,7);c.fill();if(on){c.fillStyle='rgba(255,240,170,.35)';c.beginPath();c.arc(x,y,6,0,7);c.fill()}}
   const hub=c.createRadialGradient(cx-5,cy-5,2,cx,cy,22);hub.addColorStop(0,'#fff4b0');hub.addColorStop(1,'#8a5a06');c.fillStyle=hub;c.beginPath();c.arc(cx,cy,20,0,7);c.fill();c.strokeStyle='#3a2402';c.lineWidth=2;c.stroke();c.fillStyle='#3a2402';c.font='900 10px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('MEDVE',cx,cy+4);
   c.fillStyle='#ff3b30';c.strokeStyle='#14140f';c.lineWidth=2.5;c.beginPath();c.moveTo(cx-13,4);c.lineTo(cx+13,4);c.lineTo(cx,30);c.closePath();c.fill();c.stroke();c.fillStyle='#fff';c.beginPath();c.arc(cx,11,3,0,7);c.fill()}
-function tkGiftHTML(){const can=tkDailyCan(),n=can?tkDailyDay():TK.gift.n,B=tkGiftBase(),sc=tkSpinCan(),left=TK_SPIN_CD-(Date.now()-(TK.spinT||0));
-  return `<h4>🎁 Napi ajándékdoboz</h4><p class="hint">Minden nap egy doboz – ha naponta visszajössz, egyre nagyobb (7. nap: főnyeremény). Kihagyott nap után az 1. naptól indul újra. Minden ajándék a <b>zsebbe</b> kerül.</p>
+function tkGiftHTML(){const can=tkDailyCan(),n=can?tkDailyDay():TK.gift.n,B=tkGiftBase(),sc=tkSpinCan(),left=TK_SPIN_CD-(srvNow()-(TK.spinT||0));
+  return `${CLK.ok?'':'<p class="tkseen pend">🌐 Az ajándékokhoz pontos idő kell a szervertől – kapcsolódj a netre. (A telefon órájának átállítása nem számít.)</p>'}<h4>🎁 Napi ajándékdoboz</h4><p class="hint">Minden nap egy doboz – ha naponta visszajössz, egyre nagyobb (7. nap: főnyeremény). Kihagyott nap után az 1. naptól indul újra. Minden ajándék a <b>zsebbe</b> kerül.</p>
   <div class="tkdays">${TK_DAILY.map((R,i)=>{const d=i+1,st=can?(d<n?'done':d===n?'now':''):(d<=n?'done':'');return `<div class="tkday ${st}${d===7?' big':''}"><i>${d}. nap</i><b>${st==='done'?'✅':d===7?'💎':'🎁'}</b><small>${tkShort(B*R.k)} Ft</small><em>${(R.t.replace('💰','').trim()||'&nbsp;')}</em></div>`}).join('')}</div>
-  <button type="button" class="tkbig" data-daily ${can?'':'disabled'}>${can?`🎁 KINYITOM – ${n}. nap`:`Holnap jön a következő (${(n%7)+1}. nap)`}</button>
+  <button type="button" class="tkbig" data-daily ${can?'':'disabled'}>${can?`🎁 KINYITOM – ${n}. nap`:CLK.ok?`Holnap jön a következő (${(n%7)+1}. nap)`:'🌐 Pontos idő kell – kapcsolódj a netre'}</button>
   <h4 data-st="margin-top:14px">🎡 Szerencsekerék</h4><p class="hint">3 óránként egy ingyen pörgetés${TK.spins>0?` · extra pörgetés: <b>${TK.spins} db</b>`:''}. Nyeremény: pénz (×3 – ×60 a mostani szintedhez mérve), Golden Ticket, ingyen fejlesztés vagy eszköz.</p>
   <div class="tkwheel"><canvas id="tkWheel" width="280" height="280"></canvas></div>
-  <button type="button" class="tkbig spin" data-spin ${sc?'':'disabled'}>${TK.spin?'Pörög…':sc?'🎰 PÖRGETÉS!':`Következő ingyen pörgetés: <span id="tkSpinLeft">${tkLeftTxt(left)}</span>`}</button>
+  <button type="button" class="tkbig spin" data-spin ${sc?'':'disabled'}>${TK.spin?'Pörög…':sc?'🎰 PÖRGETÉS!':!CLK.ok?'🌐 Pontos idő kell – kapcsolódj a netre':`Következő ingyen pörgetés: <span id="tkSpinLeft">${tkLeftTxt(left)}</span>`}</button>
   <p class="hint">🪂 Ejtőernyős csomag: 1–2 percenként ajándékcsomag ereszkedik a bázisra – koppints rá, mielőtt elviszik! 🎫 A Golden Ticket is gyakrabban jön. Eddig kinyitott ajándék: <b>${tkFmt(TK.gifts||0)}</b></p>`}
 function tkDropOpen(){const D=TK.drop;if(!D)return;D.open=1;TK.drop=null;const r=Math.random(),B=tkGiftBase();let m;
   if(r<.6)m='+'+tkFmt(tkGiftMoney(B*(1+Math.random()*3),D.x,D.y))+' Ft';else if(r<.8){TK.rush=Math.max(TK.rush,12);TK.gifts=(TK.gifts||0)+1;m='12 mp dupla bevétel'}else{TK.spins=(TK.spins||0)+1;TK.gifts=(TK.gifts||0)+1;m='+1 szerencsekerék-pörgetés'}
@@ -1842,7 +1885,7 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
   Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.wheelA=TK.wheelA||-Math.PI/2-Math.PI/8;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.rings=[];TK.sp=[];TK.bs=0;TK.bv=0;TK.shake=0;TK.flash=0;TK.pkB=0;TK.pileB=0;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
   const cv=TK.cv;cv.addEventListener('pointerdown',tkDown);cv.addEventListener('pointerup',tkUp);cv.addEventListener('pointercancel',tkUp);
   TK.key=e=>{if(e.type==='keydown'&&(e.key===' '||e.key==='Enter')){e.preventDefault();tkTap(TK.W/2,tkLay(TK.W,TK.H).cy)}if(e.type==='keydown'&&e.key==='ArrowUp')tkPush()};addEventListener('keydown',TK.key);addEventListener('keyup',TK.key);
-  const away=Math.min(4*3600,(Date.now()-(TK.lastT||Date.now()))/1000),inc=tkGearInc()+tkAutoInc();if(away>60&&inc>0){const v=inc*away*.25;TK.pocket+=v;TK.earned+=v;setTimeout(()=>toast(`💤 Távollétedben a hadtáp termelt: ${tkFmt(v)} Ft`),600)}
+  clkReady(tkClockFix);
   if(!TK.uteg)tkStartScreen();else $('#tkStart').hidden=true;
   playCount('kassza');tkMusic(true);TK.last=performance.now();TK.raf=requestAnimationFrame(tkLoop);TK.saveI=setInterval(()=>{tkSave();tkSync()},5000)}
 function tkStartScreen(){const s=$('#tkStart');s.hidden=false;s.innerHTML=`<h3>Tüzér Kassza</h3><p>Koppints a pénzre – minden koppintás pénzt nyomtat. A zsebedben gyűlő pénzt <b>húzd felfelé</b>: bekerül az <b>ütegkasszába</b>, ez számít a ranglistán. A <b>Pénzverdében</b> gyárthatod le a következő pénznemet (1 → 10 → 100 … 1 milliárd Ft, majd a rendfokozat-jegyek: Őrmestertől Alezredesig, Osztályparancsnoki, Tüzér Rettenet és a legfelső, a <b>Szent Borbála-jegy</b> – oda kb. fél év eljutni), a <b>Piacon</b> NATO-szintű felszerelést, drónt, járművet és bázisfejlesztést veszel – mind látszik a bázisodon. A <b>🎁 Ajándék</b> fülön napi doboz és szerencsekerék vár, időnként ejtőernyős csomag is érkezik.</p>${tkRulesHTML()}<div class="dinfo"><b>Melyik ütegbe gyűjtesz?</b></div><div class="tkutegs">${TK_UTEG.map(u=>`<button type="button" class="tkbtn tkubtn" data-u="${u}" data-st="--uc:${tkUC(u)[0]};--ut:${tkUC(u)[1]}">${u}</button>`).join('')}</div><p class="hint">Később az Ütegek fülön átigazolhatsz.</p>`;
@@ -1866,7 +1909,7 @@ function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>
 function tkPush(){const v=Math.floor(TK.pocket);if(v<1){toast('A zsebed üres – koppints a pénzre!');return}if(!TK.uteg){tkStartScreen();return}
   TK.pocket-=v;TK.given+=v;TK.pkD=1;{tkRoll(tkWeek());TK.wg+=v}TK.flyUp={t:0,v};tkKaching();if(navigator.vibrate)try{navigator.vibrate([20,30,40])}catch(e){}
   toast(`⇡ ${tkFmt(v)} Ft az ütegkasszába – ${TK.uteg}`);tkSave();tkSync(true)}
-function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;const c=tkMintCost(n),wt=tkMintWait(n);if(wt>0){toast(`🎖️ Előléptetés: még ${tkLeftTxt(wt)} szolgálati idő kell a(z) ${TK_DEN[n].n} legyártásához`);return}if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.denT=Date.now();TK.newDen={i:n,t:0};TK.sig='';tkKaching();tkConfetti(TK.W/2,tkLay(TK.W,TK.H).cy,70,1);
+function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;if(!CLK.ok&&(TK_DEN[n].wd||(TK_DEN[n+1]&&TK_DEN[n+1].wd))){clkSync();toast('🌐 Az előléptetéshez pontos idő kell – kapcsolódj a netre, és próbáld újra.');return}const c=tkMintCost(n),wt=tkMintWait(n);if(wt>0){toast(`🎖️ Előléptetés: még ${tkLeftTxt(wt)} szolgálati idő kell a(z) ${TK_DEN[n].n} legyártásához`);return}if(TK.pocket<c){toast(`🏦 Pénzverde: a legyártáshoz ${tkFmt(c)} Ft kell`);return}TK.pocket-=c;TK.den=n;TK.denT=srvNow();TK.newDen={i:n,t:0};TK.sig='';tkKaching();tkConfetti(TK.W/2,tkLay(TK.W,TK.H).cy,70,1);
   if(SOUND&&ac()){const t=AC.currentTime;[523.25,659.25,783.99].forEach((f,k)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.05,t+.3+k*.09);g.gain.exponentialRampToValueAtTime(.001,t+.3+k*.09+.2);o.connect(g).connect(MASTER);o.start(t+.3+k*.09);o.stop(t+.3+k*.09+.22)})}tkSave();tkSheetRender()}
 // ---- fülek ----
 function tkSheet(id){const s=$('#tkSheet');if(!s.hidden&&TK.sheet===id){s.hidden=true;TK.sheet=null;return}TK.sheet=id;TK.sig='';s.hidden=false;TK.open=TK.open||{};tkSheetRender();s.scrollTop=0}
@@ -2069,7 +2112,7 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
     set(E.info,`1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft${TK.hufLive?' (élő, EKB '+TK.hufD+')':TK.hufD==='becsült'?' (becsült)':' ('+TK.hufD+')'}${inc>0?' · ⚙️ '+tkFmtR(inc)+' Ft/mp':''}`);
     const nx=TK.den+1,mb=E.mint;if(mb){const can=nx<TK_DEN.length&&TK.pocket>=tkMintCost(nx)&&tkMintWait(nx)<=0;if(mb.hidden===can)mb.hidden=!can;const tx=can?`🏦 PÉNZVERDE: ${TK_DEN[nx].n}`:'';if(mb.textContent!==tx)mb.textContent=tx}
     if(!TK._mc||now-TK._mc>1000){TK._mc=now;set(E.month,'📅 Hónap vége: '+tkWeekLeft())}}
-  if((TK.uiT=(TK.uiT||0)+dt)>.4){TK.uiT=0;const sh=E.sheet;{const D=tkDM(),can=D.list.some(q=>!q.done&&tkDmProg(q)>=q.goal);if(E.navAch)E.navAch.classList.toggle('badge',can);if(E.navGift)E.navGift.classList.toggle('badge',tkGiftCan());if(TK.sheet==='gift'){const sl=$('#tkSpinLeft');if(sl)sl.textContent=tkLeftTxt(TK_SPIN_CD-(Date.now()-(TK.spinT||0)));else if(!TK.spin&&tkSpinCan()&&$('#tkSheet [data-spin]:disabled'))tkSheetRender()}}if(sh&&(TK.sheet==='upg'||TK.sheet==='gear'||TK.sheet==='den')){const mw=TK.den+1<TK_DEN.length?tkMintWait(TK.den+1):0,sig=TK.sheet==='den'?'den'+TK.den+(TK.den+1<TK_DEN.length?Math.min(50,Math.floor(TK.pocket/tkMintCost(TK.den+1)*50)):0)+'|'+Math.ceil(mw/6e4):TK.sheet+TK.den+JSON.stringify(TK.upg)+JSON.stringify(TK.own)+(TK.den+1<TK_DEN.length&&TK.pocket>=tkMintCost(TK.den+1)?1:0)+(mw>0?Math.ceil(mw/6e4):0)+TK_UPG.map(u=>TK.pocket>=tkUpgCost(u)?1:0).join('')+TK_GEAR.map(g=>TK.pocket>=tkGearCost(g)?1:0).join('');if(sig!==TK.sig){TK.sig=sig;const st=sh.scrollTop;tkSheetRender();sh.scrollTop=st}}}
+  if((TK.uiT=(TK.uiT||0)+dt)>.4){TK.uiT=0;const sh=E.sheet;{const D=tkDM(),can=D.list.some(q=>!q.done&&tkDmProg(q)>=q.goal);if(E.navAch)E.navAch.classList.toggle('badge',can);if(E.navGift)E.navGift.classList.toggle('badge',tkGiftCan());if(TK.sheet==='gift'){const sl=$('#tkSpinLeft');if(sl)sl.textContent=tkLeftTxt(TK_SPIN_CD-(srvNow()-(TK.spinT||0)));else if(!TK.spin&&tkSpinCan()&&$('#tkSheet [data-spin]:disabled')||tkDailyCan()&&$('#tkSheet [data-daily]:disabled'))tkSheetRender()}}if(sh&&(TK.sheet==='upg'||TK.sheet==='gear'||TK.sheet==='den')){const mw=TK.den+1<TK_DEN.length?tkMintWait(TK.den+1):0,sig=TK.sheet==='den'?'den'+TK.den+(TK.den+1<TK_DEN.length?Math.min(50,Math.floor(TK.pocket/tkMintCost(TK.den+1)*50)):0)+'|'+Math.ceil(mw/6e4):TK.sheet+TK.den+JSON.stringify(TK.upg)+JSON.stringify(TK.own)+(TK.den+1<TK_DEN.length&&TK.pocket>=tkMintCost(TK.den+1)?1:0)+(mw>0?Math.ceil(mw/6e4):0)+TK_UPG.map(u=>TK.pocket>=tkUpgCost(u)?1:0).join('')+TK_GEAR.map(g=>TK.pocket>=tkGearCost(g)?1:0).join('');if(sig!==TK.sig){TK.sig=sig;const st=sh.scrollTop;tkSheetRender();sh.scrollTop=st}}}
   if(TK.sheet==='gift'){const wc=$('#tkWheel');if(wc)tkWheelDraw(wc,now)}
   TK.raf=requestAnimationFrame(tkLoop)}
 
@@ -2878,7 +2921,7 @@ function chatClose(){const o=document.getElementById('chatov');if(o){o.hidden=tr
 function chatSend(){const t=$('#chText');if(!t)return;const text=t.value.trim().slice(0,CH_MAX);if(!text)return;
   if(!USERDOC){toast('Még töltődik a profilod, próbáld újra.');return}
   if(Date.now()-CHSENT<2000){toast('Lassabban, 2 másodpercenként egy üzenet.');return}CHSENT=Date.now();
-  DB.collection('chat').add({uid:UID,name:USERDOC.name,rank:USERDOC.rank||'',text,ts:Date.now()}).catch(e=>{console.warn(e);toast('Nem sikerült elküldeni ('+(e.code||'hiba')+')')});
+  DB.collection('chat').add({uid:UID,name:USERDOC.name,rank:USERDOC.rank||'',text,ts:srvNow()}).catch(e=>{console.warn(e);toast('Nem sikerült elküldeni ('+(e.code||'hiba')+')')});
   t.value='';t.style.height='';t.focus()}
 document.addEventListener('submit',e=>{if(e.target.id==='chForm'){e.preventDefault();chatSend()}});
 document.addEventListener('keydown',e=>{if(e.target.id==='chText'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend()}
@@ -3014,10 +3057,10 @@ function fbOwnLocal(uid){let o=null;try{o=localStorage.getItem('medve-owner')}ca
    Csak admin indíthatja: minden felhasználó dokumentumából törli a rekordokat, a játékszámlálókat és a Kassza-állást,
    és mindenkinél beírja a nullázás idejét (lbReset). Minden telefon ebből tudja meg, hogy a helyben tárolt régi
    rekordjait el kell dobnia – így azok nem töltődnek vissza a szerverre, és a régi eltérések is eltűnnek. */
-const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','lastPlay'];
+const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','tkSt','lastPlay'];
 async function lbResetAll(){if(USERDOC?.role!=='admin'){toast('Ehhez admin jog kell.');return}if(!navigator.onLine){toast('Ehhez internet kell.');return}
   const w=prompt('Minden játék ranglistája, a játékszámlálók és a Kassza-állás MINDENKINÉL törlődik. Nem vonható vissza.\nÍrd be: NULLÁZÁS');if((w||'').trim().toUpperCase()!=='NULLÁZÁS'){toast('Nullázás megszakítva.');return}
-  const del=firebase.firestore.FieldValue.delete(),now=Date.now(),ids=Object.keys(S.users||{});let done=0;
+  const del=firebase.firestore.FieldValue.delete(),now=srvNow(),ids=Object.keys(S.users||{});let done=0;
   try{for(let i=0;i<ids.length;i+=400){const b=DB.batch();for(const id of ids.slice(i,i+400)){const u={lbReset:now};for(const f of LB_FIELDS)if(S.users[id]&&f in S.users[id])u[f]=del;b.update(DB.doc('users/'+id),u)}await b.commit();done+=Math.min(400,ids.length-i)}
     toast('✅ Ranglista nullázva ('+done+' játékos) – új szezon indult.');lbApply()}catch(e){console.warn('lbReset',e);toast('A nullázás nem sikerült: '+(e.code||e.message||e))}}
 // a nullázás átvétele ezen a telefonon: helyi rekordok és a Kassza-állás törlése (a választott üteg megmarad)
@@ -3037,7 +3080,7 @@ setInterval(()=>{if(MODE==='fb'&&FB_SYNCED&&!document.hidden)fbSyncLocal()},3000
 function fbListen(){if(UNSUB)UNSUB();FB_SYNCED=false;
   UNSUB=DB.collection('users').onSnapshot(qs=>{const o={};qs.forEach(d=>{o[d.id]={id:d.id,...d.data()}});S.users=o;USERDOC=o[UID]||null;
     if(!USERDOC&&!qs.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
-      DB.doc('users/'+UID).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:Date.now()}).catch(()=>{})}
+      DB.doc('users/'+UID).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:srvNow()}).catch(()=>{})}
     lbApply();if(USERDOC&&!qs.metadata.fromCache){const first=!FB_SYNCED;FB_SYNCED=true;fbSyncLocal(first)}
     liveRefresh()},err=>{console.warn(err);toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
 function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hidden){const t=ov.querySelector('[data-rg].on');if(t)rankFill(t.dataset.rg)}
@@ -3071,7 +3114,7 @@ async function authSubmit(){if(AUTHBUSY)return;const reg=AUTHTAB==='reg';const n
   AUTHBUSY=true;authErr('');const b=$('#auGo');if(b){b.disabled=true;b.textContent='Várj…'}
   try{if(reg){const rank=$('#auRank')?.value||'';const cr=await AUTH.createUserWithEmailAndPassword(nickMail(nick),pw);
       try{await cr.user.updateProfile({displayName:nick})}catch(e){}
-      await DB.doc('users/'+cr.user.uid).set({name:nick,rank:RANKS.includes(rank)?rank:'',nick:nickId(nick),createdAt:Date.now()});
+      await DB.doc('users/'+cr.user.uid).set({name:nick,rank:RANKS.includes(rank)?rank:'',nick:nickId(nick),createdAt:srvNow()});
       toast('✅ Sikeres regisztráció, jó játékot!')}
     else{await AUTH.signInWithEmailAndPassword(nickMail(nick),pw);toast('Üdv újra, '+nick+'!')}}
   catch(e){console.warn(e);authErr(fbErr(e));if(b){b.disabled=false;b.textContent=reg?'Regisztrálok':'Belépek'}}
@@ -3229,7 +3272,9 @@ window.addEventListener('error',ev=>medveErr(ev.error||ev.message,'APP'));
 window.addEventListener('unhandledrejection',ev=>{const m=String((ev.reason&&(ev.reason.message||ev.reason))||'');if(/ServiceWorker|Failed to fetch|NetworkError|Load failed|network error|fetching the script/i.test(m)){ev.preventDefault();console.warn('hálózati hiba (nem jelentve):',m);return}medveErr(ev.reason,'APP')});
 function medveFps(S,t){const p=S._fpt;S._fpt=t;if(!p||t-p>250||document.hidden)return;const f=S._fps||(S._fps={n:0,sum:0,t0:t});f.n++;f.sum+=t-p;if(t-f.t0>4000){const fps=1000/(f.sum/f.n);S._fps=null;
     if(fps<38&&!LOWFX&&LOWAUTO){LOWFX=true;try{localStorage.setItem('medve-lowfx','1')}catch(e){}toast('🔋 Akadozást észleltem – gyenge telefon mód bekapcsolva (Beállításokban kikapcsolható)');try{if(S.fit&&SEM&&S===SEM.SE)S.fit();else if(S.cv&&S.W){S.dpr=1;S.cv.width=Math.round(S.W);S.cv.height=Math.round(S.H)}}catch(e){}}}}
-function medveWrap(orig,S,label){const w=function(t){const r0=S.raf;medveFps(S,t);try{orig(t)}catch(e){medveErr(e,label);if(S.raf===r0)S.raf=requestAnimationFrame(w)}};return w}
+// képkocka-korlát: a 90/120 Hz-es kijelzőkön sem rajzolunk 60-nál többet (feleannyi munka, hűvösebb telefon, tovább bírja az akku);
+// gyenge telefon módban a Tüzér Kassza (nem ügyességi játék) 30 képkocka/mp-cel megy
+function medveWrap(orig,S,label){const w=function(t){const iv=LOWFX&&label==='KASSZA'?1000/30:1000/60;if(S._lft&&t>=S._lft&&t-S._lft<iv*.76){S.raf=requestAnimationFrame(w);return}S._lft=Math.max((S._lft||0)+iv,t-iv);const r0=S.raf;medveFps(S,t);try{orig(t)}catch(e){medveErr(e,label);if(S.raf===r0)S.raf=requestAnimationFrame(w)}};return w}
 document.addEventListener('visibilitychange',()=>{try{if(document.hidden){if(typeof TK!=='undefined'&&TK.musI){tkMusic(false);TK._musWas=1}if(typeof AC!=='undefined'&&AC&&AC.state==='running')AC.suspend()}else{if(typeof AC!=='undefined'&&AC&&AC.state==='suspended')AC.resume();if(typeof TK!=='undefined'&&TK._musWas&&TK.run){TK._musWas=0;tkMusic(true)}}}catch(e){}});
 gvLoop=medveWrap(gvLoop,GV,'KONVOJ');drLoop=medveWrap(drLoop,DR,'DRONERUN');gtLoop=medveWrap(gtLoop,GT,'TEREP');harcLoop=medveWrap(harcLoop,HARC,'HARC');rkLoop=medveWrap(rkLoop,RK,'RAKODO');tkLoop=medveWrap(tkLoop,TK,'KASSZA');
 
@@ -3377,4 +3422,4 @@ function srOpen(){lazyOpen('sr','srOpen')}
 function seOpen(){lazyOpen('se','seOpen')}
 if(/[?&]sr=/i.test(location.search))lazyMod('sr').catch(()=>{});// Shot&Run meghívó link: azonnal kell
 setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
-export {$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,toast};
+export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,toast};

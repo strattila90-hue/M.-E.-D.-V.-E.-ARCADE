@@ -1,9 +1,15 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.32.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.35.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.35.0:** **Csalás elleni szerveridő, egységes pontozás, kímélőbb grafika.**
+- **A telefon naptára/órája nem számít többé.** Eddig a naptár átállításával újra lehetett nyitni a napi ajándékot, pörgetni a szerencsekereket, lerövidíteni az előléptetési várakozást, és a hónap is máskor nullázódott – ezért mutattak a telefonok különböző eredményt. Most a játék a **szerver pontos idejét** használja (a telefon óráját csak ezzel korrigálva), a napok és hónapok **mindenkinél magyar idő szerint** váltanak. Ha a telefon órája játék közben ugrik, a pontos időt újra lekéri. Net nélkül az időhöz kötött jutalmak (napi doboz, kerék, napi küldetés, előléptetés) zárva vannak, amíg a pontos idő meg nem jön; a sima játék net nélkül is megy.
+- **A szerver nem fogad el más számot** (`firestore.rules`): a Kassza hónapja csak a szerver szerinti aktuális hónap lehet; a befizetés csak nőhet, és csak a valós (szerver)idővel arányosan (az utolsó befizetés óta másodpercenként legfeljebb a meglévő összeg 2%-a, de legalább 10 millió Ft) – kitalált óriásszám nem kerülhet a ranglistára; a havi összeg csak annyival nőhet, amennyi ténylegesen be lett fizetve; új játékos első befizetése legfeljebb 1 billió Ft; időbélyeg nem lehet a szerver szerinti jövőben; a havi lezárás csak elmúlt hónapra és csak a ranglistán ténylegesen álló összeggel írható. A játék ezt maga is betartja: ha egyszerre túl sok menne fel, a maradék a következő mentésekkel megy (addig ⏳).
+- **Grafika:** 90/120 Hz-es kijelzőn sem rajzol 60 képkocka/mp-nél többet (fele munka, hűvösebb telefon, tovább bírja az akku); a játékvásznak felbontása legfeljebb 1,5× (gyenge telefon módban 1×); gyenge telefon módban a Tüzér Kassza 30 képkocka/mp-cel megy.
+- **Teendő:** a `firestore.rules` új tartalmát a Firebase konzolban közzé kell tenni (Firestore → Rules → Publish) **ugyanakkor**, amikor ez a verzió élesbe megy – a régi szabály az új mentést, az új szabály a régi appot utasítja el (adat nem vész el, a frissítés után minden feltöltődik).
 
 **v4.34.1:** Élesítési javítás: a 4.33 és a 4.34 a Vercelen csak előnézetként épült meg, az éles oldal a 4.32-n maradt. Ettől a verziótól a frissítések közvetlenül a `main` ágra kerülnek, hogy az éles telepítés magától elinduljon. Tartalmi változás nincs a 4.34.0-hoz képest.
 

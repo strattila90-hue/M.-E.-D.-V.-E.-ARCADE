@@ -1,5 +1,5 @@
 // M.E.D.V.E. Arcade – sr.js modul (az app.js tölti be lustán, amikor először kell). A közös segédeket az app.js-ből veszi át.
-import {$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,S,SOUND,UID,USERDOC,V,ac,boom,esc,gameStart,ic,medveWrap,n0,pzhFullSet,snare,sndClink,sndFar,sndMega,sndPop,sndThud,st,toast} from './app.js';
+import {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,S,SOUND,UID,USERDOC,V,ac,boom,esc,gameStart,ic,medveWrap,n0,pzhFullSet,snare,sndClink,sndFar,sndMega,sndPop,sndThud,st,toast} from './app.js';
 /* ===================== SHOT&RUN – PzH 2000 tüzérpárbaj (körökre osztott) =====================
    Pálya és modell a DroneRunból. 1 világegység = 10 m. Szögek vonásban (6400 = teljes kör).
    Minden véletlen a lövő gépén dől el, az eredmény eseményként megy át a másik félhez (online mód). */
@@ -1275,7 +1275,7 @@ function srNetListen(){setTimeout(srNetPing,400);setTimeout(srNetPing,2500);SR.n
 function srNetN(code,role,started){return {code,role,last:'',started,seq:0,q:[],rs:0,ack:0,wT:0,pend:0,okT:Date.now()}}
 function srNetEnv(N){let q=N.q,s=JSON.stringify({v:2,u:UID,a:N.rs,q});while(s.length>29000&&q.length>1){q=q.slice(1);s=JSON.stringify({v:2,u:UID,a:N.rs,q})}return s}
 function srNetFlush(N){if(!N||SR.net!==N)return;clearTimeout(N.ackT);N.ackT=0;const s=srNetEnv(N),t0=performance.now();N.wT=Date.now();N.last=s;N.pend++;
-  srNetRef().update({ev:s,ts:Date.now()}).then(()=>{srNetRtt(N,performance.now()-t0);N.fail=0;N.okT=Date.now()}).catch(e=>{N.fail=(N.fail||0)+1;if(e&&e.code==='permission-denied'||N.fail===3)srNetErr(e)}).finally(()=>{N.pend=Math.max(0,N.pend-1)})}
+  srNetRef().update({ev:s,ts:srvNow()}).then(()=>{srNetRtt(N,performance.now()-t0);N.fail=0;N.okT=Date.now()}).catch(e=>{N.fail=(N.fail||0)+1;if(e&&e.code==='permission-denied'||N.fail===3)srNetErr(e)}).finally(()=>{N.pend=Math.max(0,N.pend-1)})}
 function srNetAckSoon(N){if(!N.ackT)N.ackT=setTimeout(()=>{N.ackT=0;srNetFlush(N)},120)}
 function srNetRecv(N,str){let o=null;try{o=JSON.parse(str)}catch(e){}if(!o||o.u===UID)return;
   if(o.v!==2){SR.inbox.push(o);return}// régebbi verziójú ellenfél
@@ -1287,7 +1287,7 @@ function srNetKeep(){const N=SR.net;if(!N||!N.q.length||navigator.onLine===false
 addEventListener('online',()=>{const N=SR.net;if(N){N.wT=0;srNetFlush(N);setTimeout(srNetPing,300)}});
 async function srNetHost(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (online mód).');return}const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<5;i++)code+=A[Math.random()*A.length|0];
   srNetLeave();const seed=1+Math.random()*2147483000|0;
-  try{await DB.collection('srRooms').doc(code).set({host:UID,hostName:srMyName(),guest:null,guestName:'',seed,ev:'',ts:Date.now()})}catch(e){srNetErr(e);return}
+  try{await DB.collection('srRooms').doc(code).set({host:UID,hostName:srMyName(),guest:null,guestName:'',seed,ev:'',ts:srvNow()})}catch(e){srNetErr(e);return}
   SR.net=srNetN(code,0,false);SR.inbox=[];const st=$('#srStart'),link=srInvLink(code),cp=(t,m)=>{try{navigator.clipboard.writeText(t).then(()=>toast(m),()=>toast(t))}catch(e){toast(t)}};
   if(st){st.innerHTML=`<h3>MEGHÍVÓ KÉSZ!</h3><p class="srlead">Küldd el a barátodnak. Amint belép, <b>azonnal indul</b> a párbaj.</p>
     <div class="srroom"><small>Meghívókód</small><b>${code}</b><i class="srwait"><span class="srspin"></span>Várakozás a barátodra…</i></div>
@@ -1299,18 +1299,18 @@ async function srNetJoin(){if(!srNetOk()){toast('Ehhez be kell jelentkezned (onl
 async function srNetJoin2(){const code=($('#srCode')?.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==5){toast('Az 5 jegyű meghívókódot írd be!');return}
   srNetLeave();let d;try{const ref=DB.collection('srRooms').doc(code),s=await ref.get();if(!s.exists){toast('Nincs ilyen szoba: '+code);return}d=s.data();
     if(d.host===UID){toast('Ez a saját szobád – a kódot a társadnak küldd el.');return}if(d.guest&&d.guest!==UID){toast('Ez a szoba már megtelt.');return}if(d.guest===UID){toast('Ez a párbaj már elindult – kérj új meghívókódot.');return}
-    if(Date.now()-d.ts>3600000&&!d.guest){toast('Ez a meghívó lejárt – kérj újat.');return}
-    if(!d.guest)await ref.update({guest:UID,guestName:srMyName(),ts:Date.now()})}catch(e){srNetErr(e);return}
+    if(srvNow()-d.ts>3600000&&!d.guest){toast('Ez a meghívó lejárt – kérj újat.');return}
+    if(!d.guest)await ref.update({guest:UID,guestName:srMyName(),ts:srvNow()})}catch(e){srNetErr(e);return}
   SR.net=srNetN(code,1,true);SR.net.last=d.ev||'';SR.inbox=[];srNetListen();srBegin('net',{me:1,seed:d.seed,names:[d.hostName,srMyName()]})}
 function srNetSend(ev){const N=SR.net;if(!N)return;const o={...ev,u:UID,ts:Date.now(),n:++N.seq};
   if(ev.pts){const p=ev.pts,n=p.length/2,q=[];for(let i=0;i<n;i+=3)q.push(Math.round(p[i*2]*10)/10,Math.round(p[i*2+1]*10)/10);if((n-1)%3)q.push(Math.round(p[n*2-2]*10)/10,Math.round(p[n*2-1]*10)/10);o.pts=q;o.dt=ev.dt*3;o.apex=Math.round(ev.apex/3)}
   N.q.push(o);srNetFlush(N)}
 // oda-vissza idő (a szerver nyugtázásáig) – ebből becsüljük, mennyivel később látja a másik fél az eseményt
 function srNetRtt(N,ms){if(!N||!(ms>0)||ms>8000)return;N.rtt=N.rtt?N.rtt*.7+ms*.3:ms}
-function srNetPing(){const N=SR.net;if(!N)return;const t0=performance.now();srNetRef().update({ts:Date.now()}).then(()=>srNetRtt(N,performance.now()-t0)).catch(()=>{})}
+function srNetPing(){const N=SR.net;if(!N)return;const t0=performance.now();srNetRef().update({ts:srvNow()}).then(()=>srNetRtt(N,performance.now()-t0)).catch(()=>{})}
 const srNetLat=()=>{const r=SR.net&&SR.net.rtt;return r?srClamp((r*.6+60)/1000,.04,1.5):.25};
 function srNetLeave(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsub()}catch(e){}
-  try{const ref=DB.collection('srRooms').doc(N.code);if(N.role===0&&!N.started)ref.delete().catch(()=>{});else{N.q.push({k:'left',u:UID,ts:Date.now(),n:++N.seq});ref.update({ev:srNetEnv(N),ts:Date.now()}).catch(()=>{})}}catch(e){}}
+  try{const ref=DB.collection('srRooms').doc(N.code);if(N.role===0&&!N.started)ref.delete().catch(()=>{});else{N.q.push({k:'left',u:UID,ts:Date.now(),n:++N.seq});ref.update({ev:srNetEnv(N),ts:srvNow()}).catch(()=>{})}}catch(e){}}
 function srNetGone(){const N=SR.net;if(!N)return;SR.net=null;try{N.unsub&&N.unsub()}catch(e){}
   if(SR.mode==='net'&&SR.v&&SR.phase!=='over'){SR.phase='over';SR.run=false;srEngLoop(false);const o=$('#srOver');o.innerHTML='<h3>🏳 AZ ELLENFÉL KILÉPETT</h3><p>A párbaj véget ért – a harcmező a tiéd.</p><button class="btn pri" id="srBack">Ellenfélválasztás</button>';o.hidden=false;$('#srPanel').classList.add('off');$('#srBack').onclick=srMenu}
   else toast('Az ellenfél kilépett a szobából.')}
