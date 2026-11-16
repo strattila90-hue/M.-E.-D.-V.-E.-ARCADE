@@ -11,10 +11,11 @@
 
 **Ajánlás:** a három vizsgált irány közül a **C („Fogadó + hajtó”)** – fogadás totalizatőr-rendszerben, és a saját löveg hajtása ügyességi elemként. Ez illik a meglévő játékokhoz (ügyesség + Kassza-gazdaság), és megkerüli a tisztán szerencsejáték-jelleget.
 
-**Három döntés kell tőled, mielőtt kód készül** (részletek a 8. pontban):
-1. Legyen-e a futamnak hatása a havi Kassza-ranglistára, vagy maradjon tőle független?
-2. Közös, mindenkinek egyszerre futó online futamok kellenek-e már az első változatban, vagy elég a gép elleni?
-3. Maradhat-e a „fogadás” szó és forma úgy, hogy a játékot gyerekek is kézbe kapják (lásd Kassza gyerekzár)?
+**Eldöntve (2026-11-16):**
+1. **Gép ellen, helyben fut.** Nincs közös online futam; a szervert a játék gyakorlatilag nem terheli (lásd 7.6).
+2. **Valódi fogadás a Kassza pénzével** – nem tét nélküli „tipp”. A játékosok felnőttek, gyerekvédelmi korlát nem kell.
+3. **Valódi forint nincs.** Tét és nyeremény csak a Kassza játékpénze; befizetés, kifizetés, átváltás nem készül (indoklás a 8. pontban).
+4. **Kassza-ranglista:** a nyeremény a zsebbe megy, szigorú tétkorláttal – ez javaslat, még felülbírálható.
 
 ---
 
@@ -269,8 +270,22 @@ A lövegek állandó „istállót” alkotnak (kb. 24 névvel), hogy a formáju
 - Új fájl: `lv.js`, a `sr.js` és a `sere.js` mintájára; a közös segédeket az `app.js` export-listájából importálja.
 - `sw.js`: a `SHELL` lista bővítése, `CACHE` és `APP_VER` emelése.
 - Grafika: a meglévő PzH-modellképek (`PZH_SPRITE`, `PZH_FULL`) újrahasználhatók; hang: a Shot&Run motorhangjai.
-- `firestore.rules`: az új mezőket (pl. `lvBest`, `lvN`) fel kell venni a `userUpdOk` engedélylistájába és a rekord-/számláló-ellenőrzésbe. Figyelni kell a kérésenkénti 1000 kifejezéses korlátra (ez okozta a 4.35.2-es hibát).
-- A nyeremény a Kassza zsebébe megy. A havi ranglistára csak befizetéssel kerülhet, amit a szerver már most is időarányosan korlátoz – ez a futamból származó pénzre is érvényes lenne.
+- A nyeremény a Kassza zsebébe megy. A havi ranglistára csak befizetéssel kerülhet, amit a szerver már most is időarányosan korlátoz – ez a futamból származó pénzre is érvényes.
+
+**Szerverkímélő felépítés – a cél: játék közben nulla szerverforgalom.**
+
+| Mi | Hogyan | Szerverterhelés |
+|---|---|---|
+| Futam, mezőny, szorzók, gépi fogadók | Teljesen a telefonon számolódik | Nincs |
+| Istálló, forma, a lövegek előélete | A telefonon tárolva (mint a többi helyi állás) | Nincs |
+| Élő figyelő (listener) | Nem nyit újat; a játék alatt a játékoslista figyelése szünetel, ahogy a 4.36 óta minden játékban | Nincs |
+| Zsebpénz változása | A Kassza meglévő, összevont mentésével megy fel (legfeljebb 2 percenként, bezáráskor azonnal) | Nincs plusz írás |
+| Levonás az üteg kasszájába | A meglévő befizetési úton, a következő összevont mentéssel | Nincs plusz írás |
+| Rekord és játékszámláló | Bezáráskor egyetlen mentés, két új mező (`lvBest`, `lvN`) | Játékalkalmanként 1 írás |
+| Napi díjfutam | A mezőny a dátumból számolódik, így mindenki ugyanazt a futamot kapja – szerver nélkül | Nincs |
+
+- `firestore.rules`: csak a két új mező kerül a `userUpdOk` engedélylistájába és a rekord-/számláló-ellenőrzésbe. Figyelni kell a kérésenkénti 1000 kifejezéses korlátra (ez okozta a 4.35.2-es hibát).
+- Net nélkül is játszható; a mentés a kapcsolat visszatértekor megy fel.
 
 ### 7.7 Ütemezés
 
@@ -278,17 +293,19 @@ A lövegek állandó „istállót” alkotnak (kb. 24 névvel), hogy a formáju
 |---|---|
 | **1. – gép ellen** | Egy pálya, 8 löveg, Tét és Hely, hajtás, Tüzér Turf, helyi rekord |
 | **2. – teljes fogadás** | Befutó, Hármasbefutó, gépi fogadók, élő szorzótábla, események |
-| **3. – üteg és online** | Levonás az üteg kasszájába, díjfutamok, közös futamok |
+| **3. – üteg és díjfutamok** | Levonás az üteg kasszájába, napi díjfutam legendás ellenféllel, gátverseny |
+
+Közös, élő online futam nem szerepel a tervben.
 
 ---
 
-## 8. Nyitott kérdések és kockázatok
+## 8. Kockázatok és korlátok
 
-1. **Közös online futam és a csalás.** Ha minden telefon ugyanabból a kiinduló számból számolja ki a futamot (ahogy a Shot&Run szobák teszik), a végeredmény a fogadás lezárása előtt kiszámolható a telefonon. Valódi közös totalizatőrhöz szerveroldali sorsolás kell (pl. egy Vercel-függvény), ami most nincs a projektben. Javaslat: az 1–2. lépés gép ellen, helyben; a közös futam külön döntés.
-2. **Hatás a Kassza-ranglistára.** Egy nagy szorzós hármasbefutó felboríthatja a havi versenyt. A tétkorlát és a meglévő szerveroldali befizetési korlát tompítja, de érdemes eldönteni: számítson-e egyáltalán.
-3. **Gyerekek.** A Kasszában gyerekzáras koppintó mód van, tehát a játék gyerek kezébe is kerül. Fogadást utánzó játék gyereknek kényes. Lehetőségek: (a) marad „fogadás”, csak játékpénzzel; (b) átnevezés „tipp”-re, tét nélkül, pontokért; (c) a fogadó rész rendfokozathoz kötve. Ez a te döntésed.
-4. **Egyensúly.** A hajtás ±15%-os hatását és a levonásokat szimulációval kell belőni, hogy a hosszú távú megtérülés 85–95% között maradjon.
-5. **Méret.** Az `app.js` már 636 KB; az új játéknak külön fájlban kell maradnia.
+1. **Valódi pénz nincs a tervben.** Valódi forintért folyó fogadás szervezése Magyarországon engedélyhez kötött, a lóversenyfogadás pedig állami koncesszió; engedély nélkül bűncselekmény (tiltott szerencsejáték szervezése). Ezért a játék csak Kassza-játékpénzt kezel, és nem készül hozzá befizetés, kifizetés vagy átváltás. Ha ez mégis cél lenne, ahhoz előbb jogász és engedély kell, nem kód.
+2. **Csalás.** Mivel a futam a telefonon számolódik, a helyi állás elvileg módosítható. A kárt a meglévő szerveroldali korlát fogja meg: a ranglistára csak időarányosan korlátozott befizetés kerülhet, akárhonnan jön a pénz.
+3. **Hatás a Kassza-ranglistára.** Egy nagy szorzós hármasbefutó nagy zsebpénzt adhat. Tompítja: tétkorlát (a zseb 10%-a), a hármasbefutó 25%-os levonása és a szerveroldali befizetési korlát.
+4. **Egyensúly.** A hajtás ±15%-os hatását és a levonásokat szimulációval kell belőni, hogy a hosszú távú megtérülés 85–95% között maradjon – különben a futam jobb pénzforrás lesz, mint maga a Kassza.
+5. **Méret.** Az `app.js` már 636 KB; az új játék külön fájlban (`lv.js`) marad, és a kezdőlap után a háttérben töltődik le.
 
 ---
 
