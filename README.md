@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.35.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.35.2** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.35.2:** **Javítva: „Ranglista-mentés elutasítva” (tkSync permission-denied, KAS-9086).** Ok: a Firestore egy kérésben legfeljebb 1000 kifejezést értékel ki; a `firestore.rules` felhasználói szabálya minden mentésnél az összes (kb. 30) mezőt újra összehasonlította, ami egy régóta játszó, teljesen kitöltött fióknál túllépte a korlátot – így a szerver minden mentést (Kassza-befizetés, rekord, játékszámláló, rendfokozat) elutasított, pedig az adat helyes volt. Most az érintett mezők halmaza egyszer készül el, és a mentés által nem érintett mezőcsoportok (rekordok, számlálók, Kassza) ellenőrzése egy lépésben kimarad. Az ellenőrzések tartalma nem változott. Új regressziós teszt: teljesen kitöltött fiók. **Teendő:** a `firestore.rules`-t újra közzé kell tenni (Firebase konzol → Firestore → Rules → Publish); az app kódja nem változott, a beragadt mentések a közzététel után maguktól feltöltődnek.
 
 **v4.35.1:** **Javítva: az admin ranglista-nullázás nem törölt mindenkinél.** Ok: a telefonok a nullázást csak akkor vették át, ha „újabb” volt a náluk utoljára átvettnél – egy korábbi, előreállított naptárú telefonról indított nullázás jövőbeli jelzése miatt az új nullázást régebbinek látták, nem törölték a helyi állást, és visszatöltötték a régi összegeket. Most a nullázást az azonosítója alapján veszi át minden telefon (ha eltér, törlődik a helyi állás; a nyitott Kassza előbb bezárul, mentés nélkül). **Szerveroldali védelem:** nullázás után a fiók semmit nem tölthet fel, amíg a telefonja nem nyugtázta a nullázást (`lbSeen`), így régi helyi állás nem kerülhet vissza a ranglistára. **Teendő:** a `firestore.rules`-t újra közzé kell tenni, majd adminként **még egyszer nullázni** (Továbbiak → Fiók → Ranglista nullázása).
 

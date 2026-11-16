@@ -8,7 +8,7 @@ const DOCS = `${BASE}/v1/projects/${P}/databases/(default)/documents`;
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
 const userTok = uid => 'Bearer ' + `${b64({ alg: 'none', typ: 'JWT' })}.${b64({ sub: uid, user_id: uid, email: `${uid}@medve.invalid`, aud: P, iss: `https://securetoken.google.com/${P}`, iat: 1, exp: 9999999999 })}.`;
 const ADMIN = 'Bearer owner';
-const val = v => v instanceof Date ? { timestampValue: v.toISOString() } : typeof v === 'string' ? { stringValue: v } : Number.isInteger(v) && Math.abs(v) < 9e15 ? { integerValue: String(v) } : typeof v === 'number' ? { doubleValue: v } : typeof v === 'boolean' ? { booleanValue: v } : v;
+const val = v => v instanceof Date ? { timestampValue: v.toISOString() } : typeof v === 'string' ? { stringValue: v } : Number.isInteger(v) && Math.abs(v) < 9e15 ? { integerValue: String(v) } : typeof v === 'number' ? { doubleValue: v } : typeof v === 'boolean' ? { booleanValue: v } : v && typeof v === 'object' ? { mapValue: { fields: fields(v) } } : v;
 const fields = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, val(v)]));
 // írás a commit végponton: így szerveridő (REQUEST_TIME) is küldhető, mint az appban a serverTimestamp()
 async function write(path, auth, data, { srvTs = [], del = [], create = false } = {}) {
@@ -69,6 +69,18 @@ const expect = (name, got, want) => { const ok = (got < 300) === want; if (!ok) 
   expect('accept acknowledgement (lbSeen = lbReset)', await write(doc, U, { lbSeen: R }), true);
   expect('reject huge stale Kassza total after reset (1.29e18)', await write(doc, U, { tkFt: 1.29e18, tkWk: cur, tkWg: 1.29e18, tkAt: Date.now() }, { srvTs: ['tkSt'] }), false);
   expect('accept fresh small Kassza total after reset', await write(doc, U, { tkFt: 500, tkWk: cur, tkWg: 500, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
+  // KAS-9086: teljesen kitöltött (régi) fióknál a szabály túllépte a Firestore 1000 kifejezéses korlátját, és minden mentést elutasított
+  const uid3 = 'f' + Date.now(), U3 = userTok(uid3), doc3 = 'users/' + uid3, t0 = Date.now() - 864e5;
+  await write(doc3, U3, { name: 'Teli', rank: 'Közlegény', nick: uid3, createdAt: t0 }, { create: true });
+  expect('admin seeds a fully populated profile', await write(doc3, ADMIN, { harcBest: 50, harcAt: t0, droneBest: 500, droneAt: t0, gtBest: 30000, gtBestAt: t0, gkBest: 100, gkBestAt: t0, rkBest: 20, rkBestAt: t0, rkhBest: 1000, rkhBestAt: t0, sereBest: 100, sereBestAt: t0, harcN: 3, droneN: 3, gtN: 3, gkN: 3, rkN: 3, sereN: 3, tkN: 5, tkGive: 100, tkOwn: { a: 1 }, lastPlay: t0, tkFt: 9125, tkWk: cur, tkWg: 9125, tkUteg: '1. üteg', tkAt: Date.now() - 5e4 + 0.75, tkSt: new Date(Date.now() - 5e4), tkOwnF: {}, lbReset: 7, lbSeen: 7 }), true);
+  expect('full profile: Kassza sync (KAS-9086 payload)', await write(doc3, U3, { tkFt: 16757, tkUteg: '1. üteg', tkOwnF: {}, tkWk: cur, tkWg: 16757, tkAt: Date.now() + 0.75 }, { srvTs: ['tkSt'] }), true);
+  expect('full profile: single high score', await write(doc3, U3, { harcBest: 60, harcAt: Date.now() }), true);
+  expect('full profile: play counter + lastPlay', await write(doc3, U3, { harcN: 4, lastPlay: Date.now() }), true);
+  const t1 = Date.now();
+  expect('full profile: all 7 records at once (record sync)', await write(doc3, U3, { harcBest: 70, harcAt: t1, droneBest: 600, droneAt: t1, gtBest: 20000, gtBestAt: t1, gkBest: 200, gkBestAt: t1, rkBest: 30, rkBestAt: t1, rkhBest: 2000, rkhBestAt: t1, sereBest: 200, sereBestAt: t1 }), true);
+  expect('full profile: rank change', await write(doc3, U3, { rank: 'Őrvezető' }), true);
+  expect('full profile: still rejects a lower record', await write(doc3, U3, { harcBest: 10, harcAt: Date.now() }), false);
+  expect('full profile: still rejects absurd Kassza jump', await write(doc3, U3, { tkFt: 1e15, tkWk: cur, tkWg: 1e15, tkAt: Date.now() }, { srvTs: ['tkSt'] }), false);
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error('ERR', e); process.exit(1); });
