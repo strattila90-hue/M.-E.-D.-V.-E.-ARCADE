@@ -1704,3 +1704,37 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 #harc .tkuhint b{font:400 15px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.06em;color:#ffe08a;text-shadow:1px 1px 0 #000}
 #harc .tkuhint span{font:700 11px system-ui,sans-serif;color:#f3ecd4;opacity:.9}
 #harc.tkul .tkultra,#harc.tkul .tkpush,#harc.tkul .tkmint{visibility:hidden}
+/* ===== Tüzér Derby (lv.js) ===== */
+#harc.lv{background:#0c1f10}#harc.lv .hbar{background:linear-gradient(90deg,#123a1c,#2f7a3a)}#harc.lv .htitle b{color:#ffd23a}
+#harc.lv .hstart,#harc.lv .hover{background:rgba(10,28,14,.96);border-color:rgba(255,210,58,.55)}#harc.lv h3{color:#ffd23a}
+#harc .lvwrap{position:relative;flex:1;display:flex;min-height:0}#harc .lvwrap canvas{flex:1;width:100%;height:100%}
+#harc .lvpanel{position:absolute;inset:0;z-index:20}#harc .lvpanel[hidden]{display:none}
+#harc .lvpanel.full{background:#0c1f10;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#harc .lvstats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12px;margin:0 0 12px;opacity:.95}#harc .lvstats b{color:#ffe08a;font-size:14px}
+#harc .lv .neg,#harc.lv .neg,#harc.lv .lvstats b.neg{color:#ff8a7a}#harc.lv .pos,#harc.lv .lvstats b.pos{color:#7dff8a}
+#harc .lvhelp{text-align:left;margin-top:12px;font-size:12.5px}#harc .lvhelp summary{cursor:pointer;color:#ffe08a;font-weight:800;padding:6px 0;text-align:center}#harc .lvhelp p{font-size:12.5px;margin:0 0 8px}
+#harc .lvcard{max-width:560px;margin:0 auto;padding:10px 10px calc(14px + env(safe-area-inset-bottom,0px))}
+#harc .lvhd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:700;margin-bottom:8px}#harc .lvhd b{font-family:var(--f-display);font-weight:400;font-size:22px;letter-spacing:.04em;color:#ffd23a;margin-right:auto}
+#harc .lvgo{padding:3px 9px;border-radius:999px;background:#2f7a3a}#harc .lvgo.g1{background:#7a6a2a}#harc .lvgo.g2{background:#6a4a2a}
+#harc .lvtip{background:rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-bottom:8px;line-height:1.35}
+#harc .lvrow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:12px;padding:7px 8px;margin-bottom:6px}#harc .lvrow.me{box-shadow:inset 0 0 0 2px #ffd23a;background:rgba(255,210,58,.1)}
+#harc .lvno{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;color:#111;font-style:normal;font-weight:900;font-size:15px;box-shadow:0 0 0 1.5px #111}
+#harc .lvinf{flex:1;min-width:0;text-align:left}#harc .lvinf b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#harc .lvinf small{display:block;font-size:10.5px;opacity:.82;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#harc .lvbars{display:flex;gap:6px;margin-top:4px;font-size:8.5px;font-weight:800;opacity:.9}#harc .lvbars span{flex:1;min-width:0}#harc .lvbars i{display:block;height:4px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:1px}#harc .lvbars u{display:block;height:100%;background:#7dff8a}
+#harc .lvod{flex:none;display:flex;gap:5px}#harc .lvod button{position:relative;border:0;border-radius:10px;width:58px;padding:5px 2px 6px;background:#1c3a22;color:#fff;font:inherit;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22);cursor:pointer}
+#harc .lvod button small{display:block;font-size:9px;font-weight:800;opacity:.8}#harc .lvod button b{display:block;font-size:15px;color:#ffe08a}#harc .lvod button em{display:block;font-style:normal;font-size:8.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#harc .lvod button.on{background:#ffd23a;color:#111;box-shadow:0 0 10px rgba(255,210,58,.6)}#harc .lvod button.on b{color:#111}#harc .lvod button:disabled{opacity:.5}
+#harc .lvfoot{position:sticky;bottom:0;background:linear-gradient(rgba(12,31,16,0),#0c1f10 18%);padding-top:14px;margin-top:4px}
+#harc .lvstk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700}#harc .lvstk span{margin-right:auto}
+#harc .lvstk button{border:0;border-radius:10px;padding:5px 10px;background:#1c3a22;color:#fff;font:inherit;font-weight:900;font-size:14px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22);cursor:pointer}#harc .lvstk button small{display:block;font-size:8.5px;font-weight:700;opacity:.8}#harc .lvstk button.on{background:#ffd23a;color:#111}
+#harc .lvsum{font-size:12px;margin:8px 0;opacity:.95}#harc .lvsum b{color:#ffe08a}#harc .lvbtns{display:flex;gap:8px;justify-content:center}#harc .lvbtns .btn.pri{flex:1}
+#harc.lv .btn.line{color:#fff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4)}
+#harc .lvres{width:min(380px,92vw)}#harc .lvres .hboard{margin-top:8px}#harc .lvres .hboard>div.me{color:#ffd23a;font-weight:800}#harc .lvres .hboard>div:not(.lbl){align-items:center;gap:8px;font-size:12.5px}#harc .lvres .hboard span{text-align:left;min-width:0}#harc .lvres .hboard b{white-space:nowrap}
+#harc .lvres .lvno{width:18px;height:18px;font-size:11px;border-radius:4px;margin-right:6px;vertical-align:middle}#harc .lvbets .ok b{color:#7dff8a}#harc .lvbets .no b{color:#ff8a7a;font-weight:600}
+#harc .lvnet{margin:12px 0;font-size:15px}#harc .lvnet b{font-size:19px}#harc .lvnet.pos b{color:#7dff8a}#harc .lvnet.neg b{color:#ff8a7a}
+#harc .lvctl{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:10;pointer-events:none}#harc .lvctl[hidden]{display:none}#harc .lvctl>*{pointer-events:auto}
+#harc .lvctl .dpedal.gas{right:16px}
+#harc .lvlanes{position:absolute;left:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+#harc .lvlanes button,#harc .lvab{border:0;border-radius:14px;font:inherit;font-weight:900;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 -4px 0 rgba(0,0,0,.3)}
+#harc .lvlanes button{width:76px;height:44px;font-size:18px;line-height:1;background:linear-gradient(160deg,#3a5a8a,#1c2f4a)}#harc .lvlanes button small{display:block;font-size:8.5px;opacity:.85;margin-top:2px}#harc .lvlanes button:active{transform:scale(.94)}
+#harc .lvab{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));width:96px;height:64px;font-size:10.5px;letter-spacing:.03em;background:linear-gradient(160deg,#ff8a1e,#a8320a)}#harc .lvab b{display:block;font-size:20px;font-family:var(--f-display);font-weight:400}#harc .lvab:active{transform:translateX(-50%) scale(.94)}

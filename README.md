@@ -1,9 +1,20 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.39.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.40.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
-M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.40.0:** **Új játék: TÜZÉR DERBY – PzH 2000 lóverseny (galopp).** 8 löveg fut egy futamban: 7 az istállóból (gép hajtja), 1 a tiéd.
+- **Programfüzet:** futamonként táv (Sprint 600 m, Mérföld 900 m, Derby 1300 m), talaj (száraz, puha, mély sár), rajthely, futásstílus (élen menő, követő, hajrázó), málha (súlyterhelés – a jobb löveg több gránátot visz), forma (az utolsó 5 futam helyezése), a löveg adottságai és Öreg Zászlós tippje. Az istálló 24 lövege állandó, a formájuk futamról futamra követhető.
+- **Fogadás a Kassza zsebpénzéből** (csak játékpénz): **Tét** (a löveg nyer) és **Hely** (az első háromban végez), totalizatőr-rendszerben, 15% levonással. A kiírt szorzó becslés; a végső osztalék a zárás után alakul ki. A gépi fogadók az esélyteleneket túlfogadják, ezért a formát figyelő játékos jár jobban. Egy futamra legfeljebb a zseb 10%-a, a saját lövegre 2%-a tehető. Futam közbeni kilépésnél a tét visszajár.
+- **Hajtás:** startgép, csengőre rajt (a korai gáz kiugrás, késve indulsz; a gyors reakció jobb rajt). A **GÁZ** nyomva tartva hajtás (gyorsabb, de melegszik a motor), elengedve tempómenés (hűl); túlmelegedésnél 3 mp-re leesik a teljesítmény. **Sávváltás** ▲▼: kanyarban a belső sáv rövidebb, más löveg mögött szélárnyék van, de be is lehet szorulni. **Utánégető** futamonként 3, csak a célegyenesben. A gépi lövegek is a korláthoz húzódnak és kikerülik a lassabbat.
+- **Díjazás:** a saját löveg 1–3. helyéért a zseb 1 / 0,5 / 0,25%-a (legalább 5 000 / 2 500 / 1 000 Ft).
+- **Modell:** egyszínű szürkészöld PzH 2000 oldalnézetben, a megadott tervrajz arányai szerint rajzolva (155 mm L/52 löveg csőszájfékkel, 7 futógörgő, szellőzőrácsok).
+- **A szervert nem terheli:** a futam, a szorzók és a gépi fogadók a telefonon számolódnak; nincs új figyelő, nincs új mentés, a `firestore.rules` nem változott. A zsebpénz a Kassza helyi állásában változik, a ranglistára továbbra is csak a Kasszában befizetett (szerveroldalon korlátozott) összeg kerül. A győzelmek és a mérleg egyelőre csak a telefonon tárolódnak (nincs közös ranglista). Net nélkül is játszható.
+- Következő lépések (még nincs kész): Befutó és Hármasbefutó, élő szorzótábla, események (érvénytelen futam), levonás az üteg kasszájába, díjfutamok, gátverseny. A tervezet: `docs/tervezet-pzh2000-loverseny.md`.
+
+*Fejlesztőknek:* az új játék az `lv.js` modulban van (lustán töltődik, mint a `sr.js` és a `sere.js`); a Kassza zsebét az `app.js` `tkWallet(d)` függvényén át éri el. Az egyensúly állandói az `lv.js` elején vannak (`LV_PUSH`, `LV_CRUISE`, `LV_HEAT`, `LV_HCP`, `LV_BIAS`, `LV_TAKE`).
 
 **v4.39.1:** Tüzér Kassza: a felső ZSEB-kijelző körül a villogó izzósor helyett álló, kettős arany keret szegecsekkel (Golden Ticket alatt világosabb) – a rulettkerékhez illik, nincs mozgó fény, és kicsit gyorsabb (6× lassított processzorral kb. 27 → 29 képkocka/mp). Mind a 8 játék nyitás–játék–bezárás próbája hibamentes.
 

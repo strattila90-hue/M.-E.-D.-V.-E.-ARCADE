@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.39.1',APP_DATE='2026.11.16.';
+const APP_VER='4.40.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -372,7 +372,8 @@ const IC_P={play:'<path d="M7 4v16l13-8z"/>',medal:'<path d="M7.5 2h9l-2.5 6.5h-
  star:'<path d="M12 1.8l3 6.4 7 .8-5.2 4.8 1.5 6.9L12 17.2l-6.3 3.5 1.5-6.9L2 9l7-.8z"/>'};
 const ic=(n,cls)=>`<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="#111" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">${IC_P[n]||''}</svg>`;
 // a kezdőlap játékválasztója: egy képernyős, oldalra csúsztatható nagy csempék (Shot&Run az első)
-const DECK_G=[['shotrun','SHOT&amp;RUN','PzH 2000 tüzérpárbaj · gép vagy barát ellen','linear-gradient(200deg,#7a2a8a,#2a0b3a 55%,#0b0414)','#ff7a1e','sr',1],
+const DECK_G=[['lovi','TÜZÉR DERBY','PzH 2000 lóverseny · fogadás','linear-gradient(170deg,#3fa34d,#14401f 55%,#07160b)','#ffd23a','p',1],
+  ['shotrun','SHOT&amp;RUN','PzH 2000 tüzérpárbaj · gép vagy barát ellen','linear-gradient(200deg,#7a2a8a,#2a0b3a 55%,#0b0414)','#ff7a1e','sr',1],
   ['kassza','TÜZÉR KASSZA','Tap-tap pénzcsináló · ütegkassza','linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402)','#2f7a2f','k',1],
   ...ANI_G.map(([g,t,sub,bg,ac,ik,nw])=>[g,t.replace(/<br>/g,' '),esc(sub),bg,ac,ik,nw])];
 const DECK={i:0,raf:0},ART={url:{},busy:false,img:{}};let TK_NOTE_URL=null;
@@ -405,7 +406,7 @@ addEventListener('resize',()=>{deckFit();deckGo(DECK.i,false)});addEventListener
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-deck],[data-deckto]');if(!t)return;deckGo(t.dataset.deckto!=null?+t.dataset.deckto:DECK.i+(+t.dataset.deck))});
 document.addEventListener('keydown',e=>{if(!document.getElementById('deck')||document.getElementById('harc')?.hidden===false||ARC.more||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
   if(e.key==='ArrowRight'){deckGo(DECK.i+1);e.preventDefault()}else if(e.key==='ArrowLeft'){deckGo(DECK.i-1);e.preventDefault()}else if(e.key==='Enter'&&e.target===document.body){gameStart(DECK_G[DECK.i][0])}});
-function gameStart(k){dailyMark(k);if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');arcMore('auth');return}k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():gvOpen()}
+function gameStart(k){dailyMark(k);if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');arcMore('auth');return}k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():k==='lovi'?lvOpen():gvOpen()}
 document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('#main [data-game]');if(!g)return;e.stopPropagation();
   if(g.classList.contains('dtile')&&+g.dataset.i!==DECK.i){deckGo(+g.dataset.i);return}
   if(g.classList.contains('dtile')){g.classList.add('go');try{sndClink()}catch(x){}setTimeout(()=>{g.classList.remove('go');gameStart(g.dataset.game)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:220);return}
@@ -1743,6 +1744,10 @@ function tkHangarHTML(){const owned=TK_GEAR.filter(g=>(TK.own[g.id]||0)>0);let s
     return `<div class="tkstack"><div class="tkpile2">${stack}</div><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>becsült érték: ${tkFmt(v)} Ft · +${tkFmtR(inc)} Ft/mp</small></div></div>`}).join('');
   return `<h4 data-st="margin-top:12px">🏭 Üteg-hangár</h4>`+(owned.length?`<div class="tkhangar">${cards}</div><p class="hint">Hangár összértéke: <b>${tkFmt(sumV)} Ft</b> · termelés: <b>${tkFmtR(sumP)} Ft/mp</b></p>`:'<p class="hint">A hangár üres. Vásárolj eszközöket a Piacon – itt halmozódnak fel.</p>')}
 
+// A zseb elérése más játékból (Tüzér Derby): d Ft-tal módosítja és visszaadja a zsebpénzt. Közvetlenül a mentett állást írja,
+// a lastT (távolléti termelés alapja) érintése nélkül; a szerverre semmit nem küld – a befizetés továbbra is csak a Kasszában történik.
+function tkWallet(d){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')||{}}catch(e){}let p=Number(s.pocket);if(!Number.isFinite(p)||p<0)p=0;
+  if(d&&Number.isFinite(d)){p=Math.max(0,p+d);s.pocket=p;if(d>0){const e=Number(s.earned);s.earned=(Number.isFinite(e)?e:0)+d}if(s.ver===undefined)s.ver=TK_VER;try{localStorage.setItem(TK_KEY,JSON.stringify(s))}catch(e){}if(TK.pocket!==undefined){TK.pocket=p;if(d>0)TK.earned=(TK.earned||0)+d}}return p}
 function tkEarn(v,x,y,show){if(!v)return;TK.pocket+=v;TK.earned+=v;TK.pkD=1;if(show)TK.pop.push({x:x+(Math.random()-.5)*26,y,t:0,s:'+'+tkFmt(v),crit:show==='crit',cb:TK.combo||0})}
 // ---- szabályok: mi látszik másoknak ----
 function tkRulesHTML(){return `<details class="tkrules"><summary>📜 Szabályok – mi számít, mit látnak mások?</summary><ul>
@@ -3126,7 +3131,7 @@ setInterval(()=>{if(MODE==='fb'&&FB_SYNCED&&!document.hidden)fbSyncLocal()},3000
 // ha látszik (menü, ranglista, Ütegek fül). Játék közben és háttérben a lista-figyelő szünetel: így más játékosok mentései nem
 // terhelik a telefont (nincs akadás), és a szerveren sem sokszorozódnak az olvasások. Visszatéréskor csak a változások töltődnek le.
 let UNSUB_ME=null,LB_ON=false,LB_OFF_T=0,LIVE_T=0,LIVE_DUE=false;
-const inGame=()=>{try{return GP_RUN()||!!(typeof SE!=='undefined'&&SE.run)||!!(typeof SR!=='undefined'&&SR.run)}catch(e){return false}};
+const inGame=()=>{try{return GP_RUN()||!!(typeof SE!=='undefined'&&SE.run)||!!(typeof SR!=='undefined'&&SR.run)||!!(LVM&&LVM.LV.run)}catch(e){return false}};
 function fbStop(){if(UNSUB){UNSUB();UNSUB=null}if(UNSUB_ME){UNSUB_ME();UNSUB_ME=null}LB_ON=false}
 function fbListen(){fbStop();FB_SYNCED=false;const uid=UID;
   UNSUB_ME=DB.doc('users/'+uid).onSnapshot(x=>{if(uid!==UID)return;if(x.exists){USERDOC={id:x.id,...x.data()};S.users[uid]=USERDOC}else{USERDOC=null;delete S.users[uid]}
@@ -3409,6 +3414,15 @@ function aPine(c,x,y,s,col){for(let i=0;i<3;i++){const w=(70-i*16)*s,yy=y-i*42*s
 function aShell(c,x,y,s,rot){c.save();c.translate(x,y);c.rotate(rot);c.scale(s,s);aShape(c,[[-30,-11],[14,-11],[38,0],[14,11],[-30,11]],'#c9a227',5);aShape(c,[[-30,-11],[-20,-11],[-20,11],[-30,11]],'#8a5a1a',4);c.restore()}
 
 const ART_SCN={
+lovi(c,I){aSky(c,[[0,'#3fa9f5'],[.45,'#bfe9ff'],[.5,'#4f8a34'],[1,'#1f4a1c']]);aRays(c,360,300,22,'rgba(255,255,255,.22)');
+  aCloud(c,150,150,1,'#fff',5);aCloud(c,570,110,.8,'#fff',4);
+  aShape(c,[[-20,430],[740,400],[740,470],[-20,500]],'#fff',6);for(let x=20;x<720;x+=90)aShape(c,[[x,470],[x+14,470],[x+14,520],[x,520]],'#fff',4);
+  aHill(c,[[0,520],[720,490]],'#5aa23a','rgba(10,40,8,.3)');
+  for(let k=0;k<2;k++)for(let j=0;j<10;j++){aShape(c,[[600+k*34,330+j*34],[634+k*34,330+j*34],[634+k*34,364+j*34],[600+k*34,364+j*34]],(j+k)%2?'#111':'#fff',0)}aInk(c,[[600,330],[668,330],[668,670],[600,670]],true,6);
+  aSpeed(c,90,640,26,60,300,'rgba(255,255,255,.75)',5);aHLines(c,0,420,520,700,26,'rgba(255,255,255,.5)',5);
+  aSpr(c,I.pzh,470,500,230,{rot:-.02});aSpr(c,I.pzh,250,545,300,{rot:-.03});
+  aCloud(c,90,690,1,'#d9c58f',6);aCloud(c,60,580,.7,'#d9c58f',4);
+  aSfx(c,'HAJRÁ!',220,300,130,-.12,'#fff35a','#ff7a1e');aSfx(c,'CÉLFOTÓ!',430,400,70,.08,'#fff','#e63946');aCorners(c,'rgba(0,30,0,.6)')},
 shotrun(c,I){aSky(c,[[0,'#2b0b46'],[.4,'#7a1f6e'],[.62,'#ff6a3a'],[.8,'#ffb347'],[1,'#3a2a14']]);aRays(c,360,420,22,'rgba(255,214,140,.16)');
   aShape(c,aBlob(360,470,150,150,40,.02),'#ffcf5a',0);aDots(c,'rgba(255,120,40,.55)',12,(x,y)=>{const d=Math.hypot(x-360,y-470);return d<150?Math.max(0,(y-380)/38):0});
   aHill(c,[[0,520],[160,470],[300,510],[420,485],[560,440],[720,470]],'#3d1f4a');
@@ -3498,11 +3512,12 @@ function gRefitAll(){const h=document.getElementById('harc');if(!h||h.hidden)ret
 
 /* ===== lustán betöltött játékmodulok: a SERE és a Shot&Run külön fájlban van, így a kezdőlap sokkal gyorsabban indul.
    A kezdőlap után a háttérben előre letöltődnek (és a service worker offline is tárolja őket), így a megnyitásuk azonnali. ===== */
-let SEM=null,SRM=null;const LAZY={};
-function lazyMod(k){return LAZY[k]||(LAZY[k]=(k==='sr'?import('./sr.js'):import('./sere.js')).then(m=>{if(k==='sr')SRM=m;else SEM=m;return m}).catch(e=>{LAZY[k]=null;throw e}))}
+let SEM=null,SRM=null,LVM=null;const LAZY={};
+function lazyMod(k){return LAZY[k]||(LAZY[k]=(k==='sr'?import('./sr.js'):k==='lv'?import('./lv.js'):import('./sere.js')).then(m=>{if(k==='sr')SRM=m;else if(k==='lv')LVM=m;else SEM=m;return m}).catch(e=>{LAZY[k]=null;throw e}))}
 function lazyOpen(k,fn){let t=setTimeout(()=>{t=0;toast('Betöltés…')},400);lazyMod(k).then(m=>{clearTimeout(t);m[fn]()}).catch(e=>{clearTimeout(t);console.warn(e);toast('A játék nem töltődött be – ellenőrizd a netet, és próbáld újra.')})}
 function srOpen(){lazyOpen('sr','srOpen')}
 function seOpen(){lazyOpen('se','seOpen')}
+function lvOpen(){lazyOpen('lv','lvOpen')}
 if(/[?&]sr=/i.test(location.search))lazyMod('sr').catch(()=>{});// Shot&Run meghívó link: azonnal kell
-setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
-export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,toast};
+setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500);setTimeout(()=>lazyMod('lv').catch(()=>{}),3000)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
+export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};
