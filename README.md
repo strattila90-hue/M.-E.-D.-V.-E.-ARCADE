@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.39.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.39.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.39.1:** Tüzér Kassza: a felső ZSEB-kijelző körül a villogó izzósor helyett álló, kettős arany keret szegecsekkel (Golden Ticket alatt világosabb) – a rulettkerékhez illik, nincs mozgó fény, és kicsit gyorsabb (6× lassított processzorral kb. 27 → 29 képkocka/mp). Mind a 8 játék nyitás–játék–bezárás próbája hibamentes.
 
 **v4.39.0:** Tüzér Kassza: **👶 ULTRA KOPPINTÁS gyerekzárral.** A Kassza képernyőjén bal lent egy csúszka: jobbra húzva (végig) bekapcsol. Ilyenkor az egész képernyő koppintófelület – bárhová koppint a gyerek, az pénzt termel –, de **semmi más nem érhető el**: bezárás ✕, alsó fülek (Fejlesztés, Piac, Bankók, Ajándék, Érdemek, Ütegek), Ütegbe tol, felhúzás, Pénzverde és az Android „vissza” gomb sem működik. A koppintás ugyanannyit ér, mint egyébként (ugyanaz a 15/mp korlát, nincs extra bevétel). **Feloldás:** a jobb felső lakat folyamatos, **15 mp-es nyomva tartásával** (körbefutó jelző és visszaszámláló; elengedésre újraindul). Félig húzott csúszka nem kapcsol be. Megjegyzés: a telefon saját gombjai (kezdőképernyő, alkalmazásváltó) böngészőből nem tilthatók le – teljes zároláshoz a telefon „Képernyő rögzítése” (Android) vagy „Irányított hozzáférés” (iPhone) funkciója használható.
 

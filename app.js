@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.39.0',APP_DATE='2026.11.16.';
+const APP_VER='4.39.1',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2139,7 +2139,7 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
     const a=.5+.5*Math.sin(now/250);c.fillStyle=`rgba(255,224,138,${a.toFixed(2)})`;c.font='bold 16px sans-serif';c.fillText('⇡',px,py-pk*3-6)}
   // zseb-számláló: a szöveg legfeljebb ~12×/mp frissül (koppintáskor azonnal), a rajz betű-gyorsítótárból megy
   if(TK.pkD||now-(TK.pkT||0)>80||TK.pkS==null){TK.pkT=now;TK.pkD=0;const v=Math.floor(TK.pocket);if(v!==TK.pkV||TK.pkS==null){TK.pkV=v;TK.pkS=tkPlain(tkFmt(v)+' FT').replace(/[  ]/g,' ')}}
-  {const tx=TK.pkS,k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);tkBulbRect(c,x0-16,y0-20,w+32,5*k+32,now,12);
+  {const tx=TK.pkS,k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62;c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);/* álló arany keret szegecsekkel a villogó izzósor helyett (nincs mozgó fény, nincs fényösszeadás) */{const fx=x0-16,fy=y0-20,fw=w+32,fh=5*k+32,gc=TK.rush>0?'#ffe9a0':'#e0b53a';c.strokeStyle='#4a3606';c.lineWidth=4;c.strokeRect(fx,fy,fw,fh);c.strokeStyle=gc;c.lineWidth=2;c.strokeRect(fx,fy,fw,fh);c.fillStyle=gc;for(const [px,py] of [[fx,fy],[fx+fw,fy],[fx,fy+fh],[fx+fw,fy+fh],[fx+fw/2,fy],[fx+fw/2,fy+fh]]){c.fillRect(px-2.5,py-2.5,5,5)}c.fillStyle='#4a3606';for(const [px,py] of [[fx,fy],[fx+fw,fy],[fx,fy+fh],[fx+fw,fy+fh],[fx+fw/2,fy],[fx+fw/2,fy+fh]])c.fillRect(px-.5,py-.5,1,1)}
     c.fillStyle='#c9a227';c.font='900 9px sans-serif';c.textAlign='center';c.fillText('ZSEB',W/2,y0-4);tkTxtF(c,tx,x0+k,y0+k,'#3a2a04',k);tkTxtF(c,tx,x0,y0,TK.rush>0?'#fff4b0':'#ffe08a',k)}
   if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=70;c.save();c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);if(!LOWFX){c.shadowColor='#ffd24a';c.shadowBlur=18}c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
   if(TK.newDen){const N=TK.newDen;N.t+=dt;const a=Math.min(1,N.t*3,(3.2-N.t)*2);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(0,0,0,.65)';c.fillRect(0,H*.13,W,60);c.fillStyle='#ffcf3a';c.font='900 20px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('ÚJ PÉNZNEM: '+TK_DEN[N.i].n.toUpperCase(),W/2,H*.13+26);c.fillStyle='#f3ecd4';c.font='bold 11px sans-serif';c.fillText(TK_DEN[N.i].m,W/2,H*.13+44);c.globalAlpha=1;if(N.t>3.2)TK.newDen=null}
