@@ -1,9 +1,11 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.30.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.31.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run.
+
+**v4.31.0:** Tüzér Kassza: **javítva a pénzösszeg-eltérés** – egy játékosnál több pénz látszott, mint amennyit a többiek a ranglistán láttak. Ok: a szerverről visszatöltés egy hibás változó miatt félbeszakadt, ezért a havi összeg nem töltődött vissza, és a szerver minden további mentést elutasított; emellett a még úton lévő saját mentést a játék egyszer újra hozzáadhatta. Most a 🏆 számláló és a ranglista ugyanazt mutatja; amíg a mentés úton van, a 🏆 mellett ⏳ jelzi, az Ütegek fülön pedig látszik, mennyi áll rólad a ranglistán. **Pontosított szabályok** (kezdőképernyő és Ütegek fül): mi kerül a zsebbe, mi látszik másoknak, havi nullázás, átigazolás, több telefon. **Új 🎁 Ajándék fül:** 7 napos napi ajándékdoboz (egyre nagyobb, 7. nap főnyeremény), **szerencsekerék** 3 óránként (pénz ×3–×60, Golden Ticket, ingyen fejlesztés/eszköz, extra pörgetés), **ejtőernyős ajándékcsomag** 1–2 percenként, gyakoribb Golden Ticket. **Kaszinós grafika:** futófényes izzósor a pénz és a zseb körül, mozgó reflektorok, konfetti és érmeeső. **Új kaszinózene:** swinges lounge-jazz sétáló nagybőgővel, ride-cinnel, seprűs pergővel, Rhodes-kísérettel, vibrafon-dallammal és teremzengetéssel; Golden Ticket alatt gyorsabb, rézfúvós betétekkel.
 
 **v4.30.1:** Shot&Run: javítva a lövés utáni kamera-lemaradás – a filmes lövés-jelenet a torkolattűz után 0,2 mp-cel átúszik a kilőtt gránátra (eddig 1,25 mp-ig a csövön maradt, és a gránát kirepült a képből), a követés gyorsabb, és a gránát sebességének irányába előre tart, így nincs állandó lemaradás (mérve: legnagyobb eltérés a kép közepétől 750 → 108 képpont).
 
