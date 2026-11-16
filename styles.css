@@ -1685,3 +1685,22 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .tkdens .next img{filter:brightness(.45) saturate(.5)}
 .tkdens .tkbar{margin:5px 4px 2px}.tkdens .tkbar i{background:#6fc3e8}
 .tkdens img{height:76px;width:auto;max-width:100%;object-fit:contain}
+/* ===== Tüzér Kassza: ULTRA KOPPINTÁS csúszka + gyerekzár (4.39.0) ===== */
+#harc .tkultra{position:absolute;left:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));width:min(210px,calc(100% - 186px));height:46px;border-radius:23px;background:linear-gradient(90deg,rgba(201,162,39,calc(.15 + var(--u,0)*.6)),rgba(10,14,8,.88));border:2px solid #c9a227;box-shadow:inset 0 2px 6px rgba(0,0,0,.6),0 3px 0 #070a05;touch-action:none;overflow:hidden;z-index:6}
+#harc .tkultra em{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;font:400 12px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.06em;color:#ffe08a;font-style:normal;text-shadow:1px 1px 0 #000;pointer-events:none;opacity:calc(1 - var(--u,0))}
+#harc .tkukn{position:absolute;left:3px;top:3px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:radial-gradient(circle at 35% 30%,#fff4c0,#e0aa22 60%,#8a6410);box-shadow:0 2px 0 #4a3606,0 0 0 2px #14140f;cursor:grab;touch-action:none;transition:transform .25s ease-out}
+#harc .tkultra.on .tkukn{transition:none;cursor:grabbing}
+#harc .tkmint{bottom:calc(122px + env(safe-area-inset-bottom,0px))}
+#harc .tkulock{position:absolute;inset:0;z-index:100;touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;box-shadow:inset 0 0 0 4px #c9a227,inset 0 0 0 8px rgba(20,14,4,.75);background:linear-gradient(rgba(10,6,2,.55),rgba(10,6,2,0) 92px)}
+#harc .tkuhd{position:absolute;left:0;right:0;top:0;height:var(--uh,60px);box-sizing:border-box;padding:env(safe-area-inset-top,0px) 84px 0 16px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(#4a0c12,#1b0306);border-bottom:3px solid #c9a227;pointer-events:none}
+#harc .tkuhd b{font:400 19px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.05em;color:#ffe08a;text-shadow:2px 2px 0 #000;line-height:1.1}
+#harc .tkuhd span{font:700 12px system-ui,sans-serif;color:#f3ecd4;text-shadow:1px 1px 0 #000}
+#harc .tkuhold{--hs:min(54px,calc(var(--uh,60px) - env(safe-area-inset-top,0px) - 8px));position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + (var(--uh,60px) - env(safe-area-inset-top,0px) - var(--hs))/2);width:var(--hs);height:var(--hs);border-radius:50%;border:0;padding:0;background:conic-gradient(#ffd24a calc(var(--p,0)*360deg),rgba(255,255,255,.22) 0);box-shadow:0 3px 0 #000;touch-action:none;-webkit-touch-callout:none;z-index:1}
+#harc .tkuhold::before{content:'';position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#3a3220,#14110a)}
+#harc .tkuhold i{position:relative;font-style:normal;font-size:19px;display:block;line-height:1;margin-top:-4px}
+#harc .tkuhold em{position:absolute;left:0;right:0;bottom:6px;font:900 11px system-ui,sans-serif;font-style:normal;color:#ffe08a}
+#harc .tkuhold.on{transform:scale(1.06)}
+#harc .tkuhint{position:absolute;left:0;right:0;bottom:0;height:var(--un,64px);box-sizing:border-box;padding:0 12px env(safe-area-inset-bottom,0px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;background:linear-gradient(#2a3320,#0d120a);border-top:3px solid #c9a227;pointer-events:none}
+#harc .tkuhint b{font:400 15px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.06em;color:#ffe08a;text-shadow:1px 1px 0 #000}
+#harc .tkuhint span{font:700 11px system-ui,sans-serif;color:#f3ecd4;opacity:.9}
+#harc.tkul .tkultra,#harc.tkul .tkpush,#harc.tkul .tkmint{visibility:hidden}
