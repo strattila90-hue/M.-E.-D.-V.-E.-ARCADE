@@ -129,6 +129,35 @@ Külföldön ezen felül: napi dupla (két egymást követő futam győztese), P
 - **Melbourne Cup** ✅ – 2014-ben egyetlen futamra kb. 300 millió ausztrál dollár fogadás; ⚠️ munkahelyi sorsolásos fogadás („sweep”).
 - **Pesti „lovi”** – a régi törzsközönség szokásairól a keresés nem adott használható forrást; ehhez Krúdy és a Fehér–Török-féle *A magyar lóversenyzés története (1827–1977)* lenne a jó alap.
 
+### 4.4 A galopp (síkverseny) – a játék mintája
+
+A játék a galoppot követi, nem az ügetőt. Az alábbi a megrendelő által adott útmutató kivonata (nem a netes keresésből származik).
+
+**A futam három szakasza (1–2,5 perc):**
+1. **Start** – a lovak a startgép rekeszeiben állnak; az indító egyszerre nyitja az ajtókat, csengőszóval.
+2. **Tempómenés** – helyezkedés a belső korlát mellett. Van, aki az élre áll és diktál (frontrunner), más hátul spórol.
+3. **Hajrá** – az utolsó kanyar után végső sprint, korlátozott számú ostorütéssel; gyakran orrhossz dönt.
+
+**Távok:**
+
+| Típus | Táv | Mi dönt |
+|---|---|---|
+| Sprint | 1000–1300 m | A rajt; 1 perc 15 mp alatt vége |
+| Mérföldes | 1400–1600 m | Sebesség és taktika egyensúlya |
+| Klasszikus / hosszú | 2000–2800 m | Beosztás, a hajrá időzítése (Magyar Derby: 2400 m) |
+| Gát / akadály | – | Sövény, vizesárok, gát nagy tempóban |
+
+**Amit a fogadó figyel:**
+- **Startbox** – rövid távon és kanyargós pályán a belső (alacsony) rajtszám előny.
+- **Súlyterhelés** – zsoké + nyereg + ólom, 52–64 kg; a jobb ló többet visz, 2–3 kg a célegyenesben métereket jelent.
+- **Talaj** – jó, puha vagy mély; van sárkedvelő és csak kemény pályán nyerő ló.
+- **Zsoké** – mikor indít, talál-e rést a korlát mellett.
+- **Jártató** – a feszülten táncoló, habzó nyakú ló a start előtt elégeti az erejét.
+
+**Fogadási tanácsok:** hátulról érkező, gyors hajrájú lóra a Hely biztonságosabb (beszorulhat); sprinten a jó startboxból induló, gyors kezdésű lovakat érdemes befutóba kombinálni.
+
+**Szótár:** orrhossz / nyakhossz / lóhossz (a célbeli különbség mértékei); beszorulás („nincs út”); mázsálás (futam utáni visszamérés a nyereggel).
+
 ---
 
 ## 5. Mit veszünk át a kutatásból
@@ -138,7 +167,18 @@ Külföldön ezen felül: napi dupla (két egymást követő futam győztese), P
 | Programfüzet (Magyar Turf) | **Tüzér Turf** – futam előtti lap: mezőny, forma (utolsó 5 eredmény), talaj, tipp |
 | Telivér, pedigré | Löveg és kezelőszemélyzet: motor, lánctalp, vezető, megbízhatóság |
 | Talaj (száraz / mély) | Pálya: száraz, sár, homok – minden lövegnek van kedvence |
-| Handikep (pluszsúly a jobb lónak) | Pluszteher: teli lőszerjavadalmazás a jobb lövegen |
+| Súlyterhelés (52–64 kg, a jobb ló többet visz) | **Málha:** a jobb löveg több gránátot visz (pl. 20–60 db); a programfüzet kiírja |
+| Startgép, csengő | Sorompós indítóállás 8 rekesszel; csengőre egyszerre nyílik |
+| Startbox-előny | Belső rajthely rövid távon és kanyarban előny – a rajthelyet sorsolják |
+| Frontrunner / hátulról érkező | Minden lövegnek futásstílusa van: **élen menő**, **követő**, **hajrázó** |
+| Sprint / mérföld / klasszikus táv | Három futamhossz: Sprint (kb. 35 mp), Mérföld (kb. 50 mp), Derby (kb. 75 mp) |
+| Gátverseny | Későbbi mód: akadálypálya árokkal, betontuskóval |
+| Ostor, korlátozott ütésszám | **Utánégető:** futamonként 3 rövid gyorsítás, csak a célegyenesben |
+| Beszorulás („nincs út”) | A hajrázó löveg elakadhat a mezőny mögött – sávot kell váltani |
+| Jártató | Szemle: a járó motorral rángató, füstölő löveg a rajt előtt melegszik |
+| Mázsálás | Futam utáni málhaellenőrzés; ritkán kizárás, ha hiányzik a lőszer |
+| Orr- / nyak- / lóhossz | Különbség **csőhosszban** és **löveghosszban**; célfotó a csőszájféknél |
+| Zsoké formája | A vezető (lövegvezető) saját formával és statisztikával szerepel a programban |
 | Totalizatőr, levonás | Közös kassza; a levonás **az üteg közös kasszájába** megy |
 | Tét / Hely / Befutó / Hármasbefutó | Ugyanezek, ugyanezen a néven |
 | Szorzók mozgása zárásig | Élő szorzótábla, az utolsó 10 mp-ben „kései pénz” |
@@ -168,12 +208,15 @@ Minden futamon egy löveg a tiéd, a többire (és a sajátodra) fogadhatsz. A f
 
 ### 7.1 Egy futam menete (kb. 90 mp)
 
-1. **Szemle (20 mp)** – Tüzér Turf: 8 löveg, statok, forma, talaj, Öreg Zászlós tippje. A lövegek elvonulnak a nézők előtt.
+1. **Szemle / jártató (20 mp)** – Tüzér Turf: 8 löveg, statok, forma, málha, rajthely, talaj, Öreg Zászlós tippje. A lövegek elvonulnak a nézők előtt; az idegesen füstölő löveg rossz jel.
 2. **Fogadás (20 mp)** – szelvény kitöltése, élő szorzótábla. Zárás előtt 10 mp-cel csengő.
-3. **Rajt** – sorompó fel, motorok felbőgnek.
-4. **Futam (35–45 mp)** – oldalnézetes pálya, a lövegek sávokban. Hajtás: lásd 7.3.
-5. **Célfotó** – szoros befutónál lassítás és fotó.
-6. **Kifizetés** – osztalék, a levonás az üteg kasszájába.
+3. **Start** – a lövegek beállnak az indítóállás rekeszeibe; csengő, a sorompók egyszerre nyílnak.
+4. **Tempómenés** – helyezkedés a belső korlát mellett; az élen menők diktálnak, a hajrázók hátul spórolnak.
+5. **Hajrá** – az utolsó kanyar után a célegyenes: utánégető, sávváltás, beszorulás veszélye.
+6. **Célfotó** – szoros befutónál lassítás és fotó; a különbség csőhosszban.
+7. **Málhaellenőrzés és kifizetés** – osztalék, a levonás az üteg kasszájába.
+
+A futam hossza a távtól függ: Sprint kb. 35 mp, Mérföld kb. 50 mp, Derby kb. 75 mp. Sprinten a rajt és a rajthely dönt, Derbyn a beosztás.
 
 ### 7.2 A mezőny
 
@@ -187,13 +230,21 @@ Minden futamon egy löveg a tiéd, a többire (és a sajátodra) fogadhatsz. A f
 | Állóképesség | Mennyire lassul a végén | Állóképesség |
 | Megbízhatóság | Műszaki hiba esélye (túlmelegedés, lánctalp-szakadás) | Egészség |
 | Forma | Az utolsó 5 futam helyezése | Forma |
+| Futásstílus | Élen menő / követő / hajrázó | Frontrunner / closer |
+| Kedvenc táv | Sprint, Mérföld vagy Derby | Távkedvelés |
+| Málha | Futamonként kiírt pluszteher; lassítja a gyorsulást és a hajrát | Súlyterhelés |
+| Rajthely | Futamonként sorsolt, 1 = belső | Startbox |
+| Vezető | Saját formával; a rajtot és a résválasztást javítja | Zsoké |
 
 A lövegek állandó „istállót” alkotnak (kb. 24 névvel), hogy a formájuk több futamon át követhető legyen – ettől lesz értelme a programfüzetnek.
 
 ### 7.3 Hajtás
 
 - **Gáz** nyomva tartva: gyorsul, de melegszik a motor. Túlmelegedésnél kényszerlassítás.
+- **Rajt:** a csengő pillanatában adott gáz jó rajtot ad; korai gáz = megtorpanás a sorompónál.
 - **Taktika**, mint a valódi lovaknál: elöl menni (biztos, de fárasztó) vagy hátulról hajrázni (kockázatos, de a végén erős).
+- **Sávváltás:** balra–jobbra húzással. A belső sáv rövidebb a kanyarban, de ott könnyebb beszorulni.
+- **Utánégető:** 3 rövid gyorsítás, csak a célegyenesben használható (az ostor megfelelője).
 - **Sár / homok** szakaszokon a lánctalp-stat dönt; rossz talajon a teljes gáz megcsúszást okoz.
 - A hajtás a saját löveg idejét kb. ±15%-kal befolyásolja – elég, hogy számítson, de egy gyenge löveggel ne lehessen mindig nyerni.
 
