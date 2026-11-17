@@ -19,7 +19,7 @@ const LV_GO=[{n:'száraz',f:1,c:['#4f8a34','#467c2e']},{n:'puha',f:.975,c:['#5b7
 const LV_STY={E:['Élen menő',.05],K:['Követő',0],H:['Hajrázó',-.05]};
 const LV_COL=['#e63946','#f48c26','#ffd23a','#2a9d8f','#4fb3ff','#b388ff','#ff7ab6','#f1f1f1'];
 // járműtípusok: len a hossz (m), ex a kipufogó magassága a jármű magasságához képest
-const LV_TY={P:{n:'PzH 2000',len:11.7,ex:.6},G:{n:'Gidrán',len:7.4,ex:.3},R:{n:'Rába',len:9,ex:.55}};
+const LV_TY={P:{n:'PzH 2000',len:11.7,ex:.6},G:{n:'Gidrán',len:7.4,ex:.3},R:{n:'Rába H14',len:8,ex:.5}};
 const LV_NAMES=[['Vasparipa','P'],['Homoki Vihar','G'],['Dízel Csődör','R'],['Lánctalpas Táltos','P'],['Tábori Villám','G'],['Füstös Ráró','R'],['Borbála Büszkesége','P'],['Zsoldos Szellő','G'],['Hadtáp Hercege','R'],['Acél Kanca','P'],['Gyors Reagálás','G'],['Vezérlő Csillag','R'],
   ['Sárdagasztó','P'],['Bakonyi Betyár','G'],['Hortobágyi Hajrá','R'],['Mennydörgés','P'],['Tatai Tornádó','G'],['Málhás Pejkó','R'],['Csőre Töltött','P'],['Nehéz Lovas','P'],['Ágyúdörej','P'],['Lövegtalp Lajos','P'],['Röppálya','P'],['Tűzparancs','P']];
 const LV_DRV=['Kovács őrm.','Szabó tőrm.','Tóth szkv.','Nagy ftőrm.','Varga őrv.','Molnár zls.','Balogh őrm.','Farkas tőrm.','Lakatos szkv.','Papp őrm.','Juhász tizedes','Simon ftőrm.'];
@@ -138,7 +138,7 @@ function lvMenu(){LV.ph='menu';LV.run=false;$('#lvFast').hidden=true;const s=LV.
    <details class="lvhelp"><summary>Szabályok</summary>
     <p><b>Egy futam – egy szelvény.</b> Válassz egy indulót és a fogadás fajtáját: <b>Tét</b> – nyer; <b>Hely</b> – az első háromban végez. A legkisebb tét <b>100 Ft</b>, a legnagyobb 5 000 Ft.</p>
     <p><b>Totalizatőr:</b> a nyeremény a közös kasszából jön, 15% levonás után. A kiírt szorzó becslés – a végső osztalék a fogadás zárása után alakul ki.</p>
-    <p><b>Pénz:</b> az „Összes pénzem” tárcából fogadsz. Pénzt a többi játékkal szerzel: minden aktívan játszott perc 100 Ft. A Tüzér Kasszából is vehetsz ki, naponta legfeljebb 10 000 Ft-ot.</p>
+    <p><b>Pénz:</b> az „Összes pénzem” tárcából fogadsz (1 érme = 100 Ft). Pénzt a többi játékkal szerzel: minden aktívan játszott perc 100 Ft; az érmeverőn 100 koppintás 10 érme; a Tüzér Kasszából naponta legfeljebb 10 000 Ft vehető ki. A Derbybe a belépés ingyenes.</p>
     <p><b>Programfüzet:</b> a forma az utolsó futamok helyezése; a málha a súlyterhelés – a jobb induló többet visz. A Gidrán gyorsan rajtol és a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon. Az 1-es rajthely van a korlátnál – kanyarban ez rövidebb út.</p></details></div>`);
   $('#lvGoCard').onclick=lvCard;$('#lvWalB').onclick=()=>walOpen()}
 const lvBar=v=>`<i><u data-st="width:${Math.round(lvClamp(v,0,1)*100)}%"></u></i>`;
@@ -165,7 +165,7 @@ function lvCardUpd(){const R=LV.R;if(!R||LV.ph!=='card')return;while(LV.stk>100&
   document.querySelectorAll('#lvPanel [data-bet]').forEach(b=>{const k=b.dataset.bet,i=+k.slice(1),on=!!b0&&b0.k===k;b.disabled=!LV.odds;b.classList.toggle('on',on);
     if(LV.odds)b.querySelector('b').textContent='×'+lvNum(k[0]==='w'?lvDivW(R,i,on?LV.stk:0):lvDivP(R,i,on?LV.stk:0))});
   document.querySelectorAll('#lvPanel [data-row]').forEach(r=>r.classList.toggle('me',!!b0&&+r.dataset.row===b0.i));
-  $('#lvStk').innerHTML=poor?`<span>Nincs elég pénzed – egy futam legalább 100 Ft.</span><button type="button" data-walopen>💰 Pénzem</button>`
+  $('#lvStk').innerHTML=poor?`<span>Nincs elég pénzed – egy futam legalább 100 Ft (1 érme).</span><button type="button" data-walopen>💰 Pénzem</button>`
     :`<span>Tét:</span><button type="button" data-stk="-1" aria-label="Kisebb tét">−</button><b class="lvstkv">${n0(LV.stk)} Ft</b><button type="button" data-stk="1" aria-label="Nagyobb tét">+</button><em>Pénzed: ${n0(LV.ft)} Ft</em>`;
   const d=b0&&LV.odds?(b0.t==='w'?lvDivW(R,b0.i,LV.stk):lvDivP(R,b0.i,LV.stk)):0;
   $('#lvSumL').innerHTML=b0?`Szelvény: <b>${b0.t==='w'?'Tét':'Hely'}</b> a <b>${b0.i+1}. ${esc(R.field[b0.i].h.n)}</b> indulóra · várható nyeremény kb. <b>${n0(Math.floor(LV.stk*d))} Ft</b>`:'Koppints egy szorzóra: TÉT – nyer, HELY – dobogón végez.';
@@ -227,6 +227,41 @@ function lvModel(){if(LV_MDL)return LV_MDL;const k=(LOWFX?34:46)/75,cv=document.
   c.fillStyle='#6f7460';c.strokeStyle=INK;c.lineWidth=1.8;c.beginPath();c.rect(690,186,56,13);c.fill();c.stroke();c.fillStyle='#33342a';c.fillRect(700,174,34,12);c.fillRect(672,177,60,4);c.fillRect(736,178,26,3);c.fillRect(948,150,2.5,50);c.fillRect(820,190,40,9);
   return LV_MDL=cv}
 
+/* ---------- Rába H14 (4×4 katonai teherautó, ponyvás plató) oldalnézetben, jobbra néz; 75 egység = 1 m, hossz kb. 7,3 m ---------- */
+const LV_RW=560,LV_RH=250,LV_RWH=[[160,198],[455,198]];let LV_RBA=null;
+function lvRaba(){if(LV_RBA)return LV_RBA;const k=(LOWFX?34:46)/75,cv=document.createElement('canvas');cv.width=Math.round(LV_RW*k);cv.height=Math.round(LV_RH*k);const c=cv.getContext('2d');c.scale(k,k);c.lineJoin='round';
+  const INK='#1f2416',G1='#74834a',G2='#56633a',Dk='#3d4728',Bk='#22241d';
+  const poly=(p,f,st,w)=>{c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();if(f){c.fillStyle=f;c.fill()}if(st){c.strokeStyle=st;c.lineWidth=w||2.4;c.stroke()}};
+  const grad=(y0,y1,a,b)=>{const g=c.createLinearGradient(0,y0,0,y1);g.addColorStop(0,a);g.addColorStop(1,b);return g};
+  const box=(x,y,w,h,f)=>{c.fillStyle=f;c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.rect(x,y,w,h);c.fill();c.stroke()};
+  // alváz, a tengelyek közti ládák és tank, hátsó aláfutásgátló
+  box(30,168,500,14,'#2f3524');box(206,182,86,30,G2);box(292,182,52,30,G2);box(352,176,34,26,Bk);c.fillStyle='#2f3524';c.fillRect(22,186,26,6);c.fillRect(196,212,160,5);
+  // plató: alacsony oldalfal kötözőzsinórral, fölötte világosabb ponyva kis ablakkal
+  box(34,140,330,28,grad(140,168,G1,G2));
+  c.beginPath();c.moveTo(32,140);c.lineTo(32,44);c.quadraticCurveTo(34,30,50,29);c.lineTo(330,24);c.quadraticCurveTo(352,24,358,40);c.lineTo(366,140);c.closePath();c.fillStyle=grad(24,140,'#9aa27c','#727b56');c.fill();c.strokeStyle=INK;c.lineWidth=2.4;c.stroke();
+  c.fillStyle='rgba(255,255,255,.14)';c.beginPath();c.moveTo(50,30);c.lineTo(330,25);c.quadraticCurveTo(350,25,356,40);c.lineTo(46,44);c.closePath();c.fill();
+  c.strokeStyle='rgba(31,36,22,.35)';c.lineWidth=1.5;c.beginPath();for(const x of [88,146,204,262,318]){c.moveTo(x,31);c.quadraticCurveTo(x+3,84,x,139)}c.stroke();
+  box(196,70,26,22,'#55606a');c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=1.5;c.beginPath();c.moveTo(200,88);c.lineTo(214,74);c.moveTo(208,88);c.lineTo(218,78);c.stroke();
+  c.strokeStyle='#2b301f';c.lineWidth=1.4;c.beginPath();c.moveTo(38,146);for(let x=38;x<360;x+=14){c.lineTo(x+7,136);c.lineTo(x+14,146)}c.stroke();c.fillStyle=Dk;for(let x=45;x<360;x+=28)c.fillRect(x-1.5,146,3,20);
+  // bordás felszerelésláda a fülke mögött
+  box(368,88,34,80,grad(88,168,G1,G2));c.strokeStyle='rgba(31,36,22,.55)';c.lineWidth=1.4;c.beginPath();for(const x of [375,382,389,396]){c.moveTo(x,92);c.lineTo(x,164)}c.stroke();box(372,70,26,18,G2);
+  // szögletes bulldogfülke: nagy oldalablak, ajtó, tükör, tetőnyílás
+  poly([[402,176],[402,70],[408,60],[420,52],[512,52],[524,62],[530,74],[534,176]],grad(52,176,'#7f8f52',G2),INK);
+  poly([[414,60],[516,60],[520,66],[414,66]],'rgba(255,255,255,.1)');
+  poly([[416,72],[476,72],[476,112],[416,112]],grad(72,112,'#8fa3a8','#3d4f55'),INK,2);poly([[484,72],[520,72],[526,112],[484,112]],grad(72,112,'#a3b6ba','#4a5c62'),INK,2);
+  c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=1.5;c.beginPath();c.moveTo(424,106);c.lineTo(446,78);c.moveTo(436,106);c.lineTo(452,86);c.stroke();
+  c.strokeStyle='rgba(31,36,22,.6)';c.lineWidth=1.6;c.beginPath();c.moveTo(412,68);c.lineTo(412,172);c.lineTo(480,172);c.lineTo(480,68);c.stroke();c.strokeRect(420,122,22,34);c.fillStyle=INK;c.fillRect(462,126,12,3);
+  c.fillStyle=Bk;c.fillRect(528,70,4,26);c.fillRect(531,58,7,34);c.fillRect(440,44,46,8);c.fillRect(498,46,10,6);
+  // homlok: hűtőrács, irányjelző, fényszóró, lökhárító, fellépő
+  c.fillStyle=Bk;for(let y=124;y<150;y+=6)c.fillRect(522,y,10,3);box(524,152,9,14,'#f08a1e');
+  poly([[500,176],[546,176],[550,198],[540,206],[498,206]],G2,INK,2);box(536,180,10,12,'#f1f0dc');box(504,196,22,5,Dk);box(420,180,24,5,Dk);box(424,192,18,5,Dk);
+  // fekete sárvédőívek, terepgumik zöld tárcsával és csavarokkal
+  for(const [x,y] of LV_RWH){c.beginPath();c.arc(x,y-2,53,Math.PI*1.02,-Math.PI*.02);c.arc(x,y-2,45,-Math.PI*.02,Math.PI*1.02,true);c.closePath();c.fillStyle=Bk;c.fill();
+    c.beginPath();c.arc(x,y,42,0,7);c.fillStyle='#1b1c18';c.fill();c.strokeStyle=INK;c.lineWidth=2;c.stroke();
+    c.strokeStyle='#33352d';c.lineWidth=2;for(let q=0;q<18;q++){const a=q/18*Math.PI*2;c.beginPath();c.moveTo(x+Math.cos(a)*33,y+Math.sin(a)*33);c.lineTo(x+Math.cos(a+.12)*41,y+Math.sin(a+.12)*41);c.stroke()}
+    c.strokeStyle=INK;c.lineWidth=2;c.beginPath();c.arc(x,y,23,0,7);c.fillStyle=G1;c.fill();c.stroke();c.beginPath();c.arc(x,y,8,0,7);c.fillStyle=G2;c.fill();c.stroke()}
+  return LV_RBA=cv}
+
 /* ---------- részecskék: por, sár, kipufogófüst, láng, konfetti ---------- */
 const LV_PUFF={},LV_PCOL={dust:'216,198,152',dust1:'170,152,108',mud:'96,74,46',smoke:'168,170,168',black:'30,30,30',fire:'255,176,64'};
 function lvPuff(k){if(LV_PUFF[k])return LV_PUFF[k];const col=LV_PCOL[k],cv=document.createElement('canvas');cv.width=cv.height=64;const c=cv.getContext('2d'),g=c.createRadialGradient(32,32,2,32,32,32);
@@ -269,10 +304,7 @@ function lvBack(c,G,cam,s,now){const {W,mm,top}=G,sk=c.createLinearGradient(0,mm
     for(const [dx,col] of [[100,'#c8102e'],[180,'#fff'],[260,'#2e7d32']]){c.fillStyle='#555';c.fillRect(x+dx,top-78,1.5,18);c.fillStyle=col;c.beginPath();const w=Math.sin(now*5+dx)*2;c.moveTo(x+dx+1.5,top-78);c.lineTo(x+dx+15,top-75+w);c.lineTo(x+dx+1.5,top-70);c.fill()}}
   c.fillStyle='#2d5a26';c.fillRect(0,top-7,W,7)}
 function lvSprites(){LV.imgG=new Image();LV.imgG.src=GID_FULL||GID_SPRITE;LV.gFull=!!GID_FULL;try{gidFullSet()}catch(e){}
-  // a Rába vonalrajz: előbb kitöltött test (hogy ne legyen átlátszó), rá a sötét kontúr
-  LV.imgR=null;const sv=(fill,rule)=>'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" width="640" height="318" ').replace('fill="currentColor"','fill="'+fill+'"').replace('fill-rule="evenodd"','fill-rule="'+rule+'"'));
-  const a=new Image(),b=new Image();let n=0;const done=()=>{if(++n<2)return;try{const cv=document.createElement('canvas');cv.width=640;cv.height=318;const c=cv.getContext('2d');c.drawImage(a,0,0,640,318);c.globalCompositeOperation='source-atop';const g=c.createLinearGradient(0,0,0,318);g.addColorStop(0,'#98a07f');g.addColorStop(1,'#6a7057');c.fillStyle=g;c.fillRect(0,0,640,318);c.globalCompositeOperation='source-over';c.globalAlpha=.28;c.drawImage(b,0,0,640,318);c.globalAlpha=1;LV.imgR=cv}catch(e){}};
-  a.onload=done;b.onload=done;a.src=sv('#7d8266','nonzero');b.src=sv('#23251d','evenodd')}function lvGeom(){const W=LV.W,H=LV.H,mm=34,top=mm+Math.max(70,H*.16),ui=150,lh=lvClamp((H-top-ui)/LV_N,20,50),sw=Math.min(lh*3,W*.36),s=sw/LV_L;return {W,H,mm,top,lh,bot:top+lh*LV_N,sw,sh:sw*LV_MH/LV_MW,s}}
+  LV.imgR=lvRaba()}function lvGeom(){const W=LV.W,H=LV.H,mm=34,top=mm+Math.max(70,H*.16),ui=150,lh=lvClamp((H-top-ui)/LV_N,20,50),sw=Math.min(lh*3,W*.36),s=sw/LV_L;return {W,H,mm,top,lh,bot:top+lh*LV_N,sw,sh:sw*LV_MH/LV_MW,s}}
 function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2d'),G=lvGeom(),{W,H,mm,top,lh,bot,sw,sh,s}=G,R=LV.R,live=R&&R.rs&&(LV.ph==='gate'||LV.ph==='race'||LV.ph==='done'),now=performance.now()/1000;
   c.setTransform(LV.dpr,0,0,LV.dpr,0,0);c.globalAlpha=1;
   const pick=live&&LV.bet?R.rs[LV.bet.i]:null,D=R?R.D:600,g=R&&LV.ph!=='menu'?R.g:0;
@@ -314,7 +346,8 @@ function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2
       if(det&&ty==='P'&&r.v>.5){// forgó futógörgők, futó lánctalp
         c.strokeStyle='rgba(30,32,24,.75)';c.lineWidth=1;const wy=y0+(429-165)/LV_MH*h,rr=21/LV_MW*w,an=r.x/.43;c.beginPath();for(let k=0;k<7;k++){const wx=x0+(965-(305+77.5*k))/LV_MW*w;for(let q=0;q<2;q++){const a=an+q*Math.PI/2,dx=Math.cos(a)*rr,dy=Math.sin(a)*rr;c.moveTo(wx-dx,wy-dy);c.lineTo(wx+dx,wy+dy)}}c.stroke();
         c.fillStyle='rgba(150,150,130,.55)';const t0=x0+(965-818)/LV_MW*w,t1=x0+(965-292)/LV_MW*w,ty2=y0+(461-165)/LV_MH*h,st=w*.03,off=st-((r.x*s)%st);for(let tx=t0+off;tx<t1;tx+=st)c.fillRect(tx,ty2,st*.4,1.6)}
-      const cw=Math.max(15,sw*.12),ch=Math.max(13,sh*.36),nx=x0+w*(ty==='P'?.035:.3),ny=y0+h*(ty==='P'?.15:.32);c.fillStyle=LV_COL[i];c.strokeStyle='#111';c.lineWidth=1.5;c.beginPath();c.rect(nx,ny,cw,ch);c.fill();c.stroke();
+      if(det&&ty==='R'&&r.v>.5){c.fillStyle='rgba(30,32,24,.85)';const rr=15/LV_RW*w,an=r.x/.55;for(const [px,py] of LV_RWH){const wx=x0+px/LV_RW*w,wy=y0+py/LV_RH*h;for(let q=0;q<5;q++){const a=an+q*Math.PI*2/5;c.beginPath();c.arc(wx+Math.cos(a)*rr,wy+Math.sin(a)*rr,Math.max(.8,w*.007),0,7);c.fill()}}}
+      const cw=Math.max(15,sw*.12),ch=Math.max(13,sh*.36),nx=x0+w*(ty==='P'?.035:ty==='R'?.28:.3),ny=y0+h*(ty==='P'?.15:ty==='R'?.2:.32);c.fillStyle=LV_COL[i];c.strokeStyle='#111';c.lineWidth=1.5;c.beginPath();c.rect(nx,ny,cw,ch);c.fill();c.stroke();
       c.fillStyle='#111';c.font=`900 ${Math.round(ch*.82)}px system-ui`;c.textAlign='center';c.textBaseline='middle';c.fillText(i+1,nx+cw/2,ny+ch/2+.5);c.textBaseline='alphabetic';
       c.restore();
       if(r===pick){c.fillStyle='#ffd23a';c.strokeStyle='#111';c.lineWidth=3;c.font='900 12px system-ui';c.textAlign='center';c.strokeText('▼ TIPPED',x-w*.6,y-h-5);c.fillText('▼ TIPPED',x-w*.6,y-h-5)}}

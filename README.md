@@ -5,14 +5,16 @@
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
 
-**v4.41.0:** **„Összes pénzem” tárca + a Tüzér Derby fogadóirodává alakult.**
+**v4.41.0:** **Játéktermi érme, „Összes pénzem” tárca, a Tüzér Derby fogadóirodává alakult.**
 - **💰 ÖSSZES PÉNZEM** – új főgomb a kezdőlapon (és a Derby fejlécében): közös, forintban számolt tárca. Új játékos 1 000 Ft-tal indul.
   - **Játékidőért:** minden **aktívan játszott perc 100 Ft**, bármelyik játékban. Aktív = nyitott játék, látható ablak, nincs szünet, és az utolsó 15 mp-ben volt érintés vagy billentyű. A Tüzér Derby (fogadás, futamnézés) nem számít bele.
   - **Kivét a Tüzér Kasszából:** a Kassza zsebének 10 / 25 / 50 / 100%-a váltható át. Az érték a zseb **nagyságrendjével** arányos, nem az összegével (1 milliárd Ft kb. 2 850 Ft-ot, 1 billiárd kb. 5 700 Ft-ot, 1 kvadrillió 10 000 Ft-ot ér); a kivett rész a zseb ugyanekkora hányadát viszi el. **Naponta összesen legfeljebb 10 000 Ft** vehető ki (magyar idő, szerveróra – net kell hozzá). A Kasszába visszatenni nem lehet, a havi ranglistát a tárca nem érinti.
-  - **Mire jó:** a Tüzér Derbyn lehet megjátszani – egy futam legalább 100 Ft.
+  - **🪙 Játéktermi érme:** 1 érme = 100 Ft. **Minden játék indítása 1 érmébe kerül** (a Tüzér Derbybe a belépés ingyenes, ott a tét a költség). Ha nincs érméd, a játék helyett a tárca nyílik meg.
+  - **Érmeverő:** a tárcában egy nagy érme – **100 koppintás = 10 érme** (1 000 Ft). Ez a mentőöv: pénz nélkül sem zárhatod ki magad a játékokból. A számláló megmarad, ha közben bezárod.
+  - **Mire jó még:** a Tüzér Derbyn lehet fogadni belőle – egy futam legalább 100 Ft.
   - Csak a telefonon tárolódik (nem megy fel a szerverre, telefonok között nem szinkronizál).
 - **Tüzér Derby – csak fogadás:** nincs saját löveg, gáz és sávváltás. Futamonként **egy szelvény**: kiválasztasz egy indulót, a fogadás fajtáját (**Tét** – nyer, **Hely** – dobogós) és a tétet (100–5 000 Ft), aztán nézed a futamot. A díjazás megszűnt; a tét és a nyeremény a tárcából megy, nem a Kassza zsebéből.
-- **Vegyes mezőny:** az istállóban a PzH 2000 mellett **Gidrán** és **Rába** is indul. A Gidrán jól rajtol és a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon.
+- **Vegyes mezőny:** az istállóban a PzH 2000 mellett **Gidrán** és **Rába H14** is indul (a Rába saját, rajzolt modellt kapott: bulldogfülke, bordás felszerelésláda, ponyvás plató ablakkal, terepgumik zöld tárcsával). A Gidrán jól rajtol és a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon.
 - **Hangulat:** rajt előtti kürtszó, élő **kommentár** (élre állás, kanyar, célegyenes, műszaki hiba, a tipped helyezése), **állás-tábla** a pillanatnyi sorrenddel, közönségmoraj, ami a hajrában felerősödik, nyerő/vesztő dallam, konfetti, ha a tipped nyer. **⏩ Gyorsítás** gomb a futam alatt.
 - Mért megtérülés (500 futam, 100 Ft-os tét): első esélyes Tét kb. 93%, Hely kb. 98%; véletlen induló kb. 82%; legesélytelenebb kb. 65%. Nagy tétnél (5 000 Ft) a saját tét rontja a szorzót: kb. 72–86%.
 - A `firestore.rules` nem változott, a szerver felé nincs új forgalom. A korábbi Derby-statisztika (futam, győzelem, mérleg) nullázódik, a lövegek formája megmarad.
