@@ -1,5 +1,5 @@
 // lv.js – az app.js-ből lustán betöltött játékmodul (a közös segédeket onnan importálja)
-import {$,AC,GID_FULL,GID_SPRITE,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,esc,gidFullSet,medveWrap,n0,snare,sndClink,sndPop,toast,walFt,walOpen} from './app.js';
+import {$,AC,GID_FULL,GID_SPRITE,gidWheel,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,esc,gidFullSet,medveWrap,n0,snare,sndClink,sndPop,toast,walFt,walOpen} from './app.js';
 /* ===================== TÜZÉR DERBY – fogadóiroda: PzH 2000, Gidrán és Rába futamok =====================
    A játékos nem hajt: kiválaszt egy indulót, megteszi a tétet (Tét vagy Hely), és végignézi a futamot.
    A tét és a nyeremény az „Összes pénzem” tárcából megy (app.js: walFt) – a Tüzér Kasszától független.
@@ -8,7 +8,7 @@ import {$,AC,GID_FULL,GID_SPRITE,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,
 const LV={};
 const LV_KEY='medve-lv1',LV_L=11.7,LV_V=16.7,LV_N=8;
 const LV_TAKE={w:.15,p:.15};// totalizatőr-levonás
-const LV_BIAS={w:.9,p:1.18};// a gépi fogadók torzítása: tétnél az esélytelent, helynél az esélyest fogadják túl
+const LV_BIAS={w:.9,p:1.25};// a gépi fogadók torzítása: tétnél az esélytelent, helynél az esélyest fogadják túl
 const LV_HCP=.55;// a málha a képességkülönbség ekkora részét egyenlíti ki
 const LV_POOL=200000,LV_STAKES=[100,200,500,1000,2000,5000];
 const LV_DIST=[
@@ -27,8 +27,17 @@ function lvRng(s){s=s>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0
 // az istálló: állandó adottságok (mo motor, va váltó, al állóképesség, mb megbízhatóság, gp kedvenc talaj, dp kedvenc táv)
 // a típus is számít: a Gidrán jól rajtol és a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós
 const LV_STABLE=LV_NAMES.map(([n,ty],i)=>{const r=lvRng(7919*(i+3));r();r();const h={id:i,n,ty,mo:.2+r()*.7,va:.2+r()*.7,al:.2+r()*.7,mb:.6+r()*.38,gp:Math.floor(r()*3),dp:Math.floor(r()*3),sty:'EKH'[Math.floor(r()*3)],drv:LV_DRV[i%LV_DRV.length]};
-  if(ty==='G'){h.va=Math.min(.95,h.va+.1);h.gp=0}else if(ty==='P'){h.gp=1+(i%2)}else h.al=Math.min(.95,h.al+.2);return h});
+  if(ty==='G'){h.gp=0}else if(ty==='P'){h.gp=1+(i%2)}else h.al=Math.min(.95,h.al+.2);return h});
 const lvGauss=r=>{let u=0;for(let i=0;i<6;i++)u+=r();return (u-3)/.7071};// közel normális, szórás 1
+const LV_DT=1/60,LV_ODT=1/20,LV_ACC=2;// LV_ODT: a szorzók becsléséhez futtatott sok ezer próbafutam lépésköze
+const LV_PHOTO=.1;// ennél szorosabb (mp) várható befutónál filmes célfotó – kb. minden ötödik futam
+// a szimuláció rögzített lépésköze (s) és a gyorsulás ideje álló helyzetből a teljes sebességig – mindenkinek ugyanannyi
+/* Csalásmentes, kiszámíthatatlan sorsolás: a futam véletlenszámait a böngésző kriptográfiai generátora (crypto.getRandomValues) adja,
+   mindig a tét rögzítése UTÁN. Ebből a 128 bites magból egy sfc32 generátor fut, így a teljes futam azonnal kiszámolható
+   (a kifizetés elmentődik), a képernyőn pedig ugyanez a futam játszódik le – kilépéssel vagy az app bezárásával nem változtatható meg. */
+function lvSeed(){const a=new Uint32Array(4);try{crypto.getRandomValues(a)}catch(e){for(let i=0;i<4;i++)a[i]=Math.floor(Math.random()*4294967296)}return [...a]}
+function lvRngS(seed){let [a,b,c,d]=seed;const f=()=>{a|=0;b|=0;c|=0;d|=0;const t=(a+b|0)+d|0;d=d+1|0;a=b^b>>>9;b=c+(c<<3)|0;c=c<<21|c>>>11;c=c+t|0;return (t>>>0)/4294967296};for(let i=0;i<12;i++)f();return f}
+function lvRunOut(R){let g=0;while(R.nfin<LV_N&&g++<20000)lvStep(R,LV_DT)}
 const lvClamp=(v,a,b)=>v<a?a:v>b?b:v;
 const lvNum=v=>(v>=100?Math.round(v).toString():v>=10?v.toFixed(1):v.toFixed(2)).replace('.',',');
 
@@ -37,7 +46,14 @@ function lvLoad(){let s={};try{s=JSON.parse(localStorage.getItem(LV_KEY)||'{}')|
   LV.s={v:2,races:0,wins:0,net:0,best:0,form:s.form&&typeof s.form==='object'?s.form:{},pend:0};
   if(s.v===2){for(const k of ['races','wins','net','best'])LV.s[k]=Number(s[k])||0;LV.s.pend=Number(s.pend)>0?Number(s.pend):0}
   delete LV.s.form.me;
-  if(LV.s.pend){const v=LV.s.pend;LV.s.pend=0;lvStore();walFt(v);setTimeout(()=>toast('Megszakadt futam: a tétedet ('+n0(v)+' Ft) visszakaptad.'),500)}}
+  // félbeszakadt futam: az eredmény már a rajtnál (a tét rögzítése után) kisorsolódott – most csak elszámoljuk, visszatérítés nincs
+  const pd=s.v===2&&s.pend&&typeof s.pend==='object'?s.pend:null;LV.s.pend=0;
+  if(pd&&Number.isFinite(pd.st)&&Number.isFinite(pd.win)){lvSettle(pd);setTimeout(()=>toast(pd.win?`Félbeszakadt futam: a szelvényed nyert, +${n0(pd.win)} Ft.`:`Félbeszakadt futam: a szelvényed nem nyert (${n0(pd.st)} Ft).`),500)}
+  else if(s.v===2&&Number(s.pend)>0){walFt(Number(s.pend));lvStore();setTimeout(()=>toast('Megszakadt futam: a tétedet ('+n0(Number(s.pend))+' Ft) visszakaptad.'),500)}}
+// a sorsolt eredmény elszámolása (egyszer): nyeremény a tárcába, statisztika, forma
+function lvSettle(p){const s=LV.s;if(p.win>0)walFt(p.win);s.pend=0;s.races++;if(p.win)s.wins++;s.net+=p.win-p.st;if(p.win>s.best)s.best=p.win;for(const [id,pl] of p.form||[])s.form[id]=[...lvForm(id),pl].slice(-5);lvStore()}
+function lvPay(R,b,o){const pl=o.slice(0,3).map(r=>r.e.idx);let d=0;if(b.t==='w'&&b.i===pl[0])d=lvDivW(R,b.i,b.st,R.fw);else if(b.t==='p'&&pl.includes(b.i))d=lvDivP(R,b.i,b.st,pl,R.fp);
+  return {d,win:d?Math.floor(b.st*d):0,order:o.map(r=>r.e.idx),form:o.map((r,i)=>[r.e.h.id,i+1])}}
 function lvStore(){try{localStorage.setItem(LV_KEY,JSON.stringify(LV.s))}catch(e){}}
 const lvForm=id=>Array.isArray(LV.s.form[id])?LV.s.form[id]:[];
 
@@ -48,15 +64,15 @@ function lvAbility(h,D,g){let a=1+.05*(h.mo-.5)*D.wM+.03*(h.al-.5)*D.wS;if(h.dp=
 function lvNewRace(){const r=Math.random,x=r(),D=LV_DIST[x<.4?0:x<.75?1:2],y=r(),g=y<.55?0:y<.85?1:2;
   const pool=LV_STABLE.slice();for(let i=pool.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
   const field=pool.slice(0,LV_N).map(h=>({h,ab:lvAbility(h,D,g)}));
-  // málha (súlyterhelés): a jobb induló többet visz – ez kiegyenlíti a mezőnyt
+  // kiegyenlítés (handikep): a képességek különbségét összenyomjuk, hogy a mezőny szoros legyen – a tömeg nem számít
   const mn=Math.min(...field.map(e=>e.ab)),mx=Math.max(...field.map(e=>e.ab));
-  field.forEach((e,i)=>{e.idx=i;e.post=i;e.shells=20+2*Math.round(20*(e.ab-mn)/Math.max(1e-6,mx-mn));e.Vn=LV_V*LV_GO[g].f*(e.ab-LV_HCP*(e.ab-mn))});
+  field.forEach((e,i)=>{e.idx=i;e.post=i;e.Vn=LV_V*LV_GO[g].f*(e.ab-LV_HCP*(e.ab-mn))});
   return {D:D.m,dist:D,g,cz:D.cz,field,no:LV.s.races+1}}
 
 /* ---------- a futam szimulációja (a szorzók számításához és az élő futamhoz ugyanaz) ---------- */
 function lvSim(R,rnd){R.t=0;R.nfin=0;
   R.rs=R.field.map(e=>{const h=e.h;return {e,x:0,v:0,vd:0,ln:e.post,lf:e.post,lc:0,Vn:e.Vn*(1+lvGauss(rnd)*.011),a:LV_STY[h.sty][1],
-    react:.12+(1-h.va)*.25+rnd()*.15,tr:1.2+(1-h.va)*1.4,tk:1.5+rnd()*4,failAt:rnd()<(1-h.mb)*.25?.3+rnd()*.55:9,failT:0,fin:0}})}
+    react:.2+rnd()*.1,tr:LV_ACC,tk:1.5+rnd()*4,failAt:rnd()<(1-h.mb)*.25?.3+rnd()*.55:9,failT:0,fin:0}})}
 const lvCurve=(R,p)=>{for(const z of R.cz)if(p>=z[0]&&p<z[1])return true;return false};
 function lvFree(R,r,l){if(l<0||l>=LV_N)return false;for(const o of R.rs){if(o===r)continue;if((Math.abs(o.ln-l)<.5||Math.abs(o.lf-l)<.8)&&Math.abs(o.x-r.x)<LV_L*1.35)return false}return true}
 function lvStep(R,dt){const D=R.D,rs=R.rs,G=LV_L*1.25;R.t+=dt;
@@ -77,7 +93,7 @@ const lvOrder=R=>R.rs.slice().sort((a,b)=>(a.fin||1e9)-(b.fin||1e9)||b.x-a.x);
 // a szorzók alapja: a futamot sokszor lefuttatjuk, ebből jön a nyerési és a dobogós esély
 function lvOdds(R0,done){const N=LOWFX?140:240,w=new Array(LV_N).fill(0),pl=new Array(LV_N).fill(0);let k=0;const tok=LV.tok;
   const chunk=()=>{if(tok!==LV.tok)return;const t0=performance.now();
-    while(k<N&&performance.now()-t0<22){const R={D:R0.D,cz:R0.cz,field:R0.field};lvSim(R,Math.random);let g=0;while(R.nfin<LV_N&&g++<2500)lvStep(R,.1);
+    while(k<N&&performance.now()-t0<22){const R={D:R0.D,cz:R0.cz,field:R0.field};lvSim(R,Math.random);let g=0;while(R.nfin<LV_N&&g++<5000)lvStep(R,LV_ODT);
       const o=lvOrder(R);w[o[0].e.idx]++;for(let j=0;j<3;j++)pl[o[j].e.idx]++;k++}
     if(k<N)setTimeout(chunk,0);else done(w.map(x=>(x+.5)/(N+4)),pl.map(x=>(x+1)/(N+8/3)))};chunk()}
 
@@ -88,7 +104,7 @@ function lvPools(R,pw,pp){R.P=LV_POOL;const mk=(pr,ex)=>{const a=pr.map(p=>Math.
 function lvDivW(R,i,st,ww){ww=ww||R.ww;return Math.max(1.05,(R.P+st)*(1-LV_TAKE.w)/(ww[i]*R.P+st))}
 function lvDivP(R,i,st,pl,wp){wp=wp||R.wp;const B=j=>wp[j]*R.P+(j===i?st:0);
   if(!pl){pl=R.pp.map((p,j)=>[p,j]).filter(x=>x[1]!==i).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]);pl.push(i)}
-  const net=(R.P+st)*(1-LV_TAKE.p),bs=pl.reduce((t,j)=>t+B(j),0);return Math.max(1.05,1+(net-bs)/3/B(i))}
+  const net=(R.P+st)*(1-LV_TAKE.p),bs=pl.reduce((t,j)=>t+B(j),0);return Math.max(1,1+(net-bs)/3/B(i))}
 
 /* ---------- hangok ---------- */
 function lvSnd(k){if(!SOUND||!ac())return;try{const t=AC.currentTime+.02;
@@ -123,8 +139,8 @@ function lvOpen(){const el=$('#harc');el.hidden=false;el.classList.add('lv');doc
   lvMenu();LV.last=0;cancelAnimationFrame(LV.raf);LV.raf=requestAnimationFrame(lvLoop)}
 function lvPause(on){LV.paused=!!on;let o=$('#lvPz');if(on){lvAmb(false);if(!o){o=document.createElement('div');o.id='lvPz';o.className='gpov';o.innerHTML='<b>⏸ SZÜNET</b><span>Koppints a folytatáshoz</span>';o.onclick=()=>lvPause(false);$('#harc .lvwrap').appendChild(o)}}
   else{if(o)o.remove();if(LV.ph==='race')lvAmb(true)}}
-function lvClose(){const mid=LV.ph==='race'||LV.ph==='gate';if(mid&&!confirm('Kilépsz a futamból? A tétedet visszakapod.'))return;
-  if(mid&&LV.staked>0){walFt(LV.staked);LV.staked=0;LV.s.pend=0;lvStore()}
+function lvClose(){const mid=LV.ph==='race'||LV.ph==='gate';if(mid&&!confirm('Kilépsz? A futam eredménye már eldőlt – a szelvényedet így is elszámoljuk.'))return;
+  if(mid&&LV.s.pend){const p=LV.s.pend;lvSettle(p);toast(p.win?`A szelvényed nyert: +${n0(p.win)} Ft.`:`A szelvényed nem nyert (−${n0(p.st)} Ft).`)}LV.staked=0;
   LV.tok++;LV.run=false;LV.ph=null;LV.R=null;lvAmb(false);cancelAnimationFrame(LV.raf);clearInterval(LV.walI);try{LV.ro&&LV.ro.disconnect()}catch(e){}
   document.removeEventListener('visibilitychange',LV.vis);LV.cv=null;
   const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('lv');document.body.classList.remove('harcon')}
@@ -139,15 +155,15 @@ function lvMenu(){LV.ph='menu';LV.run=false;$('#lvFast').hidden=true;const s=LV.
     <p><b>Egy futam – egy szelvény.</b> Válassz egy indulót és a fogadás fajtáját: <b>Tét</b> – nyer; <b>Hely</b> – az első háromban végez. A legkisebb tét <b>100 Ft</b>, a legnagyobb 5 000 Ft.</p>
     <p><b>Totalizatőr:</b> a nyeremény a közös kasszából jön, 15% levonás után. A kiírt szorzó becslés – a végső osztalék a fogadás zárása után alakul ki.</p>
     <p><b>Pénz:</b> az „Összes pénzem” tárcából fogadsz (1 érme = 100 Ft). Pénzt a többi játékkal szerzel: minden aktívan játszott perc 100 Ft; az érmeverőn 100 koppintás 10 érme; a Tüzér Kasszából naponta legfeljebb 10 000 Ft vehető ki. A Derbybe a belépés ingyenes.</p>
-    <p><b>Programfüzet:</b> a forma az utolsó futamok helyezése; a málha a súlyterhelés – a jobb induló többet visz. A Gidrán gyorsan rajtol és a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon. Az 1-es rajthely van a korlátnál – kanyarban ez rövidebb út.</p></details></div>`);
+    <p><b>Programfüzet:</b> a forma az utolsó futamok helyezése; MOT – végsebesség, ÁLL – állóképesség, MEGB – megbízhatóság (műszaki hiba esélye). Minden induló egyformán gyorsul, a tömeg nem számít. A Gidrán a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon. Az 1-es rajthely van a korlátnál – kanyarban ez rövidebb út.</p></details></div>`);
   $('#lvGoCard').onclick=lvCard;$('#lvWalB').onclick=()=>walOpen()}
 const lvBar=v=>`<i><u data-st="width:${Math.round(lvClamp(v,0,1)*100)}%"></u></i>`;
 function lvCard(){LV.ph='card';LV.ft=walFt(0);LV.bet=null;LV.stk=LV.stk||100;$('#lvFast').hidden=true;const R=LV.R=lvNewRace();LV.tok++;LV.odds=false;
   const rows=R.field.map((e,i)=>{const h=e.h,f=lvForm(h.id);
     return `<div class="lvrow" data-row="${i}"><i class="lvno" data-st="background:${LV_COL[i]}">${i+1}</i>
      <div class="lvinf"><b>${esc(h.n)}</b><small><em class="lvty t${h.ty}">${LV_TY[h.ty].n}</em> ${LV_STY[h.sty][0]} · ${esc(h.drv)}</small>
-      <small>Forma: ${f.length?f.join('-'):'új'} · málha ${e.shells} · kedveli: ${LV_GO[h.gp].n}, ${LV_DIST[h.dp].n}</small>
-      <div class="lvbars"><span>MOT${lvBar(h.mo)}</span><span>VÁL${lvBar(h.va)}</span><span>ÁLL${lvBar(h.al)}</span><span>MEGB${lvBar((h.mb-.55)/.45)}</span></div></div>
+      <small>Forma: ${f.length?f.join('-'):'új'} · kedveli: ${LV_GO[h.gp].n}, ${LV_DIST[h.dp].n}</small>
+      <div class="lvbars"><span>MOT${lvBar(h.mo)}</span><span>ÁLL${lvBar(h.al)}</span><span>MEGB${lvBar((h.mb-.55)/.45)}</span></div></div>
      <div class="lvod"><button type="button" data-bet="w${i}" disabled><small>TÉT</small><b>…</b></button><button type="button" data-bet="p${i}" disabled><small>HELY</small><b>…</b></button></div></div>`}).join('');
   const p=lvPanel(`<div class="lvcard"><div class="lvhd"><b>${R.no}. FUTAM</b><span>${R.dist.n} · ${R.D} m</span><span class="lvgo g${R.g}">Talaj: ${LV_GO[R.g].n}</span></div>
     <div class="lvtip" id="lvTip">Szorzók számítása…</div><div class="lvrows">${rows}</div>
@@ -171,15 +187,18 @@ function lvCardUpd(){const R=LV.R;if(!R||LV.ph!=='card')return;while(LV.stk>100&
   $('#lvSumL').innerHTML=b0?`Szelvény: <b>${b0.t==='w'?'Tét':'Hely'}</b> a <b>${b0.i+1}. ${esc(R.field[b0.i].h.n)}</b> indulóra · várható nyeremény kb. <b>${n0(Math.floor(LV.stk*d))} Ft</b>`:'Koppints egy szorzóra: TÉT – nyer, HELY – dobogón végez.';
   $('#lvGo').disabled=!LV.odds||!b0||poor}
 // rajt: a tét levonása, a végső (kései pénzzel módosult) kassza rögzítése, beállás a startgépbe
-function lvGate(){const R=LV.R,b=LV.bet;if(!R||!LV.odds||!b||LV.ft<LV.stk)return;b.st=LV.stk;LV.staked=b.st;LV.ft=walFt(-b.st);LV.s.pend=b.st;lvStore();
-  const late=a=>{const x=a.map(v=>v*Math.exp(lvGauss(Math.random)*.1)),s=x.reduce((t,v)=>t+v,0);return x.map(v=>v/s)};R.fw=late(R.ww);R.fp=late(R.wp);
-  lvSim(R,Math.random);LV.ph='gate';LV.run=true;LV.belled=false;LV.gateT=0;LV.bellAt=3.2+Math.random()*1.2;LV.msg=null;LV.cam=-30;LV.pt=[];LV.flash=0;LV.cheer=0;LV.over=0;LV.lead=-1;LV.leadT=0;LV.sayT=0;LV.fl={};LV.fast=false;
+function lvGate(){const R=LV.R,b=LV.bet;if(!R||!LV.odds||!b||LV.ft<LV.stk)return;b.st=LV.stk;
+  // kései pénz (a végső osztalékot módosítja) és a futam sorsolása: csak most, a tét rögzítése után, kriptográfiai véletlenből
+  const lr=lvRngS(lvSeed()),late=a=>{const x=a.map(v=>v*Math.exp(lvGauss(lr)*.1)),t=x.reduce((q,v)=>q+v,0);return x.map(v=>v/t)};R.fw=late(R.ww);R.fp=late(R.wp);
+  R.seed=lvSeed();const Q={D:R.D,cz:R.cz,field:R.field};lvSim(Q,lvRngS(R.seed));lvRunOut(Q);LV.res=lvPay(R,b,lvOrder(Q));
+  LV.ft=walFt(-b.st);LV.staked=b.st;LV.s.pend={st:b.st,win:LV.res.win,form:LV.res.form};lvStore();
+  lvSim(R,lvRngS(R.seed));LV.acc=0;LV.cine=null;LV.cineDone=0;LV.ph='gate';LV.run=true;LV.belled=false;LV.gateT=0;LV.bellAt=3.2+Math.random()*1.2;LV.msg=null;LV.cam=-30;LV.pt=[];LV.flash=0;LV.cheer=0;LV.over=0;LV.lead=-1;LV.leadT=0;LV.sayT=0;LV.fl={};LV.fast=false;
   const f=$('#lvFast');f.hidden=false;f.classList.remove('on');lvPanel('');LV.fit();lvSnd('call');lvSay('Az indulók beállnak a startgépbe…');lvMsg(R.no+'. FUTAM','#ffd23a')}
-function lvFinish(){const R=LV.R,b=LV.bet;let g=0;while(R.nfin<LV_N&&g++<3000)lvStep(R,.1);
-  const o=lvOrder(R);o.forEach((r,i)=>{r.pl=i+1});const pl=o.slice(0,3).map(r=>r.e.idx);let d=0;
-  if(b.t==='w'&&b.i===pl[0])d=lvDivW(R,b.i,b.st,R.fw);else if(b.t==='p'&&pl.includes(b.i))d=lvDivP(R,b.i,b.st,pl,R.fp);
-  const win=d?Math.floor(b.st*d):0,net=win-b.st;LV.staked=0;if(win>0)LV.ft=walFt(win);
-  const s=LV.s;s.pend=0;s.races++;if(win)s.wins++;s.net+=net;if(win>s.best)s.best=win;for(const r of o){const id=r.e.h.id;s.form[id]=[...lvForm(id),r.pl].slice(-5)}lvStore();
+function lvFinish(){const R=LV.R,b=LV.bet,res=LV.res;lvRunOut(R);
+  // a képernyőn lefutott futam ugyanaz, mint a rajtnál kisorsolt (azonos mag, rögzített lépésköz); az elszámolás a sorsolt eredményből megy
+  if(lvOrder(R).some((r,i)=>r.e.idx!==res.order[i]))console.warn('DERBY: a lejátszott sorrend eltér a sorsolttól',res.order);
+  const o=res.order.map(i=>R.rs[i]);o.forEach((r,i)=>{r.pl=i+1});const d=res.d,win=res.win,net=win-b.st;LV.staked=0;
+  if(LV.s.pend)lvSettle(LV.s.pend);LV.ft=walFt(0);
   LV.ph='done';LV.run=false;lvAmb(false);$('#lvFast').hidden=true;lvSnd(win?'win':'lose');
   const w=o[0],mine=o.find(r=>r.e.idx===b.i),gap=(r,q)=>{if(!r.fin||!q.fin)return '–';const l=(r.fin-q.fin)*w.Vn/LV_L;return l<.12?'orrhosszal':l<.3?'nyakhosszal':l<.75?'fél hosszal':l<1.25?'egy hosszal':lvNum(l)+' hosszal'};
   const list=o.map((r,i)=>`<div class="${r===mine?'me':''}"><span><i class="lvno" data-st="background:${LV_COL[r.e.idx]}">${r.e.idx+1}</i>${i+1}. ${esc(r.e.h.n)} <small>${LV_TY[r.e.h.ty].n}</small></span><b>${i?gap(r,o[i-1]):(r.fin||0).toFixed(2).replace('.',',')+' mp'}</b></div>`).join('');
@@ -305,11 +324,14 @@ function lvBack(c,G,cam,s,now){const {W,mm,top}=G,sk=c.createLinearGradient(0,mm
   c.fillStyle='#2d5a26';c.fillRect(0,top-7,W,7)}
 function lvSprites(){LV.imgG=new Image();LV.imgG.src=GID_FULL||GID_SPRITE;LV.gFull=!!GID_FULL;try{gidFullSet()}catch(e){}
   LV.imgR=lvRaba()}function lvGeom(){const W=LV.W,H=LV.H,mm=34,top=mm+Math.max(70,H*.16),ui=150,lh=lvClamp((H-top-ui)/LV_N,20,50),sw=Math.min(lh*3,W*.36),s=sw/LV_L;return {W,H,mm,top,lh,bot:top+lh*LV_N,sw,sh:sw*LV_MH/LV_MW,s}}
-function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2d'),G=lvGeom(),{W,H,mm,top,lh,bot,sw,sh,s}=G,R=LV.R,live=R&&R.rs&&(LV.ph==='gate'||LV.ph==='race'||LV.ph==='done'),now=performance.now()/1000;
+function lvDraw(dt,rdt){rdt=rdt??dt;const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2d'),G=lvGeom(),{W,H,mm,top,lh,bot,sw,sh,s}=G,R=LV.R,live=R&&R.rs&&(LV.ph==='gate'||LV.ph==='race'||LV.ph==='done'),now=performance.now()/1000;
   c.setTransform(LV.dpr,0,0,LV.dpr,0,0);c.globalAlpha=1;
   const pick=live&&LV.bet?R.rs[LV.bet.i]:null,D=R?R.D:600,g=R&&LV.ph!=='menu'?R.g:0;
-  if(pick){const tx=pick.x-(LV.ph==='gate'?Math.max(W*.5,sw*1.15):W*.56)/s;LV.cam+=(tx-LV.cam)*Math.min(1,dt*(LV.ph==='gate'?2.5:5))}else LV.cam=(LV.cam||0)+dt*5;
+  const C=live?LV.cine:null;if(C){const lx=Math.max(...C.who.map(r=>r.x)),tx=Math.min(lx-(W*.52)/s,D-(W*.62)/s);LV.cam+=(tx-LV.cam)*Math.min(1,rdt*4)}else if(pick){const tx=pick.x-(LV.ph==='gate'?Math.max(W*.5,sw*1.15):W*.56)/s;LV.cam+=(tx-LV.cam)*Math.min(1,rdt*(LV.ph==='gate'?2.5:5))}else LV.cam=(LV.cam||0)+rdt*5;
   const cam=LV.cam,X=x=>(x-cam)*s;
+  // célfotó: ráközelítés a célvonalra a két esélyes sávjánál
+  const zk=C?Math.min(1,(C.out?Math.max(0,1-C.out/.6):1)*Math.min(1,C.t/.6)):0,ez=zk*zk*(3-2*zk);c.save();
+  if(ez>0){const yy=C.who.reduce((t,r)=>t+top+(r.lf+.5)*lh,0)/C.who.length,px=X(Math.min(D,Math.max(...C.who.map(r=>r.x)))),z=1+.6*ez;c.translate(px,yy);c.scale(z,z);c.translate(-px,-yy)}
   lvBack(c,G,cam,s,now);
   // gyep: sávok, nyírási csíkok, sárban tócsák
   for(let i=0;i<LV_N;i++){c.fillStyle=LV_GO[g].c[i%2];c.fillRect(0,top+i*lh,W,lh)}
@@ -336,7 +358,7 @@ function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2
     for(const r of rs){const x=X(r.x),y=top+(r.lf+.9)*lh;if(x<-sw||x>W+sw*3.5||r.v<1)continue;const tg=c.createLinearGradient(x-sw*3.2,0,x-sw*.9,0);tg.addColorStop(0,'rgba(0,0,0,0)');tg.addColorStop(1,g?'rgba(30,20,8,.34)':'rgba(40,50,20,.26)');c.fillStyle=tg;c.fillRect(x-sw*3.2,y-2.5,sw*2.3,3);c.fillRect(x-sw*3.2,y-lh*.16,sw*2.3,2.5)}
     lvPtDraw(c,dt,X,W,false);
     // járművek (a felső sáv van hátul)
-    const det=!LOWFX&&sw>90;
+    const det=sw>40;
     for(const r of rs){const x=X(r.x),y=top+(r.lf+.9)*lh,i=r.e.idx,ty=r.e.h.ty,w=sw*LV_TY[ty].len/LV_L;if(x<-sw*.3||x>W+sw*1.3)continue;
       const img=ty==='P'?lvModel():ty==='G'?LV.imgG:LV.imgR,ok=ty!=='G'?!!img:img.complete&&img.naturalWidth>0,h=ty==='P'?w*LV_MH/LV_MW:!ok?w*.42:ty==='G'?w*img.naturalHeight/img.naturalWidth:w*img.height/img.width;
       const pitch=lvClamp((r.v-(r.vd||0))/LV_V*.5,-.035,.035),bob=r.v>1?Math.sin(R.t*24+i*1.7)*lh*.022:(LV.ph==='gate'?Math.sin(now*38+i)*.5:0);
@@ -347,11 +369,16 @@ function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2
         c.strokeStyle='rgba(30,32,24,.75)';c.lineWidth=1;const wy=y0+(429-165)/LV_MH*h,rr=21/LV_MW*w,an=r.x/.43;c.beginPath();for(let k=0;k<7;k++){const wx=x0+(965-(305+77.5*k))/LV_MW*w;for(let q=0;q<2;q++){const a=an+q*Math.PI/2,dx=Math.cos(a)*rr,dy=Math.sin(a)*rr;c.moveTo(wx-dx,wy-dy);c.lineTo(wx+dx,wy+dy)}}c.stroke();
         c.fillStyle='rgba(150,150,130,.55)';const t0=x0+(965-818)/LV_MW*w,t1=x0+(965-292)/LV_MW*w,ty2=y0+(461-165)/LV_MH*h,st=w*.03,off=st-((r.x*s)%st);for(let tx=t0+off;tx<t1;tx+=st)c.fillRect(tx,ty2,st*.4,1.6)}
       if(det&&ty==='R'&&r.v>.5){c.fillStyle='rgba(30,32,24,.85)';const rr=15/LV_RW*w,an=r.x/.55;for(const [px,py] of LV_RWH){const wx=x0+px/LV_RW*w,wy=y0+py/LV_RH*h;for(let q=0;q<5;q++){const a=an+q*Math.PI*2/5;c.beginPath();c.arc(wx+Math.cos(a)*rr,wy+Math.sin(a)*rr,Math.max(.8,w*.007),0,7);c.fill()}}}
+      if(ty==='G'&&ok&&LV.gFull){const gk=w/LV_GW,an=r.x/.72;for(const lx of [-36.5,36.5]){c.save();c.translate(x0+(lx-LV_GX0)*gk,y0-LV_GY0*gk);c.scale(gk,gk);gidWheel(c,0,0,13.2,an,R.g*.25);c.restore()}}
       const cw=Math.max(15,sw*.12),ch=Math.max(13,sh*.36),nx=x0+w*(ty==='P'?.035:ty==='R'?.28:.3),ny=y0+h*(ty==='P'?.15:ty==='R'?.2:.32);c.fillStyle=LV_COL[i];c.strokeStyle='#111';c.lineWidth=1.5;c.beginPath();c.rect(nx,ny,cw,ch);c.fill();c.stroke();
       c.fillStyle='#111';c.font=`900 ${Math.round(ch*.82)}px system-ui`;c.textAlign='center';c.textBaseline='middle';c.fillText(i+1,nx+cw/2,ny+ch/2+.5);c.textBaseline='alphabetic';
       c.restore();
       if(r===pick){c.fillStyle='#ffd23a';c.strokeStyle='#111';c.lineWidth=3;c.font='900 12px system-ui';c.textAlign='center';c.strokeText('▼ TIPPED',x-w*.6,y-h-5);c.fillText('▼ TIPPED',x-w*.6,y-h-5)}}
     lvPtDraw(c,dt,X,W,true)}
+  if(C&&C.shot&&C.hold<LV_HOLD){// kimerevített célfotó: fekete-fehér, enyhe szépia, piros célvonal
+    c.globalCompositeOperation='saturation';c.fillStyle='#808080';c.fillRect(-W,0,W*3,bot+20);c.globalCompositeOperation='source-over';c.fillStyle='rgba(120,90,40,.18)';c.fillRect(-W,0,W*3,bot+20);
+    c.fillStyle='#ff2a2a';c.fillRect(X(D)-1.5,top-60,3,bot-top+60)}
+  c.restore();
   // előtér: föld, közeli korlát
   c.fillStyle='#2a2318';c.fillRect(0,bot,W,H-bot);c.fillStyle='#f4f4f4';c.fillRect(0,bot+2,W,4);c.fillStyle='#cfcfcf';for(let x=-((((cam*s*1.04)%52)+52)%52);x<W;x+=52)c.fillRect(x,bot+6,4,9);
   if(live){
@@ -368,9 +395,14 @@ function lvDraw(dt){const cv=LV.cv;if(!cv||!LV.W)return;const c=cv.getContext('2
       c.textAlign='right';c.fillStyle=good?'#7dff8a':'#ff8a7a';c.fillText('most '+k+'.',W-12,ty)}
     if(LV.com){LV.comT+=dt;const ty=y0+cw+52;c.fillStyle='rgba(0,0,0,.45)';c.fillRect(8,ty-15,W-16,40);c.fillStyle='#ffe9a8';c.font='italic 700 13px system-ui';c.textAlign='left';
       const ws=('🎙 '+LV.com).split(' ');let ln='',yy=ty;for(const wd of ws){if(c.measureText(ln+wd).width>W-32&&ln){c.fillText(ln,16,yy);ln='';yy+=16;if(yy>ty+16)break}ln+=wd+' '}if(yy<=ty+16)c.fillText(ln,16,yy)}}
-  if(LV.flash>0){c.fillStyle=`rgba(255,255,255,${Math.min(1,LV.flash)})`;c.fillRect(0,0,W,H);LV.flash-=dt*2.5}
+  if(C){const k=C.out?Math.max(0,1-C.out/.6):Math.min(1,C.t/.4),bh=Math.round(lh*.9*k);if(bh>0){c.fillStyle='#000';c.fillRect(0,mm,W,bh);c.fillRect(0,bot-bh,W,bh);
+    c.globalAlpha=k;c.textBaseline='middle';c.font='400 20px Bangers, Impact, sans-serif';c.textAlign='left';c.fillStyle='#ffd23a';c.fillText('CÉLFOTÓ',14,mm+bh/2);
+    c.textAlign='right';c.font='800 12px system-ui';c.fillStyle=C.shot?'#fff':'#ff4d4d';c.fillText(C.shot?'📸 KIMEREVÍTVE':(Math.sin(performance.now()/180)>0?'● ':'')+'LASSÍTÁS ×'+String(LV_SLOW).replace('.',','),W-14,mm+bh/2);
+    if(C.shot&&C.txt){c.textAlign='center';c.font='400 19px Bangers, Impact, sans-serif';c.fillStyle='#fff';c.fillText(C.txt.toUpperCase(),W/2,bot-bh/2)}
+    c.globalAlpha=1;c.textBaseline='alphabetic'}}
+  if(LV.flash>0){c.fillStyle=`rgba(255,255,255,${Math.min(1,LV.flash)})`;c.fillRect(0,0,W,H);LV.flash-=rdt*2.5}
   // nagy felirat
-  const m=LV.msg;if(m){m.t+=dt;if(m.t>1.6)LV.msg=null;else{c.save();c.globalAlpha=Math.min(1,(1.6-m.t)*3);let fs=34;c.font='400 34px Bangers, Impact, sans-serif';c.textAlign='center';c.lineWidth=6;c.strokeStyle='#111';c.lineJoin='round';while(fs>14&&c.measureText(m.s).width>W-20){fs-=2;c.font=`400 ${fs}px Bangers, Impact, sans-serif`}const y=mm+34+Math.max(0,.25-m.t)*40;c.strokeText(m.s,W/2,y);c.fillStyle=m.col;c.fillText(m.s,W/2,y);c.restore()}}}
+  const m=LV.msg;if(m){m.t+=rdt;if(m.t>1.6)LV.msg=null;else{c.save();c.globalAlpha=Math.min(1,(1.6-m.t)*3);let fs=34;c.font='400 34px Bangers, Impact, sans-serif';c.textAlign='center';c.lineWidth=6;c.strokeStyle='#111';c.lineJoin='round';while(fs>14&&c.measureText(m.s).width>W-20){fs-=2;c.font=`400 ${fs}px Bangers, Impact, sans-serif`}const y=mm+34+Math.max(0,.25-m.t)*40;c.strokeText(m.s,W/2,y);c.fillStyle=m.col;c.fillText(m.s,W/2,y);c.restore()}}}
 
 /* ---------- kommentár, a futam vége ---------- */
 const LV_SUF=['es','es','as','es','ös','os','es','as'],lvTag=i=>(i+1)+'-'+LV_SUF[i],lvThe=r=>(r.e.idx===0||r.e.idx===4?'az ':'a ')+lvTag(r.e.idx),lvPl=k=>(k===1||k===5?'az ':'a ')+k+'. helyen';
@@ -383,17 +415,36 @@ function lvTalk(R,dt){const o=lvOrder(R),ld=o[0],D=R.D,p=ld.x/D,nm=r=>lvThe(r)+'
     else if(!LV.fl.c&&R.t>2&&lvCurve(R,p)){LV.fl.c=1;lvSay('Kanyarba ér az élboly – a belső íven rövidebb az út.');LV.sayT=0}
     else if(LV.sayT>4.5){LV.sayT=0;lvSay([`Elöl ${nm(ld)}, mögötte ${lvThe(o[1])} és ${lvThe(o[2])}.`,`Támad a második helyről ${nm(o[1])}!`,`Hátul ${nm(o[LV_N-1])} – van még mit behozni.`,`A tipped, ${nm(pick)} ${lvPl(k)} halad.`][Math.floor(Math.random()*4)])}}
   else if(!LV.over){LV.over=R.t;lvSnd('fin');const n2=o[1],t2=n2.fin||R.t+(D-n2.x)/Math.max(1,n2.v);
-    if(t2-ld.fin<.12){lvMsg('CÉLFOTÓ!','#fff');LV.flash=.9}else lvMsg('CÉLBAN!','#ffd23a');lvSay(`Célban ${nm(ld)}!`);
+    if(LV.cine||LV.cineDone){}else if(t2-ld.fin<.12){lvMsg('CÉLFOTÓ!','#fff');LV.flash=.9}else lvMsg('CÉLBAN!','#ffd23a');lvSay(`Célban ${nm(ld)}!`);
     if(ld===pick&&!LOWFX){const G=lvGeom();for(let i=0;i<70;i++)lvPt('conf',ld.x-LV_L*Math.random()*1.5,G.top+Math.random()*G.lh*2,(Math.random()-.3)*9+ld.v*.6,-(60+Math.random()*160),1.6+Math.random(),Math.random()*6,0,1,260,LV_COL[i%8])}}
   if((LV.over&&R.nfin>=3&&R.t>LV.over+2.6&&(pick.fin||R.t>LV.over+7))||R.t>D/LV_V*1.9)lvFinish()}
 
+/* ---------- célfotó: szoros befutónál filmes lassítás – fekete sávok, ráközelítés a célvonalra, kimerevített fekete-fehér fotó ---------- */
+const LV_SLOW=.22,LV_HOLD=2.2;
+function lvCineCheck(R){if(LV.cine||LV.cineDone)return;const D=R.D,eta=r=>r.fin||R.t+(D-r.x)/Math.max(1,r.v),o=R.rs.slice().sort((a,b)=>eta(a)-eta(b));
+  if(o[0].fin||D-o[0].x>38)return;const b=LV.bet,pk=R.rs[b.i];let who=null;
+  if(eta(o[1])-eta(o[0])<LV_PHOTO)who=[o[0],o[1]];else if(b.t==='p'&&(pk===o[2]||pk===o[3])&&eta(o[3])-eta(o[2])<LV_PHOTO)who=[o[2],o[3]];
+  if(!who)return;LV.cine={t:0,who,shot:0,hold:0,out:0,hb:-1};LV.fast=false;const f=$('#lvFast');if(f){f.hidden=true;f.classList.remove('on')}LV.msg=null;
+  lvSay(`Fej fej mellett ${lvThe(who[0])} és ${lvThe(who[1])}! Célfotó lesz…`)}
+function lvCineScale(dt){const C=LV.cine;if(!C)return 1;C.t+=dt;
+  if(C.out){C.out+=dt;const k=Math.min(1,C.out/.6);if(k>=1){LV.cine=null;LV.cineDone=1;const f=$('#lvFast');if(f&&LV.ph==='race')f.hidden=false;return 1}return LV_SLOW+(1-LV_SLOW)*k}
+  if(C.shot){C.hold+=dt;if(C.hold>=LV_HOLD)C.out=1e-6;return 0}
+  if(SOUND&&C.t-C.hb>.8&&ac()){C.hb=C.t;try{const t=AC.currentTime+.01;boom(t,.55,46);boom(t+.17,.35,42)}catch(e){}}
+  return 1-(1-LV_SLOW)*Math.min(1,C.t/.5)}
+// a fotó abban a pillanatban készül, amikor az első átér a célvonalon (mint a valódi célfotó); a különbség a másik orra és a vonal távolsága
+function lvCineShot(R){const C=LV.cine;if(!C||C.shot||!C.who.some(r=>r.fin))return;C.shot=1;C.hold=0;LV.flash=1;LV.acc=0;
+  const a=C.who.find(r=>r.fin&&(!C.who.find(q=>q!==r&&q.fin)||r.fin<=C.who.find(q=>q!==r).fin)),b=C.who.find(r=>r!==a),l=(b.fin?(b.fin-a.fin)*a.Vn:Math.max(0,R.D-b.x))/LV_L;C.txt=`${lvTag(a.e.idx)} ${l<.12?'orrhosszal':l<.3?'nyakhosszal':'fél hosszal'} a ${lvTag(b.e.idx)} előtt`;
+  if(SOUND&&ac()){try{snare(AC.currentTime+.01,.5);sndClink()}catch(e){}}}
+
 /* ---------- főciklus ---------- */
 const LV_FLIP={G:false,R:false};
+// a Gidrán képének kerékpontjai (app.js gidFullSet: a 639 képpont széles rajz 136/639 léptékben, 2 egység margóval)
+const LV_GK=136/639,LV_GX0=-346*LV_GK-2,LV_GW=(639-346)*LV_GK+2-LV_GX0,LV_GY0=-297*LV_GK-2;
 function lvLoop(now){LV.raf=requestAnimationFrame(lvLoop);if(!LV.cv)return;let dt=Math.min(.05,(now-(LV.last||now))/1000);LV.last=now;if(LV.paused)dt=0;
   if(!LV.gFull&&GID_FULL){LV.gFull=true;LV.imgG.src=GID_FULL}
   const R=LV.R,sdt=dt*(LV.fast?2.5:1);
   if(LV.ph==='gate'&&dt>0){LV.gateT+=sdt;if(LV.gateT>=LV.bellAt){LV.belled=true;LV.ph='race';R.t=0;lvSnd('bell');lvAmb(true);lvBurst(R,lvGeom(),LOWFX?4:10);lvMsg('RAJT!','#7dff8a');lvSay('Elrajtoltak!')}}
-  if(LV.ph==='race'&&dt>0){const n=LV.fast?3:1;for(let i=0;i<n&&LV.ph==='race';i++){lvStep(R,sdt/n);lvTalk(R,sdt/n)}}
-  lvDraw(sdt)}
+  if(LV.ph==='race'&&dt>0){lvCineCheck(R);const cs=lvCineScale(dt);LV.ws=cs;LV.acc+=sdt*cs;let n=0;while(LV.acc>=LV_DT&&LV.ph==='race'&&n++<30){lvStep(R,LV_DT);lvTalk(R,LV_DT);LV.acc-=LV_DT;lvCineShot(R)}}else LV.ws=1;
+  lvDraw(sdt*(LV.ws??1),dt)}
 lvLoop=medveWrap(lvLoop,LV,'DERBY');
 export {LV,lvOpen};
