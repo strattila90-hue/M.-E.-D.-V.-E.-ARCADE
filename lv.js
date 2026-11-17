@@ -2,7 +2,7 @@
 import {$,AC,GID_FULL,GID_SPRITE,gidWheel,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,esc,gidFullSet,medveWrap,n0,snare,sndClink,sndPop,toast,walFt,walOpen} from './app.js';
 /* ===================== TÜZÉR DERBY – fogadóiroda: PzH 2000, Gidrán és Rába futamok =====================
    A játékos nem hajt: kiválaszt egy indulót, megteszi a tétet (Tét vagy Hely), és végignézi a futamot.
-   A tét és a nyeremény az „Összes pénzem” tárcából megy (app.js: walFt) – a Tüzér Kasszától független.
+   A tét és a nyeremény zsetonban, az „Összes pénzem” tárcából megy (app.js: walFt) – a Tüzér Kasszától független.
    8 induló fut egy futamban az istállóból; a futamot, a szorzókat és a gépi fogadókat a telefon számolja,
    a szervert a játék nem használja. Egységek: méter és másodperc; LV_L a leghosszabb jármű hossza. */
 const LV={};
@@ -10,7 +10,8 @@ const LV_KEY='medve-lv1',LV_L=11.7,LV_V=16.7,LV_N=8;
 const LV_TAKE={w:.15,p:.15};// totalizatőr-levonás
 const LV_BIAS={w:.9,p:1.25};// a gépi fogadók torzítása: tétnél az esélytelent, helynél az esélyest fogadják túl
 const LV_HCP=.55;// a málha a képességkülönbség ekkora részét egyenlíti ki
-const LV_POOL=200000,LV_STAKES=[100,200,500,1000,2000,5000];
+const LV_POOL=2000,LV_STAKES=[1,2,3,5,10,20,50];// a gépi fogadók kasszája és a választható tétek (zseton)
+const lvZ=v=>n0(v)+' zseton';
 const LV_DIST=[
   {i:0,n:'Sprint',m:600,wM:1.25,wS:.4,cz:[[.3,.56]]},
   {i:1,n:'Mérföld',m:900,wM:1,wS:1,cz:[[.24,.5]]},
@@ -43,17 +44,21 @@ const lvNum=v=>(v>=100?Math.round(v).toString():v>=10?v.toFixed(1):v.toFixed(2))
 
 /* ---------- mentett állás (csak a telefonon) ---------- */
 function lvLoad(){let s={};try{s=JSON.parse(localStorage.getItem(LV_KEY)||'{}')||{}}catch(e){}
-  LV.s={v:2,races:0,wins:0,net:0,best:0,form:s.form&&typeof s.form==='object'?s.form:{},pend:0};
-  if(s.v===2){for(const k of ['races','wins','net','best'])LV.s[k]=Number(s[k])||0;LV.s.pend=Number(s.pend)>0?Number(s.pend):0}
+  LV.s={v:3,races:0,wins:0,net:0,best:0,form:s.form&&typeof s.form==='object'?s.form:{},pend:0};
+  // v2: forintban mentett állás – átváltás 100 Ft = 1 zseton
+  const k=s.v===2?100:s.v===3?1:0,cv=v=>k?Math.round((Number(v)||0)/k):0;
+  if(k){LV.s.races=Number(s.races)||0;LV.s.wins=Number(s.wins)||0;LV.s.net=cv(s.net);LV.s.best=cv(s.best)}
   delete LV.s.form.me;
   // félbeszakadt futam: az eredmény már a rajtnál (a tét rögzítése után) kisorsolódott – most csak elszámoljuk, visszatérítés nincs
-  const pd=s.v===2&&s.pend&&typeof s.pend==='object'?s.pend:null;LV.s.pend=0;
-  if(pd&&Number.isFinite(pd.st)&&Number.isFinite(pd.win)){lvSettle(pd);setTimeout(()=>toast(pd.win?`Félbeszakadt futam: a szelvényed nyert, +${n0(pd.win)} Ft.`:`Félbeszakadt futam: a szelvényed nem nyert (${n0(pd.st)} Ft).`),500)}
-  else if(s.v===2&&Number(s.pend)>0){walFt(Number(s.pend));lvStore();setTimeout(()=>toast('Megszakadt futam: a tétedet ('+n0(Number(s.pend))+' Ft) visszakaptad.'),500)}}
+  const pd=k&&s.pend&&typeof s.pend==='object'?{st:cv(s.pend.st),win:cv(s.pend.win),form:s.pend.form}:null;
+  if(pd&&Number.isFinite(pd.st)&&Number.isFinite(pd.win)){lvSettle(pd);setTimeout(()=>toast(pd.win?`Félbeszakadt futam: a szelvényed nyert, +${lvZ(pd.win)}.`:`Félbeszakadt futam: a szelvényed nem nyert (${lvZ(pd.st)}).`),500)}
+  else if(k&&Number(s.pend)>0){walFt(cv(s.pend));setTimeout(()=>toast('Megszakadt futam: a tétedet ('+lvZ(cv(s.pend))+') visszakaptad.'),500)}
+  if(s.v!==3)lvStore()}
 // a sorsolt eredmény elszámolása (egyszer): nyeremény a tárcába, statisztika, forma
 function lvSettle(p){const s=LV.s;if(p.win>0)walFt(p.win);s.pend=0;s.races++;if(p.win)s.wins++;s.net+=p.win-p.st;if(p.win>s.best)s.best=p.win;for(const [id,pl] of p.form||[])s.form[id]=[...lvForm(id),pl].slice(-5);lvStore()}
-function lvPay(R,b,o){const pl=o.slice(0,3).map(r=>r.e.idx);let d=0;if(b.t==='w'&&b.i===pl[0])d=lvDivW(R,b.i,b.st,R.fw);else if(b.t==='p'&&pl.includes(b.i))d=lvDivP(R,b.i,b.st,pl,R.fp);
-  return {d,win:d?Math.floor(b.st*d):0,order:o.map(r=>r.e.idx),form:o.map((r,i)=>[r.e.h.id,i+1])}}
+// a kifizetés egész zseton: a tört részt véletlen kerekítés adja (a várható érték pontos – kis tétnél sem nyeli el a lefelé kerekítés)
+function lvPay(R,b,o,rr){const pl=o.slice(0,3).map(r=>r.e.idx);let d=0;if(b.t==='w'&&b.i===pl[0])d=lvDivW(R,b.i,b.st,R.fw);else if(b.t==='p'&&pl.includes(b.i))d=lvDivP(R,b.i,b.st,pl,R.fp);
+  const x=b.st*d,fl=Math.floor(x);return {d,win:d?fl+((rr||Math.random)()<x-fl?1:0):0,order:o.map(r=>r.e.idx),form:o.map((r,i)=>[r.e.h.id,i+1])}}
 function lvStore(){try{localStorage.setItem(LV_KEY,JSON.stringify(LV.s))}catch(e){}}
 const lvForm=id=>Array.isArray(LV.s.form[id])?LV.s.form[id]:[];
 
@@ -126,7 +131,7 @@ function lvAmbSet(v,ex){const e=LV.amb;if(!e)return;try{const t=AC.currentTime,f
 function lvMsg(s,col){LV.msg={s,col:col||'#fff',t:0}}
 function lvSay(s){LV.com=s;LV.comT=0}
 function lvOpen(){const el=$('#harc');el.hidden=false;el.classList.add('lv');document.body.classList.add('harcon');lvLoad();LV.ft=walFt(0);LV.tok=(LV.tok||0)+1;LV.run=false;LV.ph='menu';LV.R=null;LV.pt=[];LV.flash=0;LV.cheer=0;LV.fast=false;LV.bet=null;LV.staked=0;
-  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Derby</b></div><div class="hstat"><button type="button" class="lvwal" id="lvWal" aria-label="Összes pénzem">💰 <b data-walft>${n0(LV.ft)} Ft</b></button></div><button class="hx" id="lvClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML=`<div class="hbar"><div class="htitle">Tüzér <b>Derby</b></div><div class="hstat"><button type="button" class="lvwal" id="lvWal" aria-label="Összes pénzem">🪙 <b data-walft>${lvZ(LV.ft)}</b></button></div><button class="hx" id="lvClose" aria-label="Bezárás">✕</button></div>
    <div class="lvwrap"><canvas id="lvCv"></canvas><button type="button" class="lvfast" id="lvFast" hidden>⏩ Gyorsítás</button><div class="lvpanel" id="lvPanel"></div></div>`;
   $('#lvClose').onclick=lvClose;$('#lvWal').onclick=()=>{if(LV.ph!=='race'&&LV.ph!=='gate')walOpen()};
   $('#lvFast').onclick=()=>{LV.fast=!LV.fast;$('#lvFast').classList.toggle('on',LV.fast)};
@@ -140,7 +145,7 @@ function lvOpen(){const el=$('#harc');el.hidden=false;el.classList.add('lv');doc
 function lvPause(on){LV.paused=!!on;let o=$('#lvPz');if(on){lvAmb(false);if(!o){o=document.createElement('div');o.id='lvPz';o.className='gpov';o.innerHTML='<b>⏸ SZÜNET</b><span>Koppints a folytatáshoz</span>';o.onclick=()=>lvPause(false);$('#harc .lvwrap').appendChild(o)}}
   else{if(o)o.remove();if(LV.ph==='race')lvAmb(true)}}
 function lvClose(){const mid=LV.ph==='race'||LV.ph==='gate';if(mid&&!confirm('Kilépsz? A futam eredménye már eldőlt – a szelvényedet így is elszámoljuk.'))return;
-  if(mid&&LV.s.pend){const p=LV.s.pend;lvSettle(p);toast(p.win?`A szelvényed nyert: +${n0(p.win)} Ft.`:`A szelvényed nem nyert (−${n0(p.st)} Ft).`)}LV.staked=0;
+  if(mid&&LV.s.pend){const p=LV.s.pend;lvSettle(p);toast(p.win?`A szelvényed nyert: +${lvZ(p.win)}.`:`A szelvényed nem nyert (−${lvZ(p.st)}).`)}LV.staked=0;
   LV.tok++;LV.run=false;LV.ph=null;LV.R=null;lvAmb(false);cancelAnimationFrame(LV.raf);clearInterval(LV.walI);try{LV.ro&&LV.ro.disconnect()}catch(e){}
   document.removeEventListener('visibilitychange',LV.vis);LV.cv=null;
   const el=$('#harc');el.hidden=true;el.innerHTML='';el.classList.remove('lv');document.body.classList.remove('harcon')}
@@ -148,17 +153,17 @@ function lvPanel(html,cls){const p=$('#lvPanel');if(!p)return null;p.className='
 function lvMenu(){LV.ph='menu';LV.run=false;$('#lvFast').hidden=true;const s=LV.s;LV.ft=walFt(0);
   lvPanel(`<div class="hstart lvstart"><img src="${lvModel().toDataURL()}" alt="" data-st="width:100%;height:auto"><h3>TÜZÉR DERBY</h3>
    <p>Fogadóiroda a lövészárok szélén: <b>PzH 2000</b>, <b>Gidrán</b> és <b>Rába</b> futamok. Válassz indulót, tedd meg a tétet, és szurkolj!</p>
-   <div class="lvstats"><span>Futam <b>${s.races}</b></span><span>Nyert szelvény <b>${s.wins}</b></span><span>Mérleg <b class="${s.net<0?'neg':'pos'}">${s.net<0?'−':'+'}${n0(Math.abs(s.net))} Ft</b></span></div>
-   <div class="lvwalrow">💰 Pénzed: <b>${n0(LV.ft)} Ft</b></div>
-   <button class="btn pri" id="lvGoCard">▶ Programfüzet</button> <button class="btn line" id="lvWalB">💰 Pénzem</button>
+   <div class="lvstats"><span>Futam <b>${s.races}</b></span><span>Nyert szelvény <b>${s.wins}</b></span><span>Mérleg <b class="${s.net<0?'neg':'pos'}">${s.net<0?'−':'+'}${lvZ(Math.abs(s.net))}</b></span></div>
+   <div class="lvwalrow">🪙 Zsetonod: <b>${lvZ(LV.ft)}</b></div>
+   <button class="btn pri" id="lvGoCard">▶ Programfüzet</button> <button class="btn line" id="lvWalB">🪙 Pénzem</button>
    <details class="lvhelp"><summary>Szabályok</summary>
-    <p><b>Egy futam – egy szelvény.</b> Válassz egy indulót és a fogadás fajtáját: <b>Tét</b> – nyer; <b>Hely</b> – az első háromban végez. A legkisebb tét <b>100 Ft</b>, a legnagyobb 5 000 Ft.</p>
+    <p><b>Egy futam – egy szelvény.</b> Válassz egy indulót és a fogadás fajtáját: <b>Tét</b> – nyer; <b>Hely</b> – az első háromban végez. A tét 1–50 zseton.</p>
     <p><b>Totalizatőr:</b> a nyeremény a közös kasszából jön, 15% levonás után. A kiírt szorzó becslés – a végső osztalék a fogadás zárása után alakul ki.</p>
-    <p><b>Pénz:</b> az „Összes pénzem” tárcából fogadsz (1 érme = 100 Ft). Pénzt a többi játékkal szerzel: minden aktívan játszott perc 100 Ft; az érmeverőn 100 koppintás 10 érme; a Tüzér Kasszából naponta legfeljebb 10 000 Ft vehető ki. A Derbybe a belépés ingyenes.</p>
+    <p><b>Zseton:</b> az „Összes pénzem” tárcából fogadsz. Zsetont a többi játékkal szerzel: minden aktívan játszott perc 1 zseton; a Tüzér Kasszából naponta legfeljebb 20 vehető ki; ha elfogyott, az érmeverőn 100 koppintás 3 zseton (naponta 3-szor). A Derbybe a belépés ingyenes, a többi játék indítása 1 zseton.</p>
     <p><b>Programfüzet:</b> a forma az utolsó futamok helyezése; MOT – végsebesség, ÁLL – állóképesség, MEGB – megbízhatóság (műszaki hiba esélye). Minden induló egyformán gyorsul, a tömeg nem számít. A Gidrán a száraz pályát szereti, a lánctalpas PzH a puha talajt és a sarat, a Rába szívós a hosszú távon. Az 1-es rajthely van a korlátnál – kanyarban ez rövidebb út.</p></details></div>`);
   $('#lvGoCard').onclick=lvCard;$('#lvWalB').onclick=()=>walOpen()}
 const lvBar=v=>`<i><u data-st="width:${Math.round(lvClamp(v,0,1)*100)}%"></u></i>`;
-function lvCard(){LV.ph='card';LV.ft=walFt(0);LV.bet=null;LV.stk=LV.stk||100;$('#lvFast').hidden=true;const R=LV.R=lvNewRace();LV.tok++;LV.odds=false;
+function lvCard(){LV.ph='card';LV.ft=walFt(0);LV.bet=null;LV.stk=LV.stk||1;$('#lvFast').hidden=true;const R=LV.R=lvNewRace();LV.tok++;LV.odds=false;
   const rows=R.field.map((e,i)=>{const h=e.h,f=lvForm(h.id);
     return `<div class="lvrow" data-row="${i}"><i class="lvno" data-st="background:${LV_COL[i]}">${i+1}</i>
      <div class="lvinf"><b>${esc(h.n)}</b><small><em class="lvty t${h.ty}">${LV_TY[h.ty].n}</em> ${LV_STY[h.sty][0]} · ${esc(h.drv)}</small>
@@ -170,27 +175,27 @@ function lvCard(){LV.ph='card';LV.ft=walFt(0);LV.bet=null;LV.stk=LV.stk||100;$('
     <div class="lvfoot"><div class="lvstk" id="lvStk"></div><div class="lvsum" id="lvSumL"></div><div class="lvbtns"><button class="btn line" id="lvBack">Vissza</button><button class="btn pri" id="lvGo" disabled>🔔 Fogadok – rajt!</button></div></div></div>`,'full');
   p.onclick=e=>{const b=e.target.closest('[data-bet]'),u=e.target.closest('[data-stk]');
     if(b&&LV.odds){const k=b.dataset.bet;LV.bet=LV.bet&&LV.bet.k===k?null:{k,t:k[0],i:+k.slice(1)};lvCardUpd()}
-    else if(u){const d=+u.dataset.stk,ix=LV_STAKES.indexOf(LV.stk)+d;if(ix>=0&&ix<LV_STAKES.length&&LV_STAKES[ix]<=Math.max(100,LV.ft)){LV.stk=LV_STAKES[ix];lvCardUpd()}}
+    else if(u){const d=+u.dataset.stk,ix=LV_STAKES.indexOf(LV.stk)+d;if(ix>=0&&ix<LV_STAKES.length&&LV_STAKES[ix]<=Math.max(1,LV.ft)){LV.stk=LV_STAKES[ix];lvCardUpd()}}
     else if(e.target.closest('[data-walopen]'))walOpen()};
   $('#lvBack').onclick=lvMenu;$('#lvGo').onclick=lvGate;lvCardUpd();
   lvOdds(R,(pw,pp)=>{if(LV.R!==R||LV.ph!=='card')return;lvPools(R,pw,pp);LV.odds=true;
     const o=pw.map((x,i)=>[x,i]).sort((a,b)=>b[0]-a[0]),k=Math.random()<.65?o[0][1]:o[1+Math.floor(Math.random()*2)][1];
     $('#lvTip').innerHTML=`🎖️ <b>Öreg Zászlós tippje:</b> „${['Az én tippem ma','Én arra tennék:','Nálam a befutó:'][Math.floor(Math.random()*3)]} ${k===0||k===4?'az':'a'} ${lvTag(k)} ${esc(R.field[k].h.n)}.”`;
     lvCardUpd()})}
-function lvCardUpd(){const R=LV.R;if(!R||LV.ph!=='card')return;while(LV.stk>100&&LV.stk>LV.ft)LV.stk=LV_STAKES[LV_STAKES.indexOf(LV.stk)-1];const b0=LV.bet,poor=LV.ft<100;
+function lvCardUpd(){const R=LV.R;if(!R||LV.ph!=='card')return;while(LV.stk>1&&LV.stk>LV.ft)LV.stk=LV_STAKES[LV_STAKES.indexOf(LV.stk)-1];const b0=LV.bet,poor=LV.ft<1;
   document.querySelectorAll('#lvPanel [data-bet]').forEach(b=>{const k=b.dataset.bet,i=+k.slice(1),on=!!b0&&b0.k===k;b.disabled=!LV.odds;b.classList.toggle('on',on);
     if(LV.odds)b.querySelector('b').textContent='×'+lvNum(k[0]==='w'?lvDivW(R,i,on?LV.stk:0):lvDivP(R,i,on?LV.stk:0))});
   document.querySelectorAll('#lvPanel [data-row]').forEach(r=>r.classList.toggle('me',!!b0&&+r.dataset.row===b0.i));
-  $('#lvStk').innerHTML=poor?`<span>Nincs elég pénzed – egy futam legalább 100 Ft (1 érme).</span><button type="button" data-walopen>💰 Pénzem</button>`
-    :`<span>Tét:</span><button type="button" data-stk="-1" aria-label="Kisebb tét">−</button><b class="lvstkv">${n0(LV.stk)} Ft</b><button type="button" data-stk="1" aria-label="Nagyobb tét">+</button><em>Pénzed: ${n0(LV.ft)} Ft</em>`;
+  $('#lvStk').innerHTML=poor?`<span>Nincs zsetonod – egy futam legalább 1 zseton.</span><button type="button" data-walopen>🪙 Pénzem</button>`
+    :`<span>Tét:</span><button type="button" data-stk="-1" aria-label="Kisebb tét">−</button><b class="lvstkv">${lvZ(LV.stk)}</b><button type="button" data-stk="1" aria-label="Nagyobb tét">+</button><em>Zsetonod: ${n0(LV.ft)}</em>`;
   const d=b0&&LV.odds?(b0.t==='w'?lvDivW(R,b0.i,LV.stk):lvDivP(R,b0.i,LV.stk)):0;
-  $('#lvSumL').innerHTML=b0?`Szelvény: <b>${b0.t==='w'?'Tét':'Hely'}</b> a <b>${b0.i+1}. ${esc(R.field[b0.i].h.n)}</b> indulóra · várható nyeremény kb. <b>${n0(Math.floor(LV.stk*d))} Ft</b>`:'Koppints egy szorzóra: TÉT – nyer, HELY – dobogón végez.';
+  $('#lvSumL').innerHTML=b0?`Szelvény: <b>${b0.t==='w'?'Tét':'Hely'}</b> a <b>${b0.i+1}. ${esc(R.field[b0.i].h.n)}</b> indulóra · várható nyeremény kb. <b>${lvNum(LV.stk*d)} zseton</b>`:'Koppints egy szorzóra: TÉT – nyer, HELY – dobogón végez.';
   $('#lvGo').disabled=!LV.odds||!b0||poor}
 // rajt: a tét levonása, a végső (kései pénzzel módosult) kassza rögzítése, beállás a startgépbe
 function lvGate(){const R=LV.R,b=LV.bet;if(!R||!LV.odds||!b||LV.ft<LV.stk)return;b.st=LV.stk;
   // kései pénz (a végső osztalékot módosítja) és a futam sorsolása: csak most, a tét rögzítése után, kriptográfiai véletlenből
   const lr=lvRngS(lvSeed()),late=a=>{const x=a.map(v=>v*Math.exp(lvGauss(lr)*.1)),t=x.reduce((q,v)=>q+v,0);return x.map(v=>v/t)};R.fw=late(R.ww);R.fp=late(R.wp);
-  R.seed=lvSeed();const Q={D:R.D,cz:R.cz,field:R.field};lvSim(Q,lvRngS(R.seed));lvRunOut(Q);LV.res=lvPay(R,b,lvOrder(Q));
+  R.seed=lvSeed();const Q={D:R.D,cz:R.cz,field:R.field};lvSim(Q,lvRngS(R.seed));lvRunOut(Q);LV.res=lvPay(R,b,lvOrder(Q),lr);
   LV.ft=walFt(-b.st);LV.staked=b.st;LV.s.pend={st:b.st,win:LV.res.win,form:LV.res.form};lvStore();
   lvSim(R,lvRngS(R.seed));LV.acc=0;LV.cine=null;LV.cineDone=0;LV.ph='gate';LV.run=true;LV.belled=false;LV.gateT=0;LV.bellAt=3.2+Math.random()*1.2;LV.msg=null;LV.cam=-30;LV.pt=[];LV.flash=0;LV.cheer=0;LV.over=0;LV.lead=-1;LV.leadT=0;LV.sayT=0;LV.fl={};LV.fast=false;
   const f=$('#lvFast');f.hidden=false;f.classList.remove('on');lvPanel('');LV.fit();lvSnd('call');lvSay('Az indulók beállnak a startgépbe…');lvMsg(R.no+'. FUTAM','#ffd23a')}
@@ -203,9 +208,9 @@ function lvFinish(){const R=LV.R,b=LV.bet,res=LV.res;lvRunOut(R);
   const w=o[0],mine=o.find(r=>r.e.idx===b.i),gap=(r,q)=>{if(!r.fin||!q.fin)return '–';const l=(r.fin-q.fin)*w.Vn/LV_L;return l<.12?'orrhosszal':l<.3?'nyakhosszal':l<.75?'fél hosszal':l<1.25?'egy hosszal':lvNum(l)+' hosszal'};
   const list=o.map((r,i)=>`<div class="${r===mine?'me':''}"><span><i class="lvno" data-st="background:${LV_COL[r.e.idx]}">${r.e.idx+1}</i>${i+1}. ${esc(r.e.h.n)} <small>${LV_TY[r.e.h.ty].n}</small></span><b>${i?gap(r,o[i-1]):(r.fin||0).toFixed(2).replace('.',',')+' mp'}</b></div>`).join('');
   lvPanel(`<div class="hover lvres"><h3>${win?'💰 NYERTÉL!':'NEM JÖTT BE'}</h3>
-    <div class="hboard lvbets"><div class="lbl">Szelvény</div><div class="${win?'ok':'no'}"><span>${b.t==='w'?'Tét':'Hely'} · ${b.i+1}. ${esc(R.field[b.i].h.n)} (${mine.pl}. hely) · ${n0(b.st)} Ft</span><b>${win?'+'+n0(win)+' Ft (×'+lvNum(d)+')':'elveszett'}</b></div></div>
+    <div class="hboard lvbets"><div class="lbl">Szelvény</div><div class="${win?'ok':'no'}"><span>${b.t==='w'?'Tét':'Hely'} · ${b.i+1}. ${esc(R.field[b.i].h.n)} (${mine.pl}. hely) · ${lvZ(b.st)}</span><b>${win?'+'+lvZ(win)+' (×'+lvNum(d)+')':'elveszett'}</b></div></div>
     <div class="hboard lvord"><div class="lbl">Befutó</div>${list}</div>
-    <p class="lvnet ${net<0?'neg':'pos'}">Futam mérlege: <b>${net<0?'−':'+'}${n0(Math.abs(net))} Ft</b><br><small>Pénzed: ${n0(LV.ft)} Ft</small></p>
+    <p class="lvnet ${net<0?'neg':'pos'}">Futam mérlege: <b>${net<0?'−':'+'}${lvZ(Math.abs(net))}</b><br><small>Zsetonod: ${n0(LV.ft)}</small></p>
     <button class="btn pri" id="lvNext">▶ Következő futam</button> <button class="btn line" id="lvMenuB">Menü</button></div>`);
   $('#lvNext').onclick=lvCard;$('#lvMenuB').onclick=lvMenu}
 
@@ -391,7 +396,7 @@ function lvDraw(dt,rdt){rdt=rdt??dt;const cv=LV.cv;if(!cv||!LV.W)return;const c=
     o.forEach((r,k)=>{const x=58+k*(cw+4),me=r===pick;c.fillStyle=LV_COL[r.e.idx];c.strokeStyle=me?'#ffd23a':'#111';c.lineWidth=me?3:1.5;c.beginPath();c.rect(x,y0,cw,cw);c.fill();c.stroke();c.fillStyle='#111';c.font=`900 ${Math.round(cw*.6)}px system-ui`;c.textAlign='center';c.fillText(r.e.idx+1,x+cw/2,y0+cw*.72);
       c.fillStyle='rgba(255,255,255,.6)';c.font='700 8px system-ui';c.fillText((k+1)+'.',x+cw/2,y0+cw+10)});
     const b=LV.bet;if(b&&pick){const k=o.indexOf(pick)+1,good=b.t==='w'?k===1:k<=3;c.textAlign='left';c.font='800 12px system-ui';c.fillStyle='#fff';const ty=y0+cw+30;
-      let t=`Szelvény: ${b.t==='w'?'TÉT':'HELY'} · ${b.i+1}. ${R.field[b.i].h.n} · ${n0(b.st)} Ft`;while(t.length>8&&c.measureText(t).width>W-86)t=t.slice(0,-2);c.fillText(t,12,ty);
+      let t=`Szelvény: ${b.t==='w'?'TÉT':'HELY'} · ${b.i+1}. ${R.field[b.i].h.n} · ${lvZ(b.st)}`;while(t.length>8&&c.measureText(t).width>W-86)t=t.slice(0,-2);c.fillText(t,12,ty);
       c.textAlign='right';c.fillStyle=good?'#7dff8a':'#ff8a7a';c.fillText('most '+k+'.',W-12,ty)}
     if(LV.com){LV.comT+=dt;const ty=y0+cw+52;c.fillStyle='rgba(0,0,0,.45)';c.fillRect(8,ty-15,W-16,40);c.fillStyle='#ffe9a8';c.font='italic 700 13px system-ui';c.textAlign='left';
       const ws=('🎙 '+LV.com).split(' ');let ln='',yy=ty;for(const wd of ws){if(c.measureText(ln+wd).width>W-32&&ln){c.fillText(ln,16,yy);ln='';yy+=16;if(yy>ty+16)break}ln+=wd+' '}if(yy<=ty+16)c.fillText(ln,16,yy)}}

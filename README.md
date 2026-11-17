@@ -1,9 +1,19 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.41.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.42.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.42.0:** **Zseton – egyetlen pénznem, a fiókba mentve.**
+- **1 zseton = 1 játék.** A tárca forint helyett zsetonban számol (a főgombon és a Derby fejlécében is). Minden játék indítása 1 zseton; a Tüzér Derbybe a belépés ingyenes, ott futamonként **1–50 zsetont** lehet feltenni. Új játékos 10 zsetonnal indul.
+- **Bevétel:** minden aktívan játszott perc **1 zseton**; a **Tüzér Kasszából naponta legfeljebb 20 zseton** vehető ki (a nagyságrend szerint: 1 milliárd Ft kb. 5, 1 billiárd kb. 11, 1 kvadrillió 20 zsetont ér).
+- **Érmeverő = mentőöv:** csak akkor jelenik meg, ha elfogyott a zsetonod; **100 koppintás 3 zseton, naponta legfeljebb 3-szor**. Így senki nem szorul ki, de a játék többet ér, mint a koppintás.
+- **Átváltás:** a meglévő forintos egyenleg 100 Ft = 1 zseton arányban váltódik át (lefelé kerekítve); a Derby-statisztika is.
+- **Derby-kifizetés egész zsetonban:** a tört részt véletlen kerekítés adja (pl. 1,6 zseton = 60% eséllyel 2, 40% eséllyel 1), így a várható nyeremény pontos marad, kis tétnél sem nyeli el a lefelé kerekítés. Mért megtérülés 900 futamon, 1 zsetonos téttel: minden fogadásfajta 100% alatt (esélyes Hely kb. 97%, esélyes Tét kb. 90%).
+- **Mentés a fiókba:** az egyenleg bejelentkezve legfeljebb 2 percenként (és háttérbe tételkor) a fiókba is felmegy (`zs`, `zsSt`) – külön mentésként, új figyelő nélkül. **Új telefonon** a fiókban lévő egyenleg töltődik vissza (az azóta ott szerzett/elköltött különbséggel). A tárca ablakában látszik, mennyi van a fiókban (✓ vagy ⏳).
+- **Csalás elleni korlát (`firestore.rules`, `zsOk`):** a zseton csökkenhet bármennyit, de **nőni csak a szerveridővel arányosan** tud: percenként 1, de legalább 30 és egyszerre legfeljebb 600; az első feltöltés legfeljebb 500. Egy csaló így óránként legfeljebb kb. 60 zsetont nyerhet; egy nagy, valódi Derby-nyeremény részletekben megy fel (⏳). Új regressziós tesztek: `tests/firestore-rules.test.mjs` (az emulátorban mind átment, a régiekkel együtt).
+- **Teendő:** a `firestore.rules`-t a Firebase konzolban közzé kell tenni (Firestore → Rules → Publish). Amíg ez nem történik meg, a zseton csak a telefonon tárolódik (a fiókba mentést a szerver elutasítja), a többi mentés zavartalan.
 
 **v4.41.0:** **Játéktermi érme, „Összes pénzem” tárca, a Tüzér Derby fogadóirodává alakult.**
 - **💰 ÖSSZES PÉNZEM** – új főgomb a kezdőlapon (és a Derby fejlécében): közös, forintban számolt tárca. Új játékos 1 000 Ft-tal indul.

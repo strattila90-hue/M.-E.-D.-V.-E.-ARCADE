@@ -43,8 +43,16 @@ service cloud.firestore {
       || (cntOk(ak, 'harcN') && cntOk(ak, 'droneN') && cntOk(ak, 'gtN') && cntOk(ak, 'gkN') && cntOk(ak, 'rkN') && cntOk(ak, 'sereN') && cntOk(ak, 'tkN') && tsOk(ak, 'lastPlay')); }
     function tkAllOk(ak) { return !ak.hasAny(['tkGive', 'tkUteg', 'tkAt', 'tkOwn', 'tkFt', 'tkOwnF', 'tkWk', 'tkWg', 'tkSt'])
       || (tkOk(ak) && tkAtOk(ak) && (!chg(ak, 'tkOwn') || (request.resource.data.tkOwn is map && request.resource.data.tkOwn.size() <= 40)) && (!chg(ak, 'tkOwnF') || (request.resource.data.tkOwnF is map && request.resource.data.tkOwnF.size() <= 40))); }
-    function userUpdOk(ak) { return ak.hasOnly(['rank', 'harcBest', 'harcAt', 'droneBest', 'droneAt', 'gtBest', 'gtBestAt', 'gkBest', 'gkBestAt', 'rkBest', 'rkBestAt', 'rkhBest', 'rkhBestAt', 'sereBest', 'sereBestAt', 'harcN', 'droneN', 'gtN', 'gkN', 'rkN', 'sereN', 'tkN', 'tkGive', 'tkUteg', 'tkAt', 'tkOwn', 'tkFt', 'tkOwnF', 'tkWk', 'tkWg', 'tkSt', 'lastPlay', 'lbSeen'])
-      && lbOk() && (!chg(ak, 'rank') || (request.resource.data.rank is string && request.resource.data.rank.size() <= 24)) && recOk(ak) && cntsOk(ak) && tkAllOk(ak); }
+    // Összes pénzem (zseton): csökkenhet bármennyit; nőni csak a szerveridővel arányosan – percenként 1, de legalább 30 és egyszerre legfeljebb 600;
+    // első feltöltésnél legfeljebb 500. Minden zseton-mentés a szerveridőt (zsSt == request.time) is beírja.
+    function zsAllow() { let o = resource.data; let el = 'zsSt' in o ? (request.time.toMillis() - o.zsSt.toMillis()) / 60000 : -1;
+      return el < 0 ? 500 : (el > 570 ? 600 : 30 + el); }
+    function zsOk(ak) { let n = request.resource.data; let o = resource.data;
+      return !ak.hasAny(['zs', 'zsSt'])
+        || (n.zs is int && n.zs >= 0 && n.zs <= 10000000 && n.get('zsSt', null) == request.time
+          && (n.zs <= o.get('zs', 0) || n.zs - o.get('zs', 0) <= zsAllow())); }
+    function userUpdOk(ak) { return ak.hasOnly(['rank', 'harcBest', 'harcAt', 'droneBest', 'droneAt', 'gtBest', 'gtBestAt', 'gkBest', 'gkBestAt', 'rkBest', 'rkBestAt', 'rkhBest', 'rkhBestAt', 'sereBest', 'sereBestAt', 'harcN', 'droneN', 'gtN', 'gkN', 'rkN', 'sereN', 'tkN', 'tkGive', 'tkUteg', 'tkAt', 'tkOwn', 'tkFt', 'tkOwnF', 'tkWk', 'tkWg', 'tkSt', 'zs', 'zsSt', 'lastPlay', 'lbSeen'])
+      && lbOk() && (!chg(ak, 'rank') || (request.resource.data.rank is string && request.resource.data.rank.size() <= 24)) && recOk(ak) && cntsOk(ak) && tkAllOk(ak) && zsOk(ak); }
     match /users/{uid} {
       allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == uid && request.resource.data.keys().hasOnly(['name', 'rank', 'nick', 'createdAt']) && request.resource.data.name is string && request.resource.data.name.size() >= 2 && request.resource.data.name.size() <= 20 && request.resource.data.rank is string && request.resource.data.rank.size() <= 24 && request.resource.data.nick == request.auth.token.email.split('@')[0] && request.resource.data.createdAt is number && request.resource.data.createdAt <= nowMs() + 300000;

@@ -87,6 +87,18 @@ const expect = (name, got, want) => { const ok = (got < 300) === want; if (!ok) 
   expect('new player: play counter', await write(doc4, U4, { tkN: 1, lastPlay: Date.now() }), true);
   expect('new player: first Kassza sync with tkFt 0 and server tkSt', await write(doc4, U4, { tkFt: 0, tkUteg: '1. üteg', tkOwnF: {}, tkWk: cur, tkWg: 0, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
   expect('new player: later deposit', await write(doc4, U4, { tkFt: 5000, tkWk: cur, tkWg: 5000, tkAt: Date.now() }, { srvTs: ['tkSt'] }), true);
+  // Összes pénzem (zseton): csökkenés bármikor, növekedés csak szerveridővel arányosan
+  expect('zseton: first upload ≤ 500 with server zsSt', await write(doc4, U4, { zs: 400 }, { srvTs: ['zsSt'] }), true);
+  expect('zseton: reject without server zsSt', await write(doc4, U4, { zs: 390 }), false);
+  expect('zseton: spend (decrease) always ok', await write(doc4, U4, { zs: 380 }, { srvTs: ['zsSt'] }), true);
+  expect('zseton: small increase (+25) right away ok', await write(doc4, U4, { zs: 405 }, { srvTs: ['zsSt'] }), true);
+  expect('zseton: reject big jump (+5000)', await write(doc4, U4, { zs: 5405 }, { srvTs: ['zsSt'] }), false);
+  expect('zseton: reject negative', await write(doc4, U4, { zs: -1 }, { srvTs: ['zsSt'] }), false);
+  expect('zseton: reject fraction', await write(doc4, U4, { zs: 10.5 }, { srvTs: ['zsSt'] }), false);
+  expect('zseton: reject deleting zs', await write(doc4, U4, {}, { del: ['zs'], srvTs: ['zsSt'] }), false);
+  const doc5 = 'users/' + uid + 'z', U5 = userTok(uid + 'z');
+  expect('zseton: new profile', await write(doc5, U5, { name: 'Zs', rank: 'Közlegény', nick: uid + 'z', createdAt: Date.now() }), true);
+  expect('zseton: reject first upload > 500', await write(doc5, U5, { zs: 900 }, { srvTs: ['zsSt'] }), false);
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error('ERR', e); process.exit(1); });
