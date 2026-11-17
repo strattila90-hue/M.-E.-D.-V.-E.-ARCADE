@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.42.0',APP_DATE='2026.11.16.';
+const APP_VER='4.43.0',APP_DATE='2026.11.17.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -330,7 +330,7 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
 const SE_CARD='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060a18"/><stop offset="1" stop-color="#1d2740"/></linearGradient></defs><rect width="160" height="80" rx="10" fill="url(#g)"/><circle cx="132" cy="15" r="8" fill="#f4f1dc"/><circle cx="136" cy="12" r="7" fill="#0a1020"/><circle cx="20" cy="12" r="1" fill="#fff"/><circle cx="60" cy="8" r="1" fill="#fff"/><circle cx="96" cy="18" r="1" fill="#fff"/><path d="M0 62 L10 38 L20 62 L28 30 L40 62 L48 44 L56 62Z" fill="#0b1610"/><path d="M104 62 L112 40 L120 62 L128 32 L138 62 L146 44 L156 62Z" fill="#0b1610"/><ellipse cx="124" cy="46" rx="14" ry="4" fill="#0a0e0a"/><rect x="121" y="30" width="6" height="14" rx="2" fill="#0a0e0a"/><circle cx="124" cy="27" r="3.5" fill="#0a0e0a"/><polygon points="118,36 64,66 96,66" fill="rgba(255,245,200,.33)"/><rect y="62" width="160" height="18" fill="#0d120c"/><rect x="36" y="56" width="26" height="6" rx="3" fill="#5f6440"/><rect x="40" y="52" width="12" height="5" rx="2" fill="#4a4d30"/><circle cx="66" cy="58" r="3.4" fill="#c99b76"/><path d="M62 57 a4.5 4.5 0 0 1 9 0z" fill="#454a2c"/><circle cx="50" cy="61" r="9" fill="#15281a"/><circle cx="38" cy="61" r="7" fill="#15281a"/><circle cx="72" cy="61" r="6" fill="#15281a"/><path d="M84 20 l8 -3 l2 2 l-8 3z" fill="#2b3320"/><circle cx="88" cy="22" r="1.2" fill="#ff3b3b"/></svg>`);
 // főmenü: anime „versus” képernyő – 6 átlósan felvágott panel, villám alakú vágással
 const ANI_G=[['harc','M.E.D.V.E.<br>H.A.R.C.','Gránátfogás','linear-gradient(150deg,#e0262f,#5a0610)','#ffd24a','b'],['drone','DroneRun','PzH 2000 vs. drón','linear-gradient(210deg,#e8781e,#3d1604)','#ff3b3b','p'],
-  ['terep','Gidrán<br>Terep','CTIS terepbajnokság','linear-gradient(150deg,#b39a3a,#2c2a0e)','#4fd1ff','g'],['konvoj','Gidrán<br>Konvoj','IED, les, drónok','linear-gradient(210deg,#2f7aa8,#081a2a)','#ffb43e','g2'],
+  ['terep','Gidrán<br>Terep','4×4 terep · 3 pálya','linear-gradient(150deg,#b39a3a,#2c2a0e)','#4fd1ff','g'],['konvoj','Gidrán<br>Konvoj','IED, les, drónok','linear-gradient(210deg,#2f7aa8,#081a2a)','#ffb43e','g2'],
   ['rakodo','Rába<br>Rakodó','Torony a világűrig','linear-gradient(150deg,#f0c43a,#4a3606)','#ff5a4e','r'],['sere','SERE<br>Kitörés','Hány napot bírsz?','linear-gradient(210deg,#2fa36a,#04140d)','#f3d77a','s',1]];
 function aniPolys(){const L=[0,35,68,100],R=[0,29,62,100],SX=[58,42,58,42],yb=(k,x)=>L[k]+(R[k]-L[k])*x/100,P=[];
   for(let r=0;r<3;r++){const s0=[SX[r],yb(r,SX[r])],s1=[SX[r+1],yb(r+1,SX[r+1])];P.push([[0,L[r]],s0,s1,[0,L[r+1]]],[s0,[100,R[r]],[100,R[r+1]],s1])}return P}
@@ -533,17 +533,29 @@ const GT_S={aszfalt:{n:'Aszfalt',mu:[1,.95,.85],crr:[.012,.02,.045],col:'#2f3033
   sar:{n:'Sár',mu:[.2,.45,.8],crr:[.17,.1,.055],col:'#33220f',top:'#5a3d22'},homok:{n:'Homok',mu:[.26,.5,.84],crr:[.2,.12,.055],col:'#a5834a',top:'#d6b46e'},
   ko:{n:'Sziklás',mu:[.6,.82,.9],crr:[.03,.04,.05],col:'#4b4843',top:'#76726a'},viz:{n:'Gázló',mu:[.3,.5,.64],crr:[.09,.075,.06],col:'#30230f',top:'#4a3a26'},
   szikla:{n:'Sziklamászás',mu:[1,1.12,1.25],crr:[.03,.035,.045],col:'#3c3a36',top:'#8a857a'},lejto:{n:'Extrém lejtő',mu:[.72,.86,.98],crr:[.03,.035,.05],col:'#45403a',top:'#7d776c'}};
+GT_S.mely={n:'Dagonya',mu:[.14,.32,.66],crr:[.2,.13,.075],col:'#24170a',top:'#4a3018'};GT_S.bukk={n:'Bukkanók',mu:[.62,.8,.92],crr:[.03,.04,.05],col:'#4f4436',top:'#8a7656'};
+const GT_SINK={sar:.5,mely:1,homok:.28,viz:.2},GT_TIP={bukk:['⚠ BUKKANÓK','KERESZTTENGELY · DIFIZÁR BE · 4L · lassan'],mely:['⚠ DAGONYA','MÉLY SÁR · 1,2 bar · NE PÖRGESD · HORGONYFA A TÚLPARTON'],viz:['💧 GÁZLÓ','6–12 km/h · EGYENLETES ORRHULLÁM · NE HAJTS BELE GYORSAN']};
 const GT_TRACK=[['aszfalt',180,.05],['murva',170,.4],['sar',170,.3],['aszfalt',90,.05],['homok',190,.6],['viz',85,0],['ko',170,.75],['szikla',125,.08],['lejto',95,.08],['sar',170,.5],['murva',140,.35],['homok',150,.55],['aszfalt',140,.05]];
 const GT_PR=[4.0,2.5,1.2];
-function gtBuild(){let x0=0;GT.segs=GT_TRACK.map(([s,m,h])=>{const o={s,x0,x1:x0+m*20,h};x0+=m*20;return o});GT.len=x0;const OFF=1200,N=Math.ceil((x0+OFF+2400)/2);const Hh=new Float32Array(N);
+const GT_TRACKS={bajnok:{n:'Bajnoki pálya',d:'Hajmáskér · 2 km · aszfalt, murva, sár, homok, gázló, sziklamászás, extrém lejtő',seg:GT_TRACK,rank:1,trees:1,rain:.35,fuel0:22},
+  mocsar:{n:'Mocsaras erdő',d:'1,4 km · dagonya, mély gázló, bukkanók, kidőlt fák – csörlő és difizár kell',seg:[['murva',120,.3],['sar',140,.35],['mely',110,.15],['murva',60,.3],['viz',95,0],['sar',120,.4],['bukk',120,.2],['aszfalt',80,.05],['homok',110,.5],['mely',120,.15],['sar',100,.35],['murva',90,.3],['aszfalt',90,.05]],trees:2,rain:.7,deep:1.6,fuelSeg:7,fuel0:46},
+  szikla:{n:'Bakonyi sziklák',d:'1,3 km · kőfolyás, bukkanók, sziklamászás 4L-ben, meredek lejtő – figyeld a dőlésmérőt',seg:[['murva',130,.4],['ko',160,.8],['bukk',130,.25],['aszfalt',70,.05],['szikla',125,.08],['lejto',95,.08],['ko',150,.7],['bukk',110,.3],['homok',120,.5],['murva',100,.35],['aszfalt',100,.05]],trees:1,rain:.25,fuelSeg:3,fuel0:34}};
+let GT_TRK='bajnok';try{const v=localStorage.getItem('medve-gt-trk');if(v&&GT_TRACKS[v])GT_TRK=v}catch(e){}
+function gtBestKey(id){return id==='bajnok'?'medve-gt-best':'medve-gt-best-'+id}
+function gtBestOf(id){try{return Number(localStorage.getItem(gtBestKey(id))||0)}catch(e){return 0}}
+/* kereszttengelyes csavarodás (0–1): nyitott difivel az egyik kerék tehermentesül és elpörög */
+function gtTwist(x){const g=gtSeg(x);if(!g)return 0;const tp=Math.min(1,(x-g.x0)/120,(g.x1-x)/120);if(tp<=0)return 0;if(g.s==='bukk')return tp*Math.min(1,Math.abs(Math.sin(x/22.5))*1.2);if(g.s==='ko'||g.s==='szikla')return tp*.45*Math.abs(Math.sin(x/19));return 0}
+function gtTwistSg(x){const g=gtSeg(x);return Math.sin(x/(g&&g.s==='bukk'?22.5:19))>=0?1:-1}
+function gtBuild(){let x0=0;GT.trk=GT_TRACKS[GT_TRK]||GT_TRACKS.bajnok;GT.trkId=GT_TRK;GT.segs=GT.trk.seg.map(([s,m,h])=>{const o={s,x0,x1:x0+m*20,h};x0+=m*20;return o});GT.len=x0;const OFF=1200,N=Math.ceil((x0+OFF+2400)/2);const Hh=new Float32Array(N);
   const hil=x=>{let h=0,wsum=0;for(const g of GT.segs){const d=x<g.x0?g.x0-x:x>g.x1?x-g.x1:0;const w=Math.exp(-(d*d)/(2*140*140));h+=g.h*w;wsum+=w}return wsum>1e-6?h/wsum:.05};
   GT.water=null;for(let i=0;i<N;i++){const x=i*2-OFF;const A=hil(x)*120;let y=A*(.58*Math.sin(x/430+.7)+.32*Math.sin(x/170+2.1)+.06*Math.sin(x/90+.4));const g=gtSeg(x);
     if(g&&g.s==='ko')y+=11*Math.pow(Math.max(0,Math.sin(x/24)),3)+5*Math.pow(Math.max(0,Math.sin(x/9.7+1)),4);
     if(g&&g.s==='homok')y+=10*Math.sin(x/140)*Math.sin(x/70);
+    if(g&&(g.s==='bukk'||g.s==='mely')){const tp=Math.min(1,(x-g.x0)/150,(g.x1-x)/150);if(g.s==='bukk')y+=tp*24*Math.pow(Math.sin(x/45),2)*(.7+.3*Math.sin(x/131));else y-=tp*12}
     y+=gtXtr(x);
     Hh[i]=300-y}
-  const wv=GT.segs.find(g=>g.s==='viz');if(wv){const i0=Math.round((wv.x0+OFF)/2),i1=Math.round((wv.x1+OFF)/2),rim=Math.min(Hh[i0],Hh[i1]);for(let i=i0;i<=i1;i++){const t=(i-i0)/(i1-i0);Hh[i]=Hh[i]*(1-Math.sin(t*Math.PI))+(rim+24)*Math.sin(t*Math.PI)}GT.water={x0:wv.x0,x1:wv.x1,y:rim+2}}
-  GT.hh=Hh;GT.OFF=OFF;{const a=GT.segs.filter(g=>g.s==='aszfalt')[1];GT.fuelX=a?a.x0+(a.x1-a.x0)*.55:GT.len*.4}}
+  const wv=GT.segs.find(g=>g.s==='viz');if(wv){const i0=Math.round((wv.x0+OFF)/2),i1=Math.round((wv.x1+OFF)/2),rim=Math.min(Hh[i0],Hh[i1]),dp=24*(GT.trk.deep||1);for(let i=i0;i<=i1;i++){const t=(i-i0)/(i1-i0);Hh[i]=Hh[i]*(1-Math.sin(t*Math.PI))+(rim+dp)*Math.sin(t*Math.PI)}GT.water={x0:wv.x0,x1:wv.x1,y:rim+2}}
+  GT.hh=Hh;GT.OFF=OFF;{const a=GT.trk.fuelSeg!=null?GT.segs[GT.trk.fuelSeg]:GT.segs.filter(g=>g.s==='aszfalt')[1];GT.fuelX=a?a.x0+(a.x1-a.x0)*.55:GT.len*.4}}
 const GT_XK={szikla:[[0,0],[260,0]],lejto:[[0,0],[240,0],[246,-70],[440,-100],[640,-200],[800,-200],[806,-250],[1050,-290],[1300,-282],[1900,-282]]};
 (()=>{const k=GT_XK.szikla;let x=260,y=0;for(let i=0;i<8;i++){k.push([x+52,y+30+(i%3)*4]);y+=30+(i%3)*4;x+=52;k.push([x+120+(i%2)*40,y+(i%2?6:-4)]);x+=120+(i%2)*40;y+=(i%2?6:-4)}k.push([2500,y]);GT_XK.rise=y})();
 function gtXtr(x){if(!GT.segs)return 0;const sz=GT.segs.find(g=>g.s==='szikla'),lj=GT.segs.find(g=>g.s==='lejto');if(!sz||!lj)return 0;
@@ -554,46 +566,76 @@ function gtXtr(x){if(!GT.segs)return 0;const sz=GT.segs.find(g=>g.s==='szikla'),
   return y}
 function gtSeg(x){if(!GT.segs)return null;for(const g of GT.segs)if(x>=g.x0&&x<g.x1)return g;return x<0?GT.segs[0]:GT.segs[GT.segs.length-1]}
 function gtG(x){const f=(x+GT.OFF)/2,i=Math.floor(f);const H=GT.hh;if(i<0)return H[0];if(i>=H.length-1)return H[H.length-1];return H[i]+(H[i+1]-H[i])*(f-i)}
-function gtOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');let best=0;try{best=Number(localStorage.getItem('medve-gt-best')||0)}catch(e){}
+function gtOpen(){const el=$('#harc');el.hidden=false;document.body.classList.add('harcon');const best=gtBestOf(GT_TRK);
   el.innerHTML=`<div class="hbar"><div class="htitle">Gidrán <b>Terep</b></div><div class="hstat"><span>Idő <b id="gtTime">0,0</b></span><span>Cél <b id="gtLeft">0</b></span><span>Rekord <b id="gtBest">${best?(best/1000).toFixed(1):'–'}</b></span></div><button class="hx" id="gtClose" aria-label="Bezárás">✕</button></div>
    <div class="dwrap"><canvas id="gtCv"></canvas>
-    <div class="dhud gthud"><div class="gtspd"><b id="gtKmh">0</b><small>km/h</small></div><div class="gtgauge"><div class="lbl">Abroncsnyomás</div><b id="gtP">4,0 bar</b><div class="gtsurf" id="gtSurf">Aszfalt</div></div><div class="gtgauge"><div class="lbl">Abroncs</div><div class="dhp"><i id="gtDmg"></i></div><div class="gtwarn" id="gtWarn"></div></div><div class="gtgauge gtfuel"><div class="lbl">Üzemanyag <span id="gtRes" class="gtres" hidden>TARTALÉK</span></div><b id="gtFuel">–</b><div class="dhp"><i id="gtFuelB"></i></div><small id="gtLph">0 l/h</small></div></div>
+    <div class="dhud gthud"><div class="gtspd"><b id="gtKmh">0</b><small>km/h</small></div><div class="gtgauge"><div class="lbl">Abroncsnyomás</div><b id="gtP">4,0 bar</b><div class="gtsurf" id="gtSurf">Aszfalt</div></div><div class="gtgauge"><div class="lbl">Abroncs · Futómű</div><div class="dhp"><i id="gtDmg"></i></div><div class="dhp gtsus"><i id="gtSus"></i></div><div class="gtwarn" id="gtWarn"></div></div><div class="gtgauge gtfuel"><div class="lbl">Üzemanyag <span id="gtRes" class="gtres" hidden>TARTALÉK</span></div><b id="gtFuel">–</b><div class="dhp"><i id="gtFuelB"></i></div><small id="gtLph">0 l/h</small></div></div>
     <div class="gtwinch" id="gtWinch" hidden><div class="lbl">🪝 CSÖRLŐ – elöl <span id="gtWst"></span></div><div class="row"><button type="button" id="gtHook">Felakaszt</button><button type="button" id="gtFm" aria-label="Kisebb erő">−</button><b id="gtF">50%</b><button type="button" id="gtFp" aria-label="Nagyobb erő">+</button><button type="button" id="gtPull" class="pull">⤓ HÚZ</button></div><div class="fbar"><i id="gtFb"></i></div></div>
-    <div class="gtside"><button type="button" id="gtHand" class="gths" aria-pressed="false"><b>(P)</b><small>KÉZIFÉK</small></button><button type="button" id="gtSiren" class="gths" aria-pressed="false"><b>🚨</b><small>SZIRÉNA</small></button><span id="gtGear" class="gtgear">D</span></div>
+    <div class="gtside"><button type="button" id="gtRange" class="gths gtrange" aria-pressed="false" title="Terepfokozat (Q)"><b>4H</b><small>HAJTÁS</small></button><button type="button" id="gtHand" class="gths" aria-pressed="false"><b>(P)</b><small>KÉZIFÉK</small></button><button type="button" id="gtLock" class="gths gtlock" aria-pressed="false" title="Difizár (E)"><b>🔒</b><small>DIFIZÁR</small></button><button type="button" id="gtSiren" class="gths" aria-pressed="false"><b>🚨</b><small>SZIRÉNA</small></button><span id="gtGear" class="gtgear">D</span></div>
     <button type="button" class="gtbig gtrefuel" id="gtRefuel" hidden>⛽ TANKOLÁS<small>tartsd nyomva · 540 l/perc</small></button>
     <button type="button" class="gtbig gtunstick" id="gtUnstick" hidden>⟲ KISZABADÍTÁS<small>+10 s büntetés</small></button>
     <div class="gtctis"><div class="lbl">CTIS – abroncsnyomás</div><div class="row"><button data-p="0">4,0<small>KÖZÚT</small></button><button data-p="1">2,5<small>TEREP</small></button><button data-p="2">1,2<small>SÁR/HOMOK</small></button></div></div>
     <button class="dpedal brake" id="gtBrake">FÉK<small>hátra</small></button><button class="dpedal gas" id="gtGas">GÁZ</button></div>
-   <div class="hstart" id="gtStart"><img class="gidfull" src="${GID_FULL||GID_SPRITE}" alt="" data-st="width:100%;height:110px;object-fit:contain"><h3>Gidrán Terepbajnokság</h3><p>Teljesítsd a ${Math.round(GT_TRACK.reduce((a,b)=>a+b[1],0)/10)/100} km-es pályát a lehető leggyorsabban: aszfalt, murva, sár, homok, gázló, sziklás szakasz.<br>A <b>CTIS</b> gombokkal menet közben állítod az abroncsnyomást: <b>sárban, homokban engedd le</b>, különben elakadsz – <b>aszfalton fújd fel</b>, mert leeresztve lassú vagy, és 30 km/h felett az abroncs tönkremegy.</p><div class="dinfo"><b>Abroncsnyomás és sebességkorlát</b><span>4,0 bar – közút</span><i>max. kb. 100 km/h</i><span>2,5 bar – terep</span><i>max. 60 km/h</i><span>1,2 bar – sár, homok</span><i>max. 30 km/h</i><span>Fújás / leengedés</span><i>lassan fúj, gyorsan enged</i><b data-st="margin-top:6px">Új a pályán</b><span>Kidőlt fa (egy a pályán)</span><i>csörlővel húzd félre</i><span>Üzemanyag</span><i>200 l tartály, kevés üzemanyaggal indulsz, gyorsan fogy – tankolj!</i><span>Tolatás</span><i>FÉK nyomva tartva megállás után</i><span>Kézifék / sziréna</span><i>külön gombokkal</i><span>Cél</span><i>javítóbázis üzemanyagkúttal</i></div><p class="hint" data-st="margin:0 0 8px">Csörlő: állj meg a fa előtt (max. 7 m), <b>Felakaszt</b>, állítsd a húzóerőt, és tartsd a <b>HÚZ</b> gombot. Kevés erőnél a fa nem mozdul és a Gidránt húzza – fékezz! Túl nagy erőnél elszakadhat a kötél.</p><button class="btn pri" id="gtGo">▶ Indítás</button> <button type="button" class="btn line rkstart" data-rank="terep">🏆 Rekordjaim</button>${gBoard('gtBest',true,v=>(v/1000).toFixed(1)+' s')}</div>
+   <div class="hstart" id="gtStart"><img class="gidfull" src="${GID_FULL||GID_SPRITE}" alt="" data-st="width:100%;height:110px;object-fit:contain"><h3>Gidrán Terepbajnokság</h3><div class="gttrk" id="gtTrk">${gtTrkHtml()}</div><p>Valódi terepvezetés: <b>abroncsnyomás</b> (CTIS), <b>4H / 4L</b> terepfokozat, <b>difizár</b>, csörlő. Sárban, homokban <b>engedd le</b> a nyomást, aszfalton <b>fújd fel</b> – leeresztve 30 km/h felett tönkremegy az abroncs.</p><div class="dinfo"><b>Abroncsnyomás és sebességkorlát</b><span>4,0 bar – közút</span><i>max. kb. 100 km/h</i><span>2,5 bar – terep</span><i>max. 60 km/h</i><span>1,2 bar – sár, homok, szikla</span><i>max. 30 km/h</i><b data-st="margin-top:6px">4×4 hajtás</b><span>4L terepfokozat</span><i>kétszeres nyomaték, max. 34 km/h, motorfék lejtőn – csak állva váltható</i><span>Difizár</span><i>nyitott difivel a levegőbe emelkedő kerék elpörög, és megállsz – bukkanókon, sziklán kapcsold be (15 km/h alatt). Aszfalton zárva feszül és eltörik!</i><b data-st="margin-top:6px">Terep</b><span>Dagonya, sár</span><i>a pörgő kerék beássa magát – ne tövig nyomd: hintáztass (gáz–fék), vagy csörlőzz horgonyfához</i><span>Gázló</span><i>6–12 km/h egyenletesen; gyorsan a motor vizet nyel és leáll</i><span>Dőlésmérő</span><i>35° felett borulásveszély</i><span>Futómű</span><i>kemény ugratás, gyors sziklázás rongálja – 100%-nál vége</i><span>Kidőlt fa</span><i>csörlővel húzd félre</i><span>Üzemanyag</span><i>kevéssel indulsz – tankolj a tábori töltőn</i><span>Szellem</span><i>a legjobb menetedet áttetsző Gidrán mutatja, a szakaszhatárokon látod az időkülönbséget</i></div><p class="hint" data-st="margin:0 0 8px">Csörlő: állj meg, <b>Felakaszt</b> (kidőlt fa max. 7 m-re, horgonyfa max. 32 m-re), állítsd az erőt, és tartsd a <b>HÚZ</b> gombot. Billentyű: ← → gáz/fék, 1-2-3 nyomás, Q 4H/4L, E difizár.</p><button class="btn pri" id="gtGo">▶ Indítás</button> <button type="button" class="btn line rkstart" data-rank="terep">🏆 Rekordjaim</button>${gBoard('gtBest',true,v=>(v/1000).toFixed(1)+' s')}</div>
    <div class="hover" id="gtOver" hidden></div>`;
   $('#gtClose').onclick=()=>gClose(GT);$('#gtGo').onclick=gtStart;gidFullSet();gtSetup()}
 function gtSetup(){Object.assign(GT,gCanvas('#gtCv'));gtBuild();GT.gas=0;GT.brake=0;gHold('#gtGas',GT,'gas');gHold('#gtBrake',GT,'brake');gHold('#gtPull',GT,'pull');gHold('#gtRefuel',GT,'fueling');
   const tap=(id,fn)=>{const b=$(id);if(b)b.addEventListener('pointerdown',e=>{e.preventDefault();fn()})};
-  tap('#gtHook',gtHookToggle);tap('#gtFm',()=>{GT.force=Math.max(10,GT.force-10);gtWinchUi()});tap('#gtFp',()=>{GT.force=Math.min(100,GT.force+10);gtWinchUi()});tap('#gtUnstick',gtUnstick);tap('#gtHand',()=>{GT.hand=!GT.hand;$('#gtHand').setAttribute('aria-pressed',GT.hand);if(SOUND&&ac())snare(AC.currentTime,.15);toast(GT.hand?'(P) Kézifék behúzva':'Kézifék kiengedve')});tap('#gtSiren',()=>{GT.siren=!GT.siren;$('#gtSiren').setAttribute('aria-pressed',GT.siren);gtSirenSnd(GT.siren)});
+  tap('#gtHook',gtHookToggle);tap('#gtRange',gtRangeToggle);tap('#gtLock',gtLockToggle);tap('#gtFm',()=>{GT.force=Math.max(10,GT.force-10);gtWinchUi()});tap('#gtFp',()=>{GT.force=Math.min(100,GT.force+10);gtWinchUi()});tap('#gtUnstick',gtUnstick);tap('#gtHand',()=>{GT.hand=!GT.hand;$('#gtHand').setAttribute('aria-pressed',GT.hand);if(SOUND&&ac())snare(AC.currentTime,.15);toast(GT.hand?'(P) Kézifék behúzva':'Kézifék kiengedve')});tap('#gtSiren',()=>{GT.siren=!GT.siren;$('#gtSiren').setAttribute('aria-pressed',GT.siren);gtSirenSnd(GT.siren)});
   $('.gtctis').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-p]');if(!b)return;e.preventDefault();GT.pt=GT_PR[+b.dataset.p];gtCtisUi();if(SOUND&&ac()){const t=AC.currentTime;snare(t,.08)}});
-  GT.key=e=>{const d=e.type==='keydown'?1:0;if(e.key==='ArrowRight'||e.key==='d')GT.gas=d;if(e.key==='ArrowLeft'||e.key==='a')GT.brake=d;if(d&&'123'.includes(e.key)){GT.pt=GT_PR[+e.key-1];gtCtisUi()}};addEventListener('keydown',GT.key);addEventListener('keyup',GT.key);
-  gtReset();GT.last=performance.now();GT.raf=requestAnimationFrame(gtLoop)}
-function gtReset(){const y=gtG(-200);Object.assign(GT,{t:{x:-200,y:y-GWR-20,a:0,vx:0,vy:0,w:0},wh:GWL.map(lx=>({lx,x:0,y:0,rot:0,c:0,slip:0,L:16,r:GWR,flat:0,rev:0})),flat:null,terr:null,rk:null,wreck:null,fx2:[],shake:0,flash:0,trees:gtTrees(),hook:null,hand:false,siren:false,revMode:false,revT:0,force:50,pull:0,snapT:0,stuckT:0,fuel:22+Math.random()*3,fuelCap:200,lph:0,fueling:0,fuelT:0,dry:0,p:4,pt:4,dmg:0,time:0,run:false,done:false,flipT:0,fx:[],mud:0,started:false,warnT:0,slow:0,cine:0,cineK:0,xsc:{},air:0,cam2:null,bg:null,bgh:null,lowMsg:0,title:0});gtCtisUi()}
-function gtStart(){$('#gtStart').hidden=true;$('#gtOver').hidden=true;gtSirenSnd(false);gtReset();GT.rain=Math.random()<.35;if(GT.rain)setTimeout(()=>toast('🌧️ Eső! Csúszósabb a terep – a sárban és a sziklán óvatosan'),1800);['#gtHand','#gtSiren'].forEach(id=>$(id)?.setAttribute('aria-pressed','false'));GT.run=true;GT.last=performance.now();gEngStart(GT);gtWinchUi();rockStart('terep');playCount('terep');toast('Rajt! Tartalékban vagy – tankolj a tábori töltőállomáson ⛽')}
+  GT.key=e=>{const d=e.type==='keydown'?1:0;if(e.key==='ArrowRight'||e.key==='d')GT.gas=d;if(e.key==='ArrowLeft'||e.key==='a')GT.brake=d;if(d&&'123'.includes(e.key)){GT.pt=GT_PR[+e.key-1];gtCtisUi()}if(d&&!e.repeat&&(e.key==='q'||e.key==='Q'))gtRangeToggle();if(d&&!e.repeat&&(e.key==='e'||e.key==='E'))gtLockToggle()};addEventListener('keydown',GT.key);addEventListener('keyup',GT.key);
+  const tk=$('#gtTrk');if(tk)tk.addEventListener('click',e=>{const b=e.target.closest('[data-trk]');if(!b||GT.run)return;GT_TRK=b.dataset.trk;try{localStorage.setItem('medve-gt-trk',GT_TRK)}catch(er){}tk.innerHTML=gtTrkHtml();gtBuild();gtReset();const be=$('#gtBest'),bv=gtBestOf(GT_TRK);if(be)be.textContent=bv?(bv/1000).toFixed(1):'–'});
+  gtReset();gtPanY();GT.last=performance.now();GT.raf=requestAnimationFrame(gtLoop)}
+function gtTrkHtml(){return Object.entries(GT_TRACKS).map(([k,t])=>{const b=gtBestOf(k);return `<button type="button" data-trk="${k}" aria-pressed="${k===GT_TRK}"><b>${t.n}${t.rank?' <em>RANGLISTA</em>':''}</b><small>${t.d}</small><i>${b?'Rekord: '+(b/1000).toFixed(1).replace('.',',')+' s':'Még nincs rekord'}</i></button>`}).join('')}
+function gtPanY(){try{const h=$('#harc .gthud'),cv=$('#gtCv'),sd=$('#harc .gtside');if(h&&cv){const t=cv.getBoundingClientRect().top;GT.panY=Math.round(h.getBoundingClientRect().bottom-t+8);GT.sideB=sd?Math.round(sd.getBoundingClientRect().bottom-t):GT.panY+74}}catch(e){}}
+/* figyelmeztetés-sáv a műszerek alatt (a HUD magassága így nem ugrál) */
+function gtWarnDraw(c,W,H,now){const tx=GT.warnTxt;GT.warnY=null;if(!tx||!GT.run)return;const y=Math.max((GT.panY||200)+74,GT.sideB||0)+8,w=Math.min(W-24,420),x=(W-w)/2;c.save();c.font='bold 12px sans-serif';
+  const words=tx.split(' '),lines=[];let ln='';for(const wd of words){const t=ln?ln+' '+wd:wd;if(c.measureText(t).width>w-20&&ln){lines.push(ln);ln=wd}else ln=t}if(ln)lines.push(ln);const L=lines.slice(0,3),h=10+L.length*15;
+  const hot=/⚠|💥|💧|⛓|🟫|⛰/.test(tx);c.fillStyle=hot?'rgba(60,10,6,.88)':'rgba(12,15,9,.85)';c.beginPath();c.roundRect?c.roundRect(x,y,w,h,9):c.rect(x,y,w,h);c.fill();c.strokeStyle=hot&&Math.sin(now/150)>0?'#ff5a4a':'#111';c.lineWidth=2;c.stroke();
+  c.fillStyle=hot?'#ffd24a':'#f3ecd4';c.textAlign='center';L.forEach((l,i)=>c.fillText(l,W/2,y+17+i*15));c.restore();GT.warnY=y+h}
+function gtReset(){const y=gtG(-200);Object.assign(GT,{t:{x:-200,y:y-GWR-20,a:0,vx:0,vy:0,w:0},wh:GWL.map(lx=>({lx,x:0,y:0,rot:0,c:0,slip:0,L:16,r:GWR,flat:0,rev:0,sink:0,N:0,tw:0,lim:0,vt:0,rx0:-1e9})),flat:null,terr:null,rk:null,wreck:null,fx2:[],shake:0,flash:0,trees:gtTrees(),hook:null,hand:false,siren:false,revMode:false,revT:0,force:50,pull:0,snapT:0,stuckT:0,fuel:(GT.trk&&GT.trk.fuel0||22)+Math.random()*3,fuelCap:200,lph:0,fueling:0,fuelT:0,dry:0,p:4,pt:4,dmg:0,time:0,run:false,done:false,flipT:0,fx:[],mud:0,started:false,warnT:0,slow:0,cine:0,cineK:0,xsc:{},air:0,cam2:null,bg:null,bgh:null,lowMsg:0,title:0,
+  lo:false,lock:false,lockBroke:false,dl:0,sus:0,susT:0,bump:0,air2:0,eng:0,engDmg:0,stall:0,bow:0,sinkMax:0,anchors:gtAnchors(),ruts:[],splat:[],gh:{rec:[],t:0},ghost:gtGhostLoad(),split:null,cpI:0,st:{maxTilt:0,unstick:0,selfRec:0,lockT:0,stalls:0,lo:0}});gtCtisUi();gt4x4Ui()}
+function gtStart(){$('#gtStart').hidden=true;$('#gtOver').hidden=true;gtSirenSnd(false);gtWinchSnd(false);gtBuild();gtReset();GT.rain=Math.random()<(GT.trk.rain??.35);if(GT.rain)setTimeout(()=>toast('🌧️ Eső! Csúszósabb a terep – a sárban és a sziklán óvatosan'),1800);['#gtHand','#gtSiren'].forEach(id=>$(id)?.setAttribute('aria-pressed','false'));GT.run=true;GT.last=performance.now();gEngStart(GT);gtWinchUi();gtPanY();rockStart('terep');playCount('terep');
+  const be=$('#gtBest'),bv=gtBestOf(GT_TRK);if(be)be.textContent=bv?(bv/1000).toFixed(1):'–';toast(GT.trk.n+' – rajt! '+(GT.ghost?'A szellem a rekordodat mutatja 👻':'Tankolj a tábori töltőállomáson ⛽'))}
 function gtCtisUi(){document.querySelectorAll('.gtctis [data-p]').forEach(b=>b.classList.toggle('on',GT_PR[+b.dataset.p]===GT.pt))}
 function gtPar(s){const S=GT_S[s]||GT_S.aszfalt;const k=Math.max(0,Math.min(2,(4-GT.p)/(4-1.2)*2)),i=Math.min(1,Math.floor(k)),f=k-i;return {mu:(S.mu[i]+(S.mu[i+1]-S.mu[i])*f)*(GT.rain?(s==='aszfalt'?.92:.8):1),crr:S.crr[i]+(S.crr[i+1]-S.crr[i])*f}}
-function gtPhys(dt){const T=GT.t,G=500,K=42,Cd=10,Lmax=20,Lmin=5;const ca=Math.cos(T.a),sa=Math.sin(T.a);const dx=-sa,dy=ca;let ax=0,ay=G,tq=0;const sp=T.vx*ca+T.vy*sa;
-  const kmh=Math.abs(sp)/20*3.6;let Fe=0;const rev=GT.revMode&&GT.brake&&!GT.hook&&!GT.hand;if(GT.gas&&!GT.hand)Fe=300*Math.min(1,90/Math.max(Math.abs(sp),1));if(rev)Fe=-160*Math.min(1,60/Math.max(Math.abs(sp),1));if(kmh>108&&sp>0)Fe=Math.min(Fe,0);if(GT.flat)Fe*=.38;if(GT.fuel<=0)Fe=0;
-  let cont=0;for(const w of GT.wh){const lx=w.lx,ly=-14;const Ax=T.x+lx*ca-ly*sa,Ay=T.y+lx*sa+ly*ca;const gy=gtG(Ax+dx*w.L);const sC=(gy-w.r-Ay)/Math.max(.3,dy);
-    if(sC<Lmax){const L=Math.max(Lmin-3,sC);w.L=Math.max(Lmin,L);const rx=Ax-T.x,ry=Ay-T.y;const vpx=T.vx-T.w*ry,vpy=T.vy+T.w*rx;const vn=vpx*dx+vpy*dy;let F=K*(Lmax-Math.max(Lmin,L))+Cd*vn;if(L<Lmin)F+=K*12*(Lmin-L);F=Math.max(0,F);
+/* v4.43 terepfizika: kétlépcsős kerékmodell – előbb a rugózás és a tapadási határ, aztán a hajtás elosztása a difik szerint */
+function gtPhys(dt){const T=GT.t,G=500,K=42,Cd=10,Lmax=20,Lmin=5;const ca=Math.cos(T.a),sa=Math.sin(T.a);const dx=-sa,dy=ca;let ax=0,ay=G,tq=0;const sp=T.vx*ca+T.vy*sa,asp=Math.abs(sp);
+  const kmh=asp/20*3.6,lo=GT.lo,on=GT.fuel>0&&!(GT.stall>0),vmax=lo?34:108;let Fe=0;const rev=GT.revMode&&GT.brake&&!GT.hook&&!GT.hand;
+  // motor: állandó teljesítmény, alacsony sebességnél nyomatékkorlát; 4L-ben 2,2-szeres nyomaték, fordulatkorlát 34 km/h-nál
+  if(on&&GT.gas&&!GT.hand)Fe=Math.min(lo?270*2.2:270,27000/Math.max(asp,1));if(on&&rev)Fe=-Math.min(lo?352:160,9600/Math.max(asp,1));
+  if(kmh>vmax&&sp>0)Fe=Math.min(Fe,lo?-Math.min(220,(kmh-vmax)*25):0);if(GT.flat)Fe*=.38;if(GT.lockBroke)Fe*=.8;
+  // motorfék (gáz nélkül): 4L-ben erős – így lehet lejtőn kontrolláltan lemászni
+  if(on&&!GT.gas&&!GT.brake&&!GT.hand&&asp>3)Fe=-Math.sign(sp)*Math.min(lo?240:40,asp*(lo?4:.4));
+  let cont=0;const ws=GT.wh;
+  for(const w of ws){const lx=w.lx,ly=-14;const Ax=T.x+lx*ca-ly*sa,Ay=T.y+lx*sa+ly*ca;const sk=(w.sink||0)*7;const gy=gtG(Ax+dx*w.L)+sk;const sC=(gy-w.r-Ay)/Math.max(.3,dy);w.Ax=Ax;w.Ay=Ay;w.N=0;
+    if(sC<Lmax){const L=Math.max(Lmin-3,sC);w.L=Math.max(Lmin,L);const rx=Ax-T.x,ry=Ay-T.y;const vpx=T.vx-T.w*ry,vpy=T.vy+T.w*rx;const vn=vpx*dx+vpy*dy;let F=K*(Lmax-Math.max(Lmin,L))+Cd*vn;if(L<Lmin){F+=K*12*(Lmin-L);if(vn>GT.bump)GT.bump=vn}if(vn>(GT.vnMax||0))GT.vnMax=vn;F=Math.max(0,F);
       ax-=dx*F;ay-=dy*F;tq+=rx*(-dy*F)-ry*(-dx*F);cont++;w.c=1;
-      // tapadás
-      const cx=Ax+dx*w.L,sl=(gtG(cx+2)-gtG(cx-2))/4,tl=Math.hypot(1,sl),tx=1/tl,ty=sl/tl;const vt=vpx*tx+vpy*ty;const seg=gtSeg(cx);const P=gtPar(seg?seg.s:'aszfalt');const N=F;
-      let Fd=Fe/2;if(GT.brake&&!rev)Fd=-Math.sign(vt)*Math.min(260,Math.abs(vt)*30)/2;if(GT.hand)Fd=-Math.sign(vt)*Math.min(340,Math.abs(vt)*45)/2;const lim=P.mu*N*(w.flat?.55:1);w.slip=Math.abs(Fd)>lim?Math.min(1,(Math.abs(Fd)-lim)/Math.max(30,Math.abs(Fd))+.3):0;Fd=Math.max(-lim,Math.min(lim,Fd));
-      const cr=P.crr+(w.flat?.42:0);const Fr=Math.abs(vt)>1?-Math.sign(vt)*cr*N:-vt*cr*N;const Ft=Fd+Fr;ax+=tx*Ft;ay+=ty*Ft;tq+=rx*(ty*Ft)-ry*(tx*Ft);w.rot+=(vt/w.r+(w.slip?Math.sign(Fe||1)*w.slip*14:0))*dt;w.surf=seg?seg.s:'aszfalt'}
-    else{w.L=Lmax;w.c=0;w.slip=0;w.rot+=(GT.gas?20:0)*dt}
+      const cx=Ax+dx*w.L,sl=(gtG(cx+2)-gtG(cx-2))/4,tl=Math.hypot(1,sl),tx=1/tl,ty=sl/tl;const vt=vpx*tx+vpy*ty;const seg=gtSeg(cx);const sf=seg?seg.s:'aszfalt';const P=gtPar(sf);
+      const tw=gtTwist(cx);w.tw=tw;w.N=F;w.rx=rx;w.ry=ry;w.tx=tx;w.ty=ty;w.vt=vt;w.surf=sf;
+      // tapadási határ: talaj × nyomás, a beásódás és (nyitott difivel) a kereszttengelyes tehermentesülés csökkenti
+      w.lim=P.mu*F*(w.flat?.55:1)*(1-(w.sink||0)*.35)*(GT.lock?1:1-.7*tw);w.cr=P.crr+(w.flat?.42:0)+(w.sink||0)*.22}
+    else{w.L=Lmax;w.c=0;w.slip=0;w.lim=0;w.tw=0;w.N=0}
     w.x=Ax+dx*w.L;w.y=Ay+dy*w.L}
+  // hajtás elosztása: zárt difi – mindkét tengely a saját tapadásáig visz; nyitott – a gyengébb kerék szab határt (a másik legfeljebb 2,5-szörösét kapja)
+  const A=Math.abs(Fe),sg=Math.sign(Fe)||1,D=[0,0];
+  if(A>0){const l0=ws[0].c?ws[0].lim:0,l1=ws[1].c?ws[1].lim:0;
+    if(GT.lock){const L=l0+l1;if(L<1e-6){D[0]=D[1]=A/2}else if(A<=L){D[0]=A*l0/L;D[1]=A*l1/L}else{D[0]=l0+(A-L)/2;D[1]=l1+(A-L)/2}}
+    else{const li=l0<=l1?0:1,hi=1-li,lL=Math.min(l0,l1),lH=Math.max(l0,l1),tL=Math.min(A/2,lL);D[li]=A/2;D[hi]=Math.min(A-tL,Math.max(A*.15,2.5*tL),Math.max(lH,A/2>lH?A/2:0))}}
+  for(let i=0;i<2;i++){const w=ws[i];if(!w.c)continue;let Fd=D[i]*sg;
+    if(GT.brake&&!rev)Fd=-Math.sign(w.vt)*Math.min(260,Math.abs(w.vt)*30)/2;if(GT.hand)Fd=-Math.sign(w.vt)*Math.min(340,Math.abs(w.vt)*45)/2;
+    const lim=w.lim;w.slip=Math.abs(Fd)>lim+1e-6?Math.min(1,(Math.abs(Fd)-lim)/Math.max(30,Math.abs(Fd))+.3):0;Fd=Math.max(-lim,Math.min(lim,Fd));
+    const N=w.N,Fr=Math.abs(w.vt)>1?-Math.sign(w.vt)*w.cr*N:-w.vt*w.cr*N;const Ft=Fd+Fr;ax+=w.tx*Ft;ay+=w.ty*Ft;tq+=w.rx*(w.ty*Ft)-w.ry*(w.tx*Ft);
+    w.rot+=(w.vt/w.r+(w.slip?sg*w.slip*14:0))*dt}
+  for(const w of ws)if(!w.c)w.rot+=(GT.gas&&on?(GT.lock?0:20):0)*dt;
+  // önmentő csörlő: a horgonyfa felé húzza a járművet
+  GT.wF=0;if(GT.hook&&GT.hook.a&&GT.pull&&on){const wp=gtWinchPt(),an=GT.hook.a,ddx=an.x-wp.x,ddy=gtG(an.x)-30-wp.y,dl=Math.hypot(ddx,ddy)||1,vt=(T.vx*ddx+T.vy*ddy)/dl,Fw=GT.force/100*430*Math.max(0,Math.min(1,1-vt/50));ax+=ddx/dl*Fw;ay+=ddy/dl*Fw;GT.wF=Fw}
   // légellenállás + víz
   const v=Math.hypot(T.vx,T.vy);ax-=T.vx*v*6e-5;ay-=T.vy*v*6e-5;GT.inWater=0;if(GT.water&&T.x>GT.water.x0&&T.x<GT.water.x1&&T.y+10>GT.water.y){const dep=Math.min(1,(T.y+10-GT.water.y)/30);GT.inWater=dep;ax-=T.vx*dep*1.6;ay-=T.vy*dep*1.2+dep*120}
   T.vx+=ax*dt;T.vy+=ay*dt;T.w+=tq/2600*dt;T.w*=Math.exp(-1.2*dt);T.x+=T.vx*dt;T.y+=T.vy*dt;T.a+=T.w*dt;
-  for(const [lx,ly] of [[-70,-4],[62,-4],[0,7],[-60,-48],[52,-40],[0,-62]]){const px=T.x+lx*Math.cos(T.a)-ly*Math.sin(T.a),py=T.y+lx*Math.sin(T.a)+ly*Math.cos(T.a);const g=gtG(px);if(py>g){const pen=Math.min(6,py-g);T.y-=pen;if(T.vy>0)T.vy*=-.1;T.vx-=T.vx*Math.min(1,dt*(GT.gas||GT.brake?.8:2.4));T.w+=(lx>0?-1:1)*pen*.006*Math.cos(T.a)}}
+  GT.belly=0;for(const [lx,ly] of [[-70,-4],[62,-4],[0,7],[-60,-48],[52,-40],[0,-62]]){const px=T.x+lx*Math.cos(T.a)-ly*Math.sin(T.a),py=T.y+lx*Math.sin(T.a)+ly*Math.cos(T.a);const g=gtG(px);if(py>g){const pen=Math.min(6,py-g);T.y-=pen;if(T.vy>0)T.vy*=-.1;T.vx-=T.vx*Math.min(1,dt*(GT.gas||GT.brake?.8:2.4));T.w+=(lx>0?-1:1)*pen*.006*Math.cos(T.a);if(lx===0&&ly===7)GT.belly=1}}
   // kidőlt fák: szilárd akadály, amíg félre nem húzzuk
-  for(const tr of GT.trees){if(tr.done)continue;const fx=T.x+64*Math.cos(T.a),bx=T.x-72*Math.cos(T.a);const half=tr.k==='roncs'?36:tr.r;const wall=tr.x-half-2;if(fx>wall&&bx<tr.x+half){if(fx-wall<60){T.x-=fx-wall;if(T.vx>0){const nw=performance.now();if(T.vx>120&&nw-(tr.hitAt||0)>1500){tr.hitAt=nw;GT.shake=Math.max(GT.shake||0,.2);GT.dmg+=Math.min(20,T.vx*.05)}T.vx=0}}}}
+  for(const tr of GT.trees){if(tr.done)continue;const fx=T.x+64*Math.cos(T.a),bx=T.x-72*Math.cos(T.a);const half=tr.k==='roncs'?36:tr.r;const wall=tr.x-half-2;if(fx>wall&&bx<tr.x+half){if(fx-wall<60){T.x-=fx-wall;if(T.vx>0){const nw=performance.now();if(T.vx>120&&nw-(tr.hitAt||0)>1500){tr.hitAt=nw;GT.shake=Math.max(GT.shake||0,.2);GT.dmg+=Math.min(20,T.vx*.05);GT.sus+=Math.min(15,T.vx*.04)}T.vx=0}}}}
   GT.kmh=kmh;GT.cont=cont}
 function gtLoop(now){const cv=$('#gtCv');if(!cv)return;const c=cv.getContext('2d');let dt=Math.min(.04,(now-GT.last)/1000);GT.last=now;if(GP)dt=0;const W=GT.W,H=GT.H,T=GT.t;const rdt=dt;if(GT.slow>0){GT.slow-=dt;dt*=.38}
   if(GT.run){for(let i=0;i<6;i++)gtPhys(dt/6);gtGame(dt);gtXtrTick(dt,rdt)}
@@ -612,28 +654,28 @@ function gtLoop(now){const cv=$('#gtCv');if(!cv)return;const c=cv.getContext('2d
       else if(g.s==='ko'&&h<.5){c.fillStyle='#8d887e';c.beginPath();c.ellipse(x,y+1,5+h*9,4+h*5,0,Math.PI,0);c.fill()}
       else if(g.s==='aszfalt'&&Math.floor(x/23)%3===0){c.fillStyle='rgba(255,255,255,.5)';c.fillRect(x,y+5,12,1.5)}}}
   if(GT.water&&GT.water.x1>x0&&GT.water.x0<x1){const wv=GT.water;c.fillStyle='rgba(60,110,140,.55)';c.beginPath();c.moveTo(wv.x0,wv.y);for(let x=wv.x0;x<=wv.x1;x+=4)c.lineTo(x,Math.max(wv.y,Math.min(gtG(x),wv.y+200)));c.lineTo(wv.x1,wv.y);c.closePath();c.fill()}
-  gtDrawScenery(c,x0,x1,now);
+  gtRuts(c,x0,x1);gtDrawScenery(c,x0,x1,now);
   // táblák, rajt, cél
-  for(const g of GT.segs){if(g.x0<x0-40||g.x0>x1)continue;const y=gtG(g.x0+20);c.fillStyle='#4a3a26';c.fillRect(g.x0+18,y-38,3,38);c.font='bold 8px sans-serif';const tx=GT_S[g.s].n.toUpperCase(),tw=Math.max(36,c.measureText(tx).width+8),xr=g.s==='szikla'||g.s==='lejto';c.fillStyle=xr?'#ffcf3a':'#f4e7b6';c.fillRect(g.x0+20-tw/2,y-52,tw,15);c.strokeStyle='#4a3a26';c.lineWidth=1;c.strokeRect(g.x0+20-tw/2,y-52,tw,15);c.fillStyle='#2a1c10';c.textAlign='center';c.fillText((xr?'⚠ ':'')+tx,g.x0+20,y-41.5)}
+  for(const g of GT.segs){if(g.x0<x0-40||g.x0>x1)continue;const y=gtG(g.x0+20);c.fillStyle='#4a3a26';c.fillRect(g.x0+18,y-38,3,38);c.font='bold 8px sans-serif';const tx=GT_S[g.s].n.toUpperCase(),tw=Math.max(36,c.measureText(tx).width+8),xr=g.s==='szikla'||g.s==='lejto'||g.s==='bukk'||g.s==='mely';c.fillStyle=xr?'#ffcf3a':'#f4e7b6';c.fillRect(g.x0+20-tw/2,y-52,tw,15);c.strokeStyle='#4a3a26';c.lineWidth=1;c.strokeRect(g.x0+20-tw/2,y-52,tw,15);c.fillStyle='#2a1c10';c.textAlign='center';c.fillText((xr?'⚠ ':'')+tx+(g.s==='bukk'?' · ZÁR!':''),g.x0+20,y-41.5)}
   for(const fx of [0]){if(fx<x0-20||fx>x1)continue;const y=gtG(fx);for(let i=0;i<2;i++){c.fillStyle='#ddd';c.fillRect(fx-1+i*0,y-70,2.5,70)}for(let r=0;r<3;r++)for(let k=0;k<5;k++){c.fillStyle=(r+k)%2?'#111':'#fff';c.fillRect(fx+1.5+k*5,y-70+r*5,5,5)}c.fillStyle='#fff';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText(fx?'CÉL':'RAJT',fx+14,y-74)}
   // részecskék
   GT.fx=GT.fx.filter(p=>{p.t-=dt;p.vy+=(p.g??500)*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;c.fillStyle=p.c.replace('A',Math.max(0,Math.min(1,p.t*2)).toFixed(2));c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();return p.t>0});
-  if(GT.terr)gtDrawTerr(c,GT.terr,now);
+  gtGhostDraw(c,x0,x1);if(GT.terr)gtDrawTerr(c,GT.terr,now);
   if(GT.rk){const r=GT.rk;c.save();c.translate(r.x,r.y);c.rotate(Math.atan2(r.vy,r.vx));c.fillStyle='#4a4a3a';c.fillRect(-9,-2.2,18,4.4);c.fillStyle='#6a6a50';c.beginPath();c.moveTo(9,-3.5);c.lineTo(16,0);c.lineTo(9,3.5);c.fill();c.fillStyle='#ffb040';c.beginPath();c.arc(-11,0,3.5+Math.random()*2,0,7);c.fill();c.restore()}
   if(GT.wreck){const wr=GT.wreck;wr.t+=dt;wr.vy+=520*dt;wr.x+=wr.vx*dt;wr.y+=wr.vy*dt;wr.a+=wr.w*dt;const g=gtG(wr.x)-12;if(wr.y>g){wr.y=g;wr.vy*=-.22;wr.vx*=.5;wr.w*=.35}
     if(Math.random()<.7)GT.fx.push({x:wr.x+(Math.random()-.5)*70,y:wr.y-20,vx:(Math.random()-.5)*30,vy:-60-Math.random()*50,t:1.2,r:4+Math.random()*6,c:Math.random()<.45?'rgba(255,150,40,A)':'rgba(45,40,38,A)',g:-60});gidDraw(c,wr.x,wr.y,wr.a,[],0,true)}
-  else{gidDraw(c,T.x,T.y,T.a,GT.wh,GT.mud,false);gtLights(c,now)}
+  else{gidDraw(c,T.x,T.y,T.a,GT.wh,GT.mud,false,gtMid);gtSunk(c);gtLights(c,now);gtBow(c,now)}
   gtCable(c);if(GT.cam2)gtHeliDraw(c,GT.cam2.x,GT.cam2.y,1.1,now,-1,true);
   if(GT.fx2.length)gtFx2(c,dt);
   if(GT.water&&T.x>GT.water.x0-60&&T.x<GT.water.x1+60){const wv=GT.water;c.fillStyle='rgba(70,125,155,.42)';c.fillRect(Math.max(x0,wv.x0),wv.y,Math.min(x1,wv.x1)-Math.max(x0,wv.x0),30);c.strokeStyle='rgba(220,240,255,.6)';c.lineWidth=1.5;c.beginPath();for(let x=Math.max(x0,wv.x0);x<=Math.min(x1,wv.x1);x+=6){const y=wv.y+Math.sin(x/9+now/300)*1.2;x===Math.max(x0,wv.x0)?c.moveTo(x,y):c.lineTo(x,y)}c.stroke()}
   c.restore();
   if(GT.flash>0){GT.flash-=dt;c.fillStyle=`rgba(255,200,140,${Math.max(0,GT.flash)*.85})`;c.fillRect(0,0,W,H)}
-  if(GT.rain)gtRainDraw(c,W,H,now);gtCineOverlay(c,W,H,now);gtMiniMap(c,W,H,now);
+  if(GT.rain)gtRainDraw(c,W,H,now);gtSplat(c,W,H,rdt);gtCineOverlay(c,W,H,now);gtMiniMap(c,W,H,now);gtPanel(c,W,H,now);gtWarnDraw(c,W,H,now);gtSplitDraw(c,W,H,rdt);if((GT.pyT=(GT.pyT||0)+rdt)>1){GT.pyT=0;gtPanY()}
   // HUD
   const set=(id,v)=>{const e=$(id);if(e&&e.textContent!==v)e.textContent=v};set('#gtKmh',String(Math.round(GT.kmh||0)));set('#gtP',GT.p.toFixed(1).replace('.',',')+' bar'+(Math.abs(GT.p-GT.pt)>.05?(GT.pt>GT.p?' ↑':' ↓'):''));
   const sg=gtSeg(T.x);set('#gtSurf','Talaj: '+(sg?GT_S[sg.s].n:'Aszfalt'));set('#gtTime',(GT.time).toFixed(1).replace('.',','));set('#gtLeft',Math.max(0,Math.round((GT.len-T.x)/20))+' m');
-  const dm=$('#gtDmg');if(dm){dm.style.width=Math.max(0,100-GT.dmg)+'%';dm.style.background=GT.dmg<50?'#2ecc40':GT.dmg<75?'#f4c04e':'#ff3b30'}set('#gtWarn',GT.warnTxt||'');gtFuelHud();
-  gEngTick(GT,gRpm(GT.kmh||0,GT.gas),GT.gas?Math.min(1,.5+(GT.wh.some(w=>w.slip)?.4:0)+(GT.kmh<15?.2:0)):.1,Math.abs(GT.p-GT.pt)>.05);
+  const dm=$('#gtDmg');if(dm){dm.style.width=Math.max(0,100-GT.dmg)+'%';dm.style.background=GT.dmg<50?'#2ecc40':GT.dmg<75?'#f4c04e':'#ff3b30'}const su=$('#gtSus');if(su){su.style.width=Math.max(0,100-GT.sus)+'%';su.style.background=GT.sus<50?'#4fd1ff':GT.sus<75?'#f4c04e':'#ff3b30'}set('#gtWarn',GT.warnTxt||'');gtFuelHud();
+  gEngTick(GT,gRpm(GT.lo?Math.min(40,GT.kmh||0)*2.9:GT.kmh||0,GT.gas),GT.gas?Math.min(1,.5+(GT.wh.some(w=>w.slip)?.4:0)+(GT.kmh<15?.2:0)+(GT.pull?.2:0)):GT.lo&&GT.kmh>4?.35:.1,Math.abs(GT.p-GT.pt)>.05);
   GT.raf=requestAnimationFrame(gtLoop)}
 function gtGame(dt){const T=GT.t;
   if(!GT.started&&T.x>=0){GT.started=true;GT.time=0}if(GT.started&&!GT.done)GT.time+=dt;
@@ -641,22 +683,31 @@ function gtGame(dt){const T=GT.t;
   if(GT.p<GT.pt)GT.p=Math.min(GT.pt,GT.p+.42*dt);else if(GT.p>GT.pt)GT.p=Math.max(GT.pt,GT.p-.85*dt);
   // abroncs sebességkorlát
   const lim=GT.p>=3.4?110:GT.p>=2?60+(GT.p-2)/1.4*50:30+(GT.p-1.2)/.8*30;GT.warnTxt='';if(GT.kmh>lim+2){GT.dmg+=(GT.kmh-lim)*.55*dt;GT.warnTxt=`⚠ Max. ${Math.round(lim)} km/h ennyi nyomással!`;GT.warnT-=dt;if(GT.warnT<=0&&SOUND&&AC){GT.warnT=.5;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1400;g.gain.setValueAtTime(.04,t);g.gain.setValueAtTime(0,t+.12);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.13)}}
-  else{const stuck=GT.gas&&GT.kmh<3&&GT.wh.some(w=>w.slip>.3);if(stuck)GT.warnTxt='Kipörög! Engedd le a nyomást ↓';}
-  gtWinch(dt);gtFuel(dt);
+  else{const stuck=(GT.gas||GT.revMode&&GT.brake)&&GT.kmh<3&&GT.wh.some(w=>w.slip>.3);if(stuck)GT.warnTxt=gtStuckTip();else if(GT.belly&&GT.kmh<3&&GT.gas)GT.warnTxt='⛰ Felült a hasára! Tolass vissza, vagy csörlőzz';}
+  gtWinch(dt);gtFuel(dt);gt4x4(dt);gtMud(dt);gtWater(dt);
   {const sp=GT.t.vx*Math.cos(GT.t.a)+GT.t.vy*Math.sin(GT.t.a);if(GT.brake&&!GT.gas&&Math.abs(sp)<10&&!GT.hand){GT.revT+=dt;if(GT.revT>.35&&!GT.revMode){GT.revMode=true;if(SOUND&&AC){const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.value=1000;g.gain.setValueAtTime(.04,t);g.gain.setValueAtTime(0,t+.08);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.1)}}}else if(!GT.brake){GT.revT=0;GT.revMode=false}else GT.revT=0;
-   if(GT.gas&&GT.revMode)GT.revMode=false;const ge=$('#gtGear');if(ge){const v=GT.hand?'P':GT.revMode?'R':'D';if(ge.textContent!==v){ge.textContent=v;ge.className='gtgear g'+v}}
-   if(GT.hand&&GT.gas)GT.warnTxt='(P) Kézifék behúzva – engedd ki!';
-   if(GT.siren&&GT.ssnd){const t=AC.currentTime;}}
+   if(GT.gas&&GT.revMode)GT.revMode=false;const ge=$('#gtGear');if(ge){const v=GT.hand?'P':GT.revMode?'R':(GT.lo?'L':'D');if(ge.textContent!==v){ge.textContent=v;ge.className='gtgear g'+v}}
+   if(GT.hand&&GT.gas)GT.warnTxt='(P) Kézifék behúzva – engedd ki!'}
   // elakadás-figyelő: gáz/fék alatt sokáig áll
-  if((GT.gas||GT.brake)&&GT.kmh<1.2&&!GT.hook&&!GT.fueling)GT.stuckT+=dt;else GT.stuckT=Math.max(0,GT.stuckT-dt*2);{const u=$('#gtUnstick');if(u)u.hidden=!(GT.stuckT>3.5&&!GT.flat)}
+  if((GT.gas||GT.brake)&&GT.kmh<1.2&&!GT.hook&&!GT.fueling)GT.stuckT+=dt;else GT.stuckT=Math.max(0,GT.stuckT-dt*2);{const u=$('#gtUnstick');if(u)u.hidden=!(GT.stuckT>(gtNearAnchor()?7:3.5)&&!GT.flat)}
+  // új szakasz figyelmeztetés
+  {const sg=gtSeg(T.x);if(sg&&GT_TIP[sg.s]&&!GT.xsc[sg.s]&&T.x>sg.x0-40){GT.xsc[sg.s]=1;GT.title=3.2;GT.titleTx=GT_TIP[sg.s];if(SOUND&&ac())snare(AC.currentTime,.12)}}
   // sár/homok/por/víz részecskék
-  for(const w of GT.wh){if(!w.c)continue;const S=w.surf;const n=(w.slip>.2?3:0)+(GT.kmh>20&&(S==='homok'||S==='murva')?1:0);for(let i=0;i<n;i++){const col=S==='sar'?'rgba(70,45,22,A)':S==='homok'?'rgba(214,180,110,A)':S==='viz'?'rgba(200,225,240,A)':'rgba(150,135,110,A)';GT.fx.push({x:w.x-GWR*.6,y:w.y+GWR*.6,vx:-60-Math.random()*160+T.vx*.3,vy:-80-Math.random()*160,t:.6,r:1.5+Math.random()*2.5,c:col})}
-    if(S==='sar'&&w.slip>.2)GT.mud=Math.min(1,GT.mud+dt*.4)}
-  if(GT.inWater>.1&&GT.kmh>4){for(let i=0;i<3;i++)GT.fx.push({x:T.x+40+Math.random()*30,y:GT.water.y,vx:60+Math.random()*120+T.vx*.5,vy:-100-Math.random()*150,t:.7,r:2+Math.random()*2,c:'rgba(210,230,245,A)'})}
+  for(const w of GT.wh){if(!w.c)continue;const S=w.surf,mud=S==='sar'||S==='mely';const n=(w.slip>.2?3:0)+(GT.kmh>20&&(S==='homok'||S==='murva')?1:0)+(mud&&w.sink>.3&&w.slip>.2?2:0);for(let i=0;i<n;i++){const col=mud?'rgba(70,45,22,A)':S==='homok'?'rgba(214,180,110,A)':S==='viz'?'rgba(200,225,240,A)':'rgba(150,135,110,A)';GT.fx.push({x:w.x-GWR*.6*Math.sign(w.vt||1),y:w.y+GWR*.6,vx:(-60-Math.random()*160)*Math.sign(w.vt||1)+T.vx*.3,vy:-80-Math.random()*160,t:.6,r:1.5+Math.random()*2.5,c:col})}
+    if(mud&&w.slip>.2)GT.mud=Math.min(1,GT.mud+dt*.4);if(mud&&(w.slip>.3||GT.kmh>22)&&Math.random()<dt*(w.slip>.3?1.6:.5))gtSplatAdd()}
+  if(GT.inWater>.1&&GT.kmh>4){for(let i=0;i<3;i++)GT.fx.push({x:T.x+40+Math.random()*30,y:GT.water.y,vx:60+Math.random()*120+T.vx*.5,vy:-100-Math.random()*150,t:.7,r:2+Math.random()*2,c:'rgba(210,230,245,A)'});if(GT.kmh>14&&Math.random()<dt*3)gtSplatAdd(1)}
   if(GT.mud>0&&GT.kmh>30&&gtSeg(T.x)?.s==='aszfalt')GT.mud=Math.max(0,GT.mud-dt*.05);
   if(GT.fx.length>260)GT.fx.splice(0,GT.fx.length-260);
+  // futómű: felütközés és kemény landolás
+  GT.susT=Math.max(0,GT.susT-dt);if(GT.bump>330&&GT.susT<=0){GT.sus+=Math.min(14,(GT.bump-330)/45);GT.susT=.3;GT.shake=Math.max(GT.shake,.18);if(SOUND&&ac())boom(AC.currentTime,.25,70)}GT.bump=0;
+  {const sf=gtSeg(T.x)?.s,rl=sf==='bukk'?18:sf==='szikla'?22:sf==='ko'?45:0;if(rl&&GT.cont&&GT.kmh>rl&&!GT.done){const d=(GT.kmh-rl)*(sf==='ko'?.12:.22)*(GT.p>2?1.4:1);GT.sus+=d*dt;GT.shake=Math.max(GT.shake,Math.min(.22,d*.025));if(!GT.warnTxt)GT.warnTxt=`⚠ Túl gyors a ${sf==='ko'?'köveken':sf==='bukk'?'bukkanókon':'sziklán'} – üti a futóművet (max. ${rl} km/h)!`}}
+  if(GT.cont===0)GT.air2+=dt;else{if(GT.air2>.45&&T.vy>320){const d=Math.min(18,(T.vy-320)/28);GT.sus+=d;if(d>4)toast('💥 Kemény landolás – sérült a futómű ('+Math.round(Math.min(100,GT.sus))+'%)')}GT.air2=0}
+  {const tl=Math.abs(T.a)*180/Math.PI;if(GT.started&&tl<90&&tl>GT.st.maxTilt)GT.st.maxTilt=tl}
+  gtGhostTick(dt);gtSplitTick();
   // vége
   const up=Math.cos(T.a);if(up<.05)GT.flipT+=dt;else GT.flipT=0;if(GT.flipT>2)return gtEnd(false,'Felborult a Gidrán!');
+  if(GT.sus>=100)return gtEnd(false,'Eltört a futómű – a Gidránt el kell vontatni');
+  if(GT.engDmg>=100)return gtEnd(false,'Vízütés – tönkrement a motor');
   if(GT.dmg>=100&&!GT.flat){const wi=Math.random()<.5?0:1;GT.wh[wi].flat=1;GT.wh[wi].r=GWR*.55;GT.flat={t:0,wi};toast('💥 Defekt! Lapos kerékkel próbálj tovább haladni…');sndFlat();GT.shake=.4}
   if(GT.flat){GT.flat.t+=dt;GT.warnTxt='💥 DEFEKT – lapos kerékkel döcög';const w=GT.wh[GT.flat.wi];const rv=Math.floor(w.rot/(Math.PI*2));if(rv!==w.rev){w.rev=rv;if(SOUND&&AC){boom(AC.currentTime,.22,52);snare(AC.currentTime,.05)}GT.shake=Math.max(GT.shake,.03)}
     if(GT.flat.t>5&&!GT.terr){const x=T.x+330+Math.random()*90;GT.terr={x,y:gtG(x),aim:2,fired:0};toast('⚠ Terroristák! RPG-s a domb mögül!')}}
@@ -664,28 +715,97 @@ function gtGame(dt){const T=GT.t;
   if(GT.rk){const r=GT.rk;const dx=T.x-r.x,dy=T.y-22-r.y,dl=Math.hypot(dx,dy);r.vx+=(dx/dl*480-r.vx)*Math.min(1,dt*3);r.vy+=(dy/dl*480-r.vy)*Math.min(1,dt*3);r.x+=r.vx*dt;r.y+=r.vy*dt;GT.fx.push({x:r.x,y:r.y,vx:(Math.random()-.5)*20,vy:-20,t:.9,r:3+Math.random()*3,c:'rgba(150,145,140,A)',g:-30});if(dl<30){GT.rk=null;return gtBlowUp()}}
   if(GT.fuel<=0&&GT.kmh<1&&!GT.done){GT.dry+=dt;if(GT.dry>2.5)return gtEnd(false,'Kifogyott az üzemanyag')}
   if(T.x>=GT.len&&!GT.done)return gtEnd(true)}
+/* ===== v4.43: valódi terep – 4×4, difizár, beásódás, gázló, futómű, szellem ===== */
+function gtStuckTip(){const tw=Math.max(...GT.wh.map(w=>w.tw||0)),sk=GT.sinkMax||0,pitch=-GT.t.a*180/Math.PI,sf=gtSeg(GT.t.x)?.s;
+  if(!GT.lock&&tw>.3)return '⛓ Egy kerék a levegőben pörög – kapcsold be a DIFIZÁRAT!';
+  if(sk>.5)return gtNearAnchor()?'🟫 Beásta magát! Ne pörgesd – csörlőzz a horgonyfához, vagy hintáztass (GÁZ–FÉK)':'🟫 Beásta magát! Ne pörgesd – hintáztasd: GÁZ, FÉK, GÁZ…';
+  if(GT.p>2&&(sf==='sar'||sf==='mely'||sf==='homok'))return 'Kipörög! Engedd le a nyomást ↓';
+  if(!GT.lo&&pitch>18)return 'Túl meredek: állj meg, és válts 4L-re!';
+  if(!GT.lock)return 'Kipörög! Próbáld difizárral, kisebb gázzal';return 'Kipörög! Engedd le a nyomást ↓'}
+function gtRangeToggle(){if(!GT.run||GT.done)return;if(GT.kmh>3){toast('A 4H/4L váltáshoz állj meg (3 km/h alatt)!');return}GT.lo=!GT.lo;if(GT.lo)GT.st.lo++;gt4x4Ui();if(SOUND&&ac()){const t=AC.currentTime;snare(t,.12);boom(t+.06,.18,90)}toast(GT.lo?'4L terepfokozat – nagy nyomaték, max. 34 km/h, erős motorfék':'4H közúti fokozat')}
+function gtLockToggle(){if(!GT.run||GT.done)return;if(GT.lockBroke){toast('A difizár eltört – nem kapcsolható');return}if(!GT.lock&&GT.kmh>15){toast('A difizár csak 15 km/h alatt kapcsolható');return}GT.lock=!GT.lock;gt4x4Ui();if(SOUND&&ac())snare(AC.currentTime,.1);toast(GT.lock?'🔒 Difizár BE – minden kerék együtt hajt. Szilárd úton oldd!':'Difizár KI')}
+function gt4x4Ui(){const r=$('#gtRange');if(r){const b=r.querySelector('b');if(b)b.textContent=GT.lo?'4L':'4H';r.setAttribute('aria-pressed',String(!!GT.lo))}const l=$('#gtLock');if(l){l.setAttribute('aria-pressed',String(!!GT.lock));l.classList.toggle('broke',!!GT.lockBroke)}}
+function gt4x4(dt){const sf=gtSeg(GT.t.x)?.s,hard=sf==='aszfalt'||sf==='murva';
+  if(GT.lock){GT.st.lockT+=dt;if(hard&&GT.kmh>30){GT.dl=Math.min(100,GT.dl+dt*(GT.kmh-25)*.9);GT.warnTxt=GT.warnTxt||'⚠ Zárt difivel szilárd úton feszül a hajtáslánc – oldd a zárat!';
+    if(GT.dl>=100){GT.lock=false;GT.lockBroke=true;GT.shake=.5;gt4x4Ui();toast('💥 Eltört a difizár! Nem kapcsolható, és a hajtás is gyengült');if(SOUND&&ac()){snare(AC.currentTime,.4);boom(AC.currentTime,.3,140)}}}}
+  else GT.dl=Math.max(0,GT.dl-dt*4)}
+function gtMud(dt){const pk=.6+.8*Math.max(0,Math.min(1,(GT.p-1.2)/2.8)),dig=GT.gas||GT.revMode&&GT.brake;let mx=0;
+  for(const w of GT.wh){const k=w.c?GT_SINK[w.surf]||0:0;
+    if(!k){w.sink=Math.max(0,w.sink-dt*1.2);continue}
+    if(w.slip>.25&&dig)w.sink=Math.min(1,w.sink+dt*.55*k*w.slip*pk);
+    else if(Math.abs(w.vt)>22&&w.slip<.2)w.sink=Math.max(0,w.sink-dt*.4*(1.1-k*.4));
+    else if(k>=1)w.sink=Math.min(.6,w.sink+dt*.015);
+    mx=Math.max(mx,w.sink);if(w.sink>.18&&Math.abs(w.x-w.rx0)>6){w.rx0=w.x;GT.ruts.push({x:w.x,d:w.sink});if(GT.ruts.length>700)GT.ruts.shift()}}
+  GT.sinkMax=mx}
+function gtWater(dt){if(GT.stall>0){GT.stall-=dt;GT.warnTxt='💧 A motor vizet nyelt és leállt – újraindítás…';if(GT.stall<=0){GT.stall=0;if(GT.fuel>0){gEngStart(GT);toast('🔑 A motor újra jár')}}return}
+  const d=GT.inWater||0;
+  if(d>.4&&GT.kmh>13){GT.eng+=dt*(GT.kmh-13)*.08*d;GT.warnTxt='⚠ Túl gyors a gázlóban! Lassíts 6–12 km/h-ra, különben vizet nyel a motor';
+    if(GT.eng>=1){GT.eng=0;GT.engDmg+=34;GT.st.stalls++;GT.stall=3.5;gEngStop(GT);GT.shake=.4;toast('💧 Vízütés! A motor leállt ('+Math.min(100,Math.round(GT.engDmg))+'% motorkár)');if(SOUND&&ac())boom(AC.currentTime,.4,60)}}
+  else GT.eng=Math.max(0,GT.eng-dt*.25);
+  GT.bow=d>.3&&GT.kmh>=4&&GT.kmh<=12?Math.min(1,GT.bow+dt*2):Math.max(0,GT.bow-dt*2)}
+/* horgonyfák: a nehéz szakaszok közepén és túlpartján – ide lehet csörlőzni */
+function gtAnchors(){const out=[];for(const g of GT.segs||[]){if(!['mely','sar','bukk','szikla','viz'].includes(g.s))continue;const xs=[];for(let x=g.x0+480;x<g.x1-120;x+=560)xs.push(x);xs.push(g.x1+170);for(const x of xs){if(out.some(a=>Math.abs(a.x-x)<380))continue;if(GT.fuelX!=null&&Math.abs(x-GT.fuelX)<220)continue;if(x>GT.len-200)continue;out.push({x,seed:Math.random()*9})}}return out.sort((a,b)=>a.x-b.x)}
+function gtNearAnchor(){if(!GT.anchors)return null;const wp=gtWinchPt();let best=null;for(const a of GT.anchors){const d=a.x-wp.x;if(d>70&&d<640&&(!best||d<best.d))best={a,d}}return best}
+/* szellem: a legjobb menet 0,1 s-onként (x, y, szög) */
+function gtGhKey(){return 'medve-gt-gh-'+GT_TRK}
+function gtGhostLoad(){try{const v=localStorage.getItem(gtGhKey());if(!v)return null;const o=JSON.parse(v);return o&&o.v===1&&Array.isArray(o.d)&&o.d.length>=9?o:null}catch(e){return null}}
+function gtGhostTick(dt){if(!GT.started||GT.done)return;const g=GT.gh;g.t+=dt;while(g.t>=.1){g.t-=.1;const T=GT.t;g.rec.push(Math.round(T.x),Math.round(T.y),Math.round(T.a*100))}}
+function gtGhostAt(t){const o=GT.ghost;if(!o)return null;const d=o.d,i=t/.1,k=Math.floor(i),n=d.length/3;if(k<0||k>=n-1)return null;const f=i-k,a=k*3,b=a+3;return{x:d[a]+(d[b]-d[a])*f,y:d[a+1]+(d[b+1]-d[a+1])*f,a:(d[a+2]+(d[b+2]-d[a+2])*f)/100}}
+function gtGhostTimeAtX(x){const o=GT.ghost;if(!o)return null;const d=o.d;for(let k=0;k+3<d.length;k+=3)if(d[k+3]>=x){const f=(x-d[k])/Math.max(1e-6,d[k+3]-d[k]);return (k/3+Math.max(0,Math.min(1,f)))*.1}return null}
+function gtSplitTick(){if(!GT.started||!GT.segs)return;const T=GT.t;while(GT.cpI<GT.segs.length-1&&T.x>=GT.segs[GT.cpI+1].x0){GT.cpI++;const gt=gtGhostTimeAtX(GT.segs[GT.cpI].x0);GT.split={n:GT.cpI,d:gt!=null?GT.time-gt:null,t:2.8,s:GT_S[GT.segs[GT.cpI].s].n}}}
+function gtSplitDraw(c,W,H,dt){const sp=GT.split;if(!sp||sp.t<=0)return;sp.t-=dt;const a=Math.min(1,sp.t*2);c.save();c.globalAlpha=a;c.textAlign='center';const y=(GT.warnY||Math.max((GT.panY||200)+74,GT.sideB||0))+8;
+  c.fillStyle='rgba(12,15,9,.82)';c.beginPath();c.roundRect?c.roundRect(W/2-64,y,128,sp.d!=null?40:24,9):c.rect(W/2-64,y,128,sp.d!=null?40:24);c.fill();
+  c.fillStyle='#e8e2cc';c.font='bold 10px sans-serif';c.fillText(`${sp.n}/${GT.segs.length-1} · ${sp.s.toUpperCase()}`,W/2,y+15);
+  if(sp.d!=null){const neg=sp.d<0;c.fillStyle=neg?'#2ecc40':'#ff5a4a';c.font='900 17px Anton, Impact, sans-serif';c.fillText((neg?'▼ −':'▲ +')+Math.abs(sp.d).toFixed(1).replace('.',',')+' s',W/2,y+34)}c.restore()}
+function gtGhostDraw(c,x0,x1){if(!GT.ghost||!GT.started||GT.done)return;const g=gtGhostAt(GT.time);if(!g||g.x<x0-160||g.x>x1+160)return;c.save();c.globalAlpha=.3;gidDraw(c,g.x,g.y,g.a,null,0,false);c.globalAlpha=.75;c.fillStyle='#bfe6ff';c.font='bold 9px sans-serif';c.textAlign='center';c.fillText('👻 REKORD',g.x,g.y-62);c.restore()}
+/* rajz: rugóstagok, alacsony nyomáson kidudorodó abroncs, sárba süllyedt kerék, nyomvályúk, orrhullám, sárfröccs a kamerán */
+function gtMid(c){const T=GT.t,bq=Math.max(0,(4-GT.p)/2.8);for(const w of GT.wh){if(w.Ax==null)continue;const ax=w.Ax,ay=w.Ay,bx=w.x,by=w.y,L=Math.hypot(bx-ax,by-ay)||1,ux=(bx-ax)/L,uy=(by-ay)/L;
+  c.strokeStyle='#202318';c.lineWidth=4.5;c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.stroke();c.strokeStyle='#b49a3a';c.lineWidth=1.4;c.beginPath();for(let i=0;i<=7;i++){const t=i/7,o=i%2?3.2:-3.2;c.lineTo(ax+(bx-ax)*t-uy*o,ay+(by-ay)*t+ux*o)}c.stroke();
+  if(w.c&&bq>.05&&!w.flat){c.fillStyle='#161614';c.beginPath();c.ellipse(bx,by+GWR*.8,GWR*(1+bq*.2),GWR*(.2+bq*.1),T.a,0,7);c.fill()}}}
+function gtSunk(c){for(const w of GT.wh){if(!w.c||w.sink<.08)continue;const sg=gtSeg(w.x);if(!sg)continue;const S=GT_S[sg.s],gy=gtG(w.x);c.fillStyle=S.col;c.beginPath();c.moveTo(w.x-GWR-3,gy+3);c.quadraticCurveTo(w.x,gy-2-w.sink*3,w.x+GWR+3,gy+3);c.lineTo(w.x+GWR+3,w.y+GWR+2);c.lineTo(w.x-GWR-3,w.y+GWR+2);c.fill();c.fillStyle=S.top;c.beginPath();c.ellipse(w.x,gy+1-w.sink*2,GWR+4,2.2,0,0,7);c.fill()}}
+function gtRuts(c,x0,x1){if(!GT.ruts.length)return;c.fillStyle='rgba(15,9,3,.45)';for(const r of GT.ruts){if(r.x<x0||r.x>x1)continue;const y=gtG(r.x);c.beginPath();c.ellipse(r.x,y+2,6,1.4+r.d*2.4,0,0,7);c.fill()}}
+function gtBow(c,now){if(!GT.water||GT.bow<.05)return;const T=GT.t,fx=T.x+60*Math.cos(T.a),wy=GT.water.y,b=GT.bow;c.fillStyle=`rgba(232,244,255,${.6*b})`;c.beginPath();c.moveTo(fx-8,wy+1);c.quadraticCurveTo(fx+16,wy-16*b-Math.sin(now/90)*2,fx+44,wy+1);c.closePath();c.fill();
+  c.strokeStyle=`rgba(255,255,255,${.5*b})`;c.lineWidth=1.2;for(let i=1;i<4;i++){c.beginPath();c.arc(fx+30+i*16,wy+1,6+i*3,Math.PI*1.1,Math.PI*1.9);c.stroke()}}
+function gtSplatAdd(water){if(!GT.splat||GT.splat.length>12)return;const W=GT.W||360,H=GT.H||640;GT.splat.push({x:Math.random()*W,y:H*.12+Math.random()*H*.55,r:7+Math.random()*20,t:water?1.2:4,t0:water?1.2:4,w:!!water,k:Math.random()*6})}
+function gtSplat(c,W,H,dt){if(!GT.splat||!GT.splat.length)return;GT.splat=GT.splat.filter(p=>{p.t-=dt*(GT.rain&&!p.w?2.2:1);const a=Math.max(0,p.t/p.t0);c.fillStyle=p.w?`rgba(210,230,245,${.35*a})`:`rgba(62,40,18,${.6*a})`;c.beginPath();for(let i=0;i<9;i++){const an=i/9*Math.PI*2,rr=p.r*(.75+.35*Math.sin(an*3+p.k));i?c.lineTo(p.x+Math.cos(an)*rr,p.y+Math.sin(an)*rr):c.moveTo(p.x+Math.cos(an)*rr,p.y+Math.sin(an)*rr)}c.closePath();c.fill();
+  if(!p.w){c.beginPath();c.arc(p.x+p.r*.9,p.y+p.r*1.1,p.r*.25,0,7);c.fill()}return p.t>0})}
+/* műszer: dőlésmérő és 4×4 kerékállapot felülnézetben */
+function gtPanel(c,W,H,now){if(!GT.wh||!GT.wh[0])return;const T=GT.t,x0=12,y0=GT.panY||200,w=152,h=74;c.save();c.fillStyle='rgba(12,15,9,.84)';c.beginPath();c.roundRect?c.roundRect(x0,y0,w,h,10):c.rect(x0,y0,w,h);c.fill();c.strokeStyle='#111';c.lineWidth=2;c.stroke();
+  const pitch=-T.a*180/Math.PI,ap=Math.abs(pitch),col=ap<25?'#2ecc40':ap<35?'#f4c04e':'#ff3b30',cx=x0+38,cy=y0+44,R=27;
+  c.lineWidth=5;for(const [a0,a1,cc] of [[-25,25,'#2e6b34'],[25,35,'#8a6a1c'],[-35,-25,'#8a6a1c'],[35,55,'#7a2620'],[-55,-35,'#7a2620']]){c.strokeStyle=cc;c.beginPath();c.arc(cx,cy,R,-Math.PI/2+a0*Math.PI/180*1.4,-Math.PI/2+a1*Math.PI/180*1.4);c.stroke()}{const th=-Math.PI/2+Math.max(-60,Math.min(60,pitch))*Math.PI/180*1.4;c.fillStyle='#fff';c.beginPath();c.moveTo(cx+Math.cos(th)*(R-5),cy+Math.sin(th)*(R-5));c.lineTo(cx+Math.cos(th-.12)*(R+5),cy+Math.sin(th-.12)*(R+5));c.lineTo(cx+Math.cos(th+.12)*(R+5),cy+Math.sin(th+.12)*(R+5));c.fill()}
+  c.save();c.translate(cx,cy);c.rotate(-Math.max(-60,Math.min(60,pitch))*Math.PI/180);c.fillStyle=col;c.fillRect(-15,-6,30,7);c.fillRect(-6,-12,13,6);c.fillStyle='#111';c.beginPath();c.arc(-9,2,3.2,0,7);c.arc(9,2,3.2,0,7);c.fill();c.restore();
+  c.fillStyle=col;c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(Math.round(pitch)+'°',cx,y0+70);c.fillStyle='#cfd6c0';c.font='bold 8px sans-serif';c.fillText(ap>=35&&Math.sin(now/120)>0?'⚠ BORULÁS':'DŐLÉS',cx,y0+12);
+  // kerekek felülről (jobbra néz)
+  const bx=x0+84,by=y0+14,ww=11,wh=7;c.fillStyle='#2a3020';c.fillRect(bx+6,by+9,48,22);c.strokeStyle=GT.lock?'#ffd23a':'rgba(200,200,190,.35)';c.lineWidth=2;c.setLineDash(GT.lock?[]:[3,3]);c.beginPath();c.moveTo(bx+11,by+20);c.lineTo(bx+49,by+20);c.moveTo(bx+11,by+6);c.lineTo(bx+11,by+34);c.moveTo(bx+49,by+6);c.lineTo(bx+49,by+34);c.stroke();c.setLineDash([]);
+  for(let i=0;i<2;i++){const wl=GT.wh[i],xx=bx+(i?49:11),ld=wl.c?Math.min(1.4,wl.N/250):0,s=gtTwistSg(wl.x)*(i?1:-1)*(GT.lock?.6:1),tw=wl.tw||0;
+    for(const side of [-1,1]){const yy=by+20+side*14,l=ld*(1+side*s*tw);const lifted=!wl.c||l<.14,spin=wl.slip>.3&&(lifted?!GT.lock:true);
+      c.fillStyle=spin?(Math.sin(now/60)>0?'#ff3b30':'#9b1a12'):lifted?'rgba(0,0,0,0)':`rgba(46,204,64,${.35+.65*Math.min(1,l)})`;c.fillRect(xx-ww/2,yy-wh/2,ww,wh);c.strokeStyle=lifted?'#8a8a80':'#111';c.lineWidth=1.2;c.strokeRect(xx-ww/2,yy-wh/2,ww,wh)}}
+  c.fillStyle=GT.lo?'#ffd23a':'#e8e2cc';c.font='900 12px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(GT.lo?'4L':'4H',bx+30,by+25);
+  c.font='bold 8px sans-serif';c.fillStyle=GT.lockBroke?'#ff5a4a':GT.lock?'#ffd23a':'#cfd6c0';c.fillText(GT.lockBroke?'ZÁR TÖRÖTT':GT.lock?'🔒 ZÁRVA':'NYITOTT DIFI',bx+30,y0+70);
+  if(GT.sinkMax>.15){c.fillStyle='#c98a3a';c.fillRect(x0+w-8,y0+h-6-GT.sinkMax*56,4,GT.sinkMax*56)}c.restore()}
 /* ===== v4.2: Gidrán Terep – extrém sziklamászás, filmes jelenetek, háttér-verseny, minitérkép ===== */
 function gtXtrTick(dt,rdt){const T=GT.t,sg=gtSeg(T.x),k=sg&&(sg.s==='szikla'||sg.s==='lejto');GT.cine=k?1:0;GT.cineK+=((GT.cine)-(GT.cineK||0))*Math.min(1,rdt*2.5);
-  if(sg&&!GT.xsc[sg.s]&&k){GT.xsc[sg.s]=1;GT.title=3.2;GT.titleTx=sg.s==='szikla'?['EXTRÉM SZAKASZ','SZIKLAMÁSZÁS · 1,2 bar · lassan, egyenletes gázzal']:['⚠ EXTRÉM LEJTŐ','SZAKADÉK · FÉKKEL ADAGOLD · NE BORULJ ÁT'];GT.slow=Math.max(GT.slow,.7);if(SOUND&&ac())boom(AC.currentTime,.5,55);
+  if(sg&&!GT.xsc[sg.s]&&k){GT.xsc[sg.s]=1;GT.title=3.2;GT.titleTx=sg.s==='szikla'?['EXTRÉM SZAKASZ','SZIKLAMÁSZÁS · 4L · DIFIZÁR · 1,2 bar · lassan']:['⚠ EXTRÉM LEJTŐ','SZAKADÉK · 4L MOTORFÉK · NE BORULJ ÁT'];GT.slow=Math.max(GT.slow,.7);if(SOUND&&ac())boom(AC.currentTime,.5,55);
     if(!GT.cam2)GT.cam2={x:T.x-260,y:T.y-260,vx:0,vy:0}}
   if(GT.title>0)GT.title-=rdt;
   // filmező helikopter a szakasz alatt
   if(GT.cam2){const C=GT.cam2,tx=T.x+(k?150:900),ty=gtG(T.x)-(k?250:420);C.vx+=((tx-C.x)*1.6-C.vx)*Math.min(1,rdt*1.8);C.vy+=((ty-C.y)*1.6-C.vy)*Math.min(1,rdt*1.8);C.x+=C.vx*dt;C.y+=C.vy*dt;if(!k&&C.x-T.x>1500)GT.cam2=null}
   // levegőben: lassítás + kemény landolás
   if(GT.cont===0){GT.air+=rdt;if(GT.air>.18&&!GT.airSlow&&k&&T.vy>60){GT.airSlow=1;GT.slow=Math.max(GT.slow,1.1);GT.flashT=.2}}
-  else{if(GT.air>.55&&k){const hv=Math.abs(T.vy);GT.shake=Math.max(GT.shake||0,Math.min(1,.25+hv/900));if(SOUND&&ac())boom(AC.currentTime,Math.min(.8,.3+hv/1200),48);if(GT.air>.6){toast(hv>380?'💥 Kemény landolás!':'🪨 Landolás!');if(hv>380)GT.dmg+=6}for(let i=0;i<16;i++)GT.fx.push({x:T.x+(Math.random()-.5)*120,y:gtG(T.x)-4,vx:(Math.random()-.5)*260,vy:-60-Math.random()*160,t:.8,r:2+Math.random()*3,c:'rgba(150,140,125,A)'})}GT.air=0;GT.airSlow=0}}
+  else{if(GT.air>.55&&k){const hv=Math.abs(T.vy);GT.shake=Math.max(GT.shake||0,Math.min(1,.25+hv/900));if(SOUND&&ac())boom(AC.currentTime,Math.min(.8,.3+hv/1200),48);if(GT.air>.6){toast(hv>380?'💥 Kemény landolás!':'🪨 Landolás!');if(hv>380)GT.sus+=Math.min(12,(hv-380)/30+3)}for(let i=0;i<16;i++)GT.fx.push({x:T.x+(Math.random()-.5)*120,y:gtG(T.x)-4,vx:(Math.random()-.5)*260,vy:-60-Math.random()*160,t:.8,r:2+Math.random()*3,c:'rgba(150,140,125,A)'})}GT.air=0;GT.airSlow=0}}
 function gtRainDraw(c,W,H,now){c.fillStyle='rgba(40,50,70,.18)';c.fillRect(0,0,W,H);c.strokeStyle='rgba(200,215,235,.45)';c.lineWidth=1.2;c.beginPath();const t=now/1000;for(let i=0;i<70;i++){const x=((i*53.7+t*60)%(W+40))-20,y=((i*91.3+t*900)%(H+40))-20;c.moveTo(x,y);c.lineTo(x-5,y+16)}c.stroke();if(Math.random()<.002){GT.flash=.35;try{if(SOUND&&ac())boom(AC.currentTime+.6,.6,40)}catch(e){}}}
 function gtCineOverlay(c,W,H,now){const k=GT.cineK||0,bh=H*.07*k;if(bh>.5){c.fillStyle='#000';c.fillRect(0,0,W,bh);c.fillRect(0,H-bh,W,bh)}
   if(GT.title>0&&GT.titleTx){const a=Math.min(1,GT.title*1.4,(3.2-GT.title)*3);c.save();c.globalAlpha=Math.max(0,a);c.textAlign='center';c.fillStyle='rgba(0,0,0,.45)';c.fillRect(0,H*.3-38,W,66);c.fillStyle='#ffcf3a';c.font='900 30px Anton, Impact, sans-serif';c.fillText(GT.titleTx[0],W/2,H*.3);c.fillStyle='#f3ecd4';c.font='bold 12px sans-serif';c.fillText(GT.titleTx[1],W/2,H*.3+20);c.restore()}
   if(GT.slow>0){c.fillStyle='rgba(255,255,255,.75)';c.font='bold 11px sans-serif';c.textAlign='right';c.fillText('▶▶ LASSÍTÁS',W-12,H*.07*k+18)}}
 function gtMiniMap(c,W,H,now){if(!GT.segs)return;const x0=16,w=W-32,y=H-196,len=GT.len,px=x=>x0+Math.max(0,Math.min(1,x/len))*w,T=GT.t;
   c.fillStyle='rgba(0,0,0,.5)';c.beginPath();c.roundRect?c.roundRect(x0-6,y-16,w+12,34,8):c.rect(x0-6,y-16,w+12,34);c.fill();
-  for(const g of GT.segs){c.fillStyle=GT_S[g.s].top;c.fillRect(px(g.x0),y,Math.max(1,px(g.x1)-px(g.x0)),6);if(g.s==='szikla'||g.s==='lejto'){c.fillStyle='#ffcf3a';c.fillRect(px(g.x0),y+6,px(g.x1)-px(g.x0),2)}}
+  for(const g of GT.segs){c.fillStyle=GT_S[g.s].top;c.fillRect(px(g.x0),y,Math.max(1,px(g.x1)-px(g.x0)),6);if(g.s==='szikla'||g.s==='lejto'||g.s==='bukk'||g.s==='mely'){c.fillStyle='#ffcf3a';c.fillRect(px(g.x0),y+6,px(g.x1)-px(g.x0),2)}}
+  if(GT.anchors){c.fillStyle='#5fbf4a';for(const a of GT.anchors)c.fillRect(px(a.x)-1,y-5,2,5)}
   const fx=GT.fuelX;c.font='bold 11px sans-serif';c.textAlign='center';if(fx!=null){c.fillText('⛽',px(fx),y-3)}c.fillText('🏁',px(len)-4,y-3);
   c.fillStyle='#fff';c.beginPath();c.moveTo(px(T.x),y-1);c.lineTo(px(T.x)-5,y-9);c.lineTo(px(T.x)+5,y-9);c.fill();
   const dF=fx!=null?Math.round((fx-T.x)/20):null,dE=Math.round((len-T.x)/20);let txt,col='#f3ecd4';
   if(dF!=null&&dF>-4){txt=dF>3?`⛽ Töltőállomás: ${dF} m`:'⛽ ITT A TÖLTŐ – állj meg, tartsd a TANKOLÁS gombot';const need=dF*.024+1;if(GT.fuel<need+4){col=Math.sin(now/150)>0?'#ff5a4a':'#ffd24a';txt+=' · KEVÉS ÜZEMANYAG!'}}
-  else{txt=`🏁 Célig: ${Math.max(0,dE)} m`;const sz=GT.segs.find(g=>g.s==='szikla');if(sz&&T.x<sz.x0){txt+=` · ⚠ szikla: ${Math.round((sz.x0-T.x)/20)} m`}}
+  else{txt=`🏁 Célig: ${Math.max(0,dE)} m`;const sz=GT.segs.find(g=>['szikla','bukk','mely','viz','lejto'].includes(g.s)&&g.x0>T.x);if(sz){txt+=` · ⚠ ${GT_S[sz.s].n.toLowerCase()}: ${Math.round((sz.x0-T.x)/20)} m`}}
   c.fillStyle=col;c.font='bold 11px sans-serif';c.textAlign='left';c.fillText(txt,x0,y+17)}
 function gtHeliDraw(c,x,y,s,now,face,cam){c.save();c.translate(x,y);c.scale(s*face,s);c.rotate(.06*Math.sin(now/900));
   c.fillStyle='#3d4530';c.beginPath();c.ellipse(0,0,30,11,0,0,7);c.fill();c.fillRect(20,-4,46,5);c.beginPath();c.moveTo(62,-4);c.lineTo(70,-16);c.lineTo(72,-16);c.lineTo(68,1);c.fill();
@@ -705,20 +825,26 @@ function gtBgRace(c,W,H,sc,dt,now){const T=GT.t;if(!GT.bg)GT.bg=[0,1,2].map(i=>(
 function gtSirenSnd(on){if(!on){const S=GT.ssnd;GT.ssnd=null;if(S){try{S.g.gain.setTargetAtTime(0,AC.currentTime,.05);setTimeout(()=>{try{S.o.stop();S.l.stop()}catch(e){}},300)}catch(e){}}return}if(!SOUND||!ac()||GT.ssnd)return;const a=AC,o=a.createOscillator(),l=a.createOscillator(),lg=a.createGain(),g=a.createGain(),f=a.createBiquadFilter();o.type='sawtooth';o.frequency.value=900;l.type='sine';l.frequency.value=.45;lg.gain.value=330;l.connect(lg).connect(o.frequency);f.type='lowpass';f.frequency.value=2600;g.gain.value=0;o.connect(f).connect(g).connect(MASTER);o.start();l.start();g.gain.setTargetAtTime(.06,a.currentTime,.1);GT.ssnd={o,l,g}}
 function gtTrees(){const out=[];const cand=(GT.segs||[]).filter(g=>['murva','sar','ko','homok'].includes(g.s)&&g.x1-g.x0>1600);
   const flat=x=>{let m=0;for(let k=-200;k<=120;k+=20)m=Math.max(m,Math.abs(gtG(x+k+4)-gtG(x+k-4))/8);return m};
-  const kinds=['fa'];const want=1;let tries=0;
-  while(out.length<want&&tries<200){tries++;const g=cand[Math.floor(Math.random()*cand.length)];if(!g)break;const x=g.x0+400+Math.random()*(g.x1-g.x0-800);if(flat(x)>.14)continue;if(out.some(t=>Math.abs(t.x-x)<9000))continue;if(GT.fuelX!=null&&Math.abs(x-GT.fuelX)<1500)continue;
+  const kinds=['fa','fa','fa'];const want=GT.trk&&GT.trk.trees||1;let tries=0;
+  while(out.length<want&&tries<200){tries++;const g=cand[Math.floor(Math.random()*cand.length)];if(!g)break;const x=g.x0+400+Math.random()*(g.x1-g.x0-800);if(flat(x)>.14)continue;if(out.some(t=>Math.abs(t.x-x)<(want>1?5000:9000)))continue;if(GT.fuelX!=null&&Math.abs(x-GT.fuelX)<1500)continue;
     const k=kinds[out.length];out.push(k==='fa'?{k,x,r:17+Math.random()*5,need:35+Math.floor(Math.random()*4)*10,prog:0,done:0,seed:Math.random()*9}:{k,x,r:22,need:55+Math.floor(Math.random()*3)*10,prog:0,done:0,seed:Math.random()*9})}
   return out.sort((a,b)=>a.x-b.x)}
 function gtNearTree(){const T=GT.t,fx=T.x+64;let best=null;for(const t of GT.trees){if(t.done)continue;const d=t.x-(t.k==='roncs'?36:t.r)-fx;if(d>-20&&d<260&&(!best||d<best.d))best={t,d}}return best}
 function gtWinchPt(){const T=GT.t,c=Math.cos(T.a),s=Math.sin(T.a),lx=66,ly=-4;return {x:T.x+lx*c-ly*s,y:T.y+lx*s+ly*c}}
-function gtHookToggle(){if(!GT.run)return;if(GT.hook){GT.hook=null;GT.pull=0;toast('🪝 Csörlő leakasztva');gtWinchUi();return}
-  const n=gtNearTree();if(!n){toast('Nincs akadály a csörlő előtt');return}if(n.d>140){toast('Menj közelebb – max. 7 m-re');return}if(GT.kmh>4){toast('Előbb állj meg');return}
-  GT.hook={t:n.t};GT.snapT=0;if(SOUND&&ac()){const t=AC.currentTime;snare(t,.2);sndPing()}toast('🪝 Felakasztva – állítsd az erőt és húzd!');gtWinchUi()}
+function gtHookToggle(){if(!GT.run)return;if(GT.hook){GT.hook=null;GT.pull=0;gtWinchSnd(false);toast('🪝 Csörlő leakasztva');gtWinchUi();return}
+  const n=gtNearTree(),an=gtNearAnchor();if(GT.kmh>4&&(n&&n.d<=140||an)){toast('Előbb állj meg');return}
+  if(n&&n.d<=140){GT.hook={t:n.t};GT.snapT=0;if(SOUND&&ac()){const t=AC.currentTime;snare(t,.2);sndPing()}toast('🪝 Felakasztva – állítsd az erőt és húzd!');gtWinchUi();return}
+  if(an){GT.hook={a:an.a};GT.snapT=0;if(SOUND&&ac()){const t=AC.currentTime;snare(t,.2);sndPing()}toast('🪝 Fakímélő heveder a horgonyfán – tartsd a HÚZ gombot, a kerekekkel finoman segíts');gtWinchUi();return}
+  if(n){toast('Menj közelebb – kidőlt fához max. 7 m-re');return}toast('Nincs akadály vagy horgonyfa a csörlő előtt (max. 32 m)')}
 function gtWinchUi(){const b=$('#gtHook');if(b){b.textContent=GT.hook?'Leakaszt':'Felakaszt';b.classList.toggle('on',!!GT.hook)}const f=$('#gtF');if(f)f.textContent=GT.force+'%';const fb=$('#gtFb');if(fb){fb.style.width=GT.force+'%';fb.style.background=GT.force>80?'#ff3b30':GT.force>60?'#f4c04e':'#2ecc40'}}
 function gtWinchSnd(on){if(!SOUND||!ac())return;if(on&&!GT.wsnd){const a=AC,o=a.createOscillator(),g=a.createGain(),f=a.createBiquadFilter();o.type='sawtooth';o.frequency.value=180;f.type='bandpass';f.frequency.value=700;f.Q.value=2;g.gain.value=0;o.connect(f).connect(g).connect(MASTER);o.start();g.gain.setTargetAtTime(.07,a.currentTime,.05);GT.wsnd={o,g}}
   else if(!on&&GT.wsnd){const S=GT.wsnd;GT.wsnd=null;try{S.g.gain.setTargetAtTime(0,AC.currentTime,.05);setTimeout(()=>{try{S.o.stop()}catch(e){}},300)}catch(e){}}}
-function gtWinch(dt){const n=gtNearTree();const w=$('#gtWinch');if(w)w.hidden=!(GT.hook||(n&&n.d<220));const st=$('#gtWst');
-  if(!GT.hook){gtWinchSnd(false);if(st)st.textContent=n?`· ${n.t.k==='roncs'?'roncs':'fa'} ${Math.max(0,Math.round(n.d/20))} m`:'';return}
+function gtWinch(dt){const n=gtNearTree(),an=GT.hook?null:gtNearAnchor();const w=$('#gtWinch');const stuckish=GT.stuckT>1.2||GT.sinkMax>.45||GT.belly||(GT.gas&&GT.kmh<3);if(w)w.hidden=!(GT.hook||(n&&n.d<220)||(an&&stuckish));const st=$('#gtWst');
+  if(!GT.hook){gtWinchSnd(false);if(st)st.textContent=n&&n.d<220?`· ${n.t.k==='roncs'?'roncs':'fa'} ${Math.max(0,Math.round(n.d/20))} m`:an?`· 🌲 horgonyfa ${Math.round(an.d/20)} m`:'';return}
+  if(GT.hook.a){const a=GT.hook.a,wp=gtWinchPt(),dd=a.x-wp.x;if(dd<70||dd>720){GT.hook=null;GT.pull=0;gtWinchSnd(false);if(dd<70){GT.st.selfRec++;toast('✅ Kicsörlőzve – mehetsz tovább!')}else toast('A kötél nem ér el – akaszd újra');gtWinchUi();return}
+    if(GT.pull){gtWinchSnd(true);if(GT.wsnd)GT.wsnd.o.frequency.setTargetAtTime(110+GT.force*1.5-(GT.kmh<1?40:0),AC.currentTime,.05);if(st)st.textContent=`· horgonyfa ${Math.round(dd/20)} m · húzás`;
+      if((GT.brake||GT.hand)&&GT.force>50){GT.snapT+=dt;GT.warnTxt='⚠ Fékezve csörlőzöl – engedd ki a féket, mert elszakad a kötél!';if(GT.snapT>1.8){GT.hook=null;GT.pull=0;gtWinchSnd(false);GT.shake=.4;toast('💥 Elszakadt a csörlőkötél! Akaszd újra, és ne fékezz húzás közben');if(SOUND&&AC){snare(AC.currentTime,.5);boom(AC.currentTime,.4,120)}gtWinchUi();return}}else GT.snapT=Math.max(0,GT.snapT-dt)}
+    else{gtWinchSnd(false);if(st)st.textContent=`· horgonyfa ${Math.round(dd/20)} m · felakasztva`}return}
   const tr=GT.hook.t,T=GT.t;const wp=gtWinchPt();const dist=Math.hypot(tr.x-tr.r*.4-wp.x,(gtG(tr.x)-tr.r)-wp.y);if(dist>200){GT.hook=null;toast('A kötél nem ér el – akaszd újra közelebbről');gtWinchUi();return}
   if(GT.pull){gtWinchSnd(true);const F=GT.force;if(GT.wsnd)GT.wsnd.o.frequency.setTargetAtTime(140+F*1.6-(F<tr.need?60:0),AC.currentTime,.05);
     if(F>=tr.need){tr.prog=Math.min(1,tr.prog+(.1+(F-tr.need)/100*.7)*dt);if(st)st.textContent=`· húzás ${Math.round(tr.prog*100)}%`;if(Math.random()<.3)GT.fx.push({x:tr.x,y:gtG(tr.x)-4,vx:(Math.random()-.5)*60,vy:-40-Math.random()*40,t:.5,r:2+Math.random()*2,c:'rgba(110,90,60,A)'})}
@@ -726,14 +852,14 @@ function gtWinch(dt){const n=gtNearTree();const w=$('#gtWinch');if(w)w.hidden=!(
     if(F>tr.need+30){GT.snapT+=dt;GT.warnTxt='⚠ Túl nagy erő – szakadhat a kötél!';if(GT.snapT>1.4){GT.hook=null;GT.pull=0;gtWinchSnd(false);GT.shake=.4;toast('💥 Elszakadt a csörlőkötél! Akaszd újra kisebb erővel');if(SOUND&&AC){snare(AC.currentTime,.5);boom(AC.currentTime,.4,120)}gtWinchUi();return}}else GT.snapT=Math.max(0,GT.snapT-dt)
     if(tr.prog>=1){tr.done=1;GT.hook=null;GT.pull=0;gtWinchSnd(false);toast(tr.k==='roncs'?'✅ A roncs félrehúzva – szabad az út':'✅ A fa félrehúzva – szabad az út');gtWinchUi()}}
   else{gtWinchSnd(false);if(st)st.textContent=`· felakasztva · ${Math.round(tr.prog*100)}%`}}
-function gtFuel(dt){const rpmF=Math.max(0,Math.min(1,(gRpm(GT.kmh||0,GT.gas)-750)/2100));const load=GT.gas?Math.min(1,.45+rpmF*.4+(GT.wh.some(w=>w.slip>.2)?.15:0)):0;GT.lph=GT.fuel>0?3+load*67+(GT.pull?6:0):0;GT.fuel=Math.max(0,GT.fuel-GT.lph/3600*dt*24);if(GT.fuel<8&&!GT.lowMsg){GT.lowMsg=1;toast('⛽ Kevés az üzemanyag – irány a töltőállomás!')}
+function gtFuel(dt){const rpmF=Math.max(0,Math.min(1,(gRpm(GT.lo?Math.min(40,GT.kmh||0)*2.9:GT.kmh||0,GT.gas)-750)/2100));const load=GT.gas?Math.min(1,.45+rpmF*.4+(GT.wh.some(w=>w.slip>.2)?.15:0)):0;GT.lph=GT.fuel>0&&!(GT.stall>0)?3+load*67+(GT.pull?6:0):0;GT.fuel=Math.max(0,GT.fuel-GT.lph/3600*dt*24);if(GT.fuel<8&&!GT.lowMsg){GT.lowMsg=1;toast('⛽ Kevés az üzemanyag – irány a töltőállomás!')}
   if(GT.fuel<=0&&!GT.dryMsg){GT.dryMsg=1;toast('⛽ Kifogyott az üzemanyag – a motor leállt!');gEngStop(GT)}
   const fs=gtFuelSt();const near=fs&&Math.abs(GT.t.x-fs.x)<70&&GT.kmh<2;const rb=$('#gtRefuel');if(rb)rb.hidden=!near;
   if(near&&GT.fueling&&GT.fuel<GT.fuelCap){GT.fuel=Math.min(GT.fuelCap,GT.fuel+dt*9);GT.lowMsg=0;GT.fuelT-=dt;if(GT.fuelT<=0&&SOUND&&AC){GT.fuelT=.25;snare(AC.currentTime,.03)}if(GT.fuel>0&&!GT.snd&&GT.dryMsg){GT.dryMsg=0;GT.dry=0;gEngStart(GT)}}}
 function gtFuelSt(){const T=GT.t;let best=null;for(const x of [GT.fuelX,GT.len-90]){if(x==null)continue;if(!best||Math.abs(T.x-x)<Math.abs(T.x-best.x))best={x}}return best}
 function gtFuelHud(){const f=$('#gtFuel');if(!f)return;const v=GT.fuel.toFixed(1).replace('.',',')+' l';if(f.textContent!==v)f.textContent=v;const b=$('#gtFuelB');if(b){const p=Math.min(100,GT.fuel/GT.fuelCap*100);b.style.width=Math.max(GT.fuel>0?2:0,p)+'%';b.style.background=GT.fuel<10?'#ff3b30':GT.fuel<40?'#f4c04e':'#2ecc40'}
   const r=$('#gtRes');if(r)r.hidden=!(GT.fuel<10);const l=$('#gtLph');if(l)l.textContent=`${Math.round(GT.lph)} l/h · ${GT.fuelCap} l tartály`}
-function gtUnstick(){const T=GT.t;T.y-=34;T.vy=-60;T.vx=Math.max(T.vx,40);T.a*=.25;T.w=0;GT.time+=10;GT.stuckT=0;toast('⟲ Kiszabadítva (+10 s)');const u=$('#gtUnstick');if(u)u.hidden=true}
+function gtUnstick(){const T=GT.t;T.y-=34;T.vy=-60;T.vx=Math.max(T.vx,40);T.a*=.25;T.w=0;GT.time+=10;GT.stuckT=0;GT.st.unstick++;for(const w of GT.wh)w.sink=0;toast('⟲ Kiszabadítva (+10 s)');const u=$('#gtUnstick');if(u)u.hidden=true}
 function gtLights(c,now){const T=GT.t,ca=Math.cos(T.a),sa=Math.sin(T.a);const P=(lx,ly)=>({x:T.x+lx*ca-ly*sa,y:T.y+lx*sa+ly*ca});
   const h=P(61,-19);c.save();c.globalCompositeOperation='lighter';const g=c.createRadialGradient(h.x,h.y,2,h.x+ca*120,h.y+sa*120,150);g.addColorStop(0,'rgba(255,245,200,.35)');g.addColorStop(1,'rgba(255,245,200,0)');c.fillStyle=g;c.beginPath();c.moveTo(h.x,h.y-3);const e1=P(61+190,-19-38),e2=P(61+190,-19+30);c.lineTo(e1.x,e1.y);c.lineTo(e2.x,e2.y);c.closePath();c.fill();c.restore();
   c.fillStyle='#fff6c8';c.beginPath();c.arc(h.x,h.y,2.6,0,7);c.fill();
@@ -743,8 +869,8 @@ function gtLights(c,now){const T=GT.t,ca=Math.cos(T.a),sa=Math.sin(T.a);const P=
       c.save();c.globalCompositeOperation='lighter';const p=on?L:R;const g=c.createRadialGradient(p.x,p.y,0,p.x,p.y,9);g.addColorStop(0,on?'rgba(70,150,255,.7)':'rgba(255,60,60,.65)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(p.x-9,p.y-9,18,18);c.restore()}}
   const r=P(-72,-12);const brk=(GT.brake&&!GT.revMode||GT.hand)&&GT.run;c.fillStyle=brk?'#ff2a1a':'#8a1a14';c.fillRect(r.x-1.5,r.y-3,3,6);
   if(brk){c.save();c.globalCompositeOperation='lighter';const gg=c.createRadialGradient(r.x,r.y,0,r.x,r.y,22);gg.addColorStop(0,'rgba(255,40,20,.85)');gg.addColorStop(1,'rgba(255,40,20,0)');c.fillStyle=gg;c.fillRect(r.x-22,r.y-22,44,44);c.restore()}}
-function gtCable(c){if(!GT.hook)return;const tr=GT.hook.t;const a=gtWinchPt();const s=gtTreeShift(tr);const bx=tr.x-tr.r*.4+s.dx,by=gtG(tr.x)-tr.r+s.dy;const tens=GT.pull?1:0;
-  c.strokeStyle='#2b2b2b';c.lineWidth=1.6;c.beginPath();c.moveTo(a.x,a.y);const mx=(a.x+bx)/2,my=(a.y+by)/2+(tens?2:14);c.quadraticCurveTo(mx,my,bx,by);c.stroke();
+function gtCable(c){if(!GT.hook)return;const a=gtWinchPt();let bx,by;if(GT.hook.a){const an=GT.hook.a;bx=an.x-4;by=gtG(an.x)-30;c.strokeStyle='#c9a227';c.lineWidth=3;c.beginPath();c.moveTo(an.x-6,by-3);c.lineTo(an.x+6,by-3);c.stroke()}else{const tr=GT.hook.t;const s=gtTreeShift(tr);bx=tr.x-tr.r*.4+s.dx;by=gtG(tr.x)-tr.r+s.dy}const tens=GT.pull?1:0;
+  c.strokeStyle='#2b2b2b';c.lineWidth=1.6;c.beginPath();c.moveTo(a.x,a.y);const mx=(a.x+bx)/2,my=(a.y+by)/2+(tens?2:Math.min(30,Math.abs(bx-a.x)*.06+10));c.quadraticCurveTo(mx,my,bx,by);c.stroke();
   c.fillStyle='#666';c.beginPath();c.arc(a.x,a.y,3.2,0,7);c.fill();c.strokeStyle='#999';c.lineWidth=1.4;c.beginPath();c.arc(bx,by+3,3,Math.PI*.1,Math.PI*1.4);c.stroke()}
 function gtDrawWreckCar(c,t,gy,s,x0,x1){c.save();c.globalAlpha=s.al;c.translate(t.x+s.dx,gy+s.dy);c.scale(s.sc,s.sc);c.rotate((t.done?1:t.prog)*-.25);
   c.fillStyle='#2b2420';c.beginPath();c.moveTo(-34,0);c.lineTo(-33,-15);c.lineTo(-20,-18);c.lineTo(-10,-31);c.lineTo(14,-31);c.lineTo(24,-18);c.lineTo(36,-15);c.lineTo(36,0);c.closePath();c.fill();
@@ -754,6 +880,10 @@ function gtDrawWreckCar(c,t,gy,s,x0,x1){c.save();c.globalAlpha=s.al;c.translate(
   c.restore();if(!t.done&&t.x>x0&&t.x<x1){c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('RONCS AUTÓ',t.x,gy-46)}}
 function gtTreeShift(t){const p=t.done?1:t.prog;return {dx:p*18,dy:-p*34,sc:1-p*.45,al:1-p*.55}}
 function gtDrawScenery(c,x0,x1,now){
+  // horgonyfák
+  if(GT.anchors)for(const a of GT.anchors){if(a.x<x0-90||a.x>x1+90)continue;const gy=gtG(a.x);c.fillStyle='#3b2a18';c.fillRect(a.x-5,gy-150,10,152);c.fillStyle='#2f2113';c.fillRect(a.x-2,gy-150,3,150);
+    c.fillStyle='#2e4a1c';for(let i=0;i<7;i++){const ang=i/7*Math.PI*2+a.seed;c.beginPath();c.arc(a.x+Math.cos(ang)*26,gy-160+Math.sin(ang)*20,22+((i*5+a.seed*3)%7),0,7);c.fill()}c.fillStyle='#3e5f26';c.beginPath();c.arc(a.x-8,gy-170,20,0,7);c.fill();
+    const near=GT.run&&!GT.hook&&GT.stuckT>1.2&&gtNearAnchor()?.a===a;if(near){c.fillStyle=`rgba(255,224,138,${.7+.3*Math.sin(now/120)})`;c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('🌲 HORGONYFA – CSÖRLŐ',a.x,gy-200)}}
   // kidőlt fák
   for(const t of GT.trees){if(t.x<x0-120||t.x>x1+120)continue;const gy=gtG(t.x);const s=gtTreeShift(t);if(t.k==='roncs'){gtDrawWreckCar(c,t,gy,s,x0,x1);continue}c.save();c.globalAlpha=s.al;c.translate(t.x+s.dx,gy-t.r+s.dy);c.scale(s.sc,s.sc);c.rotate((t.done?1:t.prog)*.5);
     c.fillStyle='#3e5a22';for(let i=0;i<6;i++){const a=-Math.PI/2+(i-2.5)*.42;c.beginPath();c.arc(Math.cos(a)*(t.r+18)+Math.sin(t.seed+i)*6,Math.sin(a)*(t.r+14)-6,13+((i*7+t.seed)%5),0,7);c.fill()}
@@ -772,9 +902,12 @@ function gtDrawScenery(c,x0,x1,now){
     c.fillStyle='#c9a227';c.fillRect(bx-98,y-42,16,42);c.fillStyle='#222';c.fillRect(bx-95,y-36,10,10);c.fillStyle='#d33';c.fillRect(bx-104,y-48,28,6);c.fillStyle='#fff';c.font='bold 8px sans-serif';c.fillText('⛽',bx-90,y-50);
     c.fillStyle='#ddd';c.fillRect(bx-3,y-80,3,80);c.fillStyle='#3a6e2e';c.fillRect(bx,y-80,26,8);c.fillStyle='#fff';c.fillRect(bx,y-72,26,8);c.fillStyle='#c0392b';c.fillRect(bx,y-64,26,8);
     c.fillStyle='#fff';c.font='bold 11px sans-serif';c.fillText('CÉL',bx+13,y-86)}}
-function gtEnd(ok,why){if(GT.done)return;gtWinchSnd(false);gtSirenSnd(false);GT.siren=false;GT.done=true;GT.run=false;rockStop(2);GT.gas=0;GT.brake=0;gEngStop(GT);const ms=Math.round(GT.time*1000);let r={best:0,rec:false};if(ok){r=gSave('gtBest',ms,'medve-gt-best',true);if(SOUND&&ac()){const t=AC.currentTime;[523,659,784,1047].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.05,t+i*.12);g.gain.exponentialRampToValueAtTime(.001,t+i*.12+.3);o.connect(g).connect(MASTER);o.start(t+i*.12);o.stop(t+i*.12+.32)})}}else{sndThud()}
+function gtEnd(ok,why){if(GT.done)return;gtWinchSnd(false);gtSirenSnd(false);GT.siren=false;GT.done=true;GT.run=false;rockStop(2);GT.gas=0;GT.brake=0;gEngStop(GT);const ms=Math.round(GT.time*1000);let r={best:0,rec:false};if(ok){if(GT.trk.rank)r=gSave('gtBest',ms,'medve-gt-best',true);else{const k=gtBestKey(GT_TRK),b=gtBestOf(GT_TRK);r={best:!b||ms<b?ms:b,rec:!b||ms<b};if(r.rec)try{localStorage.setItem(k,String(ms))}catch(e){}}
+    if(r.rec||!GT.ghost){try{localStorage.setItem(gtGhKey(),JSON.stringify({v:1,ms,d:GT.gh.rec}))}catch(e){}}if(SOUND&&ac()){const t=AC.currentTime;[523,659,784,1047].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.05,t+i*.12);g.gain.exponentialRampToValueAtTime(.001,t+i*.12+.3);o.connect(g).connect(MASTER);o.start(t+i*.12);o.stop(t+i*.12+.32)})}}else{sndThud()}
   const bE=$('#gtBest');if(bE&&r.best)bE.textContent=(r.best/1000).toFixed(1);
-  setTimeout(()=>{const o=$('#gtOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>${ok?'🏁 Célba értél!':'💥 '+esc(why)}</h3><p>${ok?`Idő: <b class="hred">${(ms/1000).toFixed(1)} s</b><br>Abroncs állapota: <b>${Math.round(100-GT.dmg)}%</b><br>Üzemanyag a célban: <b>${GT.fuel.toFixed(1).replace('.',',')} l</b><br>${r.rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+(r.best/1000).toFixed(1)+' s</b>'}`:`Megtett táv: <b>${Math.max(0,Math.round(GT.t.x/20))} m</b>`}</p><button class="btn pri" id="gtAgain">↻ Újra</button> <button class="btn line" data-rank="terep">🏆 Rekordjaim</button> <button class="btn line" id="gtQuit">Kilépés</button>${gBoard('gtBest',true,v=>(v/1000).toFixed(1)+' s')}`;$('#gtAgain').onclick=gtStart;$('#gtQuit').onclick=()=>gClose(GT)},900)}
+  setTimeout(()=>{const o=$('#gtOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>${ok?'🏁 Célba értél!':'💥 '+esc(why)}</h3><p>${esc(GT.trk.n)}<br>${ok?`Idő: <b class="hred">${(ms/1000).toFixed(1)} s</b>${GT.st.unstick?` (benne ${GT.st.unstick}× kiszabadítás, +${GT.st.unstick*10} s)`:''}<br>${r.rec?'<b class="hrec">🏆 ÚJ REKORD!</b>'+(GT.trk.rank?'':' <small>(ezen a pályán)</small>'):'Rekord: <b>'+(r.best/1000).toFixed(1)+' s</b>'}<br>`:`Megtett táv: <b>${Math.max(0,Math.round(GT.t.x/20))} m</b><br>`}${gtReport(ok)}</p><button class="btn pri" id="gtAgain">↻ Újra</button> <button class="btn line" id="gtPick">🗺 Pálya</button> <button class="btn line" data-rank="terep">🏆 Rekordjaim</button> <button class="btn line" id="gtQuit">Kilépés</button>${gBoard('gtBest',true,v=>(v/1000).toFixed(1)+' s')}`;$('#gtAgain').onclick=gtStart;$('#gtPick').onclick=()=>{o.hidden=true;const tk=$('#gtTrk');if(tk)tk.innerHTML=gtTrkHtml();const st=$('#gtStart');if(st){st.hidden=false;st.scrollTop=0}};$('#gtQuit').onclick=()=>gClose(GT)},900)}
+function gtReport(ok){const S=GT.st;let stars=3;if(S.unstick)stars--;if(GT.sus>50||GT.dmg>60||S.stalls)stars--;if(!ok)stars=0;
+  return `<span class="gtrep">${ok?'<b class="gtstars">'+'★'.repeat(Math.max(1,stars))+'☆'.repeat(3-Math.max(1,stars))+'</b> terepvezetői értékelés<br>':''}Abroncs: <b>${Math.round(Math.max(0,100-GT.dmg))}%</b> · Futómű: <b>${Math.round(Math.max(0,100-GT.sus))}%</b>${GT.engDmg?` · Motor: <b>${Math.round(Math.max(0,100-GT.engDmg))}%</b>`:''}<br>Max. dőlés: <b>${Math.round(S.maxTilt)}°</b> · Üzemanyag: <b>${GT.fuel.toFixed(1).replace('.',',')} l</b><br>Önmentés csörlővel: <b>${S.selfRec}</b> · Kiszabadítás: <b>${S.unstick}</b>${S.stalls?` · Vízütés: <b>${S.stalls}</b>`:''}<br>Difizárral: <b>${Math.round(S.lockT)} s</b>${S.lo?` · 4L-re váltás: <b>${S.lo}×</b>`:''}</span>`}
 function sndFlat(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;boom(t,.6,90);snare(t,.5);const n=a.createBufferSource();n.buffer=NOISE;n.loop=true;const h=a.createBiquadFilter();h.type='highpass';h.frequency.value=2200;const g=a.createGain();g.gain.setValueAtTime(.22,t);g.gain.exponentialRampToValueAtTime(.001,t+1.6);n.connect(h).connect(g).connect(MASTER);n.start(t);n.stop(t+1.7)}
 function sndRpg(){if(!SOUND||!ac())return;const a=AC,t=a.currentTime;boom(t,.5,70);const n=a.createBufferSource();n.buffer=NOISE;n.loop=true;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.setValueAtTime(400,t);f.frequency.exponentialRampToValueAtTime(2600,t+.9);const g=a.createGain();g.gain.setValueAtTime(.32,t);g.gain.exponentialRampToValueAtTime(.001,t+1.1);n.connect(f).connect(g).connect(MASTER);n.start(t);n.stop(t+1.15)}
 function gtDrawTerr(c,e,now){c.save();c.translate(e.x,e.y);c.fillStyle='#2a2620';c.fillRect(-4,-24,8,15);c.beginPath();c.arc(0,-28,5,0,7);c.fill();c.fillStyle='#4a3a2a';c.fillRect(-6,-34,12,4);c.fillStyle='#2a2620';c.fillRect(-5,-9,4,9);c.fillRect(1,-9,4,9);
@@ -2922,7 +3055,7 @@ function arcRender(){const m=document.getElementById('main');if(ARC.more==='auth
    <div class="medcap"><b>DICSŐSÉGFAL</b><span>${FB_ON&&UID?'<i class="lvdot">ÉLŐ</i> ranglista':'Rekordjaim'} · mind a 8 játék · koppints a kitüntetésre</span></div>
    ${FB_ON&&UID?`<div class="lvgrid" id="arcLive">${liveHTML()}</div>`:''}</div>
   ${FB_ON&&UID?`<button type="button" class="rkbtn chbtn" id="chatOpen">${chatBtnHTML()}</button>`:''}
-  <div class="arc-low"><div class="arc-hero"><div class="arc-hrow"><b>8 játék</b><span class="arc-ver">v${APP_VER}</span></div><span>Medvés gránátfogás · PzH 2000 drónüldözés · Gidrán terepbajnokság · Gidrán konvoj · Rába drónos toronyépítés · SERE túlélés és kitérés · Shot&amp;Run tüzérpárbaj</span></div></div>
+  <div class="arc-low"><div class="arc-hero"><div class="arc-hrow"><b>8 játék</b><span class="arc-ver">v${APP_VER}</span></div><span>Medvés gránátfogás · PzH 2000 drónüldözés · Gidrán 4×4 terepbajnokság · Gidrán konvoj · Rába drónos toronyépítés · SERE túlélés és kitérés · Shot&amp;Run tüzérpárbaj</span></div></div>
   ${FB_ON&&UID?`<div class="panel arc-p authbox" id="authBox">${authInner()}</div>`:''}
   ${shareHTML()}
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>

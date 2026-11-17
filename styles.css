@@ -1761,3 +1761,22 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .waltap{flex:none;width:92px;height:92px;border-radius:50%;border:4px solid #8a5a06;background:radial-gradient(circle at 35% 30%,#fff3a8,#ffd23a 45%,#c98a12);font-size:40px;line-height:1;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;box-shadow:0 6px 0 #6b4504,0 10px 18px rgba(0,0,0,.45)}
 .waltap small{display:block;font:900 9px var(--f-body,system-ui);letter-spacing:.06em;color:#4a2f02;margin-top:2px}.waltap:active{transform:translateY(4px);box-shadow:0 2px 0 #6b4504,0 4px 8px rgba(0,0,0,.45)}
 .waltap.hit{animation:walhit .12s ease-out}@keyframes walhit{50%{transform:scale(.93) translateY(3px)}}
+
+/* ===== v4.43: Gidrán Terep – 4×4, pályaválasztó, futómű ===== */
+#harc .gtside{display:grid;grid-template-columns:repeat(2,62px);gap:6px;justify-items:end;align-items:start}
+#harc .gtside .gtgear{grid-column:1/-1;width:100%}
+#harc .gtgear.gL{color:#ffd23a}
+#harc .gths.gtrange[aria-pressed="true"]{background:#ffd23a;color:#111}
+#harc .gths.gtlock[aria-pressed="true"]{background:#ffb020;color:#111;box-shadow:3px 3px 0 #111,0 0 14px rgba(255,176,32,.7)}
+#harc .gths.gtlock.broke{background:#4a1a14;color:#ff8a7a;opacity:.8}
+#harc .gtgauge .dhp.gtsus{margin-top:3px;height:5px}
+#harc .gttrk{display:grid;gap:6px;margin:8px 0 10px;text-align:left}
+#harc .gttrk button{display:flex;flex-direction:column;gap:2px;width:100%;padding:8px 10px;border:2.5px solid #111;border-radius:12px;background:#2b3324;color:#f3ecd4;font:inherit;text-align:left;box-shadow:3px 3px 0 #111;cursor:pointer}
+#harc .gttrk button[aria-pressed="true"]{background:#c9a227;color:#111}
+#harc .gttrk b{font-size:14px;letter-spacing:.02em}#harc .gttrk b em{font-style:normal;font-size:9px;font-weight:900;background:#111;color:#ffd23a;border-radius:4px;padding:1px 5px;margin-left:4px;vertical-align:2px}
+#harc .gttrk small{font-size:11px;line-height:1.3;opacity:.9}#harc .gttrk i{font-style:normal;font-size:10.5px;font-weight:800;opacity:.85}
+#harc .gtrep{display:block;margin-top:6px;font-size:12.5px;line-height:1.55}
+#harc .gtstars{color:#ffd23a;font-size:22px;letter-spacing:.08em;-webkit-text-stroke:1px #111}
+@media (max-width:420px){#harc .gtside{grid-template-columns:repeat(2,56px)}#harc .gtside .gths{width:56px;height:50px}}
+#harc #gtWarn{display:none}
+#harc #gtWinch:not([hidden])~#gtUnstick{bottom:calc(236px + env(safe-area-inset-bottom,0px))}

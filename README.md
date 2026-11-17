@@ -1,9 +1,21 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.42.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.43.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.43.0:** **Gidrán Terep – valódi offroad élmény.**
+- **4×4 hajtáslánc:** új **4H / 4L** gomb (terepfokozat: 2,2-szeres nyomaték, max. 34 km/h, erős motorfék a lejtőn – csak állva váltható) és **DIFIZÁR**. A fizika kétlépcsős lett: előbb a rugózás és a kerekenkénti tapadási határ, aztán a hajtás elosztása. **Nyitott difivel** a gyengébben tapadó kerék szab határt – ha egy kerék a levegőbe emelkedik vagy tehermentesül (kereszttengelyes csavarodás bukkanókon, sziklán), elpörög, és megállsz; **zárt difivel** minden kerék a saját tapadásáig visz. A zár csak 15 km/h alatt kapcsolható, aszfalton/murván 30 km/h felett zárva feszül a hajtáslánc, és **eltörik** (gyengébb hajtás, a zár többé nem kapcsolható).
+- **Beásódás sárban, dagonyában, homokban:** a pörgő kerék kerekenként beássa magát (magas nyomással gyorsabban), nő a gördülési ellenállás, csökken a tapadás, a kerék láthatóan a sárba süllyed, és nyomvályút hagy. Kiút: kis gáz, **hintáztatás** (gáz–fék), vagy **önmentés csörlővel**.
+- **Horgonyfák és önmentő csörlő:** a nehéz szakaszok közepén és túlpartján álló fákhoz (max. 32 m) fakímélő hevederrel lehet csörlőzni – a csörlő a Gidránt húzza ki, időbüntetés nélkül (fékezve húzva elszakad a kötél). A régi **KISZABADÍTÁS** (+10 s) továbbra is megvan, de horgonyfa közelében csak később jelenik meg.
+- **Gázló:** 6–12 km/h-nál szép **orrhullám**; gyorsabban vizet nyel a motor (**vízütés**: leáll, újraindul, 34% motorkár – háromnál vége).
+- **Futómű-kár:** felütközés és kemény landolás rongálja (külön kék sáv az abroncs alatt); 100%-nál el kell vontatni a Gidránt.
+- **Műszer:** **dőlésmérő** (35° felett borulásveszély) és **4×4 kerékállapot** felülnézetből: terhelés, levegőbe emelt és kipörgő kerék, 4H/4L, nyitott/zárt difi, beásódás mértéke.
+- **Valósághű látvány:** alacsony nyomáson kidudorodó abroncs, sárba süllyedő kerék, nyomvályúk, sárfröccs a kamerán (az eső lemossa), rugóstagok.
+- **3 pálya:** **Bajnoki pálya** (változatlan nyomvonal, ranglistás), **Mocsaras erdő** (dagonya, mély gázló, bukkanók, 2 kidőlt fa, gyakori eső) és **Bakonyi sziklák** (kőfolyás, bukkanók, sziklamászás, extrém lejtő). Az új pályák rekordja a telefonon tárolódik.
+- **Rekord-szellem és részidők:** a legjobb menet áttetsző Gidránként fut veled, a szakaszhatárokon megjelenik a különbség (▼ zöld = gyorsabb). Új talajok: **Dagonya**, **Bukkanók**; okosabb elakadás-tippek (difizár / hintáztatás / 4L / nyomás).
+- **Eredmény:** csillagos terepvezetői értékelés, abroncs-, futómű- és motorállapot, max. dőlés, önmentések, kiszabadítások, vízütések, difizáras idő.
 
 **v4.42.0:** **Zseton – egyetlen pénznem, a fiókba mentve.**
 - **1 zseton = 1 játék.** A tárca forint helyett zsetonban számol (a főgombon és a Derby fejlécében is). Minden játék indítása 1 zseton; a Tüzér Derbybe a belépés ingyenes, ott futamonként **1–50 zsetont** lehet feltenni. Új játékos 10 zsetonnal indul.
