@@ -1,6 +1,6 @@
 # Tervezet: PzH 2000 Lóverseny („Tüzér Derby”)
 
-**Állapot:** brainstorming / tervezet – kód még nem készült hozzá.
+**Állapot:** a játék elkészült (4.40.0), a 4.41.0-ban pedig átalakult: csak fogadni lehet (nincs hajtás), a tét az „Összes pénzem” tárcából megy, és Gidrán meg Rába is indul. Az alábbi tervezet az eredeti elképzelést rögzíti; a tényleges működést a README 4.40–4.41-es bejegyzése írja le.
 **Készült:** 2026-11-16, a 4.39.1-es verzió mellé. Megvalósítva a 9. játék lenne (javasolt verzió: 4.40.0).
 
 ---

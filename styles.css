@@ -1732,9 +1732,25 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 #harc .lvres{width:min(380px,92vw)}#harc .lvres .hboard{margin-top:8px}#harc .lvres .hboard>div.me{color:#ffd23a;font-weight:800}#harc .lvres .hboard>div:not(.lbl){align-items:center;gap:8px;font-size:12.5px}#harc .lvres .hboard span{text-align:left;min-width:0}#harc .lvres .hboard b{white-space:nowrap}
 #harc .lvres .lvno{width:18px;height:18px;font-size:11px;border-radius:4px;margin-right:6px;vertical-align:middle}#harc .lvbets .ok b{color:#7dff8a}#harc .lvbets .no b{color:#ff8a7a;font-weight:600}
 #harc .lvnet{margin:12px 0;font-size:15px}#harc .lvnet b{font-size:19px}#harc .lvnet.pos b{color:#7dff8a}#harc .lvnet.neg b{color:#ff8a7a}
-#harc .lvctl{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:10;pointer-events:none}#harc .lvctl[hidden]{display:none}#harc .lvctl>*{pointer-events:auto}
-#harc .lvctl .dpedal.gas{right:16px}
-#harc .lvlanes{position:absolute;left:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
-#harc .lvlanes button,#harc .lvab{border:0;border-radius:14px;font:inherit;font-weight:900;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;box-shadow:0 6px 14px rgba(0,0,0,.45),inset 0 -4px 0 rgba(0,0,0,.3)}
+#harc .lvwal{border:0;border-radius:999px;padding:5px 12px;background:rgba(0,0,0,.35);color:#fff;font:inherit;font-weight:800;font-size:13px;box-shadow:inset 0 0 0 1.5px rgba(255,210,58,.6);cursor:pointer}#harc .lvwal b{color:#ffe08a;font-size:15px}
+#harc .lvfast{position:absolute;right:10px;top:42px;z-index:10;border:0;border-radius:999px;padding:7px 12px;background:rgba(0,0,0,.55);color:#fff;font:inherit;font-weight:900;font-size:12px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4);cursor:pointer}#harc .lvfast[hidden]{display:none}#harc .lvfast.on{background:#ffd23a;color:#111}
+#harc .lvwalrow{font-size:15px;margin:0 0 12px}#harc .lvwalrow b{color:#ffe08a;font-size:19px}
+#harc .lvty{font-style:normal;font-weight:900;font-size:9px;padding:1px 5px;border-radius:4px;background:#4c503c;color:#fff;margin-right:3px}#harc .lvty.tG{background:#8a6a2a}#harc .lvty.tR{background:#2f5f7a}
+#harc .lvstk b.lvstkv{min-width:86px;text-align:center;font-size:18px;color:#ffe08a}#harc .lvstk em{font-style:normal;font-size:11px;opacity:.8;margin-left:auto}#harc .lvstk button[data-stk]{width:40px;font-size:20px;line-height:1}#harc .lvstk span{margin-right:0}
+#harc .lvres .hboard small{opacity:.6;font-size:10px}
 #harc .lvlanes button{width:76px;height:44px;font-size:18px;line-height:1;background:linear-gradient(160deg,#3a5a8a,#1c2f4a)}#harc .lvlanes button small{display:block;font-size:8.5px;opacity:.85;margin-top:2px}#harc .lvlanes button:active{transform:scale(.94)}
 #harc .lvab{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(26px + env(safe-area-inset-bottom,0px));width:96px;height:64px;font-size:10.5px;letter-spacing:.03em;background:linear-gradient(160deg,#ff8a1e,#a8320a)}#harc .lvab b{display:block;font-size:20px;font-family:var(--f-display);font-weight:400}#harc .lvab:active{transform:translateX(-50%) scale(.94)}
+
+/* ===== Összes pénzem ===== */
+.walb{display:flex;align-items:center;gap:8px;width:100%;flex:0 0 auto;padding:6px 12px;border:3px solid #111;border-radius:12px;background:linear-gradient(100deg,#ffd23a,#f0a51a);color:#111;box-shadow:4px 4px 0 #111;transform:skewX(-4deg);font:inherit;cursor:pointer}
+.walb i{font-style:normal;font-size:20px}.walb span{font:400 15px var(--f-comic,var(--f-display));letter-spacing:.08em}.walb b{margin-left:auto;font:400 22px var(--f-comic,var(--f-display));letter-spacing:.03em;white-space:nowrap}
+#walov{position:fixed;inset:0;z-index:210;background:rgba(10,12,8,.74);display:flex;align-items:center;justify-content:center;padding:14px;touch-action:auto}#walov[hidden]{display:none}
+.walbox{width:min(420px,100%);max-height:calc(100% - 8px);overflow-y:auto;background:#14241a;color:#fff;border:3px solid #ffd23a;border-radius:20px;padding:14px 16px 16px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.walhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.walhd b{font:400 24px var(--f-display);letter-spacing:.04em;color:#ffd23a}
+.walx{border:0;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:17px;cursor:pointer}
+.walbig{text-align:center;background:rgba(255,210,58,.12);border-radius:14px;padding:10px;margin-bottom:10px}.walbig span{display:block;font-size:10px;font-weight:800;letter-spacing:.14em;opacity:.8}.walbig b{font:400 38px var(--f-display);color:#ffe08a;letter-spacing:.02em}
+.walsec{background:rgba(255,255,255,.06);border-radius:12px;padding:10px 12px;margin-bottom:8px}.walsec h4{margin:0 0 4px;font-size:14px;color:#ffe08a}.walsec p{margin:0 0 8px;font-size:12.5px;line-height:1.4;opacity:.95}.walsec small{display:block;font-size:11px;opacity:.8}
+.walprog{height:8px;border-radius:5px;background:rgba(255,255,255,.18);overflow:hidden;margin-bottom:5px}.walprog i{display:block;height:100%;background:#7dff8a}
+.walbtns{display:flex;gap:6px;margin-bottom:6px}.walbtns button{flex:1;border:0;border-radius:10px;padding:7px 2px;background:#ffd23a;color:#111;font:inherit;cursor:pointer}.walbtns button b{display:block;font-size:15px}.walbtns button small{font-size:10.5px;font-weight:800;opacity:1}.walbtns button:disabled{opacity:.35;cursor:not-allowed}
+.walgo{width:100%;min-height:44px;font-size:17px}
+@media (orientation:landscape) and (max-height:560px){.deck .walb{grid-column:1;grid-row:2;align-self:start;transform:none;padding:4px 8px}.deck .walb span{display:none}.deck .walb b{font-size:18px}.deckdots{align-self:end!important}}

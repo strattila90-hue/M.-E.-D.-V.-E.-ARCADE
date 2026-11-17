@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.40.0',APP_DATE='2026.11.16.';
+const APP_VER='4.41.0',APP_DATE='2026.11.16.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -372,12 +372,51 @@ const IC_P={play:'<path d="M7 4v16l13-8z"/>',medal:'<path d="M7.5 2h9l-2.5 6.5h-
  star:'<path d="M12 1.8l3 6.4 7 .8-5.2 4.8 1.5 6.9L12 17.2l-6.3 3.5 1.5-6.9L2 9l7-.8z"/>'};
 const ic=(n,cls)=>`<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="#111" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">${IC_P[n]||''}</svg>`;
 // a kezdőlap játékválasztója: egy képernyős, oldalra csúsztatható nagy csempék (Shot&Run az első)
-const DECK_G=[['lovi','TÜZÉR DERBY','PzH 2000 lóverseny · fogadás','linear-gradient(170deg,#3fa34d,#14401f 55%,#07160b)','#ffd23a','p',1],
+const DECK_G=[['lovi','TÜZÉR DERBY','Fogadóiroda · PzH, Gidrán, Rába','linear-gradient(170deg,#3fa34d,#14401f 55%,#07160b)','#ffd23a','p',1],
   ['shotrun','SHOT&amp;RUN','PzH 2000 tüzérpárbaj · gép vagy barát ellen','linear-gradient(200deg,#7a2a8a,#2a0b3a 55%,#0b0414)','#ff7a1e','sr',1],
   ['kassza','TÜZÉR KASSZA','Tap-tap pénzcsináló · ütegkassza','linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402)','#2f7a2f','k',1],
   ...ANI_G.map(([g,t,sub,bg,ac,ik,nw])=>[g,t.replace(/<br>/g,' '),esc(sub),bg,ac,ik,nw])];
 const DECK={i:0,raf:0},ART={url:{},busy:false,img:{}};let TK_NOTE_URL=null;
 function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteCv(6).toDataURL());return k==='b'?BEAR_SPRITE:k==='p'||k==='sr'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD}
+/* ===== ÖSSZES PÉNZEM: közös tárca (Ft). Bevétel: minden aktívan játszott perc 100 Ft (bármelyik játékban, a Tüzér Derby kivételével),
+   és a Tüzér Kassza zsebéből naponta legfeljebb 10 000 Ft vehető ki. Elkölteni a Tüzér Derbyn lehet (egy futam legalább 100 Ft).
+   Csak a telefonon tárolódik: a szerverre nem megy fel, a ranglistákat nem érinti. ===== */
+const WAL_KEY='medve-wal1',WAL_MIN=100,WAL_DAYCAP=10000,WAL={};
+function walLoad(){let s=null;try{s=JSON.parse(localStorage.getItem(WAL_KEY)||'null')}catch(e){}if(!s||typeof s!=='object')s={ft:1000};// új játékos: 1 000 Ft kezdőpénz
+  const n=k=>{const x=Number(s[k]);return Number.isFinite(x)&&x>=0?x:0};WAL.ft=Math.floor(n('ft'));WAL.act=Math.min(59,n('act'));WAL.tot=n('tot');WAL.wd=s.wd&&typeof s.wd==='object'?{d:String(s.wd.d||''),v:Number(s.wd.v)||0}:{d:'',v:0}}
+function walSave(){try{localStorage.setItem(WAL_KEY,JSON.stringify({ft:WAL.ft,act:WAL.act,tot:WAL.tot,wd:WAL.wd}))}catch(e){}}
+function walShow(){document.querySelectorAll('[data-walft]').forEach(e=>{e.textContent=n0(WAL.ft)+' Ft'})}
+// d Ft-tal módosítja és visszaadja az egyenleget
+function walFt(d){if(WAL.ft===undefined)walLoad();if(d&&Number.isFinite(d)){WAL.ft=Math.max(0,Math.floor(WAL.ft+d));walSave();walShow();if(!$('#walov')?.hidden)walFill()}return WAL.ft}
+// aktív játékidő: nyitott játék, látható ablak, nincs szünet, és az utolsó 15 mp-ben volt érintés/billentyű; a Derby (fogadás, nézés) nem számít
+let WAL_IN=0;for(const n of ['pointerdown','pointermove','keydown','touchstart'])addEventListener(n,()=>{WAL_IN=Date.now()},{passive:true,capture:true});
+setInterval(()=>{const h=document.getElementById('harc');if(!h||h.hidden||document.hidden||GP||h.classList.contains('lv')||Date.now()-WAL_IN>15000)return;if(WAL.ft===undefined)walLoad();
+  if(++WAL.act>=60){WAL.act=0;WAL.tot+=WAL_MIN;walFt(WAL_MIN);toast('💰 +100 Ft – 1 perc aktív játék')}else if(WAL.act%10===0)walSave()},1000);
+// Kassza-kivét: a zseb értéke a nagyságrendjével (nem az összegével) arányos – 1 kvadrillió Ft (1e24) ér 10 000 Ft-ot, 1 milliárd kb. 2 850 Ft-ot.
+// A kivett rész a zseb ugyanekkora hányadát viszi el; naponta (magyar idő, szerveróra) összesen legfeljebb 10 000 Ft vehető ki.
+const walKasVal=p=>p>=1000?Math.min(WAL_DAYCAP,Math.floor(WAL_DAYCAP*Math.log10(p/1000)/21)):0;
+function walDayLeft(){if(!CLK.ok)return -1;return WAL.wd.d===budDay()?Math.max(0,WAL_DAYCAP-WAL.wd.v):WAL_DAYCAP}
+const walTakeFt=(p,pct,left)=>Math.max(0,Math.min(left,Math.floor(walKasVal(p)*pct/100/10)*10));
+function walTake(pct){const left=walDayLeft();if(left<0){toast('A kivéthez pontos idő kell – kapcsold be a netet.');clkSync();return}
+  const p=tkWallet(0),V=walKasVal(p),ft=walTakeFt(p,pct,left);if(ft<10){toast(left<10?'A mai 10 000 Ft-os keretet már kivetted.':'Ehhez kevés a pénz a Kassza zsebében.');return}
+  tkWallet(-p*Math.min(1,ft/V));const d=budDay();WAL.wd=WAL.wd.d===d?{d,v:WAL.wd.v+ft}:{d,v:ft};walFt(ft);toast(`💰 +${n0(ft)} Ft a Kasszából`)}
+function walFill(){const o=$('#walov');if(!o||o.hidden)return;if(WAL.ft===undefined)walLoad();const p=tkWallet(0),V=walKasVal(p),left=walDayLeft();
+  o.querySelector('.walbody').innerHTML=`<div class="walbig"><span>EGYENLEG</span><b data-walft>${n0(WAL.ft)} Ft</b></div>
+   <div class="walsec"><h4>⏱ Játékidőért</h4><p>Minden <b>aktívan játszott perc 100 Ft</b>, bármelyik játékban. A szünet, a tétlen várakozás és a Tüzér Derby nem számít.</p>
+    <div class="walprog"><i data-st="width:${Math.round(WAL.act/60*100)}%"></i></div><small>A következő 100 Ft-ig még ${60-WAL.act} mp játék · eddig így szereztél: ${n0(WAL.tot)} Ft</small></div>
+   <div class="walsec"><h4>🏦 Kivét a Tüzér Kasszából</h4><p>A Kassza zsebedben <b>${tkFmt(p)} Ft</b> van; ez itt <b>${n0(V)} Ft</b>-ot ér (a nagyságrend számít, nem az összeg). Amennyit kiveszel, a zsebed ugyanakkora hányada megy el.</p>
+    <div class="walbtns">${[10,25,50,100].map(k=>{const ft=left<0?0:walTakeFt(p,k,left);return `<button type="button" data-waltake="${k}"${ft<10?' disabled':''}><b>${k===100?'Mind':k+'%'}</b><small>+${n0(ft)} Ft</small></button>`}).join('')}</div>
+    <small>${left<0?'A kivéthez pontos idő kell (net).':`Napi keret: 10 000 Ft · ma még ${n0(left)} Ft vehető ki.`}</small></div>
+   <div class="walsec"><h4>🏇 Mire költheted?</h4><p>A <b>Tüzér Derbyn</b> fogadhatsz belőle – egy futam legalább 100 Ft.</p><button type="button" class="cb c-gold walgo" data-walgo>${ic('play')}<span>Tüzér Derby</span></button></div>`}
+function walOpen(){if(WAL.ft===undefined)walLoad();let o=$('#walov');if(!o){o=document.createElement('div');o.id='walov';document.body.appendChild(o);
+    o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.walx')){walClose();return}const t=e.target.closest('[data-waltake]');if(t){walTake(+t.dataset.waltake);walFill();return}
+      if(e.target.closest('[data-walgo]')){walClose();if($('#harc').hidden)gameStart('lovi')}});
+    o.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true})}
+  o.innerHTML=`<div class="walbox" role="dialog" aria-label="Összes pénzem"><div class="walhd"><b>💰 Összes pénzem</b><button type="button" class="walx" aria-label="Bezárás">✕</button></div><div class="walbody"></div></div>`;
+  o.hidden=false;clkReady(()=>walFill());walFill();clearInterval(WAL.ui);WAL.ui=setInterval(walFill,5000)}
+function walClose(){const o=$('#walov');if(o){o.hidden=true;o.innerHTML=''}clearInterval(WAL.ui)}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wal]');if(!b)return;e.preventDefault();e.stopPropagation();walOpen()},true);
+function walHTML(){if(WAL.ft===undefined)walLoad();return `<button type="button" class="walb" data-wal aria-label="Összes pénzem"><i>💰</i><span>ÖSSZES PÉNZEM</span><b data-walft>${n0(WAL.ft)} Ft</b></button>`}
 function gamesHTML(){const n=DECK_G.length,dg=dailyGame(),i0=Math.min(DECK.i,n-1),nn=x=>String(x).padStart(2,'0');
   const tiles=DECK_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const u=ART.url[g];
     return `<button type="button" class="dtile${i===i0?' on':''}" data-game="${g}" data-i="${i}" aria-label="${t.replace(/&amp;/g,'&')} – ${sub}" data-st="--bg:${bg};--ac:${ac}">
@@ -386,6 +425,7 @@ function gamesHTML(){const n=DECK_G.length,dg=dailyGame(),i0=Math.min(DECK.i,n-1
       <div class="dtxt"><b>${t}</b><span>${sub}</span><em class="cb">${ic('play')}JÁTÉK</em></div></button>`}).join('');
   return `<section class="deck" id="deck"><div class="deckhd"><span class="cbanner">VÁLASSZ BEVETÉST!</span><i><b>${n} JÁTÉK</b><em id="deckN">${i0+1}/${n}</em></i></div>
     ${dailyHTML()}
+    ${walHTML()}
     <div class="deckwrap"><button type="button" class="deckar l cb" data-deck="-1" aria-label="Előző játék">${ic('left')}</button><div class="decktrack" id="deckT">${tiles}</div><button type="button" class="deckar r cb" data-deck="1" aria-label="Következő játék">${ic('right')}</button></div>
     <div class="deckdots" id="deckD">${DECK_G.map((x,i)=>`<button type="button" class="${i===i0?'on':''}" data-deckto="${i}" aria-label="${i+1}. játék"></button>`).join('')}</div>
     <p class="deckhint">${ic('left')} CSÚSZTASD OLDALRA A TÖBBI JÁTÉKHOZ ${ic('right')}</p>
@@ -3094,7 +3134,7 @@ function fbErr(e){const c=(e&&e.code)||'';return ({
 // a készüléken tárolt rekordok ahhoz tartoznak, aki utoljára itt be volt jelentkezve
 function fbOwnLocal(uid){let o=null;try{o=localStorage.getItem('medve-owner')}catch(e){}
   // más felhasználó lépett be ezen a telefonon: az előző játékos rekordjai és Kassza-állása nem kerülhet át hozzá
-  if(o&&o!==uid){try{[...LS_BEST,'medve-tkft-best',TK_KEY].forEach(k=>localStorage.removeItem(k));for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}}
+  if(o&&o!==uid){try{[...LS_BEST,'medve-tkft-best',TK_KEY,WAL_KEY,'medve-lv1'].forEach(k=>localStorage.removeItem(k));delete WAL.ft;for(const k of Object.keys(TK))delete TK[k];tkLoad()}catch(e){}}
   try{localStorage.setItem('medve-owner',uid)}catch(e){}}
 /* ---------- ranglista nullázása (új szezon) ----------
    Csak admin indíthatja: minden felhasználó dokumentumából törli a rekordokat, a játékszámlálókat és a Kassza-állást,
@@ -3520,4 +3560,4 @@ function seOpen(){lazyOpen('se','seOpen')}
 function lvOpen(){lazyOpen('lv','lvOpen')}
 if(/[?&]sr=/i.test(location.search))lazyMod('sr').catch(()=>{});// Shot&Run meghívó link: azonnal kell
 setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500);setTimeout(()=>lazyMod('lv').catch(()=>{}),3000)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
-export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};
+export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,GID_FULL,GID_SPRITE,SIL_RAW,brass,gidFullSet,walFt,walOpen,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};
