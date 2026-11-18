@@ -1,9 +1,20 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.49.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.50.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.50.0:** **Gidrán Terep: élethűbb gumik, árnyék és páncéltest; a gázpedál helyett tempomat-csúszka.**
+- **Belapuló gumi:** a nyomás és a pillanatnyi terhelés szerint lapul (4,0 baron alig, 1,2 baron a sugár ~19%-a). A talaj felé egyenes felfekvés, mellette kidomborodó oldalfal, a futófelület követi az alakot. Ugráskor, landoláskor a terheléssel együtt változik.
+- **Fizika:** a gördülési sugár a belapulással csökken (alacsony nyomáson lejjebb ül a kocsi), a gördülési ellenállás kissé nő.
+- **Árnyékok:** a páncéltest árnyéka a terepet követi, a magassággal halványul és szélesedik. A kerekek alatt kontaktárnyék, a kerék tetején a sárvédő árnyéka.
+- **Páncéltest:** felülről világosabb, a has felé sötétedő árnyalás.
+- **🎚 Tempomat:** a jobb alsó csúszkával a célsebességet állítod (4H: 0–100, 4L: 0–34 km/h), a gázt PI-szabályzó adagolja.
+  - Túllépésnél leveszi a gázt, és a motor fékez.
+  - A FÉK alatt nincs gáz, elengedve folytatja.
+  - Billentyű: →/↑ +4 km/h, ↓ −4, ← fék.
+  - Mérve: 40 km/h-ra állítva 1 s alatt eléri, és ±1 km/h-n tartja. A falon 14 km/h-ra állítva felmászik, a szakadékon 0-ra állítva a 4L motorfék 13 km/h alatt tartja.
 
 **v4.49.1:** **A vereség-képernyőn látszik a zseton-egyenleg** (H.A.R.C., DroneRun, Shot&Run).
 - Mindig kiírja: „🪙 Egyenleged: N zseton”.
