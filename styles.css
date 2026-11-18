@@ -1780,3 +1780,10 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 @media (max-width:420px){#harc .gtside{grid-template-columns:repeat(2,56px)}#harc .gtside .gths{width:56px;height:50px}}
 #harc #gtWarn{display:none}
 #harc #gtWinch:not([hidden])~#gtUnstick{bottom:calc(236px + env(safe-area-inset-bottom,0px))}
+/* v4.44: zseton +1 – kis, kattinthatatlan jelzés a fejléc bal sarkában (játék közben nem zavar) */
+#walPip{position:fixed;left:8px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:96;pointer-events:none;display:flex;align-items:center;gap:4px;padding:4px 10px 4px 6px;border-radius:999px;background:rgba(20,14,2,.86);border:1.5px solid #e0b53a;box-shadow:0 2px 6px rgba(0,0,0,.45);color:#ffe08a;opacity:0;transform:translateY(-8px) scale(.9);transition:opacity .25s ease-out,transform .25s ease-out;will-change:opacity,transform}
+#walPip.on{opacity:1;transform:none}
+#walPip i{font-style:normal;font-size:15px;line-height:1}
+#walPip b{font:400 16px/1 var(--f-display,Anton,Impact,sans-serif);letter-spacing:.03em;color:#ffe08a}
+#walPip small{font:700 10px/1 system-ui,sans-serif;color:#e8e2c0;opacity:.85}
+@media (prefers-reduced-motion:reduce){#walPip{transition:opacity .2s}}

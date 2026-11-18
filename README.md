@@ -1,9 +1,19 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.43.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.44.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.44.0:** **Tüzér Kassza – új koppintás-nézet és pénz-gépágyú; a zseton nem zavar játék közben.**
+- **Köteg lent, a pénz berepül a kerékre:** a koppintható bankó (érme) a kerék közepéről lekerült. A képernyő alján most rendezett **bankóköteg** áll, mint amikor kézben számoljuk a pénzt; az érméknél **recézett peremű érmeoszlop**. A köteg rétegenként, lefelé egyre sötétebb élekkel látszik. **Koppintásra vagy pöccintésre** a legfelső bankó ívben a **rulettkerékre repül**: pörög, átfordul, és a kerék síkjába dőlve landol. Ott a kerékkel együtt forog, majd beszívódik a kasszába, közben kipattan a „+összeg”. A ZSEB-kijelző minden érkezésre lüktet. A kerék közepén arany tengelydísz van; telitalálatnál nagyobb gyűrű, villanás és konfetti.
+- **A pöccintés dob, nem tol be:** a felfelé húzás már nem viszi a zsebet az ütegkasszába, így pöccintés közben sem megy el véletlenül. A befizetés az **⇡ ÜTEGBE TOL** gombbal megy; a pénz a ZSEB-kijelzőtől repül a halomra.
+- **💸 Pénz-gépágyú:** **óránként egyszer, véletlen pillanatban** érkezik, a szerver órája szerint (a telefon órájának állítása nem hozza előbb). Ha épp nincs nyitva a Kassza, megvár, de egyszerre csak egy lehet, nem gyűlik fel. A gyerekzár alatt pihen. A forgócsöves gépágyú jobb lent jelenik meg; **nyomva tartva felpörög** (I → II → III → IV → **MAX** fokozat = 2×, 4×, 6×, 8×, **10× érték**). Ilyenkor mp-enként 5–14 bankót szór a kerékre, motorzúgással és torkolattűzzel. **Összesen 10 mp lőidő**, amely csak nyomva tartás közben fogy; a hátralévő időt a gépágyú körüli gyűrű mutatja. Elengedve a gépágyú visszapörög, ezért a folyamatos tartás hozza a legtöbbet. A kerék fölött a fokozat és a gyűlő összeg látszik, a végén összesítés. Az első gépágyú a frissítés után 2–6 percen belül megjön.
+- **Nem akad, gyenge telefonon sem:** a köteg és a gépágyú teste egyszer kirajzolt kép. Repülő vagy fekvő pénzenként képkockánként egyetlen `drawImage` fut egy `setTransform`-mal; nincs árnyékszámítás és képkockánkénti gradiens, a darabszámnak felső korlátja van. Mérés 6× lassított processzorral (390×844, 2× kijelző): tétlenül **37 → 45** képkocka/mp, folyamatos koppintás közben **24 → 27** (a 95. percentilis **83 → 50 ms**). Gépágyúzás közben 27, gyenge telefon módban 47–59.
+- **Kis kijelzőn is elfér:** alacsony kijelzőn a köteg legfeljebb a szabad magasság harmadát foglalja. Nagyon alacsony kijelzőn (pl. 320×568) a futóverseny helyén a kerék fér el. Az ejtőernyős csomag a köteg mellett, balra száll le.
+- **A zseton nem zavar játék közben:** a percenként felugró „🪙 +1 zseton” toast helyett 2 mp-re egy kis, kattinthatatlan jelzés villan fel a fejléc bal sarkában (🪙 +1 · egyenleg). Nem takar irányítást, és nem írja felül a játék saját üzeneteit.
+- **Elemzés:** miért nincs most igazán értelme a zsetonnak, és hogyan lehetne fejleszteni (zseton-bolt, folytatás, tagsági fokozat, napi plafon): `docs/tervezet-zseton.md`.
+- A `firestore.rules` nem változott; a gépágyú állapota a Kassza helyi mentésében van (`mg`).
 
 **v4.43.0:** **Gidrán Terep – valódi offroad élmény.**
 - **4×4 hajtáslánc:** új **4H / 4L** gomb (terepfokozat: 2,2-szeres nyomaték, max. 34 km/h, erős motorfék a lejtőn – csak állva váltható) és **DIFIZÁR**. A fizika kétlépcsős lett: előbb a rugózás és a kerekenkénti tapadási határ, aztán a hajtás elosztása. **Nyitott difivel** a gyengébben tapadó kerék szab határt – ha egy kerék a levegőbe emelkedik vagy tehermentesül (kereszttengelyes csavarodás bukkanókon, sziklán), elpörög, és megállsz; **zárt difivel** minden kerék a saját tapadásáig visz. A zár csak 15 km/h alatt kapcsolható, aszfalton/murván 30 km/h felett zárva feszül a hajtáslánc, és **eltörik** (gyengébb hajtás, a zár többé nem kapcsolható).
