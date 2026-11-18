@@ -1,9 +1,16 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.45.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.46.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.46.0:** **Adminnak szerverterhelés-jelző a létszám és a tevékenység alapján.**
+- A fiók panel **🛡 Admin** dobozában új **📊 Szerverterhelés** kártya: állapot (🟢 Nyugodt · 🟡 Közepes · 🟠 Magas · 🔴 Túlterhelt), százalék és színes sáv.
+- **Létszám:** aktív most (5 perc), 1 órán belül, ma (24 óra), összes regisztrált. Az utolsó tevékenység a `lastPlay`, `tkAt`, `zsSt`, `tkSt` bélyegek legkésőbbike, a szerveridőhöz igazítva.
+- **Tevékenység:** a többi játékos mentései percenként (a lista-figyelőn élőben mérve, utolsó 5 perc), a becsült olvasás/perc (≈ mentés/perc × aktív kliensek, mert minden mentést minden nyitott lista megkap), és a chat 10 perces forgalma.
+- A százalék a négy mutató közül a legterheltebb a `LOADCAP` küszöbökhöz képest (alapból 40 aktív, 60 mentés/perc, 2000 olvasás/perc, 40 chat/10 perc). A küszöbök az `app.js`-ben hangolhatók. A kártya 15 mp-enként frissül.
+- Nincs plusz Firestore-lekérdezés, a meglévő figyelt adatokból számol. A `firestore.rules` nem változott.
 
 **v4.45.0:** **Legyen értelme a zsetonnak: bolt, folytatás, tagsági fokozat, napi plafon.** (A `docs/tervezet-zseton.md` mind a 4 javaslata.)
 - **🪙 Zseton-bolt** a Tüzér Kassza **Ajándék** fülén:

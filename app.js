@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.45.0',APP_DATE='2026.11.18.';
+const APP_VER='4.46.0',APP_DATE='2026.11.18.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -3526,8 +3526,8 @@ function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
   UNSUB=DB.collection('users').onSnapshot(qs=>{if(uid!==UID)return;
     if(first){first=false;const o={};if(S.users[uid])o[uid]=S.users[uid];qs.forEach(d=>{if(d.id!==uid)o[d.id]={id:d.id,...d.data()}});S.users=o;lbApply();liveSoon();return}
     // utána csak a változott dokumentumokat dolgozzuk fel – nem építjük újra a teljes listát minden mentésnél
-    let reset=false;qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){delete S.users[id];return}const d={id,...c.doc.data()};if(d.lbReset&&(!S.users[id]||S.users[id].lbReset!==d.lbReset))reset=true;S.users[id]=d});
-    if(reset)lbApply();liveSoon()},err=>{console.warn(err);LB_ON=false;UNSUB=null;toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
+    let reset=false,nw=0;qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='modified')nw++;if(c.type==='removed'){delete S.users[id];return}const d={id,...c.doc.data()};if(d.lbReset&&(!S.users[id]||S.users[id].lbReset!==d.lbReset))reset=true;S.users[id]=d});
+    if(nw)loadNote(nw);if(reset)lbApply();liveSoon()},err=>{console.warn(err);LB_ON=false;UNSUB=null;toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
 // ÉLŐ FUTÓVERSENY a Kasszában: csak a verseny élmezőnye (első 8) figyelt valós időben – a kis katonák így élőben futnak,
 // de a szerveren csak az élmezőny mentései sokszorozódnak, nem mindenkié. Havi nézethez összetett index kell (users: tkWk ↑, tkWg ↓);
 // ha még nincs meg, átmenetileg a teljes lista-figyelő pótolja (drágább, de a verseny akkor is élő marad).
@@ -3553,12 +3553,33 @@ function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hid
   const lv=document.getElementById('arcLive');if(lv)lv.innerHTML=liveHTML();const ab=document.getElementById('authBox');if(ab&&UID)ab.innerHTML=authInner()}
 function liveHTML(){return RANKG.map(([g,t,f,,asc,fmt])=>{const rows=arr('users').filter(u=>u[f]>0).sort((a,b)=>asc?a[f]-b[f]:b[f]-a[f]).slice(0,3);
   return `<button type="button" class="lvg" data-rank="${g}"><b>${t}</b>${rows.length?rows.map((u,i)=>`<span class="${u.id===UID?'me':''}"><i>${['🥇','🥈','🥉'][i]}</i><em>${esc(u.name)}</em><strong>${fmt(u[f])}</strong></span>`).join(''):'<span class="lv0">Még senki</span>'}</button>`}).join('')}
+/* ADMIN – SZERVERTERHELÉS-JELZŐ (becslés, csak az adminnak látszik; nem kérdez le semmit külön, nincs plusz Firestore-olvasás)
+   Létszám: a már figyelt felhasználói lista utolsó tevékenység-bélyegei (lastPlay, tkAt, zsSt, tkSt) alapján – aktív 5 percen, 1 órán, 24 órán belül.
+   Tevékenység: a lista-figyelőn élőben beérkező mentések (más játékosok dokumentum-módosításai) az utolsó 5 percben, plusz a chat 10 perces forgalma.
+   Egy mentést minden nyitott listájú kliens megkap (olvasásként számít), ezért a becsült olvasás/perc ≈ mentés/perc × aktív kliensek.
+   A küszöbök (LOADCAP) igény szerint hangolhatók; 100% = „erős” terhelés, nem a szerver kemény korlátja. */
+const LOADW=[],LOADCAP={a5:40,wpm:60,rpm:2000,ch10:40};
+function loadNote(n){try{if(USERDOC?.role!=='admin')return;const t=Date.now();for(let i=0;i<Math.min(n,200);i++)LOADW.push(t);while(LOADW.length&&t-LOADW[0]>6e5)LOADW.shift()}catch(e){}}
+function loadTs(v){return typeof v==='number'?v:v&&v.toMillis?v.toMillis():0}
+function loadStat(){const now=srvNow(),us=arr('users');let a5=0,a60=0,a24=0;
+  for(const u of us){const t=Math.max(loadTs(u.lastPlay),loadTs(u.tkAt),loadTs(u.zsSt),loadTs(u.tkSt));if(!t)continue;const d=now-t;if(d<=3e5)a5++;if(d<=36e5)a60++;if(d<=864e5)a24++}
+  const t0=Date.now();while(LOADW.length&&t0-LOADW[0]>6e5)LOADW.shift();const w5=LOADW.filter(t=>t0-t<=3e5).length,wpm=w5/5;
+  const ch10=CHAT.filter(m=>m.ts&&now-m.ts<=6e5).length,rpm=Math.round(wpm*Math.max(1,a5));
+  const pct=Math.min(100,Math.round(100*Math.max(a5/LOADCAP.a5,wpm/LOADCAP.wpm,rpm/LOADCAP.rpm,ch10/LOADCAP.ch10)));
+  const lv=pct>=85?['🔴','Túlterhelt','hi']:pct>=60?['🟠','Magas','up']:pct>=30?['🟡','Közepes','mid']:['🟢','Nyugodt','lo'];
+  return {n:us.length,a5,a60,a24,wpm,rpm,ch10,pct,lv}}
+function loadHTML(){const s=loadStat();
+  return `<div class="adload ${s.lv[2]}" id="admLoad"><div class="adlh"><b>📊 Szerverterhelés</b><span>${s.lv[0]} ${s.lv[1]} · ${s.pct}%</span></div><div class="adlbar"><i data-st="width:${s.pct}%"></i></div>
+    <div class="adlg"><span><b>${s.a5}</b>aktív most (5 p)</span><span><b>${s.a60}</b>1 órán belül</span><span><b>${s.a24}</b>ma (24 ó)</span><span><b>${s.n}</b>regisztrált</span>
+    <span><b>${s.wpm.toFixed(1)}</b>mentés/perc</span><span><b>~${s.rpm}</b>olvasás/perc</span><span><b>${s.ch10}</b>chat (10 p)</span></div>
+    <p class="hint">Becslés a létszámból és a tevékenységből; a mentés/perc ennél a telefonnál mért (az utolsó 5 percben).${LB_ON?'':' ⚠️ A lista-figyelő most áll, a számok régebbiek lehetnek.'}</p></div>`}
+setInterval(()=>{try{const b=document.getElementById('admLoad');if(b&&!document.hidden&&USERDOC?.role==='admin')b.outerHTML=loadHTML()}catch(e){}},15000);
 function authInner(){
   if(!FB_ON)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">${FB_CFG?'A bejelentkezéshez internet kell az első indításkor. Kapcsolódj netre, majd töltsd újra az oldalt.':'A szerver még nincs beállítva (firebase-config.js), ezért most csak helyi rekordok vannak.'}</p>`;
   if(!AUTHREADY)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">Kapcsolódás…</p>`;
   if(UID){const nm=USERDOC?((USERDOC.rank?USERDOC.rank+' ':'')+USERDOC.name):(AUTH.currentUser?.displayName||'…');
     return `<h3>👤 ${esc(nm)}</h3><label class="authf"><span>Rendfokozat</span><select id="auRankEd">${RANKS.map(r=>`<option value="${esc(r)}" ${r===(USERDOC?.rank||'')?'selected':''}>${r||'— nincs megadva —'}</option>`).join('')}</select></label>
-      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>${USERDOC?.role==='admin'?`<div class="lbadm"><b>🛡 Admin</b><p class="hint">Új szezon: minden játék ranglistája, a játékszámlálók és a Kassza-állás mindenkinél nulláról indul. A telefonokon tárolt régi rekordok is törlődnek, nem töltődnek vissza.</p><button type="button" class="btn sm lbrst" id="auLbReset">🗑 Ranglista nullázása – új szezon</button></div>`:''}`}
+      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>${USERDOC?.role==='admin'?`<div class="lbadm"><b>🛡 Admin</b>${loadHTML()}<p class="hint">Új szezon: minden játék ranglistája, a játékszámlálók és a Kassza-állás mindenkinél nulláról indul. A telefonokon tárolt régi rekordok is törlődnek, nem töltődnek vissza.</p><button type="button" class="btn sm lbrst" id="auLbReset">🗑 Ranglista nullázása – új szezon</button></div>`:''}`}
   const reg=AUTHTAB==='reg';
   return `<h3>🔐 ${reg?'Regisztráció':'Bejelentkezés'}</h3>${navigator.onLine?'':'<p class="choff">📴 Nincs internet. Belépés nélkül is játszhatsz, a rekordjaid a következő belépéskor feltöltődnek.</p>'}<p class="hint" data-st="margin:0 0 10px">A játékhoz fiók kell, így a rekordjaid élőben felkerülnek a közös ranglistára.</p>
    <div class="autabs"><button type="button" data-autab="login" class="${reg?'':'on'}">Belépés</button><button type="button" data-autab="reg" class="${reg?'on':''}">Regisztráció</button></div>
