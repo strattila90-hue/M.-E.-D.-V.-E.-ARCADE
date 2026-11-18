@@ -1,9 +1,28 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.47.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.48.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.48.0:** **H.A.R.C. Gránátvihar (dobálós, hullámos, főellenségekkel) és Gidrán Terep – Fal és szakadék.** Részletes terv és számok: `docs/tervezet-harc-terep.md`.
+- **M.E.D.V.E. H.A.R.C. – Gránátvihar:** fentről hullámokban jönnek az ellenségek, a medve 155 mm-es gránátokkal dobálja őket.
+  - **A lőszer elkapásból jön:** az ellenséges tüzérség lehulló gránátját, a lőszerládát, az elsősegélyt és a fegyverládát el kell kapni, így a régi játék lényege is megmaradt.
+  - **Irányítás:** ujj lent (húzás) = követ és dob; ujj fel = megáll és elkap. Billentyűzeten ←/→ és Szóköz.
+  - **Pályák:** 5 szektor × 5 hullám (Határsáv, Erdő, Város, Hegyvidék, Éjszaka), minden 5. hullám főellenség: Drónanyahajó, Harci helikopter, Léghajó, Rajkirály, Bombázó. Utána új kör, gyorsabban.
+  - **Ellenségek:** FPV-drón, kvadkopter (bombáz), ejtőernyős (földet érve közelharc), Shahed jellegű drón, helikopter (rakéta).
+  - **Fegyverek:** alap gránát, repeszköteg ×3, kazettás, hőkereső, termobárikus (fegyverládából, 15 s). Mellé 🚨 tűzcsapás 30 találat után.
+  - **Pontok:** kombószorzó (×4-ig), hullám- és sérülésmentes bónusz, főellenség-pont. A ranglistára pont kerül, legfeljebb 100 000 (`firestore.rules`). A régi „db” rekordok pontként látszanak; tiszta laphoz az admin új szezont indíthat.
+  - **Dobóanimáció:** a dobókar és a kézben lévő gránát a medve saját képéből van kivágva, a vállnál forog (behúzás, átlendítés a fej fölé, elengedés a csúcson). A gránát forogva repül, a következő beúszik a kézbe.
+  - Játék közben az üzenetek a vásznon jelennek meg, a toast nem takarja az ujjat.
+- **Gidrán Terep:**
+  - **Hátsó lámpa javítva:** a fék- és a tolatólámpa eddig a pótkerék-tartó alatt, a levegőben lebegett, és nem fordult a kocsival. Most a hátfalon van, a karosszériával együtt dől.
+  - **Új pálya – Fal és szakadék (1,1 km):** 60%, majd **100%-os (45°)** betonfal, utána **85%-os** szakadék.
+    - Felfelé csak **4L + difizár** megy. 4H-ban vagy nyitott difivel visszacsúszik, esőben 1,2 barra kell engedni.
+    - Lefelé a **4L motorfék** lépésben tart. 4H-ban megfut, és 28 km/h felett átbukik; a peremről elrugaszkodni sem kiút.
+    - Szimulációval ellenőrizve minden változat.
+  - **Grafika:** betonblokk-textúra, valódi meredekségű sárga táblák (60% / 100% / 85%), filmes mód és **nagy meredekségmérő** (% és fok) a szükséges beállítások pipáival.
+  - Az erősebb 4L motorfék (420, eddig 240) a régi extrém lejtőn is segít.
 
 **v4.47.0:** **Több játékost bír el ingyen: appnyitáskor csak a ranglisták élmezőnye töltődik le.**
 - **Előtte:** minden nyitott app a teljes játékoslistát figyelte. Nyitáskor ez n olvasás volt, utána pedig **minden** játékos minden mentése minden telefonnak egy olvasásba került, vagyis a forgalom a létszám négyzetével nőtt.
