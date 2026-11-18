@@ -1,9 +1,26 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.46.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.46.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.46.1:** **A szerverterhelés-jelző piros plafonja a Firestore ingyenes (Spark) napi kerete.**
+- Keret: **50 000 olvasás és 20 000 írás naponta**. A beállított mentési ütemből számolva az **olvasás fogy el előbb**; az írás bőven elég (~35 írás/fő/nap).
+- Modell (`FSM` az `app.js`-ben): ~2 appnyitás/fő/nap, nyitásonként a teljes játékoslista (n regisztrált) + 80 chatüzenet + saját fiók; ~30 perc játék/nap (zseton 2 percenként, játékszámláló, Kassza 2 percenként); minden mentést minden épp nyitott lista megkap; a szabályok íráskénti 1 olvasása is beszámít.
+  Olvasás/nap ≈ D·2·(n+81) + 35·D + 1,94·D² (D = napi játékos, n = regisztrált).
+- **Ennyi embert bír el ingyen:**
+
+  | Regisztrált | Napi játékos | Egyszerre (csúcs) |
+  |---|---|---|
+  | ≤ 100 | ~90 | ~15 |
+  | 150 | ~77 | ~13 |
+  | 200 | ~68 | ~11 |
+  | 300 | ~55 | ~9 |
+  | 500 | ~39 | ~7 |
+
+  A regisztrált létszám is számít, mert minden appnyitás a teljes listát letölti.
+- A jelző 100%-a (🔴) = a keret: a mai (24 órás) létszámból becsült napi olvasás/írás, az egyszerre aktívak és az olvasás/perc közül a legrosszabb. Az élő mutatóknál a plafon a napi keret egyenletes elosztásának 3-szorosa (csúcsidő). Szintek: 🟢 < 50%, 🟡 50–75%, 🟠 75–100%, 🔴 ≥ 100%. A kártya kiírja a mostani plafont (fő/nap, egyszerre) és a mai becsült olvasás/írás számot.
 
 **v4.46.0:** **Adminnak szerverterhelés-jelző a létszám és a tevékenység alapján.**
 - A fiók panel **🛡 Admin** dobozában új **📊 Szerverterhelés** kártya: állapot (🟢 Nyugodt · 🟡 Közepes · 🟠 Magas · 🔴 Túlterhelt), százalék és színes sáv.

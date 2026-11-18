@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.46.0',APP_DATE='2026.11.18.';
+const APP_VER='4.46.1',APP_DATE='2026.11.18.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -3554,25 +3554,36 @@ function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hid
 function liveHTML(){return RANKG.map(([g,t,f,,asc,fmt])=>{const rows=arr('users').filter(u=>u[f]>0).sort((a,b)=>asc?a[f]-b[f]:b[f]-a[f]).slice(0,3);
   return `<button type="button" class="lvg" data-rank="${g}"><b>${t}</b>${rows.length?rows.map((u,i)=>`<span class="${u.id===UID?'me':''}"><i>${['🥇','🥈','🥉'][i]}</i><em>${esc(u.name)}</em><strong>${fmt(u[f])}</strong></span>`).join(''):'<span class="lv0">Még senki</span>'}</button>`}).join('')}
 /* ADMIN – SZERVERTERHELÉS-JELZŐ (becslés, csak az adminnak látszik; nem kérdez le semmit külön, nincs plusz Firestore-olvasás)
-   Létszám: a már figyelt felhasználói lista utolsó tevékenység-bélyegei (lastPlay, tkAt, zsSt, tkSt) alapján – aktív 5 percen, 1 órán, 24 órán belül.
-   Tevékenység: a lista-figyelőn élőben beérkező mentések (más játékosok dokumentum-módosításai) az utolsó 5 percben, plusz a chat 10 perces forgalma.
-   Egy mentést minden nyitott listájú kliens megkap (olvasásként számít), ezért a becsült olvasás/perc ≈ mentés/perc × aktív kliensek.
-   A küszöbök (LOADCAP) igény szerint hangolhatók; 100% = „erős” terhelés, nem a szerver kemény korlátja. */
-const LOADW=[],LOADCAP={a5:40,wpm:60,rpm:2000,ch10:40};
+   A PIROS PLAFON = a Firestore ingyenes (Spark) napi kerete: 50 000 olvasás és 20 000 írás naponta (Csendes-óceáni éjfélkor nullázódik).
+   Modell a beállított mentési ütemből (FSM – ha a mentési időközök változnak, ezt is igazítsd):
+   - naponta játékosonként ~2 appnyitás; nyitásonként a teljes users-lista (n regisztrált dokumentum) + a chat utolsó 80 üzenete + a saját fiók = n+81 olvasás
+   - ~30 perc játék/nap (a napi 30 zsetonos plafonhoz igazítva): zseton-mentés 2 percenként (15), játékszámláló-mentés (~10), Kassza-mentés 2 percenként (~10) = ~35 írás/fő/nap
+   - minden írást minden épp nyitott listájú kliens megkap (1 olvasás/fő): ~40 perc nyitott app/fő, ~12 órás aktív napra szétterítve → 35·D·D·40/720 olvasás
+   - a szabályok minden íráshoz számolhatnak 1 olvasást (rule get()), ezt is beszámítjuk
+   Ebből: olvasás/nap ≈ D·2·(n+81) + 35·D + 1,94·D². n = D esetén kb. 90 fő/nap az ingyenes keret – az olvasás fogy el előbb, az írás (~3 150) bőven elég.
+   Élő mutatók: egyszerre aktívak és olvasás/perc – plafon a napi keret egyenletes elosztásának 3-szorosa (csúcsidő-ráhagyás). */
+const LOADW=[],FSQ={r:50000,w:20000},FSM={opens:2,chat:80,wDay:35,onMin:40,dayMin:720,peak:3};
+function fsDayR(D,n){return D*FSM.opens*(Math.max(n,D)+FSM.chat+1)+D*FSM.wDay+FSM.wDay*D*D*FSM.onMin/FSM.dayMin}
+function fsDayW(D){return D*FSM.wDay}
+// hány napi játékost bír el az ingyenes keret a mostani regisztrált létszám mellett
+function fsCap(n){let lo=0,hi=20000;while(hi-lo>1){const m=(lo+hi)>>1;if(fsDayR(m,n)<=FSQ.r&&fsDayW(m)<=FSQ.w)lo=m;else hi=m}return lo}
 function loadNote(n){try{if(USERDOC?.role!=='admin')return;const t=Date.now();for(let i=0;i<Math.min(n,200);i++)LOADW.push(t);while(LOADW.length&&t-LOADW[0]>6e5)LOADW.shift()}catch(e){}}
 function loadTs(v){return typeof v==='number'?v:v&&v.toMillis?v.toMillis():0}
-function loadStat(){const now=srvNow(),us=arr('users');let a5=0,a60=0,a24=0;
+function loadStat(){const now=srvNow(),us=arr('users'),n=us.length;let a5=0,a60=0,a24=0;
   for(const u of us){const t=Math.max(loadTs(u.lastPlay),loadTs(u.tkAt),loadTs(u.zsSt),loadTs(u.tkSt));if(!t)continue;const d=now-t;if(d<=3e5)a5++;if(d<=36e5)a60++;if(d<=864e5)a24++}
   const t0=Date.now();while(LOADW.length&&t0-LOADW[0]>6e5)LOADW.shift();const w5=LOADW.filter(t=>t0-t<=3e5).length,wpm=w5/5;
-  const ch10=CHAT.filter(m=>m.ts&&now-m.ts<=6e5).length,rpm=Math.round(wpm*Math.max(1,a5));
-  const pct=Math.min(100,Math.round(100*Math.max(a5/LOADCAP.a5,wpm/LOADCAP.wpm,rpm/LOADCAP.rpm,ch10/LOADCAP.ch10)));
-  const lv=pct>=85?['🔴','Túlterhelt','hi']:pct>=60?['🟠','Magas','up']:pct>=30?['🟡','Közepes','mid']:['🟢','Nyugodt','lo'];
-  return {n:us.length,a5,a60,a24,wpm,rpm,ch10,pct,lv}}
+  const ch10=CHAT.filter(m=>m.ts&&now-m.ts<=6e5).length,rpm=Math.round((wpm+ch10/10)*Math.max(1,a5));
+  const cap=fsCap(n),capNow=Math.max(3,Math.round(cap*FSM.onMin/FSM.dayMin*FSM.peak)),rpmMax=Math.round(FSQ.r/FSM.dayMin*FSM.peak);
+  const dR=Math.round(fsDayR(a24,n)),dW=Math.round(fsDayW(a24));
+  const pct=Math.round(100*Math.max(dR/FSQ.r,dW/FSQ.w,a5/capNow,rpm/rpmMax));
+  const lv=pct>=100?['🔴','Ingyenes keret felett','hi']:pct>=75?['🟠','Közel a plafonhoz','up']:pct>=50?['🟡','Közepes','mid']:['🟢','Nyugodt','lo'];
+  return {n,a5,a60,a24,wpm,rpm,ch10,pct,lv,cap,capNow,rpmMax,dR,dW}}
+const fsK=v=>v.toLocaleString('hu-HU');
 function loadHTML(){const s=loadStat();
-  return `<div class="adload ${s.lv[2]}" id="admLoad"><div class="adlh"><b>📊 Szerverterhelés</b><span>${s.lv[0]} ${s.lv[1]} · ${s.pct}%</span></div><div class="adlbar"><i data-st="width:${s.pct}%"></i></div>
-    <div class="adlg"><span><b>${s.a5}</b>aktív most (5 p)</span><span><b>${s.a60}</b>1 órán belül</span><span><b>${s.a24}</b>ma (24 ó)</span><span><b>${s.n}</b>regisztrált</span>
-    <span><b>${s.wpm.toFixed(1)}</b>mentés/perc</span><span><b>~${s.rpm}</b>olvasás/perc</span><span><b>${s.ch10}</b>chat (10 p)</span></div>
-    <p class="hint">Becslés a létszámból és a tevékenységből; a mentés/perc ennél a telefonnál mért (az utolsó 5 percben).${LB_ON?'':' ⚠️ A lista-figyelő most áll, a számok régebbiek lehetnek.'}</p></div>`}
+  return `<div class="adload ${s.lv[2]}" id="admLoad"><div class="adlh"><b>📊 Szerverterhelés</b><span>${s.lv[0]} ${s.lv[1]} · ${s.pct}%</span></div><div class="adlbar"><i data-st="width:${Math.min(100,s.pct)}%"></i></div>
+    <div class="adlg"><span><b>${s.a5}<small>/${s.capNow}</small></b>aktív most (5 p)</span><span><b>${s.a24}<small>/${s.cap}</small></b>ma (24 ó)</span><span><b>${s.a60}</b>1 órán belül</span><span><b>${s.n}</b>regisztrált</span>
+    <span><b>${s.wpm.toFixed(1)}</b>mentés/perc</span><span><b>~${s.rpm}<small>/${s.rpmMax}</small></b>olvasás/perc</span><span><b>${s.ch10}</b>chat (10 p)</span></div>
+    <p class="hint">🔴 plafon = a Firestore ingyenes napi kerete (50 000 olvasás, 20 000 írás). A mostani ${s.n} regisztrálttal kb. <b>${s.cap} fő/nap</b> fér bele, egyszerre kb. ${s.capNow}. Mai becslés: ${fsK(s.dR)} olvasás, ${fsK(s.dW)} írás. A mentés/perc ennél a telefonnál mért (utolsó 5 perc).${LB_ON?'':' ⚠️ A lista-figyelő most áll, a számok régebbiek lehetnek.'}</p></div>`}
 setInterval(()=>{try{const b=document.getElementById('admLoad');if(b&&!document.hidden&&USERDOC?.role==='admin')b.outerHTML=loadHTML()}catch(e){}},15000);
 function authInner(){
   if(!FB_ON)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">${FB_CFG?'A bejelentkezéshez internet kell az első indításkor. Kapcsolódj netre, majd töltsd újra az oldalt.':'A szerver még nincs beállítva (firebase-config.js), ezért most csak helyi rekordok vannak.'}</p>`;
