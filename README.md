@@ -1,9 +1,53 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.45.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.47.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.47.0:** **Több játékost bír el ingyen: appnyitáskor csak a ranglisták élmezőnye töltődik le.**
+- **Előtte:** minden nyitott app a teljes játékoslistát figyelte. Nyitáskor ez n olvasás volt, utána pedig **minden** játékos minden mentése minden telefonnak egy olvasásba került, vagyis a forgalom a létszám négyzetével nőtt.
+- **Most:**
+  - **Kezdőlap:** játékonként csak az **első 5** helyezettet figyeli (7 × 5 dokumentum, a létszámtól függetlenül). Csak ezeknek a játékosoknak a mentései jutnak el a többi telefonra.
+  - **Ranglista:** a nyitott fülön az **első 10**. Ha nem vagy köztük, külön sorban látod a saját eredményed („még nem fértél be az első 10-be”), helyezés nélkül.
+  - **Teljes lista** csak ott töltődik le, ahol kell: a **👥 Összes** fülön (kérésre), a Kassza **ütegverseny** lapján (minden üteg összege), az adminnak (terhelésjelző), és egyszer a szezon-nullázáskor.
+  - **Chat:** zárt chatnél csak az utolsó 10 üzenet figyelt (az „új” jelzéshez), megnyitáskor 80.
+- Egy appnyitás így kb. **46 olvasás** (eddig a regisztráltak száma + 81).
+- **Ingyenes keret** a terhelésjelző modellje szerint:
+
+  | Regisztrált | Napi játékos (előtte → most) | Egyszerre (csúcs) |
+  |---|---|---|
+  | ≤ 200 | ~68–90 → **~200** | ~34 |
+  | 300 | ~55 → **~188** | ~31 |
+  | 500 | ~39 → **~164** | ~27 |
+  | 1000 | ~22 → **~124** | ~21 |
+
+  Ebben már a chat továbbítása és a teljes lista ritka letöltése is benne van. A maradék gyorsan növekvő tag a Kassza ütegverseny-lapja (teljes lista), mert az összes üteg összegéhez mindenki kell.
+- A terhelésjelző (`FSM` az `app.js`-ben) az új olvasási mintával számol. A `firestore.rules` és az indexek nem változtak: az egymezős rendezéshez a Firestore automatikus indexe elég.
+
+**v4.46.1:** **A szerverterhelés-jelző piros plafonja a Firestore ingyenes (Spark) napi kerete.**
+- Keret: **50 000 olvasás és 20 000 írás naponta**. A beállított mentési ütemből számolva az **olvasás fogy el előbb**; az írás bőven elég (~35 írás/fő/nap).
+- Modell (`FSM` az `app.js`-ben): ~2 appnyitás/fő/nap, nyitásonként a teljes játékoslista (n regisztrált) + 80 chatüzenet + saját fiók; ~30 perc játék/nap (zseton 2 percenként, játékszámláló, Kassza 2 percenként); minden mentést minden épp nyitott lista megkap; a szabályok íráskénti 1 olvasása is beszámít.
+  Olvasás/nap ≈ D·2·(n+81) + 35·D + 1,94·D² (D = napi játékos, n = regisztrált).
+- **Ennyi embert bír el ingyen:**
+
+  | Regisztrált | Napi játékos | Egyszerre (csúcs) |
+  |---|---|---|
+  | ≤ 100 | ~90 | ~15 |
+  | 150 | ~77 | ~13 |
+  | 200 | ~68 | ~11 |
+  | 300 | ~55 | ~9 |
+  | 500 | ~39 | ~7 |
+
+  A regisztrált létszám is számít, mert minden appnyitás a teljes listát letölti.
+- A jelző 100%-a (🔴) = a keret: a mai (24 órás) létszámból becsült napi olvasás/írás, az egyszerre aktívak és az olvasás/perc közül a legrosszabb. Az élő mutatóknál a plafon a napi keret egyenletes elosztásának 3-szorosa (csúcsidő). Szintek: 🟢 < 50%, 🟡 50–75%, 🟠 75–100%, 🔴 ≥ 100%. A kártya kiírja a mostani plafont (fő/nap, egyszerre) és a mai becsült olvasás/írás számot.
+
+**v4.46.0:** **Adminnak szerverterhelés-jelző a létszám és a tevékenység alapján.**
+- A fiók panel **🛡 Admin** dobozában új **📊 Szerverterhelés** kártya: állapot (🟢 Nyugodt · 🟡 Közepes · 🟠 Magas · 🔴 Túlterhelt), százalék és színes sáv.
+- **Létszám:** aktív most (5 perc), 1 órán belül, ma (24 óra), összes regisztrált. Az utolsó tevékenység a `lastPlay`, `tkAt`, `zsSt`, `tkSt` bélyegek legkésőbbike, a szerveridőhöz igazítva.
+- **Tevékenység:** a többi játékos mentései percenként (a lista-figyelőn élőben mérve, utolsó 5 perc), a becsült olvasás/perc (≈ mentés/perc × aktív kliensek, mert minden mentést minden nyitott lista megkap), és a chat 10 perces forgalma.
+- A százalék a négy mutató közül a legterheltebb a `LOADCAP` küszöbökhöz képest (alapból 40 aktív, 60 mentés/perc, 2000 olvasás/perc, 40 chat/10 perc). A küszöbök az `app.js`-ben hangolhatók. A kártya 15 mp-enként frissül.
+- Nincs plusz Firestore-lekérdezés, a meglévő figyelt adatokból számol. A `firestore.rules` nem változott.
 
 **v4.45.0:** **Legyen értelme a zsetonnak: bolt, folytatás, tagsági fokozat, napi plafon.** (A `docs/tervezet-zseton.md` mind a 4 javaslata.)
 - **🪙 Zseton-bolt** a Tüzér Kassza **Ajándék** fülén:

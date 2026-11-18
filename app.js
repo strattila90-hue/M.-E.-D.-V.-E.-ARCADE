@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.45.0',APP_DATE='2026.11.18.';
+const APP_VER='4.47.0',APP_DATE='2026.11.18.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -311,7 +311,10 @@ function rankRows(g){const G=RANKG.find(x=>x[0]===g),f=G[2],ls=G[3],asc=G[4],nf=
   let mine=0;if(!(MODE==='fb'&&UID&&USERDOC)){try{mine=Number(localStorage.getItem(ls)||0)}catch(e){}}const me=rows.find(r=>r.id===UID);
   if(mine>0){if(me){if(!me.v||(asc?mine<me.v:mine>me.v))me.v=mine}else rows.push({id:UID||'_me',n:USERDOC?uname(USERDOC):'Te',v:mine,c:0,me:1})}
   rows.forEach(r=>{if(r.id===UID)r.me=1});
-  rows.sort((a,b)=>((b.v>0)-(a.v>0))||(a.v&&b.v?(asc?a.v-b.v:b.v-a.v):b.c-a.c));return rows}
+  rows.sort((a,b)=>((b.v>0)-(a.v>0))||(a.v&&b.v?(asc?a.v-b.v:b.v-a.v):b.c-a.c));
+  // élmezőny-mód (nincs teljes lista): csak az első TOPN eredmény hiteles, utána a saját sorod jön külön, helyezés nélkül
+  if(MODE==='fb'&&UID&&!USRC.all){const top=rows.filter(r=>r.v>0).slice(0,USRC['rk:'+g]?TOPN:TOPH);if(!top.some(r=>r.me)){const m=rows.find(r=>r.me);if(m)top.push(Object.assign({},m,{out:1}))}return top}
+  return rows}
 function rankAll(){const rows=arr('users').filter(u=>u.role!=='pending'&&uplays(u)>0).map(u=>({id:u.id,n:uname(u),t:uplays(u),me:u.id===UID?1:0}));rows.sort((a,b)=>b.t-a.t);return rows}
 function rankOpen(g){g=g||'harc';let o=$('#rankov');if(!o){o=document.createElement('div');o.id='rankov';document.body.appendChild(o);
     o.addEventListener('click',e=>{if(e.target.closest('.rkx')){rankClose();return}const t=e.target.closest('[data-rg]');if(t)rankFill(t.dataset.rg)});
@@ -319,15 +322,16 @@ function rankOpen(g){g=g||'harc';let o=$('#rankov');if(!o){o=document.createElem
   o.innerHTML=`<div class="rkbox" role="dialog" aria-label="Ranglista"><div class="rkhd"><b>🏆 ${FB_ON&&UID?'Élő ranglista':'Rekordjaim'}</b><button type="button" class="rkx" aria-label="Ranglista bezárása" title="Bezárás">✕</button></div><div class="rktabs">${RANKG.map(x=>`<button type="button" data-rg="${x[0]}">${x[1]}</button>`).join('')}${FB_ON&&UID?'<button type="button" data-rg="all">👥 Összes</button>':''}</div><div class="rkme"></div><div class="rklist"></div></div>`;
   o.hidden=false;document.body.classList.add('rkon');rankFill(g);addEventListener('keydown',rankKey)}
 function rankKey(e){if(e.key==='Escape'){e.stopPropagation();rankClose()}}
-function rankClose(){const o=$('#rankov');if(o){o.hidden=true;o.innerHTML=''}document.body.classList.remove('rkon');removeEventListener('keydown',rankKey)}
+function rankClose(){RANK_ALL=false;RANK_G='';setTimeout(rkWatch,0);const o=$('#rankov');if(o){o.hidden=true;o.innerHTML=''}document.body.classList.remove('rkon');removeEventListener('keydown',rankKey)}
 function rankFill(g){const o=$('#rankov');if(!o)return;o.querySelectorAll('[data-rg]').forEach(b=>b.classList.toggle('on',b.dataset.rg===g));const L=o.querySelector('.rklist'),ME=o.querySelector('.rkme');
+  RANK_ALL=g==='all';const rg=RANK_ALL?'':g;if(rg!==RANK_G){RANK_G=rg;setTimeout(rkWatch,0)}if(RANK_ALL&&!USRC.all){lbWatch();ME.innerHTML='';L.innerHTML='<div class="rkempty">A teljes játékoslista betöltése…</div>';return}
   if(g==='all'){const rows=rankAll(),mi=rows.findIndex(r=>r.me);
     ME.innerHTML=mi>=0?`Te: <b>${mi+1}.</b> hely · <b>${rows[mi].t}</b> játék`:'Még nem játszottál.';
     L.innerHTML=rows.length?`<div class="rkhint">Mindenki, aki bármelyik játékkal játszott – a játszott körök száma szerint.</div>`+rows.map((r,i)=>`<div class="rkrow${r.me?' me':''}"><span class="rkp">${i+1}.</span><span class="rkn">${esc(r.n)}</span><b>${r.t} játék</b></div>`).join(''):'<div class="rkempty">Még senki nem játszott.</div>';
     L.scrollTop=0;return}
   const G=RANKG.find(x=>x[0]===g),fmt=G[5],rows=rankRows(g);const mi=rows.findIndex(r=>r.me),mr=rows[mi];
-  ME.innerHTML=mr&&mr.v?`Te: <b>${mi+1}.</b> hely · <b>${fmt(mr.v)}</b>`:mr?`Még nincs eredményed · ${mr.c}× játszottál`:'Még nem játszottál ebben a játékban.';
-  L.innerHTML=rows.length?rows.map((r,i)=>`<div class="rkrow${r.me?' me':''}${r.v&&i<3?' top':''}${r.v?'':' nov'}"><span class="rkp">${r.v?(['🥇','🥈','🥉'][i]||(i+1)+'.'):'–'}</span><span class="rkn">${esc(r.n)}${r.c?`<small class="rkc">${r.c}×</small>`:''}</span><b>${r.v?fmt(r.v):'–'}</b></div>`).join(''):'<div class="rkempty">Még senki nem játszott ezzel a játékkal.</div>';
+  ME.innerHTML=mr&&mr.v&&mr.out?`Te: <b>${fmt(mr.v)}</b> · még nem fértél be az első ${USRC['rk:'+g]?TOPN:TOPH}-be`:mr&&mr.v?`Te: <b>${mi+1}.</b> hely · <b>${fmt(mr.v)}</b>`:mr?`Még nincs eredményed · ${mr.c}× játszottál`:'Még nem játszottál ebben a játékban.';
+  L.innerHTML=rows.length?rows.map((r,i)=>`<div class="rkrow${r.me?' me':''}${r.v&&i<3?' top':''}${r.v?'':' nov'}"><span class="rkp">${r.out?'…':r.v?(['🥇','🥈','🥉'][i]||(i+1)+'.'):'–'}</span><span class="rkn">${esc(r.n)}${r.c?`<small class="rkc">${r.c}×</small>`:''}</span><b>${r.v?fmt(r.v):'–'}</b></div>`).join(''):'<div class="rkempty">Még senki nem játszott ezzel a játékkal.</div>';
   L.scrollTop=0;const m=o.querySelector('.rkrow.me');if(m&&mi>6)m.scrollIntoView({block:'center'})}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rank]');if(!b)return;e.preventDefault();e.stopPropagation();rankOpen(b.dataset.rank)},true);
 const SE_CARD='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060a18"/><stop offset="1" stop-color="#1d2740"/></linearGradient></defs><rect width="160" height="80" rx="10" fill="url(#g)"/><circle cx="132" cy="15" r="8" fill="#f4f1dc"/><circle cx="136" cy="12" r="7" fill="#0a1020"/><circle cx="20" cy="12" r="1" fill="#fff"/><circle cx="60" cy="8" r="1" fill="#fff"/><circle cx="96" cy="18" r="1" fill="#fff"/><path d="M0 62 L10 38 L20 62 L28 30 L40 62 L48 44 L56 62Z" fill="#0b1610"/><path d="M104 62 L112 40 L120 62 L128 32 L138 62 L146 44 L156 62Z" fill="#0b1610"/><ellipse cx="124" cy="46" rx="14" ry="4" fill="#0a0e0a"/><rect x="121" y="30" width="6" height="14" rx="2" fill="#0a0e0a"/><circle cx="124" cy="27" r="3.5" fill="#0a0e0a"/><polygon points="118,36 64,66 96,66" fill="rgba(255,245,200,.33)"/><rect y="62" width="160" height="18" fill="#0d120c"/><rect x="36" y="56" width="26" height="6" rx="3" fill="#5f6440"/><rect x="40" y="52" width="12" height="5" rx="2" fill="#4a4d30"/><circle cx="66" cy="58" r="3.4" fill="#c99b76"/><path d="M62 57 a4.5 4.5 0 0 1 9 0z" fill="#454a2c"/><circle cx="50" cy="61" r="9" fill="#15281a"/><circle cx="38" cy="61" r="7" fill="#15281a"/><circle cx="72" cy="61" r="6" fill="#15281a"/><path d="M84 20 l8 -3 l2 2 l-8 3z" fill="#2b3320"/><circle cx="88" cy="22" r="1.2" fill="#ff3b3b"/></svg>`);
@@ -3321,9 +3325,11 @@ let CHAT=[],CHUNSUB=null,CHSENT=0;
 const CH_MAX=300;
 function chatSeen(){try{return Number(localStorage.getItem('medve-chat-seen')||0)}catch(e){return 0}}
 function chatMarkSeen(){const t=CHAT.length?CHAT[CHAT.length-1].ts||0:0;try{localStorage.setItem('medve-chat-seen',String(Math.max(t,chatSeen())))}catch(e){}}
-function chatListen(){if(CHUNSUB)CHUNSUB();
-  CHUNSUB=DB.collection('chat').orderBy('ts','desc').limit(80).onSnapshot({includeMetadataChanges:true},qs=>{const a=[];qs.forEach(d=>a.push({id:d.id,pend:d.metadata.hasPendingWrites,...d.data()}));CHAT=a.reverse();chatRefresh()},err=>console.warn('chat',err))}
-function chatStop(){if(CHUNSUB){CHUNSUB();CHUNSUB=null}CHAT=[];chatClose()}
+// zárt chatnél csak az utolsó 10 üzenet figyelt (az „új” jelzéshez ennyi elég, a gomb 9+-ig számol) – nyitáskor 80; így egy appnyitás 10 olvasás, nem 80
+let CH_LIM=0;
+function chatListen(lim){lim=lim||10;if(CHUNSUB&&CH_LIM===lim)return;if(CHUNSUB)CHUNSUB();CH_LIM=lim;
+  CHUNSUB=DB.collection('chat').orderBy('ts','desc').limit(lim).onSnapshot({includeMetadataChanges:true},qs=>{const a=[];qs.forEach(d=>a.push({id:d.id,pend:d.metadata.hasPendingWrites,...d.data()}));CHAT=a.reverse();chatRefresh()},err=>console.warn('chat',err))}
+function chatStop(){if(CHUNSUB){CHUNSUB();CHUNSUB=null}CH_LIM=0;CHAT=[];chatClose()}
 function chatUnread(){const s=chatSeen();return CHAT.filter(m=>(m.ts||0)>s&&m.uid!==UID).length}
 function chatBtnHTML(){const n=chatUnread();return `💬 <b>Chat</b><span>${n?`<i class="chnew">${n>9?'9+':n} új</i>`:'mindenki írhat'}</span>`}
 function chatTime(ts){if(!ts)return '';const d=new Date(ts),n=new Date();const hm=pad(d.getHours())+':'+pad(d.getMinutes());return d.toDateString()===n.toDateString()?hm:(pad(d.getMonth()+1)+'.'+pad(d.getDate())+'. '+hm)}
@@ -3337,8 +3343,8 @@ function chatOpen(){if(!(FB_ON&&UID)){toast('A chathez lépj be!');return}let o=
   o.innerHTML=`<div class="chbox" role="dialog" aria-label="Chat"><div class="rkhd"><b>💬 Chat</b><button type="button" class="rkx" id="chX" aria-label="Chat bezárása" title="Bezárás">✕</button></div>
    <div class="chnet" id="chNet" hidden>Nincs internet. Az üzeneted elküldődik, amint lesz kapcsolat.</div><div class="chlist"></div>
    <form id="chForm" class="chform"><textarea id="chText" rows="1" maxlength="${CH_MAX}" placeholder="Üzenet…" aria-label="Üzenet"></textarea><button type="submit" class="btn pri" id="chSend" aria-label="Küldés">➤</button></form></div>`;
-  o.hidden=false;document.body.classList.add('rkon');chatRefresh();setTimeout(()=>$('#chText')?.focus(),50)}
-function chatClose(){const o=document.getElementById('chatov');if(o){o.hidden=true;o.innerHTML=''}if(!document.getElementById('rankov')||document.getElementById('rankov').hidden)document.body.classList.remove('rkon');const b=document.getElementById('chatOpen');if(b)b.innerHTML=chatBtnHTML()}
+  o.hidden=false;document.body.classList.add('rkon');chatListen(80);chatRefresh();setTimeout(()=>$('#chText')?.focus(),50)}
+function chatClose(){const o=document.getElementById('chatov');if(o){o.hidden=true;o.innerHTML=''}if(CHUNSUB&&CH_LIM>10)chatListen(10);if(!document.getElementById('rankov')||document.getElementById('rankov').hidden)document.body.classList.remove('rkon');const b=document.getElementById('chatOpen');if(b)b.innerHTML=chatBtnHTML()}
 function chatSend(){const t=$('#chText');if(!t)return;const text=t.value.trim().slice(0,CH_MAX);if(!text)return;
   if(!USERDOC){toast('Még töltődik a profilod, próbáld újra.');return}
   if(Date.now()-CHSENT<2000){toast('Lassabban, 2 másodpercenként egy üzenet.');return}CHSENT=Date.now();
@@ -3481,8 +3487,9 @@ function fbOwnLocal(uid){let o=null;try{o=localStorage.getItem('medve-owner')}ca
 const LB_FIELDS=['harcBest','harcAt','droneBest','droneAt','gtBest','gtBestAt','gkBest','gkBestAt','rkBest','rkBestAt','rkhBest','rkhBestAt','sereBest','sereBestAt','harcN','droneN','gtN','gkN','rkN','sereN','tkN','tkFt','tkGive','tkOwn','tkOwnF','tkWk','tkWg','tkAt','tkSt','lastPlay','lbSeen'];
 async function lbResetAll(){if(USERDOC?.role!=='admin'){toast('Ehhez admin jog kell.');return}if(!navigator.onLine){toast('Ehhez internet kell.');return}
   const w=prompt('Minden játék ranglistája, a játékszámlálók és a Kassza-állás MINDENKINÉL törlődik. Nem vonható vissza.\nÍrd be: NULLÁZÁS');if((w||'').trim().toUpperCase()!=='NULLÁZÁS'){toast('Nullázás megszakítva.');return}
-  const del=firebase.firestore.FieldValue.delete(),now=srvNow(),ids=Object.keys(S.users||{});let done=0;
-  try{for(let i=0;i<ids.length;i+=400){const b=DB.batch();for(const id of ids.slice(i,i+400)){const u={lbReset:now};for(const f of LB_FIELDS)if(S.users[id]&&f in S.users[id])u[f]=del;b.update(DB.doc('users/'+id),u)}await b.commit();done+=Math.min(400,ids.length-i)}
+  const del=firebase.firestore.FieldValue.delete(),now=srvNow();let done=0;
+  // a telefon már csak az élmezőnyt figyeli, ezért a nullázáshoz egyszer lekérjük a teljes listát
+  try{const AU={};(await DB.collection('users').get()).forEach(d=>{AU[d.id]=d.data()});const ids=Object.keys(AU);for(let i=0;i<ids.length;i+=400){const b=DB.batch();for(const id of ids.slice(i,i+400)){const u={lbReset:now};for(const f of LB_FIELDS)if(f in AU[id])u[f]=del;b.update(DB.doc('users/'+id),u)}await b.commit();done+=Math.min(400,ids.length-i)}
     toast('✅ Ranglista nullázva ('+done+' játékos) – új szezon indult.');lbApply()}catch(e){console.warn('lbReset',e);toast('A nullázás nem sikerült: '+(e.code||e.message||e))}}
 // a nullázás átvétele ezen a telefonon: helyi rekordok és a Kassza-állás törlése (a választott üteg megmarad)
 // A nullázást az azonosítója (időbélyege) alapján vesszük át: ha az eltér a telefonon utoljára átvettől, a helyi állás törlődik.
@@ -3510,38 +3517,64 @@ setInterval(()=>{if(MODE==='fb'&&FB_SYNCED&&!document.hidden)fbSyncLocal()},3000
 // terhelik a telefont (nincs akadás), és a szerveren sem sokszorozódnak az olvasások. Visszatéréskor csak a változások töltődnek le.
 let UNSUB_ME=null,LB_ON=false,LB_OFF_T=0,LIVE_T=0,LIVE_DUE=false;
 const inGame=()=>{try{return GP_RUN()||!!(typeof SE!=='undefined'&&SE.run)||!!(typeof SR!=='undefined'&&SR.run)||!!(LVM&&LVM.LV.run)}catch(e){return false}};
-function fbStop(){if(UNSUB){UNSUB();UNSUB=null}if(UNSUB_ME){UNSUB_ME();UNSUB_ME=null}LB_ON=false}
+function fbStop(){if(RK_UN){RK_UN();RK_UN=null}RK_KEY='';lwStop('top');lwStop('all');if(UNSUB_ME){UNSUB_ME();UNSUB_ME=null}uClear()}
 function fbListen(){fbStop();FB_SYNCED=false;const uid=UID;
-  UNSUB_ME=DB.doc('users/'+uid).onSnapshot(x=>{if(uid!==UID)return;if(x.exists){USERDOC={id:x.id,...x.data()};S.users[uid]=USERDOC}else{USERDOC=null;delete S.users[uid]}
+  UNSUB_ME=DB.doc('users/'+uid).onSnapshot(x=>{if(uid!==UID)return;if(x.exists){USERDOC={id:x.id,...x.data()}}else{USERDOC=null}uRebuild()
     if(!USERDOC&&!x.metadata.fromCache&&AUTH.currentUser){const u=AUTH.currentUser;const nm=(u.displayName||u.email.split('@')[0]).slice(0,20);
       DB.doc('users/'+uid).set({name:nm,rank:'',nick:u.email.split('@')[0],createdAt:srvNow()}).catch(()=>{})}
     lbApply();if(USERDOC&&!x.metadata.fromCache){const first=!FB_SYNCED;FB_SYNCED=true;fbSyncLocal(first)}
     liveSoon()},err=>{console.warn(err);toast('A fiók most nem érhető el ('+(err.code||'hiba')+')')});
   lbWatch()}
-// a lista-figyelő csak akkor fut, ha a lista látszik; rövid játék miatt nem kapcsol ki-be (20 mp türelmi idő)
-function lbWant(){if(MODE!=='fb'||!UID||!DB||document.hidden)return false;if(!inGame())return true;return typeof TK!=='undefined'&&TK.run&&(TK.sheet==='uteg'||!!TK.raceFb)}
-function lbWatch(){try{raceWatch();if(MODE!=='fb'||!UID||!DB){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;return}const want=lbWant(),now=Date.now();
-  if(want){LB_OFF_T=0;if(!LB_ON)lbSub();return}if(!LB_ON)return;if(!LB_OFF_T){LB_OFF_T=now;return}if(now-LB_OFF_T>20000){if(UNSUB){UNSUB();UNSUB=null}LB_ON=false;LB_OFF_T=0}}catch(e){}}
-function lbSub(){if(UNSUB)UNSUB();LB_ON=true;const uid=UID;let first=true;
-  UNSUB=DB.collection('users').onSnapshot(qs=>{if(uid!==UID)return;
-    if(first){first=false;const o={};if(S.users[uid])o[uid]=S.users[uid];qs.forEach(d=>{if(d.id!==uid)o[d.id]={id:d.id,...d.data()}});S.users=o;lbApply();liveSoon();return}
-    // utána csak a változott dokumentumokat dolgozzuk fel – nem építjük újra a teljes listát minden mentésnél
-    let reset=false;qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){delete S.users[id];return}const d={id,...c.doc.data()};if(d.lbReset&&(!S.users[id]||S.users[id].lbReset!==d.lbReset))reset=true;S.users[id]=d});
-    if(reset)lbApply();liveSoon()},err=>{console.warn(err);LB_ON=false;UNSUB=null;toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})}
+/* JÁTÉKOSLISTA – TAKARÉKOS FIGYELÉS (4.47.0). Korábban minden nyitott app a teljes users-gyűjteményt figyelte: nyitáskor n olvasás,
+   utána MINDEN játékos minden mentése minden telefonnak 1 olvasás (a létszám négyzetével nőtt). Most két szint van:
+   - 'top': játékonként csak az első TOPH=5 (orderBy + limit) – nyitáskor 7×5 olvasás a létszámtól függetlenül, utána csak az élmezőny mentései jönnek;
+   - 'rk:<játék>': a nyitott ranglista-fülön az első TOPN=10 (csak amíg a ranglista nyitva van);
+   - 'all': a teljes lista csak ott, ahol tényleg kell: admin, a ranglista „👥 Összes” füle, a Kassza ütegverseny-lapja.
+   A dokumentumok egy közös tárban (UDOC) vannak, forrásonként (USRC) nyilvántartva, ki melyik figyelőben szerepel; S.users = ezek uniója + a saját fiók.
+   Leiratkozáskor a 'top' utolsó állása megmarad (a játék végi táblákhoz), az 'all' eldobódik (ne maradjon elavult teljes lista). */
+const TOPN=10,TOPH=5,UDOC={},USRC={},LW={top:{on:false,off:0,un:[]},all:{on:false,off:0,un:[]}};let RANK_ALL=false,RANK_G='',RK_UN=null,RK_KEY='';
+function uRebuild(){const o={};for(const s of Object.values(USRC))for(const id of s)if(UDOC[id])o[id]=UDOC[id];for(const id in UDOC)if(!o[id])delete UDOC[id];if(UID&&USERDOC)o[UID]=USERDOC;S.users=o}
+function uClear(){for(const k in USRC)delete USRC[k];for(const k in UDOC)delete UDOC[k]}
+function uDrop(src){delete USRC[src];uRebuild()}
+// egy figyelő pillanatképének átvétele; az első (újra)feliratkozáskor a forrás tagsága nulláról épül; visszaadja a mások által módosított dokumentumok számát
+function uTake(src,qs,first){const uid=UID,set=USRC[src]||(USRC[src]=new Set());let nw=0,reset=false;
+  if(first){set.clear();qs.forEach(d=>{if(d.id===uid)return;set.add(d.id);UDOC[d.id]={id:d.id,...d.data()}})}
+  else qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){set.delete(id);return}if(c.type==='modified')nw++;const d={id,...c.doc.data()};if(d.lbReset&&(!UDOC[id]||UDOC[id].lbReset!==d.lbReset))reset=true;set.add(id);UDOC[id]=d});
+  uRebuild();return {nw,reset}}
+const rankOvOpen=()=>{const o=document.getElementById('rankov');return !!o&&!o.hidden};
+function lbBase(){return MODE==='fb'&&!!UID&&!!DB&&!document.hidden}
+// élmezőny: amíg a kezdőlap/ranglista látszik; rövid játék miatt nem kapcsol ki-be (20 mp türelmi idő)
+function lbWantTop(){if(!lbBase())return false;if(!inGame()||rankOvOpen())return true;return typeof TK!=='undefined'&&TK.run&&!!TK.sheet}
+// teljes lista: admin (terhelésjelző, nullázás), „Összes” fül, Kassza ütegverseny (minden üteg összege), vagy ha a futóverseny-index hiányzik
+function lbWantAll(){if(!lbBase())return false;if(USERDOC?.role==='admin')return true;if(RANK_ALL&&rankOvOpen())return true;return typeof TK!=='undefined'&&TK.run&&(TK.sheet==='uteg'||!!TK.raceFb)}
+function lwStop(k){const w=LW[k];w.un.forEach(f=>{try{f()}catch(e){}});w.un=[];w.on=false;w.off=0;if(k==='all'){LB_ON=false;if(USRC.all)uDrop('all')}}
+function lwStep(k,want,sub){const w=LW[k],now=Date.now();if(want){w.off=0;if(!w.on){w.on=true;sub()}return}if(!w.on)return;if(!w.off){w.off=now;return}if(now-w.off>20000)lwStop(k)}
+function lbWatch(){try{raceWatch();rkWatch();if(MODE!=='fb'||!UID||!DB){lwStop('top');lwStop('all');return}lwStep('all',lbWantAll(),lbSubAll);lwStep('top',lbWantTop(),lbSubTop)}catch(e){}}
+function lbSubTop(){const uid=UID,U=DB.collection('users');
+  LW.top.un=RANKG.map(([g,,f,,asc])=>{let first=true;const src='top:'+g;
+    return U.orderBy(f,asc?'asc':'desc').limit(TOPH).onSnapshot(qs=>{if(uid!==UID)return;const f0=first,r=uTake(src,qs,first);first=false;if(r.nw)loadNote(r.nw,'top');if(f0||r.reset)lbApply();liveSoon()},
+      err=>{console.warn('ranglista '+g,err&&err.code);toast('A ranglista most nem érhető el ('+(err.code||'hiba')+')')})})}
+// a nyitott ranglista-fül első TOPN helyezettje
+function rkWatch(){try{const g=lbBase()&&rankOvOpen()&&RANK_G?RANK_G:'';if(g===RK_KEY)return;if(RK_UN){RK_UN();RK_UN=null}if(RK_KEY)uDrop('rk:'+RK_KEY);RK_KEY=g;if(!g)return;
+  const G=RANKG.find(x=>x[0]===g);if(!G)return;const uid=UID;let first=true;
+  RK_UN=DB.collection('users').orderBy(G[2],G[4]?'asc':'desc').limit(TOPN).onSnapshot(qs=>{if(uid!==UID)return;const r=uTake('rk:'+g,qs,first);first=false;if(r.nw)loadNote(r.nw,'top');if(rankOvOpen()&&RANK_G===g)rankFill(g);liveSoon()},e=>console.warn('ranglista-fül',e&&e.code))}catch(e){}}
+function lbSubAll(){const uid=UID;let first=true;LB_ON=true;
+  LW.all.un=[DB.collection('users').onSnapshot(qs=>{if(uid!==UID)return;const f0=first,r=uTake('all',qs,first);first=false;if(r.nw)loadNote(r.nw,'all');if(f0||r.reset)lbApply();if(f0&&RANK_ALL&&rankOvOpen())rankFill('all');liveSoon()},
+    err=>{console.warn(err);LB_ON=false;LW.all.un=[];LW.all.on=false;toast('A teljes játékoslista most nem érhető el ('+(err.code||'hiba')+')')})]}
 // ÉLŐ FUTÓVERSENY a Kasszában: csak a verseny élmezőnye (első 8) figyelt valós időben – a kis katonák így élőben futnak,
 // de a szerveren csak az élmezőny mentései sokszorozódnak, nem mindenkié. Havi nézethez összetett index kell (users: tkWk ↑, tkWg ↓);
 // ha még nincs meg, átmenetileg a teljes lista-figyelő pótolja (drágább, de a verseny akkor is élő marad).
 let RACE_UN=null,RACE_KEY='',UT_UN=null,UT_KEY='';
 // az üteg közös kasszájához az ütegtársak (egy üteg, ~1/7 játékos) is élőben figyeltek, amíg a Kassza nyitva van
 function utegWatch(){try{const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run&&!!TK.uteg,key=on?TK.uteg:'';
-  if(key===UT_KEY)return;if(UT_UN){UT_UN();UT_UN=null}UT_KEY=key;if(!key)return;const uid=UID;
+  if(key===UT_KEY)return;if(UT_UN){UT_UN();UT_UN=null}UT_KEY=key;if(USRC.uteg)uDrop('uteg');if(!key)return;const uid=UID;let first=true;
   UT_UN=DB.collection('users').where('tkUteg','==',key).onSnapshot(qs=>{if(uid!==UID)return;
-    qs.docChanges().forEach(c=>{const id=c.doc.id;if(id===uid)return;if(c.type==='removed'){/* átigazolt: az új ütegét a teljes lista hozza */if(S.users[id]&&S.users[id].tkUteg===key)S.users[id]=Object.assign({},S.users[id],{tkUteg:null});return}S.users[id]={id,...c.doc.data()}});TK.stc=null},
+    /* átigazolt társ: kikerül ebből a forrásból; ha más figyelőben is benne van, onnan friss adattal jön */uTake('uteg',qs,first);first=false;TK.stc=null},
     e=>{console.warn('ütegtársak',e&&e.code,e&&e.message)})}catch(e){}}
 function raceWatch(){try{utegWatch();const on=MODE==='fb'&&!!UID&&!!DB&&!document.hidden&&typeof TK!=='undefined'&&TK.run,cur=on?tkWeek():'',key=on?(TK.utw?'w|'+cur:'t'):'';
-  if(key===RACE_KEY)return;if(RACE_UN){RACE_UN();RACE_UN=null}RACE_KEY=key;if(!key){if(typeof TK!=='undefined')TK.raceTop=null;return}
+  if(key===RACE_KEY)return;if(RACE_UN){RACE_UN();RACE_UN=null}RACE_KEY=key;if(USRC.race)uDrop('race');if(!key){if(typeof TK!=='undefined')TK.raceTop=null;return}
   const uid=UID,U=DB.collection('users'),q=TK.utw?U.where('tkWk','==',cur).orderBy('tkWg','desc').limit(8):U.orderBy('tkFt','desc').limit(8);
-  RACE_UN=q.onSnapshot(qs=>{if(uid!==UID)return;const top=new Set();qs.forEach(d=>{top.add(d.id);if(d.id!==uid)S.users[d.id]={id:d.id,...d.data()}});TK.raceTop=top;TK.raceFb=false;TK.stc=null},
+  let first=true;RACE_UN=q.onSnapshot(qs=>{if(uid!==UID)return;const top=new Set();qs.forEach(d=>top.add(d.id));uTake('race',qs,first);first=false;TK.raceTop=top;TK.raceFb=false;TK.stc=null},
     e=>{console.warn('élő futóverseny',e&&e.code,e&&e.message);TK.raceFb=true;lbWatch()})}catch(e){}}
 setInterval(lbWatch,3000);document.addEventListener('visibilitychange',()=>{lbWatch();if(!document.hidden&&LIVE_DUE)liveSoon()});
 // a kijelző frissítése összevonva, legfeljebb 1,5 mp-enként; játék közben és háttérben elhalasztva (visszatéréskor frissül)
@@ -3553,12 +3586,46 @@ function liveRefresh(){const ov=document.getElementById('rankov');if(ov&&!ov.hid
   const lv=document.getElementById('arcLive');if(lv)lv.innerHTML=liveHTML();const ab=document.getElementById('authBox');if(ab&&UID)ab.innerHTML=authInner()}
 function liveHTML(){return RANKG.map(([g,t,f,,asc,fmt])=>{const rows=arr('users').filter(u=>u[f]>0).sort((a,b)=>asc?a[f]-b[f]:b[f]-a[f]).slice(0,3);
   return `<button type="button" class="lvg" data-rank="${g}"><b>${t}</b>${rows.length?rows.map((u,i)=>`<span class="${u.id===UID?'me':''}"><i>${['🥇','🥈','🥉'][i]}</i><em>${esc(u.name)}</em><strong>${fmt(u[f])}</strong></span>`).join(''):'<span class="lv0">Még senki</span>'}</button>`}).join('')}
+/* ADMIN – SZERVERTERHELÉS-JELZŐ (becslés, csak az adminnak látszik; nem kérdez le semmit külön, nincs plusz Firestore-olvasás)
+   A PIROS PLAFON = a Firestore ingyenes (Spark) napi kerete: 50 000 olvasás és 20 000 írás naponta (Csendes-óceáni éjfélkor nullázódik).
+   Modell a beállított mentési és figyelési ütemből (FSM – ha ezek változnak, ezt is igazítsd). D = napi játékos, n = regisztrált:
+   - appnyitás (~2/fő/nap): saját fiók 1 + játékonként az első 5 (7×5) + chat utolsó 10 = 46 olvasás – NEM függ a létszámtól (4.47.0 óta)
+   - ranglista megnyitása (~1/fő/nap): a fül első 10-e; teljes lista (Kassza ütegverseny, „Összes” fül) ~0,2-szer/fő/nap × n olvasás
+   - ~30 perc játék/nap: ~35 írás/fő/nap (zseton és Kassza 2 percenként, játékszámláló); a szabályok íráskénti 1 olvasása is beszámít
+   - továbbítás: csak az élmezőny (~20 aktív élre jutott játékos) mentései mennek ki, a nyitott appoknak (~40 perc/fő, 12 órás napra elosztva), átlag 1,5 listában
+   - chat: ~1 üzenet/fő/nap, minden épp nyitott appnak 1 olvasás
+   Olvasás/nap ≈ D·(2·46 + 10 + 35) + 0,2·D·n + 35·min(D,20)·D·40/720·1,5 + 1·D·D·40/720. */
+const LOADW=[],FSQ={r:50000,w:20000},FSM={opens:2,openR:1+7*5+10,rkView:1,rkR:10,fullOpen:0.2,wDay:35,topW:20,dup:1.5,chat:1,onMin:40,dayMin:720,peak:3};
+function fsDayR(D,n){const on=FSM.onMin/FSM.dayMin;return D*(FSM.opens*FSM.openR+FSM.rkView*FSM.rkR+FSM.wDay)+FSM.fullOpen*D*Math.max(n,D)+FSM.wDay*Math.min(D,FSM.topW)*D*on*FSM.dup+FSM.chat*D*D*on}
+function fsDayW(D){return D*FSM.wDay}
+// hány napi játékost bír el az ingyenes keret a mostani regisztrált létszám mellett
+function fsCap(n){let lo=0,hi=20000;while(hi-lo>1){const m=(lo+hi)>>1;if(fsDayR(m,n)<=FSQ.r&&fsDayW(m)<=FSQ.w)lo=m;else hi=m}return lo}
+// src: 'all' = a teljes lista egy változása (= egy másik játékos egy mentése), 'top' = az élmezőny-figyelők egy kézbesítése (= egy olvasás nyitott appanként)
+function loadNote(n,src){try{if(USERDOC?.role!=='admin')return;const t=Date.now();for(let i=0;i<Math.min(n,200);i++)LOADW.push([t,src||'all']);while(LOADW.length&&t-LOADW[0][0]>6e5)LOADW.shift()}catch(e){}}
+function loadTs(v){return typeof v==='number'?v:v&&v.toMillis?v.toMillis():0}
+function loadStat(){const now=srvNow(),us=arr('users'),n=us.length;let a5=0,a60=0,a24=0;
+  for(const u of us){const t=Math.max(loadTs(u.lastPlay),loadTs(u.tkAt),loadTs(u.zsSt),loadTs(u.tkSt));if(!t)continue;const d=now-t;if(d<=3e5)a5++;if(d<=36e5)a60++;if(d<=864e5)a24++}
+  const t0=Date.now();while(LOADW.length&&t0-LOADW[0][0]>6e5)LOADW.shift();const r5=LOADW.filter(x=>t0-x[0]<=3e5),wpm=r5.filter(x=>x[1]==='all').length/5,tpm=r5.filter(x=>x[1]==='top').length/5;
+  // olvasás/perc ≈ élmezőny-kézbesítés × nyitott appok + teljes-lista változás × teljes listát nyitva tartók (admin + ~10%) + chat × nyitott appok
+  const ch10=CHAT.filter(m=>m.ts&&now-m.ts<=6e5).length,act=Math.max(1,a5),rpm=Math.round(tpm*act+wpm*(1+Math.ceil(a5*0.1))+ch10/10*act);
+  const cap=fsCap(n),capNow=Math.max(3,Math.round(cap*FSM.onMin/FSM.dayMin*FSM.peak)),rpmMax=Math.round(FSQ.r/FSM.dayMin*FSM.peak);
+  const dR=Math.round(fsDayR(a24,n)),dW=Math.round(fsDayW(a24));
+  const pct=Math.round(100*Math.max(dR/FSQ.r,dW/FSQ.w,a5/capNow,rpm/rpmMax));
+  const lv=pct>=100?['🔴','Ingyenes keret felett','hi']:pct>=75?['🟠','Közel a plafonhoz','up']:pct>=50?['🟡','Közepes','mid']:['🟢','Nyugodt','lo'];
+  return {n,a5,a60,a24,wpm,rpm,ch10,pct,lv,cap,capNow,rpmMax,dR,dW}}
+const fsK=v=>v.toLocaleString('hu-HU');
+function loadHTML(){const s=loadStat();
+  return `<div class="adload ${s.lv[2]}" id="admLoad"><div class="adlh"><b>📊 Szerverterhelés</b><span>${s.lv[0]} ${s.lv[1]} · ${s.pct}%</span></div><div class="adlbar"><i data-st="width:${Math.min(100,s.pct)}%"></i></div>
+    <div class="adlg"><span><b>${s.a5}<small>/${s.capNow}</small></b>aktív most (5 p)</span><span><b>${s.a24}<small>/${s.cap}</small></b>ma (24 ó)</span><span><b>${s.a60}</b>1 órán belül</span><span><b>${s.n}</b>regisztrált</span>
+    <span><b>${s.wpm.toFixed(1)}</b>mentés/perc</span><span><b>~${s.rpm}<small>/${s.rpmMax}</small></b>olvasás/perc</span><span><b>${s.ch10}</b>chat (10 p)</span></div>
+    <p class="hint">🔴 plafon = a Firestore ingyenes napi kerete (50 000 olvasás, 20 000 írás). Appnyitásonként csak a ranglisták első 5 helyezettje töltődik le. A mostani ${s.n} regisztrálttal kb. <b>${s.cap} fő/nap</b> fér bele, egyszerre kb. ${s.capNow}. Mai becslés: ${fsK(s.dR)} olvasás, ${fsK(s.dW)} írás. A mentés/perc ennél a telefonnál mért (utolsó 5 perc).${LB_ON?'':' ⚠️ A lista-figyelő most áll, a számok régebbiek lehetnek.'}</p></div>`}
+setInterval(()=>{try{const b=document.getElementById('admLoad');if(b&&!document.hidden&&USERDOC?.role==='admin')b.outerHTML=loadHTML()}catch(e){}},15000);
 function authInner(){
   if(!FB_ON)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">${FB_CFG?'A bejelentkezéshez internet kell az első indításkor. Kapcsolódj netre, majd töltsd újra az oldalt.':'A szerver még nincs beállítva (firebase-config.js), ezért most csak helyi rekordok vannak.'}</p>`;
   if(!AUTHREADY)return `<h3>🔐 Fiók</h3><p class="hint" data-st="margin:0">Kapcsolódás…</p>`;
   if(UID){const nm=USERDOC?((USERDOC.rank?USERDOC.rank+' ':'')+USERDOC.name):(AUTH.currentUser?.displayName||'…');
     return `<h3>👤 ${esc(nm)}</h3><label class="authf"><span>Rendfokozat</span><select id="auRankEd">${RANKS.map(r=>`<option value="${esc(r)}" ${r===(USERDOC?.rank||'')?'selected':''}>${r||'— nincs megadva —'}</option>`).join('')}</select></label>
-      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>${USERDOC?.role==='admin'?`<div class="lbadm"><b>🛡 Admin</b><p class="hint">Új szezon: minden játék ranglistája, a játékszámlálók és a Kassza-állás mindenkinél nulláról indul. A telefonokon tárolt régi rekordok is törlődnek, nem töltődnek vissza.</p><button type="button" class="btn sm lbrst" id="auLbReset">🗑 Ranglista nullázása – új szezon</button></div>`:''}`}
+      <button type="button" class="btn line sm" id="auOut" data-st="margin-top:10px">Kijelentkezés</button>${USERDOC?.role==='admin'?`<div class="lbadm"><b>🛡 Admin</b>${loadHTML()}<p class="hint">Új szezon: minden játék ranglistája, a játékszámlálók és a Kassza-állás mindenkinél nulláról indul. A telefonokon tárolt régi rekordok is törlődnek, nem töltődnek vissza.</p><button type="button" class="btn sm lbrst" id="auLbReset">🗑 Ranglista nullázása – új szezon</button></div>`:''}`}
   const reg=AUTHTAB==='reg';
   return `<h3>🔐 ${reg?'Regisztráció':'Bejelentkezés'}</h3>${navigator.onLine?'':'<p class="choff">📴 Nincs internet. Belépés nélkül is játszhatsz, a rekordjaid a következő belépéskor feltöltődnek.</p>'}<p class="hint" data-st="margin:0 0 10px">A játékhoz fiók kell, így a rekordjaid élőben felkerülnek a közös ranglistára.</p>
    <div class="autabs"><button type="button" data-autab="login" class="${reg?'':'on'}">Belépés</button><button type="button" data-autab="reg" class="${reg?'on':''}">Regisztráció</button></div>
@@ -3593,7 +3660,7 @@ if(FB_ON){try{firebase.initializeApp(FBC);AUTH=firebase.auth();DB=firebase.fires
     try{DB.enablePersistence().catch(()=>{})}catch(e){}
     AUTH.onAuthStateChanged(u=>{AUTHREADY=true;AUTHTAB='login';
       if(u){UID=u.uid;MODE='fb';fbOwnLocal(u.uid);fbListen();chatListen()}
-      else{fbStop();chatStop();UID=null;USERDOC=null;MODE='local';S.users={}}
+      else{fbStop();chatStop();UID=null;USERDOC=null;MODE='local';S.users={};RANK_ALL=false;RANK_G=''}
       if(document.getElementById('harc')?.hidden!==false)arcRender();dlAfterAuth()})}
   catch(e){console.warn('Firebase init hiba',e);FB_ON=false;AUTHREADY=true}}
 
