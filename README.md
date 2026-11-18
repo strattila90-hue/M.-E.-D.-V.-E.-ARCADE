@@ -1,9 +1,32 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.44.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.45.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.45.0:** **Legyen értelme a zsetonnak: bolt, folytatás, tagsági fokozat, napi plafon.** (A `docs/tervezet-zseton.md` mind a 4 javaslata.)
+- **🪙 Zseton-bolt** a Tüzér Kassza **Ajándék** fülén:
+  - **💸 Pénz-gépágyú most:** 15 zseton, naponta legfeljebb 3. A megvett gépágyú nem tolja el a következő ingyenes érkezését, és egyszerre most is csak egy lehet.
+  - **🎫 Golden Ticket:** 15 mp dupla bevétel, 8 zseton, naponta legfeljebb 5.
+  - Vásárláskor a fül bezáródik, hogy azonnal koppinthass, illetve lőhess.
+- **🪙 Folytatás vereség után** a **H.A.R.C.**-ban, a **DroneRun**-ban és a **Shot&Run**-ban (ott csak gép ellen, és csak ha kilőtték a lövegedet). **Menetenként egyszer, 3 zseton** (Gyémánt fokozaton 2). A gomb a vereség ablakában jelenik meg.
+  - **H.A.R.C.:** a medve 60%-kal áll talpra, a lehulló gránátok eltűnnek.
+  - **DroneRun:** a PzH talpra áll ugyanott (legalább 60%). A közeli drónok, gránátok és aknák eltűnnek, a főellenség marad.
+  - **Shot&Run:** a javítóbrigád helyrehozza a löveget (45%, minden sérülés javítva, a tűz eloltva), és te jössz.
+  - A menet pontja, megtett távja és lelőtt drónjai megmaradnak, a ranglistára is a végső eredmény kerül. Az online és a kétszemélyes Shot&Run-ban nincs folytatás.
+- **Tagsági fokozat** az **összesen elköltött** zseton szerint. Ide számít a játékindítás, a bolt és a folytatás, a Derbyből pedig a futamonkénti **nettó veszteség**. A tét levonásakor még nem számít, így a megszakadt, visszatérített futam sem emel.
+
+  | Fokozat | Elköltött zseton | Előny |
+  |---|---|---|
+  | 🥉 Bronz | 100 | Kassza +5% koppintásérték |
+  | 🥈 Ezüst | 500 | Kassza +10%, pénz-gépágyú 50 percenként |
+  | 🥇 Arany | 2 000 | Kassza +15%, gépágyú 45 percenként, +1 érmeverő-mentés naponta |
+  | 💎 Gyémánt | 10 000 | Kassza +20%, gépágyú 40 percenként, +2 érmeverő-mentés, folytatás 2 zsetonért |
+
+  A szintlépést üzenet jelzi. A fokozat a kezdőlap „Összes pénzem” gombján és a tárca ablakában látszik (haladásjelző, összecsukható fokozatlista). Csak a telefonon tárolódik, ezért a fiókba mentés nem változott.
+- **Napi plafon:** a játékidőért **naponta legfeljebb 30 zseton** jár, a nap magyar idő szerint vált. Utána a percszámláló megáll, a sarokjelzés egyszer kiírja: „mára kész · 30/30”. A Kassza-kivét (napi 20) és a Derby addig is megy. A tárca mutatja a mai állást, és felsorolja, mire költheted a zsetont.
+- A `firestore.rules` most sem változott: a költés a `zs`-t csak csökkenti, azt a szabály mindig elfogadja.
 
 **v4.44.0:** **Tüzér Kassza – új koppintás-nézet és pénz-gépágyú; a zseton nem zavar játék közben.**
 - **Köteg lent, a pénz berepül a kerékre:** a koppintható bankó (érme) a kerék közepéről lekerült. A képernyő alján most rendezett **bankóköteg** áll, mint amikor kézben számoljuk a pénzt; az érméknél **recézett peremű érmeoszlop**. A köteg rétegenként, lefelé egyre sötétebb élekkel látszik. **Koppintásra vagy pöccintésre** a legfelső bankó ívben a **rulettkerékre repül**: pörög, átfordul, és a kerék síkjába dőlve landol. Ott a kerékkel együtt forog, majd beszívódik a kasszába, közben kipattan a „+összeg”. A ZSEB-kijelző minden érkezésre lüktet. A kerék közepén arany tengelydísz van; telitalálatnál nagyobb gyűrű, villanás és konfetti.

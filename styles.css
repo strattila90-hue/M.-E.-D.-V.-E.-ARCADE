@@ -1787,3 +1787,17 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 #walPip b{font:400 16px/1 var(--f-display,Anton,Impact,sans-serif);letter-spacing:.03em;color:#ffe08a}
 #walPip small{font:700 10px/1 system-ui,sans-serif;color:#e8e2c0;opacity:.85}
 @media (prefers-reduced-motion:reduce){#walPip{transition:opacity .2s}}
+/* v4.45: zseton – folytatás gomb, Kassza-bolt, tárca: költéslista és tagsági fokozat */
+.btn.zsc{background:linear-gradient(#ffe169,#e0a514);color:#2a1c04;font-weight:900;box-shadow:0 0 0 2px #111,0 3px 0 #6e5408;animation:tkp .9s infinite alternate}
+.btn.zsc:active{transform:translateY(2px)}
+.zsshop{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.zsshop button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 6px;border:2.5px solid #111;border-radius:12px;box-shadow:3px 3px 0 #111;background:linear-gradient(#ffe169,#c98a06);color:#2a1c04;font:inherit;cursor:pointer;min-width:0}
+.zsshop button i{font-style:normal;font-size:22px;line-height:1}.zsshop button b{font:400 15px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.04em;text-align:center}.zsshop button small{font-size:10.5px;font-weight:800;text-align:center;line-height:1.25}
+.zsshop button:disabled{background:#3a4030;color:#a8ae98;box-shadow:2px 2px 0 #111;cursor:default}
+.zsshop button:active:not(:disabled){transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.walspend{list-style:none;margin:0 0 8px;padding:0;font-size:12.5px;line-height:1.35}
+.walspend li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)}.walspend li span{margin-left:auto;white-space:nowrap;font-weight:800;color:#ffe08a}
+.wallv{list-style:none;margin:8px 0 0;padding:0;font-size:11.5px;line-height:1.3}
+.wallv li{display:grid;grid-template-columns:auto auto 1fr;gap:2px 8px;align-items:baseline;padding:4px 6px;border-radius:8px;opacity:.65}
+.wallv li.on{opacity:1;background:rgba(255,224,138,.1)}.wallv li b{white-space:nowrap}.wallv li em{font-style:normal;font-size:10.5px;opacity:.8;white-space:nowrap}.wallv li span{grid-column:1/-1;opacity:.9}
+.walmore{margin-top:6px}.walmore summary{cursor:pointer;font-size:11.5px;font-weight:800;color:#ffe08a;opacity:.9}

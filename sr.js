@@ -1,5 +1,5 @@
 // M.E.D.V.E. Arcade – sr.js modul (az app.js tölti be lustán, amikor először kell). A közös segédeket az app.js-ből veszi át.
-import {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,S,SOUND,UID,USERDOC,V,ac,boom,esc,gameStart,ic,medveWrap,n0,pzhFullSet,snare,sndClink,sndFar,sndMega,sndPop,sndThud,st,toast} from './app.js';
+import {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,S,SOUND,UID,USERDOC,V,ac,boom,esc,gameStart,ic,medveWrap,n0,pzhFullSet,snare,sndClink,sndFar,sndMega,sndPop,sndThud,st,toast,zsPay,zsContCost} from './app.js';
 /* ===================== SHOT&RUN – PzH 2000 tüzérpárbaj (körökre osztott) =====================
    Pálya és modell a DroneRunból. 1 világegység = 10 m. Szögek vonásban (6400 = teljes kör).
    Minden véletlen a lövő gépén dől el, az eredmény eseményként megy át a másik félhez (online mód). */
@@ -433,7 +433,7 @@ function srMsg(txt,dur){const m=$('#srMsg');if(!m)return;m.textContent=txt;m.hid
 
 /* ---------- játékmenet ---------- */
 function srBegin(mode,o){o=o||{};setTimeout(srCamUI,0);SR.bail=[];setTimeout(()=>{try{if(AC){srEngStartBuf();srRadioBuf();srTurretBuf();srLoaderHumBuf();for(let k=0;k<4;k++)srLoadBuf(k)}}catch(e){}},250);/* a hangminták előre elkészülnek, így az első kapcsoláskor sem akad */SR.cine=null;SR.cineQ=[];SR.cineF=0;SR.tutS=null;SR.tutE=null;clearTimeout(SR.allT);{const h=$('#harc');h&&h.classList.remove('srm')}SR.opts={mode,o};SR.paused=null;srPzShow(false);if(mode!=='net')srSaveDel();const seed=o.seed||(1+Math.random()*2147483000|0);
-  Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
+  Object.assign(SR,{mode,lvl:o.lvl??1,me:o.me||0,seed,cont:0,drop:0,crates:[],camT:0,fx:[],smokes:[],flares:[],float:[],subs:[],last:[null,null],rep:[null,null],turn:0,round:1,phase:'prep',shot:null,pend:null,t:0,ai:{n:0,tx:0,q:[],wait:0},camFree:false,ovw:false,prepT:0,bgx:[],trc:[],bgT:.6,war:[],warT:2.5,nk:null,nkF:0,nkT:55+Math.random()*95,col:null,shake:0,flash:0,mv:0,pred:null,predK:''});
   if(mode!=='net')SR.inbox=[];
   const [xa,xb]=srGen(seed),nm=o.names||(mode==='ai'?[srMyName(),'Gép · '+SR_AI[SR.lvl].n]:['1. löveg','2. löveg']);
   SR.v=[srNewVeh(0,xa,nm[0],false),srNewVeh(1,xb,nm[1],mode==='ai')];for(const v of SR.v){const R=srRest(v);v.y=R.y;v.a=R.a}SR.ai.tx=xa;
@@ -537,10 +537,16 @@ function srEnd(){if(SR.mode!=='net')srSaveDel();SR.paused=null;srPzShow(false);S
   else h=`<h3>💀 MEGHALTÁL</h3><p>${SR.noAmmo?'Elfogyott a lőszer, és a te löveged sérült jobban.':'A PzH 2000-ed kiégett. Egy életed volt.'}</p>`;
   SR.noAmmo=false;const used=v=>60-srAmmoN(v);
   o.innerHTML=h+`<div class="rkres"><div><span>${esc(a.name)}<small>${used(a)} lövés</small></span><b class="${a.dead?'neg':''}">${a.dead?'megsemmisült':Math.round(a.hp)+'%'}</b></div><div><span>${esc(b.name)}<small>${used(b)} lövés</small></span><b class="${b.dead?'neg':''}">${b.dead?'megsemmisült':Math.round(b.hp)+'%'}</b></div><div><span>Körök</span><b class="dim">${SR.round}</b></div></div>
-   <button class="btn pri" id="srAgain">🔁 Új játék ugyanezzel az ellenféllel</button> <button class="btn line" id="srBack">Ellenfélválasztás</button>`;
+   ${srCanCont()?`<button class="btn zsc" id="srCont">🪙 FOLYTATÁS · ${zsContCost()} zseton</button> `:''}<button class="btn pri" id="srAgain">🔁 Új játék ugyanezzel az ellenféllel</button> <button class="btn line" id="srBack">Ellenfélválasztás</button>`;
   o.hidden=false;$('#srPanel').classList.add('off');
   $('#srAgain').onclick=()=>{if(SR.mode==='net'){if(!SR.net){toast('Az ellenfél kilépett.');return}const seed=1+Math.random()*2147483000|0;srNetSend({k:'re',seed});srBegin('net',{...SR.opts.o,seed})}else srBegin(SR.opts.mode,{...SR.opts.o,seed:0})};
-  $('#srBack').onclick=()=>{srNetLeave();srMenu()}}
+  $('#srBack').onclick=()=>{srNetLeave();srMenu()};const cb=$('#srCont');if(cb)cb.onclick=srCont}
+// folytatás zsetonért – csak gép ellen, ha a te lövegedet lőtték ki (nem lőszerhiány miatt), meccsenként egyszer:
+// a javítóbrigád helyrehozza (45%, minden sérülés javítva, a tűz eloltva), és te jössz
+const srCanCont=()=>SR.mode==='ai'&&!SR.cont&&SR.v&&SR.v[SR.me]&&SR.v[SR.me].dead&&!SR.v[1-SR.me].dead;
+function srCont(){if(!srCanCont())return;if(!zsPay(zsContCost()))return;SR.cont=1;const v=SR.v[SR.me];
+  Object.assign(v,{dead:false,burn:0,cook:0,hp:45,hpD:45,hpG:45,hpGT:.6,hitF:.6,crew:Math.max(3,v.crew||0)});for(const k in v.d)v.d[k]=0;SR.bail=[];SR.cine=null;SR.cineQ=[];
+  $('#srOver').hidden=true;$('#srPanel').classList.remove('off');SR.run=true;SR.turn=SR.me;SR.phase='wait';SR.t=1.2;srFloat(v,'🪙 javítva – 45%','#ffe08a');srUI();toast('🪙 Folytatás – a javítóbrigád helyrehozta a lövegedet (45%)')}
 function srMove(v,dir,dt){const o=SR.v[1-v.i];if(!(v.sys.eng&&v.d.eng<2)){if(!v.ai&&!SR.mvW){SR.mvW=1;toast(v.d.eng>=2?'A motor megsemmisült – nem tudsz mozogni.':'Előbb indítsd be a MOTORT!')}return false}
   if(v.d.trk>=2){if(!v.ai&&!SR.mvW){SR.mvW=1;toast('Leszakadt a lánctalp – a löveg mozgásképtelen.')}return false}
   if(v.fuel<=0){if(!v.ai&&!SR.mvW){SR.mvW=1;toast('Ebben a körben nem mehetsz tovább.')}return false}

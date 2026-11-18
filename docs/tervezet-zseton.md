@@ -1,6 +1,7 @@
 # Tervezet: legyen értelme a zsetonnak
 
-**Állapot:** elemzés és javaslat. Ebből a 4.44.0-ban csak a zavaró „+1 zseton” toast helyett bevezetett kis sarokjelzés készült el. A többi pont döntésre vár.
+**Állapot:** megvalósítva. A 4.44.0-ban a zavaró „+1 zseton” toast helyett kis sarokjelzés jött, a 4.45.0-ban mind a 4 javaslat elkészült (a tényleges működést a README 4.45.0-s bejegyzése írja le).
+**Döntések (4.45.0):** az árak a javasoltak (gépágyú 15, Golden Ticket 8, folytatás 3, Gyémánt fokozaton 2); a folytatásos menet a ranglistára kerül, de menetenként csak egy folytatás van; a tagsági fokozat egyelőre csak a telefonon tárolódik (`zsSpent` szabálymódosítás nélkül nem mehet fel a fiókba); a játékidős zseton napi plafonja 30.
 **Készült:** 2026-11-18, a 4.44.0 mellé.
 
 ---

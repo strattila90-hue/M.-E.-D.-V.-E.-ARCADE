@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.44.0',APP_DATE='2026.11.18.';
+const APP_VER='4.45.0',APP_DATE='2026.11.18.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -111,7 +111,7 @@ function harcSetup(){const cv=$('#hCv');const dpr=Math.min(2,devicePixelRatio||1
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);mv(e.clientX)});cv.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')mv(e.clientX)});
   HARC.key=e=>{if(e.key==='ArrowLeft')HARC.tx=Math.max(40,(HARC.tx??HARC.bx)-40);if(e.key==='ArrowRight')HARC.tx=Math.min(HARC.W-40,(HARC.tx??HARC.bx)+40);if(e.key==='Escape')harcClose()};if(HARC.keyOn)removeEventListener('keydown',HARC.keyOn);HARC.keyOn=HARC.key;addEventListener('keydown',HARC.key);
   HARC.raf=requestAnimationFrame(harcLoop)}
-function harcStart(){$('#hStart').hidden=true;$('#hOver').hidden=true;Object.assign(HARC,{run:true,dead:false,shells:[],fly:[],parts:[],caught:0,missed:0,hp:100,pts:0,combo:0,bestCombo:0,wind:0,salvoAt:25,last:performance.now(),spawnT:0,lvl:0,deadT:0,flash:0,pal:0,palL:0,blood:[],splat:[],drips:[],deathT:0,marks:[],ex:[],shake:0});Object.assign(HSC,{tr:null,queue:0,deliv:0,salvo:0,sT:0,mf:0,boo:0,cheer:0,shots:[]});harcHud();sndDrum();rockStart('harc');playCount('harc')}
+function harcStart(){$('#hStart').hidden=true;$('#hOver').hidden=true;Object.assign(HARC,{run:true,dead:false,shells:[],fly:[],parts:[],caught:0,missed:0,hp:100,pts:0,combo:0,bestCombo:0,wind:0,salvoAt:25,last:performance.now(),spawnT:0,lvl:0,deadT:0,flash:0,pal:0,palL:0,blood:[],splat:[],drips:[],deathT:0,marks:[],ex:[],shake:0,cont:0});Object.assign(HSC,{tr:null,queue:0,deliv:0,salvo:0,sT:0,mf:0,boo:0,cheer:0,shots:[]});harcHud();sndDrum();rockStart('harc');playCount('harc')}
 function harcHud(){$('#hScore')&&($('#hScore').textContent=HARC.caught);$('#hLvl')&&($('#hLvl').textContent=HARC.lvl+1)}
 const H_PAL={x:14,w:150};
 function palSlot(i){const per=10,row=Math.floor(i/per),col=i%per;const base=HARC.H-58;return {x:H_PAL.x+10+col*13,y:base-8-row*9}}
@@ -295,7 +295,10 @@ function harcDie(){HARC.dead=true;HARC.run=false;rockStop(1.5);HARC.deathT=0;HAR
   const sc=HARC.caught;let best=harcBest(),rec=false;if(sc>best){best=sc;rec=true;try{localStorage.setItem('medve-harc-best',String(sc))}catch(e){}}
   if(MODE==='fb'&&UID&&sc>(USERDOC?.harcBest||0)){try{DB.doc('users/'+UID).update({harcBest:sc,harcAt:srvNow()}).catch(()=>{})}catch(e){}}
   $('#hBest')&&($('#hBest').textContent=best);
-  setTimeout(()=>{const o=$('#hOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💀 A medve elesett</h3><p>Elkapott gránát: <b class="hred">${sc} db</b><br>Elért szint: <b>${HARC.lvl+1}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p><button class="btn pri" id="hAgain">↻ Újra</button> <button class="btn line" data-rank="harc">🏆 Rekordjaim</button> <button class="btn line" id="hQuit">Kilépés</button>${harcBoard()}`;$('#hAgain').onclick=()=>harcStart();$('#hQuit').onclick=harcClose},3400)}
+  setTimeout(()=>{const o=$('#hOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💀 A medve elesett</h3><p>Elkapott gránát: <b class="hred">${sc} db</b><br>Elért szint: <b>${HARC.lvl+1}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p>${HARC.cont?'':`<button class="btn zsc" id="hCont">🪙 FOLYTATÁS · ${zsContCost()} zseton</button> `}<button class="btn pri" id="hAgain">↻ Újra</button> <button class="btn line" data-rank="harc">🏆 Rekordjaim</button> <button class="btn line" id="hQuit">Kilépés</button>${harcBoard()}`;$('#hAgain').onclick=()=>harcStart();$('#hCont')&&($('#hCont').onclick=harcCont);$('#hQuit').onclick=harcClose},3400)}
+// folytatás zsetonért: menetenként egyszer, a medve 60%-kal áll talpra, a lehulló gránátok eltűnnek; a menet pontja és rekordja megmarad
+function harcCont(){if(!HARC.dead||HARC.cont||!$('#hOver'))return;if(!zsPay(zsContCost()))return;$('#hOver').hidden=true;
+  Object.assign(HARC,{cont:1,dead:false,run:true,hp:60,shells:[],blood:[],splat:[],drips:[],parts:[],deathT:0,flash:.5,combo:0,last:performance.now()});HSC.boo=0;HSC.cheer=1.2;harcHud();rockStart('harc');toast('🪙 Folytatás – a medve újra talpon (60%)')}
 const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' db'],['drone','DroneRun','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkhBest','medve-rkh-best',false,v=>rkM(v)],['sere','SERE','sereBest','medve-sere-best',false,v=>seFmt(v)],['kassza','Kassza','tkFt','medve-tkft-best',false,v=>tkFmt(v)+' Ft']];
 const NF={harc:'harcN',drone:'droneN',terep:'gtN',konvoj:'gkN',rakodo:'rkN',sere:'sereN',kassza:'tkN'};
 const uname=u=>(u.rank?u.rank+' ':'')+(u.name||'?');
@@ -384,7 +387,23 @@ function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteCv(6).toDa
    Mentés: a telefonon azonnal, a fiókba (Firestore: zs, zsSt) összevontan, legfeljebb 2 percenként. A szabály (firestore.rules: zsOk)
    csökkenést bármikor elfogad, növekedést viszont csak a szerveridővel arányosan (percenként 1, legalább 30, egyszerre legfeljebb 600) –
    így egy csaló óránként legfeljebb kb. 60 zsetont nyerhet; a nagyobb nyeremény részletekben megy fel (⏳). Új telefonon a fiókból töltődik vissza. ===== */
-const WAL_KEY='medve-zs1',WAL_OLD='medve-wal1',WAL_START=10,WAL_KAS=20,WAL_TAPS=100,WAL_TAPWIN=3,WAL_TAPDAY=3,WAL_SYNC=120000,WAL={};
+const WAL_KEY='medve-zs1',WAL_OLD='medve-wal1',WAL_START=10,WAL_KAS=20,WAL_TAPS=100,WAL_TAPWIN=3,WAL_TAPDAY=3,WAL_SYNC=120000,WAL_DAYCAP=30,WAL={};
+/* ===== v4.45: a zseton értelme – BOLT, FOLYTATÁS, TAGSÁGI FOKOZAT =====
+   Bolt (Tüzér Kassza, Ajándék fül): extra pénz-gépágyú 15 zseton (napi 3), Golden Ticket 8 zseton (napi 5).
+   Folytatás vereség után: H.A.R.C., DroneRun, Shot&Run (gép ellen) – menetenként egyszer, 3 zseton (Gyémánt fokozaton 2).
+   Tagsági fokozat az ÖSSZESEN ELKÖLTÖTT zseton szerint (játékindítás, bolt, folytatás, a Derby futamonkénti nettó vesztesége).
+   Csak a telefonon tárolódik (WAL.sp) – a fiók szerverszabálya (zsOk) nem változott; a költés a zs-t csak csökkenti, azt a szabály mindig elfogadja. */
+const ZS_SHOP={gun:{c:15,day:3,n:'Pénz-gépágyú'},gt:{c:8,day:5,n:'Golden Ticket'}},ZS_CONT=3;
+const ZS_LV=[{n:'Újonc',i:'🎖️',s:0,kp:0},{n:'Bronz',i:'🥉',s:100,kp:.05},{n:'Ezüst',i:'🥈',s:500,kp:.1,gun:50},{n:'Arany',i:'🥇',s:2000,kp:.15,gun:45,res:1},{n:'Gyémánt',i:'💎',s:10000,kp:.2,gun:40,res:2,cd:1}];
+function zsLv(){if(WAL.ft===undefined)walLoad();let l=0;for(let i=1;i<ZS_LV.length;i++)if((WAL.sp||0)>=ZS_LV[i].s)l=i;return l}
+const zsPerk=()=>ZS_LV[zsLv()];
+function zsPerkTxt(L){const a=[];if(L.kp)a.push(`Kassza: +${Math.round(L.kp*100)}% koppintásérték`);if(L.gun)a.push(`pénz-gépágyú ${L.gun} percenként`);if(L.res)a.push(`+${L.res} érmeverő-mentés naponta`);if(L.cd)a.push(`folytatás ${ZS_CONT-L.cd} zsetonért`);return a.join(' · ')||'még nincs előny'}
+function walSpend(n){if(!(n>0))return;const l0=zsLv();WAL.sp=(WAL.sp||0)+n;const l1=zsLv();walSave();if(l1>l0){const L=ZS_LV[l1];setTimeout(()=>toast(`${L.i} Új tagsági fokozat: ${L.n.toUpperCase()}! ${zsPerkTxt(L)}`),500)}}
+const zsContCost=()=>ZS_CONT-(zsPerk().cd||0);
+// fizetés zsetonnal: ha nincs elég, nem von le semmit, és megmondja, mennyi kell
+function zsPay(cost){if(WAL.ft===undefined)walLoad();if(WAL.ft<cost){toast(`🪙 Ehhez ${cost} zseton kell – most ${n0(WAL.ft)} van.`);return false}walFt(-cost);return true}
+function zsBuyLeft(k){if(WAL.ft===undefined)walLoad();const o=WAL.by[k],d=budDay(srvNow());return ZS_SHOP[k].day-(o&&o.d===d?o.v:0)}
+function zsBuyMark(k){const d=budDay(srvNow()),o=WAL.by[k];WAL.by[k]=o&&o.d===d?{d,v:o.v+1}:{d,v:1};walSave()}
 function walLoad(){let s=null;try{s=JSON.parse(localStorage.getItem(WAL_KEY)||'null')}catch(e){}WAL.fresh=false;
   if(!s||typeof s!=='object'){let o=null;try{o=JSON.parse(localStorage.getItem(WAL_OLD)||'null')}catch(e){}
     // átállás a forintos tárcáról: 100 Ft = 1 zseton (lefelé kerekítve)
@@ -392,20 +411,23 @@ function walLoad(){let s=null;try{s=JSON.parse(localStorage.getItem(WAL_KEY)||'n
     else{s={zs:WAL_START};WAL.fresh=true}}// új telefon: a fiókban lévő egyenleg felülírhatja (walSync)
   const n=k=>{const x=Number(s[k]);return Number.isFinite(x)&&x>=0?x:0};WAL.ft=Math.floor(n('zs'));WAL.act=Math.min(59,n('act'));WAL.tot=Math.floor(n('tot'));WAL.tap=Math.min(WAL_TAPS-1,Math.floor(n('tap')));
   const dd=(v,f)=>v&&typeof v==='object'?{d:String(v.d||''),v:Number(v.v)||0}:{d:'',v:0};WAL.wd=dd(s.wd);WAL.td=dd(s.td);WAL.fresh=WAL.fresh||s.fresh===1;
+  WAL.sp=Math.floor(n('sp'));WAL.dz=dd(s.dz);WAL.by={};for(const k of Object.keys(ZS_SHOP))WAL.by[k]=dd(s.by&&s.by[k]);
   if(WAL.mig){walSave();try{localStorage.removeItem(WAL_OLD)}catch(e){}WAL.mig=0}else if(WAL.fresh)walSave()}
-function walSave(){try{localStorage.setItem(WAL_KEY,JSON.stringify({zs:WAL.ft,act:WAL.act,tot:WAL.tot,tap:WAL.tap,wd:WAL.wd,td:WAL.td,fresh:WAL.fresh?1:0}))}catch(e){}}
+function walSave(){try{localStorage.setItem(WAL_KEY,JSON.stringify({zs:WAL.ft,act:WAL.act,tot:WAL.tot,tap:WAL.tap,wd:WAL.wd,td:WAL.td,fresh:WAL.fresh?1:0,sp:WAL.sp||0,dz:WAL.dz,by:WAL.by}))}catch(e){}}
 const zsTxt=v=>n0(v)+' zseton';
 function walShow(){document.querySelectorAll('[data-walft]').forEach(e=>{e.textContent=zsTxt(WAL.ft)})}
 // d zsetonnal módosítja és visszaadja az egyenleget (a Derby és a játékindítás is ezt hívja)
-function walFt(d){if(WAL.ft===undefined)walLoad();if(d&&Number.isFinite(d)){WAL.ft=Math.max(0,Math.floor(WAL.ft+d));walSave();walShow();if(!$('#walov')?.hidden)walFill()}return WAL.ft}
+function walFt(d,nosp){if(WAL.ft===undefined)walLoad();if(d&&Number.isFinite(d)){const was=WAL.ft;WAL.ft=Math.max(0,Math.floor(WAL.ft+d));if(d<0&&!nosp)walSpend(was-WAL.ft);walSave();walShow();if(!$('#walov')?.hidden)walFill()}return WAL.ft}
 // aktív játékidő: nyitott játék, látható ablak, nincs szünet, és az utolsó 15 mp-ben volt érintés/billentyű; a Derby (fogadás, nézés) nem számít
 let WAL_IN=0;for(const n of ['pointerdown','pointermove','keydown','touchstart'])addEventListener(n,()=>{WAL_IN=Date.now()},{passive:true,capture:true});
 setInterval(()=>{const h=document.getElementById('harc');if(!h||h.hidden||document.hidden||GP||h.classList.contains('lv')||Date.now()-WAL_IN>15000)return;if(WAL.ft===undefined)walLoad();
-  if(++WAL.act>=60){WAL.act=0;WAL.tot+=1;walFt(1);walPip(1)}else if(WAL.act%10===0)walSave()},1000);
+  // napi plafon (magyar nap): legfeljebb WAL_DAYCAP zseton játékidőért – utána a perc-számláló áll
+  const day=budDay(srvNow());if(WAL.dz.d!==day)WAL.dz={d:day,v:0};if(WAL.dz.v>=WAL_DAYCAP)return;
+  if(++WAL.act>=60){WAL.act=0;WAL.tot+=1;WAL.dz.v++;walFt(1);walPip(1,WAL.dz.v>=WAL_DAYCAP)}else if(WAL.act%10===0)walSave()},1000);
 // játék közben nem zavar: a toast helyett 2 mp-re egy kis, átlátszó, kattinthatatlan jelzés a fejléc bal sarkában (a játék címe fölött) – nem takar
 // irányítást, nem írja felül a játék saját üzeneteit, csak átlátszóság/eltolás animálódik (GPU), így nem akaszt
-function walPip(n){let p=document.getElementById('walPip');if(!p){p=document.createElement('div');p.id='walPip';p.setAttribute('aria-hidden','true');document.body.appendChild(p)}
-  p.innerHTML=`<i>🪙</i><b>+${n}</b><small>zseton · ${n0(WAL.ft)}</small>`;p.classList.remove('on');void p.offsetWidth;p.classList.add('on');clearTimeout(walPip.t);walPip.t=setTimeout(()=>p.classList.remove('on'),2200)}
+function walPip(n,cap){let p=document.getElementById('walPip');if(!p){p=document.createElement('div');p.id='walPip';p.setAttribute('aria-hidden','true');document.body.appendChild(p)}
+  p.innerHTML=`<i>🪙</i><b>+${n}</b><small>${cap?`mára kész · ${WAL_DAYCAP}/${WAL_DAYCAP}`:'zseton · '+n0(WAL.ft)}</small>`;p.classList.remove('on');void p.offsetWidth;p.classList.add('on');clearTimeout(walPip.t);walPip.t=setTimeout(()=>p.classList.remove('on'),2200)}
 // mai (magyar idő, szerveróra) számláló; -1, ha nincs pontos idő
 const walToday=o=>CLK.ok?(o.d===budDay()?o.v:0):-1;
 // Kassza-kivét: a zseb értéke a nagyságrendjével arányos – 1 kvadrillió Ft (1e24) ér 20 zsetont, 1 milliárd kb. 5-öt; a kivett rész a zseb ugyanekkora hányadát viszi el
@@ -416,7 +438,8 @@ function walTake(pct){const left=walDayLeft();if(left<0){toast('A kivéthez pont
   const p=tkWallet(0),V=walKasVal(p),z=walTakeZs(p,pct,left);if(z<1){toast(left<1?'A mai 20 zsetonos keretet már kivetted.':'Ehhez kevés a pénz a Kassza zsebében.');return}
   tkWallet(-p*Math.min(1,z/V));const d=budDay();WAL.wd=WAL.wd.d===d?{d,v:WAL.wd.v+z}:{d,v:z};walFt(z);toast(`🪙 +${zsTxt(z)} a Kasszából`)}
 // érmeverő (mentőöv): csak 0 zsetonnál; 100 koppintás = 3 zseton, naponta legfeljebb 3-szor. A számláló megmarad; koppintás közben csak a kijelző frissül.
-function walTapLeft(){const v=walToday(WAL.td);return v<0?-1:Math.max(0,WAL_TAPDAY-v)}
+const walTapDay=()=>WAL_TAPDAY+(zsPerk().res||0);
+function walTapLeft(){const v=walToday(WAL.td);return v<0?-1:Math.max(0,walTapDay()-v)}
 function walTap(){if(WAL.ft===undefined)walLoad();if(WAL.ft>0||walTapLeft()<1)return;WAL.tap=(WAL.tap||0)+1;WAL.tapT=Date.now();try{navigator.vibrate&&navigator.vibrate(4)}catch(e){}
   if(WAL.tap>=WAL_TAPS){WAL.tap=0;const d=budDay();WAL.td=WAL.td.d===d?{d,v:WAL.td.v+1}:{d,v:1};walFt(WAL_TAPWIN);toast(`🪙 +${WAL_TAPWIN} zseton!`);try{sndClink()}catch(e){}walFill();return}
   if(WAL.tap%10===0)walSave();const n=$('#walTapN'),b=$('#walTapB'),c=$('#walTapC');if(n)n.textContent=WAL.tap+' / '+WAL_TAPS;if(b)b.style.width=(WAL.tap/WAL_TAPS*100)+'%';if(c){c.classList.remove('hit');void c.offsetWidth;c.classList.add('hit')}}
@@ -431,15 +454,20 @@ function walSync(force){try{if(typeof MODE==='undefined'||MODE!=='fb'||!UID||!DB
   else if(up>sv){const st=USERDOC.zsSt&&USERDOC.zsSt.toMillis?USERDOC.zsSt.toMillis():now,el=Math.max(0,(now-st)/60000);up=Math.min(up,sv+Math.floor(Math.min(600,30+el))-1);if(up<=sv)return}
   WAL.syncT=now;WAL.busy=true;DB.doc('users/'+UID).update({zs:up,zsSt:firebase.firestore.FieldValue.serverTimestamp()}).catch(e=>console.warn('zseton-mentés',e&&e.code)).finally(()=>{WAL.busy=false})}catch(e){WAL.busy=false}}
 setInterval(()=>walSync(),20000);document.addEventListener('visibilitychange',()=>{if(document.hidden)walSync(true)});
-function walFill(){const o=$('#walov');if(!o||o.hidden)return;if(WAL.ft===undefined)walLoad();const p=tkWallet(0),V=walKasVal(p),left=walDayLeft(),tl=walTapLeft(),sv=walSrv(),zero=WAL.ft<1;
+function walFill(){const o=$('#walov');if(!o||o.hidden)return;if(WAL.ft===undefined)walLoad();const p=tkWallet(0),V=walKasVal(p),left=walDayLeft(),tl=walTapLeft(),sv=walSrv(),zero=WAL.ft<1,dzv=WAL.dz&&WAL.dz.d===budDay(srvNow())?WAL.dz.v:0;
   o.querySelector('.walbody').innerHTML=`${WAL.note?`<div class="walnote">${esc(WAL.note)}</div>`:''}<div class="walbig"><span>EGYENLEG</span><b data-walft>${zsTxt(WAL.ft)}</b><em>1 zseton = 1 játék${sv!==null?` · fiókodban: ${n0(sv)}${sv<WAL.ft?' ⏳':' ✓'}`:''}</em></div>
-   ${zero?`<div class="walsec waltapsec"><h4>🪙 Érmeverő – mentőöv</h4><div class="waltaprow"><button type="button" class="waltap" id="walTapC" data-waltap aria-label="Érmeverő – koppints"${tl<1?' disabled':''}>🪙<small>KOPPINTS!</small></button><div><p><b>100 koppintás = ${WAL_TAPWIN} zseton.</b> ${tl<0?'Pontos idő kell (net).':tl?`Ma még ${tl}× használhatod.`:'Mára elfogyott – holnap újra.'}</p><div class="walprog"><i id="walTapB" data-st="width:${WAL.tap/WAL_TAPS*100}%"></i></div><small id="walTapN">${WAL.tap} / ${WAL_TAPS}</small></div></div></div>`:''}
-   <div class="walsec"><h4>⏱ Játékidőért</h4><p>Minden <b>aktívan játszott perc 1 zseton</b>, bármelyik játékban. A szünet, a tétlen várakozás és a Tüzér Derby nem számít.</p>
-    <div class="walprog"><i data-st="width:${Math.round(WAL.act/60*100)}%"></i></div><small>A következő zsetonig még ${60-WAL.act} mp játék · eddig így szereztél: ${zsTxt(WAL.tot)}</small></div>
+   ${zero?`<div class="walsec waltapsec"><h4>🪙 Érmeverő – mentőöv</h4><div class="waltaprow"><button type="button" class="waltap" id="walTapC" data-waltap aria-label="Érmeverő – koppints"${tl<1?' disabled':''}>🪙<small>KOPPINTS!</small></button><div><p><b>100 koppintás = ${WAL_TAPWIN} zseton</b> (naponta ${walTapDay()}×). ${tl<0?'Pontos idő kell (net).':tl?`Ma még ${tl}× használhatod.`:'Mára elfogyott – holnap újra.'}</p><div class="walprog"><i id="walTapB" data-st="width:${WAL.tap/WAL_TAPS*100}%"></i></div><small id="walTapN">${WAL.tap} / ${WAL_TAPS}</small></div></div></div>`:''}
+   ${walLvHTML()}
+   <div class="walsec"><h4>⏱ Játékidőért</h4><p>Minden <b>aktívan játszott perc 1 zseton</b>, bármelyik játékban, <b>naponta legfeljebb ${WAL_DAYCAP}</b>. A szünet, a tétlen várakozás és a Tüzér Derby nem számít.</p>
+    ${dzv>=WAL_DAYCAP?`<div class="walprog"><i data-st="width:100%"></i></div><small>Mára megvan mind a ${WAL_DAYCAP} – holnap újra. A Kassza-kivét és a Derby addig is megy. Eddig így szereztél: ${zsTxt(WAL.tot)}</small>`:`<div class="walprog"><i data-st="width:${Math.round(WAL.act/60*100)}%"></i></div><small>A következő zsetonig még ${60-WAL.act} mp játék · ma: ${dzv} / ${WAL_DAYCAP} · eddig így szereztél: ${zsTxt(WAL.tot)}</small>`}</div>
    <div class="walsec"><h4>🏦 Kivét a Tüzér Kasszából</h4><p>A Kassza zsebedben <b>${tkFmt(p)} Ft</b> van; ez <b>${n0(V)} zsetont</b> ér (a nagyságrend számít, nem az összeg). Amennyit kiveszel, a zsebed ugyanakkora hányada megy el.</p>
     <div class="walbtns">${[10,25,50,100].map(k=>{const z=left<0?0:walTakeZs(p,k,left);return `<button type="button" data-waltake="${k}"${z<1?' disabled':''}><b>${k===100?'Mind':k+'%'}</b><small>+${n0(z)} zseton</small></button>`}).join('')}</div>
     <small>${left<0?'A kivéthez pontos idő kell (net).':`Napi keret: ${WAL_KAS} zseton · ma még ${n0(left)} vehető ki.`}</small></div>
-   <div class="walsec"><h4>🕹️ Mire költöd?</h4><p><b>Minden játék indítása 1 zseton.</b> A <b>Tüzér Derbybe</b> a belépés ingyenes – ott 1–50 zsetont tehetsz fel egy futamra.${zero?'':' Az érmeverő akkor jelenik meg, ha elfogyott a zsetonod.'}</p><button type="button" class="cb c-gold walgo" data-walgo>${ic('play')}<span>Tüzér Derby</span></button></div>`}
+   <div class="walsec"><h4>🕹️ Mire költöd?</h4><ul class="walspend"><li><b>Játékindítás</b><span>1 zseton</span></li><li><b>Folytatás vereség után</b> – H.A.R.C., DroneRun, Shot&amp;Run (gép ellen), menetenként egyszer<span>${zsContCost()} zseton</span></li><li><b>💸 Pénz-gépágyú most</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gun'))}×<span>${ZS_SHOP.gun.c} zseton</span></li><li><b>🎫 Golden Ticket</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gt'))}×<span>${ZS_SHOP.gt.c} zseton</span></li><li><b>Tüzér Derby</b> – a belépés ingyenes, tét futamonként<span>1–50 zseton</span></li></ul><p>Minden elköltött zseton a <b>tagsági fokozatodat</b> is emeli.${zero?'':' Az érmeverő akkor jelenik meg, ha elfogyott a zsetonod.'}</p><button type="button" class="cb c-gold walgo" data-walgo>${ic('play')}<span>Tüzér Derby</span></button></div>`}
+// tagsági fokozat: az összesen elköltött zseton szerint; mostani előnyök, haladás a következőig, a teljes létra
+function walLvHTML(){const l=zsLv(),L=ZS_LV[l],N=ZS_LV[l+1],sp=WAL.sp||0,pc=N?Math.min(100,(sp-L.s)/(N.s-L.s)*100):100;
+  return `<div class="walsec walsecLv"><h4>${L.i} Tagsági fokozat: ${L.n}</h4><p>Eddig elköltve: <b>${zsTxt(sp)}</b>${N?` · a(z) ${N.i} <b>${N.n}</b> fokozatig még ${n0(N.s-sp)}`:' · elérted a legfelső fokozatot!'}</p><div class="walprog"><i data-st="width:${pc.toFixed(1)}%"></i></div><small>Most: ${zsPerkTxt(L)}</small>
+   <details class="walmore"><summary>Az összes fokozat és előny</summary><ul class="wallv">${ZS_LV.slice(1).map((x,i)=>`<li class="${i+1<=l?'on':''}"><b>${x.i} ${x.n}</b><em>${n0(x.s)} zseton elköltése</em><span>${zsPerkTxt(x)}</span></li>`).join('')}</ul></details></div>`}
 function walOpen(note){if(WAL.ft===undefined)walLoad();WAL.note=typeof note==='string'?note:'';let o=$('#walov');if(!o){o=document.createElement('div');o.id='walov';document.body.appendChild(o);
     o.addEventListener('click',e=>{if(e.target===o||e.target.closest('.walx')){walClose();return}const t=e.target.closest('[data-waltake]');if(t){walTake(+t.dataset.waltake);walFill();return}
       if(e.target.closest('[data-walgo]')){walClose();if($('#harc').hidden)gameStart('lovi')}});
@@ -449,7 +477,7 @@ function walOpen(note){if(WAL.ft===undefined)walLoad();WAL.note=typeof note==='s
   o.hidden=false;clkReady(()=>walFill());walFill();clearInterval(WAL.ui);WAL.ui=setInterval(()=>{if(Date.now()-(WAL.tapT||0)>3000)walFill()},5000)}
 function walClose(){const o=$('#walov');if(o){o.hidden=true;o.innerHTML=''}clearInterval(WAL.ui);walSave();walSync()}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wal]');if(!b)return;e.preventDefault();e.stopPropagation();walOpen()},true);
-function walHTML(){if(WAL.ft===undefined)walLoad();return `<button type="button" class="walb" data-wal aria-label="Összes pénzem"><i>🪙</i><span>ÖSSZES PÉNZEM</span><b data-walft>${zsTxt(WAL.ft)}</b></button>`}
+function walHTML(){if(WAL.ft===undefined)walLoad();const L=zsPerk();return `<button type="button" class="walb" data-wal aria-label="Összes pénzem – ${L.n} fokozat"><i>🪙</i><span>ÖSSZES PÉNZEM<small>${L.i} ${L.n.toUpperCase()}</small></span><b data-walft>${zsTxt(WAL.ft)}</b></button>`}
 function gamesHTML(){const n=DECK_G.length,dg=dailyGame(),i0=Math.min(DECK.i,n-1),nn=x=>String(x).padStart(2,'0');
   const tiles=DECK_G.map(([g,t,sub,bg,ac,ik,nw],i)=>{const u=ART.url[g];
     return `<button type="button" class="dtile${i===i0?' on':''}" data-game="${g}" data-i="${i}" aria-label="${t.replace(/&amp;/g,'&')} – ${sub}" data-st="--bg:${bg};--ac:${ac}">
@@ -1298,7 +1326,7 @@ function droneSetup(){const cv=$('#dCv');const dpr=Math.min(2,devicePixelRatio||
   if(DR.keyOn){removeEventListener('keydown',DR.keyOn);removeEventListener('keyup',DR.keyOn)}DR.keyOn=DR.key;addEventListener('keydown',DR.key);addEventListener('keyup',DR.key);
   drReset();DR.last=performance.now();DR.raf=requestAnimationFrame(drLoop)}
 function drReset(){DR.br={hp:8,down:false,t:0};DR.nuke=null;Object.assign(DR,{t:{x:120,y:drGround(120)-40,a:0,vx:0,vy:0,w:0,dist:0,trk:0},wheels:D_WHEELS.map(w=>({...w,c:0,cx:0,cy:0})),hp:100,kills:0,ammo:200,res:1800,reload:0,fireT:0,bullets:[],cas:[],sa:[],saT:3,mines:[],nextMine:900,trk0:0,trkDone:0,rpm:650,temp:82,fan:0,lostTrk:null,smoke:0,smokeCd:0,sm:[],ovr:0,ovrCd:0,fault:null,faultT:18+Math.random()*12,repT:0,drones:[],grenades:[],fx:[],flipT:0,run:false,dead:false,spawnT:5,camX:0,camY:0,maxD:1,bgx:[],trc:[],bgT:.6,dying:null,shake:0,flash:0,fm:0,fmNext:1000,fmS:null,fmN:0,fmImp:0,elev:0,rec:0,lk:0,hb:0,shells:[],mgf:0})}
-function droneStart(){$('#dStart').hidden=true;$('#dOver').hidden=true;drReset();DR.run=true;DR.last=performance.now();drSoundStart();sndDrum();musStart();playCount('drone')}
+function droneStart(){$('#dStart').hidden=true;$('#dOver').hidden=true;drReset();DR.cont=0;DR.run=true;DR.last=performance.now();drSoundStart();sndDrum();musStart();playCount('drone')}
 function drSoundStart(){if(!SOUND||!ac())return;const a=AC,dst=typeof hOut==='function'?hOut():MASTER;
   const bq=(type,f,q,g)=>{const b=a.createBiquadFilter();b.type=type;b.frequency.value=f;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b};
   const osc=(type,f)=>{const o=a.createOscillator();o.type=type;o.frequency.value=f;return o};
@@ -1472,7 +1500,13 @@ function drDie(why){if(DR.dead)return;DR.dead=true;DR.run=false;DR.sa=[];const T
   const dist=Math.floor(T.dist/20),score=dist+DR.kills*100+(DR.fmN||0)*500;let best=drBest(),rec=false;if(score>best){best=score;rec=true;try{localStorage.setItem('medve-drone-best',String(score))}catch(e){}}
   if(MODE==='fb'&&UID&&score>(USERDOC?.droneBest||0)){try{DB.doc('users/'+UID).update({droneBest:score,droneAt:srvNow()}).catch(()=>{})}catch(e){}}
   $('#dBest')&&($('#dBest').textContent=best);
-  setTimeout(()=>{const o=$('#dOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💥 ${esc(why)}</h3><p>Megtett táv: <b>${dist} m</b><br>Lelőtt drón: <b>${DR.kills}</b> × 100<br>${DR.fmN?`MRSI tűzfeladat: <b>${DR.fmN}</b> × 500<br>`:''}Pontszám: <b class="hred">${score}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p><button class="btn pri" id="dAgain">↻ Újra</button> <button class="btn line" data-rank="drone">🏆 Rekordjaim</button> <button class="btn line" id="dQuit">Kilépés</button>${drBoard()}`;$('#dAgain').onclick=droneStart;$('#dQuit').onclick=droneClose;musStop(2.5)},3900)}
+  setTimeout(()=>{const o=$('#dOver');if(!o)return;o.hidden=false;o.innerHTML=`<h3>💥 ${esc(why)}</h3><p>Megtett táv: <b>${dist} m</b><br>Lelőtt drón: <b>${DR.kills}</b> × 100<br>${DR.fmN?`MRSI tűzfeladat: <b>${DR.fmN}</b> × 500<br>`:''}Pontszám: <b class="hred">${score}</b><br>${rec?'<b class="hrec">🏆 ÚJ REKORD!</b>':'Rekord: <b>'+best+'</b>'}</p>${DR.cont?'':`<button class="btn zsc" id="dCont">🪙 FOLYTATÁS · ${zsContCost()} zseton</button> `}<button class="btn pri" id="dAgain">↻ Újra</button> <button class="btn line" data-rank="drone">🏆 Rekordjaim</button> <button class="btn line" id="dQuit">Kilépés</button>${drBoard()}`;$('#dAgain').onclick=droneStart;$('#dQuit').onclick=droneClose;$('#dCont')&&($('#dCont').onclick=drCont);musStop(2.5)},3900)}
+// folytatás zsetonért: menetenként egyszer – a PzH talpra áll ugyanott (60%), a közeli drónok, gránátok és aknák eltűnnek; a megtett táv és a lelőtt drónok megmaradnak
+function drCont(){if(!DR.dead||DR.cont||!$('#dOver'))return;if(!zsPay(zsContCost()))return;$('#dOver').hidden=true;const T=DR.t;
+  T.x=Math.max(120,T.x-40);T.y=drGround(T.x)-40;T.a=0;T.vx=0;T.vy=0;T.w=0;DR.wheels=D_WHEELS.map(w=>({...w,c:0,cx:0,cy:0}));
+  Object.assign(DR,{cont:1,dead:false,run:true,dying:null,hp:Math.max(DR.hp,60),flipT:0,shake:0,flash:.5,sa:[],grenades:[],last:performance.now()});
+  DR.drones=DR.drones.filter(d=>d.boss||Math.abs(d.x-T.x)>700);DR.mines=(DR.mines||[]).filter(m=>!(m.x>T.x-60&&m.x<T.x+420));
+  drSoundStart();musStart();toast('🪙 Folytatás – a PzH újra harcképes (60%)')}
 function drBattleBg(c,W,H,sc,dt,now){const t=now/1000,hz=H*.6,off=DR.camX*.5*sc,sp=150;
   for(let k=Math.floor(off/sp)-1;k<=Math.floor((off+W)/sp)+1;k++){const h=Math.abs(Math.sin(k*91.7)*1e4%1);if(h<.3)continue;const x=k*sp-off+h*110,y=hz-4+h*14;
     for(let i=0;i<7;i++){const q=(t*.11+i/7+h)%1;c.fillStyle=`rgba(28,20,22,${.34*(1-q)})`;c.beginPath();c.arc(x+q*q*70+Math.sin(q*5+k)*8,y-12-q*190,6+q*32,0,7);c.fill()}
@@ -1907,7 +1941,7 @@ function tkLoad(){let s={};try{s=JSON.parse(localStorage.getItem(TK_KEY)||'{}')}
   Object.assign(TK,{ver:TK_VER,pocket:0,given:0,earned:0,taps:0,den:0,tickets:0,upg:{tap:0,auto:0,crit:0,combo:0},own:{},uteg:'',lastT:0,synced:0,wgSynced:null,dm:null,wk:'',wg:0,streak:0,lastDm:'',gift:{d:'',n:0},spinT:0,spins:0,gifts:0,denT:0,mg:null},s);TK.gift=Object.assign({d:'',n:0},TK.gift||{});TK.flight=null;TK.upg=Object.assign({tap:0,auto:0,crit:0,combo:0},TK.upg||{});TK.own=TK.own||{};
   // A mentett állapot hibás számot is tartalmazhat (null, NaN, szöveg). Ezt nem küldjük a szervernek.
   for(const k of ['pocket','given','earned','taps','den','tickets','wg','streak','spinT','spins','gifts','denT']){const x=Number(TK[k]);TK[k]=Number.isFinite(x)?x:0}
-  {const m=TK.mg;TK.mg=m&&typeof m==='object'?{n:Number(m.n)||0,have:m.have?1:0,fuel:Math.max(0,Math.min(TK_MG_T,Number(m.fuel)||0))}:null;if(TK.mg&&TK.mg.have&&TK.mg.fuel<=0)TK.mg.have=0}
+  {const m=TK.mg;TK.mg=m&&typeof m==='object'?{n:Number(m.n)||0,have:m.have?1:0,fuel:Math.max(0,Math.min(TK_MG_T,Number(m.fuel)||0)),paid:m.paid?1:0}:null;if(TK.mg&&TK.mg.have&&TK.mg.fuel<=0)TK.mg.have=0}
   tkAdopt();
   if(mig)setTimeout(()=>toast('🔄 Új szezon: mostantól forintban megy – a ranglista és a mentés nulláról indul.'),900)}
 // a pontos idő megérkezésekor: a régi (telefon órájával mentett, jövőbeli) időpontok helyreállítása + távolléti termelés
@@ -1936,7 +1970,7 @@ function tkCap(d){const o=Number(d&&d.tkFt)||0,t=d&&d.tkSt;if(t===undefined)retu
 const tkAchLvl=a=>{let l=0;const v=a.m();for(const t of a.t)if(v>=t)l++;return l};
 // az érdem-szorzó számítása drága (minden érdem végigszámolása) – 300 ms-ig gyorsítótárból jön, képkockánként többször is kell
 function tkMult(){const n=performance.now();if(!(TK._mu&&n-TK._muT<300)){TK._muT=n;TK._mu=1+TK_ACH.reduce((s,a)=>s+tkAchLvl(a),0)*.03}return TK._mu*(1+.1*Math.log10(1+TK.given))*(TK.rush>0?2:1)}
-const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*.5*tkMult();
+const tkTapV=()=>TK_DEN[TK.den].v*(1+TK.upg.tap*.25)*.5*tkMult()*(1+(zsPerk().kp||0));// a zseton-fokozat is emeli
 const TK_HUF0=395;const tkGP=g=>Math.round(g.p*(TK.huf||TK_HUF0));const tkGInc=g=>g.p*TK_HUF0/3000;
 const tkGearInc=()=>TK_GEAR.reduce((s,g)=>s+(TK.own[g.id]||0)*tkGInc(g),0)*tkMult();
 const tkAutoInc=()=>TK.upg.auto*.5*tkTapV()*.5;
@@ -2017,7 +2051,8 @@ function tkGiftHTML(){const can=tkDailyCan(),n=can?tkDailyDay():TK.gift.n,B=tkGi
   <h4 data-st="margin-top:14px">🎡 Szerencsekerék</h4><p class="hint">3 óránként egy ingyen pörgetés${TK.spins>0?` · extra pörgetés: <b>${TK.spins} db</b>`:''}. Nyeremény: pénz (×3 – ×60 a mostani szintedhez mérve), Golden Ticket, ingyen fejlesztés vagy eszköz.</p>
   <div class="tkwheel"><canvas id="tkWheel" width="280" height="280"></canvas></div>
   <button type="button" class="tkbig spin" data-spin ${sc?'':'disabled'}>${TK.spin?'Pörög…':sc?'🎰 PÖRGETÉS!':!CLK.ok?'🌐 Pontos idő kell – kapcsolódj a netre':`Következő ingyen pörgetés: <span id="tkSpinLeft">${tkLeftTxt(left)}</span>`}</button>
-  <h4 data-st="margin-top:14px">💸 Pénz-gépágyú</h4><p class="hint">Óránként egyszer, véletlen pillanatban érkezik (a szerver órája szerint). Ha épp nem vagy itt, megvár – de egyszerre csak egy, nem gyűlik fel. Jobb lent <b>tartsd nyomva</b>: a forgócsöves gépágyú felpörög (I → IV → MAX fokozat), MAX-on <b>10× értékű</b> bankókat szór a kerékre – összesen 10 mp-ig. ${TK.mg&&TK.mg.have?'<b>Most itt van, vár rád!</b>':'Úton van…'}</p>
+  <h4 data-st="margin-top:14px">💸 Pénz-gépágyú</h4><p class="hint">${tkGunIv()/6e4===60?'Óránként egyszer':(tkGunIv()/6e4)+' percenként egyszer ('+zsPerk().i+' '+zsPerk().n+' fokozat)'}, véletlen pillanatban érkezik (a szerver órája szerint). Ha épp nem vagy itt, megvár – de egyszerre csak egy, nem gyűlik fel. Jobb lent <b>tartsd nyomva</b>: a forgócsöves gépágyú felpörög (I → IV → MAX fokozat), MAX-on <b>10× értékű</b> bankókat szór a kerékre – összesen 10 mp-ig. ${TK.mg&&TK.mg.have?'<b>Most itt van, vár rád!</b>':'Úton van…'}</p>
+  ${tkZsShopHTML()}
   <p class="hint">🪂 Ejtőernyős csomag: 1–2 percenként ajándékcsomag ereszkedik a bázisra – koppints rá, mielőtt elviszik! 🎫 A Golden Ticket is gyakrabban jön. Eddig kinyitott ajándék: <b>${tkFmt(TK.gifts||0)}</b></p>`}
 function tkDropOpen(){const D=TK.drop;if(!D)return;D.open=1;TK.drop=null;const r=Math.random(),B=tkGiftBase();let m;
   if(r<.6)m='+'+tkFmt(tkGiftMoney(B*(1+Math.random()*3),D.x,D.y))+' Ft';else if(r<.8){TK.rush=Math.max(TK.rush,12);TK.gifts=(TK.gifts||0)+1;m='12 mp dupla bevétel'}else{TK.spins=(TK.spins||0)+1;TK.gifts=(TK.gifts||0)+1;m='+1 szerencsekerék-pörgetés'}
@@ -2175,7 +2210,7 @@ function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=T
   s.querySelectorAll('[data-gb]').forEach(b=>b.onclick=()=>{const g=TK_GEAR.find(q=>q.id===b.dataset.gb),q=tkQ(g),c=tkBulk(g,q);if(TK.pocket<c)return;TK.pocket-=c;TK.own[g.id]=(TK.own[g.id]||0)+q;TK.newBuy={g,t:0};tkKaching();toast(`🛒 Beszerezve: ${q}× ${g.n}`);tkSave();tkSync(true);tkSheetRender()});s.querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{TK.qty=b.dataset.qty==='max'?'max':+b.dataset.qty;tkSheetRender()});
   s.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();TK.uteg=b.dataset.mv;tkSave();tkSync('now');toast(`Átigazoltál: ${TK.uteg} – a befizetéseid veled jönnek`);tkSheetRender()});
   s.querySelectorAll('[data-uo]').forEach(b=>b.onclick=()=>{TK.open[b.dataset.uo]=!TK.open[b.dataset.uo];tkSheetRender()});s.querySelectorAll('[data-uth]').forEach(b=>b.onclick=()=>{TK.uth=true;tkSheetRender()});s.querySelectorAll('[data-utw]').forEach(b=>b.onclick=()=>{TK.uth=false;TK.utw=b.dataset.utw==='1';tkSheetRender()});s.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=()=>tkDmClaim(+b.dataset.dmc));
-  {const dg=s.querySelector('[data-daily]');if(dg)dg.onclick=tkDailyClaim;const sp=s.querySelector('[data-spin]');if(sp)sp.onclick=tkSpinStart;const wc=s.querySelector('#tkWheel');if(wc)tkWheelDraw(wc,performance.now())}
+  s.querySelectorAll('[data-zsbuy]').forEach(b=>b.onclick=()=>tkZsBuy(b.dataset.zsbuy));{const dg=s.querySelector('[data-daily]');if(dg)dg.onclick=tkDailyClaim;const sp=s.querySelector('[data-spin]');if(sp)sp.onclick=tkSpinStart;const wc=s.querySelector('#tkWheel');if(wc)tkWheelDraw(wc,performance.now())}
   s.querySelectorAll('canvas[data-pile]').forEach(cv=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(tkPileCv(Number(cv.dataset.pile),120,70,cv.dataset.u||''),0,0)})}
 function tkUsers(){let a=[];try{a=(typeof arr==='function'?arr('users'):[]).map(u=>Object.assign({},u,{tkGive:u.tkFt||0,tkOwn:u.tkOwnF||{},tkW:u.tkWk===tkWeek()?(u.tkWg||0):0}))}catch(e){}const me=typeof UID!=='undefined'?UID:null;let mine=a.find(u=>u.id===me);
   if(!mine){mine={id:'me',name:(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Te'};a=a.concat([mine])}mine=Object.assign({},mine,{tkGive:Math.max(TK.given,mine.tkGive||0),tkUteg:TK.uteg||mine.tkUteg,tkOwn:TK.own,tkW:TK.wk===tkWeek()?TK.wg:0});return a.map(u=>u.id===mine.id?mine:u)}
@@ -2378,7 +2413,7 @@ function tkGunHit(x,y){const M=TK.mg;if(!M||!M.have||TK.ultra||(TK.mgIn||0)<.7)r
 const tkGunLv=()=>(TK.mgS||0)>=1?5:1+Math.min(3,Math.floor((TK.mgS||0)*4));
 function tkGunTick(dt,L){const M=TK.mg;if(!M)return;TK.mgSumT=(TK.mgSumT||0)+dt;TK.mgFl=Math.max(0,(TK.mgFl||0)-dt);
   if(!M.have){if(TK.mgOut){TK.mgOut.t+=dt;if(TK.mgOut.t>.7)TK.mgOut=null}
-    if(CLK.ok&&!TK.ultra&&!TK.mgOut&&srvNow()>=M.n){const now=srvNow();M.have=1;M.fuel=TK_MG_T;M.n=(Math.floor(now/36e5)+1)*36e5+Math.random()*36e5;TK.mgIn=0;TK.mgS=0;TK.mgSum=0;TK.mgSumT=9;TK.mgBan={t:0};tkFanfare(false);if(navigator.vibrate)try{navigator.vibrate([30,40,30])}catch(e){}if(TK.sheet)toast('💸 Megérkezett a pénz-gépágyú! Tartsd nyomva – jobb lent.');tkSave()}
+    if(CLK.ok&&!TK.ultra&&!TK.mgOut&&srvNow()>=M.n){const now=srvNow(),I=tkGunIv();M.n=(Math.floor(now/I)+1)*I+Math.random()*I;tkGunGive(false);if(TK.sheet)toast('💸 Megérkezett a pénz-gépágyú! Tartsd nyomva – jobb lent.')}
     return}
   if((TK.mgIn||0)<1)TK.mgIn=Math.min(1,(TK.mgIn||0)+dt*1.8);
   const hold=TK.mgHold!=null&&!TK.ultra&&dt>0;TK.mgS=Math.max(0,Math.min(1,(TK.mgS||0)+(hold?dt/TK_MG_UP:-dt/.8)));TK.mgPh=((TK.mgPh||0)+dt*(1.5+TK.mgS*38))%6.2832;tkGunSnd(hold);
@@ -2389,7 +2424,18 @@ function tkGunTick(dt,L){const M=TK.mg;if(!M)return;TK.mgSumT=(TK.mgSumT||0)+dt;
 function tkGunShot(L,lv){const v=tkTapV()*lv*2;tkEarn(v);TK.mgSum=(TK.mgSum||0)+v;TK.mgSumT=0;TK.mgFl=.05;
   const G=tkGunPos(L),j=(Math.random()-.5)*.12,mx=G.x+Math.cos(G.a+j)*G.len,my=G.y+Math.sin(G.a+j)*G.len;
   tkThrow(TK.den,v,{x0:mx,y0:my,gun:lv,a0:G.a+(Math.random()-.5)*.4,bend:(Math.random()-.5)*70});if(lv===5&&!LOWFX)TK.shake=Math.max(TK.shake||0,.06);tkGunPew()}
-function tkGunEnd(){const M=TK.mg;M.have=0;M.fuel=0;TK.mgHold=null;TK.mgS=0;tkGunSnd(false);TK.mgOut={t:0};const now=srvNow();if(M.n<now+15*6e4)M.n=now+(15+Math.random()*45)*6e4;
+// a gépágyú érkezési időköze: 60 perc, a zseton-fokozattal 50 / 45 / 40
+const tkGunIv=()=>(zsPerk().gun||60)*6e4;
+function tkGunGive(paid){const M=TK.mg;M.have=1;M.fuel=TK_MG_T;M.paid=paid?1:0;TK.mgIn=0;TK.mgS=0;TK.mgSum=0;TK.mgSumT=9;TK.mgOut=null;TK.mgBan={t:0};tkFanfare(false);if(navigator.vibrate)try{navigator.vibrate([30,40,30])}catch(e){}tkSave()}
+// zseton-bolt (Ajándék fül): a vásárolt gépágyú nem tolja el a következő ingyenes érkezését
+function tkZsBuy(k){const S=ZS_SHOP[k];if(!S||!TK.run||TK.ultra)return;if(zsBuyLeft(k)<1){toast(`Mára elfogyott (${S.day}/nap) – holnap újra.`);return}
+  if(k==='gun'&&TK.mg&&TK.mg.have){toast('💸 Már van egy pénz-gépágyúd – előbb lődd el!');return}if(k==='gt'&&TK.rush>0){toast('🎫 Most is fut egy Golden Ticket – várd meg a végét!');return}
+  if(!zsPay(S.c))return;zsBuyMark(k);const sh=$('#tkSheet');if(sh){sh.hidden=true;TK.sheet=null}
+  if(k==='gun')tkGunGive(true);else{TK.tickets++;TK.rush=Math.max(TK.rush,15);tkConfetti(TK.W/2,tkLay(TK.W,TK.H).cy,40,1);tkFanfare(false);toast('🎫 Golden Ticket – 15 mp-ig dupla bevétel!')}tkSave()}
+function tkZsShopHTML(){const L=zsPerk(),ft=walFt(0),gl=zsBuyLeft('gun'),tl=zsBuyLeft('gt'),gd=(TK.mg&&TK.mg.have)||gl<1||ft<ZS_SHOP.gun.c,td=TK.rush>0||tl<1||ft<ZS_SHOP.gt.c;
+  return `<h4 data-st="margin-top:14px">🪙 Zseton-bolt</h4><p class="hint">Az „Összes pénzem” zsetonjából: most <b>${n0(ft)} zseton</b> · fokozat: ${L.i} ${L.n}. Minden elköltött zseton a tagsági fokozatodat is emeli.</p>
+  <div class="zsshop"><button type="button" data-zsbuy="gun"${gd?' disabled':''}><i>💸</i><b>Pénz-gépágyú most</b><small>${ZS_SHOP.gun.c} zseton · ma még ${Math.max(0,gl)}×${TK.mg&&TK.mg.have?' · már van egy':''}</small></button><button type="button" data-zsbuy="gt"${td?' disabled':''}><i>🎫</i><b>Golden Ticket</b><small>15 mp dupla bevétel · ${ZS_SHOP.gt.c} zseton · ma még ${Math.max(0,tl)}×</small></button></div>`}
+function tkGunEnd(){const M=TK.mg;M.have=0;M.fuel=0;TK.mgHold=null;TK.mgS=0;tkGunSnd(false);TK.mgOut={t:0};const now=srvNow();if(!M.paid&&M.n<now+15*6e4)M.n=now+tkGunIv()*(.25+Math.random()*.75);M.paid=0;
   toast(`💸 A pénz-gépágyú kiürült – összesen +${tkFmt(TK.mgSum||0)} Ft`);tkKaching();tkSave()}
 // motorzúgás (a pörgéssel emelkedik) + lövésenként rövid papírsuhogás
 function tkGunSnd(on){if(!SOUND||!AC)on=false;const S=TK.mgA;
@@ -3852,4 +3898,4 @@ function seOpen(){lazyOpen('se','seOpen')}
 function lvOpen(){lazyOpen('lv','lvOpen')}
 if(/[?&]sr=/i.test(location.search))lazyMod('sr').catch(()=>{});// Shot&Run meghívó link: azonnal kell
 setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500);setTimeout(()=>lazyMod('lv').catch(()=>{}),3000)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
-export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,GID_FULL,GID_SPRITE,gidWheel,SIL_RAW,brass,gidFullSet,walFt,walOpen,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};
+export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,GID_FULL,GID_SPRITE,gidWheel,SIL_RAW,brass,gidFullSet,walFt,walOpen,walSpend,zsPay,zsContCost,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};

@@ -1,5 +1,5 @@
 // lv.js – az app.js-ből lustán betöltött játékmodul (a közös segédeket onnan importálja)
-import {$,AC,GID_FULL,GID_SPRITE,gidWheel,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,esc,gidFullSet,medveWrap,n0,snare,sndClink,sndPop,toast,walFt,walOpen} from './app.js';
+import {$,AC,GID_FULL,GID_SPRITE,gidWheel,LOWFX,MASTER,NOISE,SIL_RAW,SOUND,ac,boom,brass,esc,gidFullSet,medveWrap,n0,snare,sndClink,sndPop,toast,walFt,walOpen,walSpend} from './app.js';
 /* ===================== TÜZÉR DERBY – fogadóiroda: PzH 2000, Gidrán és Rába futamok =====================
    A játékos nem hajt: kiválaszt egy indulót, megteszi a tétet (Tét vagy Hely), és végignézi a futamot.
    A tét és a nyeremény zsetonban, az „Összes pénzem” tárcából megy (app.js: walFt) – a Tüzér Kasszától független.
@@ -55,7 +55,8 @@ function lvLoad(){let s={};try{s=JSON.parse(localStorage.getItem(LV_KEY)||'{}')|
   else if(k&&Number(s.pend)>0){walFt(cv(s.pend));setTimeout(()=>toast('Megszakadt futam: a tétedet ('+lvZ(cv(s.pend))+') visszakaptad.'),500)}
   if(s.v!==3)lvStore()}
 // a sorsolt eredmény elszámolása (egyszer): nyeremény a tárcába, statisztika, forma
-function lvSettle(p){const s=LV.s;if(p.win>0)walFt(p.win);s.pend=0;s.races++;if(p.win)s.wins++;s.net+=p.win-p.st;if(p.win>s.best)s.best=p.win;for(const [id,pl] of p.form||[])s.form[id]=[...lvForm(id),pl].slice(-5);lvStore()}
+// a tagsági fokozatba a futam nettó vesztesége számít (a tét levonásakor még nem – így a megszakadt, visszatérített futam sem)
+function lvSettle(p){const s=LV.s;if(p.win>0)walFt(p.win);if(p.st>p.win)walSpend(p.st-p.win);s.pend=0;s.races++;if(p.win)s.wins++;s.net+=p.win-p.st;if(p.win>s.best)s.best=p.win;for(const [id,pl] of p.form||[])s.form[id]=[...lvForm(id),pl].slice(-5);lvStore()}
 // a kifizetés egész zseton: a tört részt véletlen kerekítés adja (a várható érték pontos – kis tétnél sem nyeli el a lefelé kerekítés)
 function lvPay(R,b,o,rr){const pl=o.slice(0,3).map(r=>r.e.idx);let d=0;if(b.t==='w'&&b.i===pl[0])d=lvDivW(R,b.i,b.st,R.fw);else if(b.t==='p'&&pl.includes(b.i))d=lvDivP(R,b.i,b.st,pl,R.fp);
   const x=b.st*d,fl=Math.floor(x);return {d,win:d?fl+((rr||Math.random)()<x-fl?1:0):0,order:o.map(r=>r.e.idx),form:o.map((r,i)=>[r.e.h.id,i+1])}}
@@ -196,7 +197,7 @@ function lvGate(){const R=LV.R,b=LV.bet;if(!R||!LV.odds||!b||LV.ft<LV.stk)return
   // kései pénz (a végső osztalékot módosítja) és a futam sorsolása: csak most, a tét rögzítése után, kriptográfiai véletlenből
   const lr=lvRngS(lvSeed()),late=a=>{const x=a.map(v=>v*Math.exp(lvGauss(lr)*.1)),t=x.reduce((q,v)=>q+v,0);return x.map(v=>v/t)};R.fw=late(R.ww);R.fp=late(R.wp);
   R.seed=lvSeed();const Q={D:R.D,cz:R.cz,field:R.field};lvSim(Q,lvRngS(R.seed));lvRunOut(Q);LV.res=lvPay(R,b,lvOrder(Q),lr);
-  LV.ft=walFt(-b.st);LV.staked=b.st;LV.s.pend={st:b.st,win:LV.res.win,form:LV.res.form};lvStore();
+  LV.ft=walFt(-b.st,1);LV.staked=b.st;LV.s.pend={st:b.st,win:LV.res.win,form:LV.res.form};lvStore();
   lvSim(R,lvRngS(R.seed));LV.acc=0;LV.cine=null;LV.cineDone=0;LV.ph='gate';LV.run=true;LV.belled=false;LV.gateT=0;LV.bellAt=3.2+Math.random()*1.2;LV.msg=null;LV.cam=-30;LV.pt=[];LV.flash=0;LV.cheer=0;LV.over=0;LV.lead=-1;LV.leadT=0;LV.sayT=0;LV.fl={};LV.fast=false;
   const f=$('#lvFast');f.hidden=false;f.classList.remove('on');lvPanel('');LV.fit();lvSnd('call');lvSay('Az indulók beállnak a startgépbe…');lvMsg(R.no+'. FUTAM','#ffd23a')}
 function lvFinish(){const R=LV.R,b=LV.bet,res=LV.res;lvRunOut(R);
