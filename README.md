@@ -1,9 +1,13 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.49.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.49.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.49.1:** **A vereség-képernyőn látszik a zseton-egyenleg** (H.A.R.C., DroneRun, Shot&Run).
+- Mindig kiírja: „🪙 Egyenleged: N zseton”.
+- Ha jár folytatás, de kevés hozzá a zseton: kiírja, mennyi hiányzik, a gomb halványabb, a „zsetont szerzek” link pedig megnyitja az Összes pénzem tárcát.
 
 **v4.49.0:** **Gidrán Terep: Expedíció (5 szakasz) és szellemverseny a ranglista elsőjével.** Részletek: `docs/tervezet-harc-terep.md`.
 - **🧭 Expedíció:** a pályaválasztó tetején indítható. Öt szakasz: Bajnoki pálya → Mocsaras erdő → Bakonyi sziklák → Fal és szakadék → Hazatérés (új, csak itt).
