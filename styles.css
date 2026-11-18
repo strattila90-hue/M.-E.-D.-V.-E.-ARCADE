@@ -1811,3 +1811,14 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .adlg span b small{font-size:11px;font-weight:400;opacity:.7;margin-left:1px}
 .hstart .hrules{text-align:left;margin:6px 0 8px;padding-left:18px;font-size:12.5px;line-height:1.4}.hstart .hrules li{margin:3px 0}
 body.harcon .toast{pointer-events:none}
+/* Gidrán Terep – expedíció és szellemverseny (4.49) */
+#harc .gttrk button.gtexp,.gttrk button.gtexp{background:linear-gradient(135deg,#3a4a22,#1f2a14);border-color:#c9a227}
+.gttrk button.gtexp b{color:#ffd24a}#harc .gttrk button.gtexp.new,.gttrk button.gtexp.new{background:#2b3324;border-color:#111}.gttrk button.gtexp.new b{color:#f3ecd4}
+.expbox{display:grid;gap:5px;margin:8px 0;text-align:left}
+.expst{display:grid;grid-template-columns:78px 1fr 46px;align-items:center;gap:6px;font-size:12px}.expst b{text-align:right}.expst .dhp{height:8px}
+.exprow{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08)}.exprow span{flex:1;text-align:left}
+.exprow button{font:inherit;font-size:12px;font-weight:800;padding:5px 9px;border:2px solid #111;border-radius:9px;background:#c9a227;color:#111;cursor:pointer}
+.exprow button+button{background:#f3ecd4}
+.expsvc{margin:6px 0}
+.gtvs{display:block;margin:4px 0;padding:5px 8px;border-radius:8px;background:rgba(255,210,74,.14);font-size:12.5px}
+.expst .dhp{width:auto;flex:none;margin:0}

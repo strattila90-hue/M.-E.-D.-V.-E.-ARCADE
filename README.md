@@ -1,9 +1,20 @@
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.48.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.49.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.49.0:** **Gidrán Terep: Expedíció (5 szakasz) és szellemverseny a ranglista elsőjével.** Részletek: `docs/tervezet-harc-terep.md`.
+- **🧭 Expedíció:** a pályaválasztó tetején indítható. Öt szakasz: Bajnoki pálya → Mocsaras erdő → Bakonyi sziklák → Fal és szakadék → Hazatérés (új, csak itt).
+  - Az üzemanyag és a kopás (abroncs, futómű, motor) szakaszról szakaszra megmarad.
+  - **Szervizpark** a szakaszok között: tankolás, abroncs-, futómű- és motorjavítás időbüntetésért vagy zsetonért.
+  - Egyszer **vontatás** (+180 s), ha egy szakasz elbukik.
+  - Eredmény: összidő, a legjobb a telefonon tárolódik. A félbehagyott expedíció folytatható.
+- **🏆 Szellemverseny az elsővel:** a ranglistás pályán a ranglista első helyezettjének legjobb menete arany szellemként fut.
+  - Köztes időnként látszik az elsőhöz mért különbség, a célban az is, hogy megverted-e.
+  - A saját legjobb menet útvonala új szerver-rekordnál feltöltődik (`gtGhost/{uid}`). Rajtonként legfeljebb 1 olvasás.
+- **⚠ A `firestore.rules` változott** (új `gtGhost` gyűjtemény), ezért újra kell telepíteni. Amíg ez nem történik meg, csak a szellemverseny nem működik, minden más igen. A szabályteszt (`tests/firestore-rules.test.mjs`) új esetekkel bővült; emulátor híján még nem futott.
 
 **v4.48.0:** **H.A.R.C. Gránátvihar (dobálós, hullámos, főellenségekkel) és Gidrán Terep – Fal és szakadék.** Részletes terv és számok: `docs/tervezet-harc-terep.md`.
 - **M.E.D.V.E. H.A.R.C. – Gránátvihar:** fentről hullámokban jönnek az ellenségek, a medve 155 mm-es gránátokkal dobálja őket.

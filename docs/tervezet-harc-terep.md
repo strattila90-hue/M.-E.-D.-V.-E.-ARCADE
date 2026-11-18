@@ -146,8 +146,31 @@ A 25. hullám után **új kör** indul: minden 15%-kal gyorsabb, az ellenségek 
   - **Nagy meredekségmérő:** a kép tetején, a fal és a szakadék alatt. Százalékban és fokban mutat, színes zónákkal. Alatta a szükséges beállítások pipával vagy X-szel: 4L, DIFIZÁR, illetve 4L MOTORFÉK.
 - **Mellékhatás a többi pályán:** az erősebb 4L motorfék a régi extrém lejtőn is jobban tart.
 
-### Javaslat a teljes játékmód újragondolásához (nincs megvalósítva, döntésre vár)
-1. **Expedíció (kampány):** 5 egymásra épülő bevetés közös üzemanyaggal és futómű-kopással. A pályák között javítani és tankolni lehet, ami időbe vagy zsetonba kerül. A végén összesített idő és állapot számít.
-2. **Hegymenet-kihívás:** csak a fal, egyre meredekebb változatokban (60%, 80%, 100%, 120% és lépcsős). Napi pálya a szerveridő szerinti maggal, külön napi ranglistával.
-3. **Mentőakció:** a szakadék alján elakadt jármű. Csörlővel és horgonyfával kell felhúzni a falra, a pontszám az idő és a csörlőkábel terhelése szerint jár.
-4. **Szellemverseny a ranglista első helyezettjével** (a meglévő szellem-rendszerre építve).
+### A játékmód újragondolása – választott irányok: 1 és 4 (v4.49.0, megvalósítva)
+**1. Expedíció (5 szakasz):** Bajnoki pálya → Mocsaras erdő → Bakonyi sziklák → Fal és szakadék → Hazatérés (új zárószakasz, 1,3 km; csak az expedícióban).
+- **Közös állapot:** az üzemanyag (indulás 45 l), az abroncs, a futómű és a motor kopása szakaszról szakaszra megmarad.
+- **Szervizpark** a szakaszok között, mindegyik idő vagy zseton ellenében:
+
+  | Szolgáltatás | Időbüntetés | vagy zseton |
+  |---|---|---|
+  | ⛽ Tankolás 120 l-ig | 0,4 s literenként (legalább 5 s) | 2 |
+  | 🛞 Abroncsjavítás | 25 s | 2 |
+  | 🔧 Futómű (−60%) | 40 s | 3 |
+  | ⚙️ Motorjavítás | 30 s | 2 |
+
+  Ami nincs megjavítva, a következő szakaszon is megmarad.
+- **Vontatás:** expedíciónként egyszer. Egy elbukott szakasz elölről indul, a szakasz eleji állapottal, +180 s büntetéssel.
+- **Eredmény:** összidő (szakaszidők + büntetések). A legjobb a telefonon tárolódik, a félbehagyott expedíció később folytatható.
+
+**4. Szellemverseny az elsővel:** a ranglistás Bajnoki pályán a ranglista első helyezettjének legjobb menete **arany szellemként** fut melletted.
+- A köztes időknél a saját rekordod mellett a hátrányod vagy előnyöd az elsőhöz képest is látszik („🏆 1.: +2,2 s”). A célban kiírja, hogy megverted-e, és mennyivel.
+- **Tárolás:** a szellem útvonala a `gtGhost/{uid}` Firestore-dokumentumba kerül, amikor a szerveren is új rekordot futsz.
+  - A szabály csak a saját dokumentumot engedi írni, és csak pontosan a fiókban rögzített rekordidővel (`ms == gtBest`). Kitalált, gyorsabb szellem így nem kerülhet fel.
+  - Méret: legfeljebb 60 000 szám (kb. 33 perc menet).
+  - Szezon-nullázás után a régi szellem nem töltődik be, mert az ideje már nem egyezik.
+- **Terhelés:** rajtonként legfeljebb 1 olvasás (a memóriában megmarad), írás csak új rekordnál.
+- **Telepíteni kell:** a `firestore.rules` változott, újra kell telepíteni. Amíg ez nem történik meg, a szellem nem töltődik fel, és az első szelleme nem jelenik meg; minden más működik.
+
+### További ötletek (nincs megvalósítva)
+- **Hegymenet-kihívás:** csak a fal, egyre meredekebb változatokban (60%, 80%, 100%, 120% és lépcsős). Napi pálya szerveridő szerinti maggal, külön napi ranglistával.
+- **Mentőakció:** a szakadék alján elakadt jármű. Csörlővel és horgonyfával kell felhúzni a falra, a pontszám az idő és a kábelterhelés szerint jár.
