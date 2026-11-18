@@ -8,7 +8,7 @@ const DOCS = `${BASE}/v1/projects/${P}/databases/(default)/documents`;
 const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
 const userTok = uid => 'Bearer ' + `${b64({ alg: 'none', typ: 'JWT' })}.${b64({ sub: uid, user_id: uid, email: `${uid}@medve.invalid`, aud: P, iss: `https://securetoken.google.com/${P}`, iat: 1, exp: 9999999999 })}.`;
 const ADMIN = 'Bearer owner';
-const val = v => v instanceof Date ? { timestampValue: v.toISOString() } : typeof v === 'string' ? { stringValue: v } : Number.isInteger(v) && Math.abs(v) < 9e15 ? { integerValue: String(v) } : typeof v === 'number' ? { doubleValue: v } : typeof v === 'boolean' ? { booleanValue: v } : v && typeof v === 'object' ? { mapValue: { fields: fields(v) } } : v;
+const val = v => v instanceof Date ? { timestampValue: v.toISOString() } : typeof v === 'string' ? { stringValue: v } : Number.isInteger(v) && Math.abs(v) < 9e15 ? { integerValue: String(v) } : typeof v === 'number' ? { doubleValue: v } : typeof v === 'boolean' ? { booleanValue: v } : Array.isArray(v) ? { arrayValue: { values: v.map(val) } } : v && typeof v === 'object' ? { mapValue: { fields: fields(v) } } : v;
 const fields = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, val(v)]));
 // írás a commit végponton: így szerveridő (REQUEST_TIME) is küldhető, mint az appban a serverTimestamp()
 async function write(path, auth, data, { srvTs = [], del = [], create = false } = {}) {
@@ -99,6 +99,13 @@ const expect = (name, got, want) => { const ok = (got < 300) === want; if (!ok) 
   const doc5 = 'users/' + uid + 'z', U5 = userTok(uid + 'z');
   expect('zseton: new profile', await write(doc5, U5, { name: 'Zs', rank: 'Közlegény', nick: uid + 'z', createdAt: Date.now() }), true);
   expect('zseton: reject first upload > 500', await write(doc5, U5, { zs: 900 }, { srvTs: ['zsSt'] }), false);
+  // Terep-szellem: csak a saját, csak a fiókban rögzített rekordidővel, korlátozott mérettel
+  const gh = Array.from({ length: 30 }, (_, i) => i * 10);
+  expect('ghost: own, ms == gtBest', await write('gtGhost/' + uid3, U3, { v: 1, ms: 20000, d: gh, name: 'Teszt', ts: Date.now() }), true);
+  expect('ghost: reject faster than recorded best', await write('gtGhost/' + uid3, U3, { v: 1, ms: 15000, d: gh, name: 'Teszt', ts: Date.now() }), false);
+  expect('ghost: reject writing someone else\'s ghost', await write('gtGhost/' + uid3, U4, { v: 1, ms: 20000, d: gh, name: 'Teszt', ts: Date.now() }), false);
+  expect('ghost: reject without a recorded best', await write('gtGhost/' + uid4, U4, { v: 1, ms: 20000, d: gh, name: 'Ujonc', ts: Date.now() }), false);
+  expect('ghost: reject extra field', await write('gtGhost/' + uid3, U3, { v: 1, ms: 20000, d: gh, name: 'Teszt', ts: Date.now(), x: 1 }), false);
   console.log(fails ? `\n${fails} FAILED` : '\nALL PASSED');
   process.exit(fails ? 1 : 0);
 })().catch(e => { console.error('ERR', e); process.exit(1); });

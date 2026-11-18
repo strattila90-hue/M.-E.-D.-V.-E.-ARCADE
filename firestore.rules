@@ -72,6 +72,16 @@ service cloud.firestore {
         && request.resource.data.m < mk(request.time + duration.value(2, 'h')) && me().get('tkWk', '') == request.resource.data.m && request.resource.data.g <= me().get('tkWg', 0) + 1;
       allow update, delete: if false;
     }
+    // Terep-szellem (4.49): a ranglistás pályán a saját legjobb menet útvonala (0,1 s-onként x, y, szög). Csak a saját, és csak pontosan
+    // a fiókban rögzített rekordidővel (gtBest) írható – gyorsabb, kitalált szellem nem kerülhet fel. Bárki olvashatja (szellemverseny az elsővel).
+    match /gtGhost/{uid} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && request.resource.data.keys().hasOnly(['v', 'ms', 'd', 'name', 'ts'])
+        && request.resource.data.v == 1 && request.resource.data.ms is int && request.resource.data.ms > 0 && request.resource.data.ms == me().get('gtBest', -1)
+        && request.resource.data.d is list && request.resource.data.d.size() >= 9 && request.resource.data.d.size() <= 60000
+        && request.resource.data.name is string && request.resource.data.name.size() <= 48 && request.resource.data.ts is number && request.resource.data.ts <= nowMs() + 300000;
+      allow delete: if signedIn() && (request.auth.uid == uid || isAdmin());
+    }
     // Shot&Run párbajszoba: a házigazda nyitja (5 jegyű kód), egy vendég csatlakozhat, utána csak ők ketten írhatják az eseményt
     match /srRooms/{code} {
       allow read: if signedIn();
