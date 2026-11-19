@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.50.0',APP_DATE='2026.11.18.';
+const APP_VER='4.50.1',APP_DATE='2026.11.19.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -3523,6 +3523,7 @@ function arcRender(){const m=document.getElementById('main');if(ARC.more==='auth
   <div class="panel arc-p"><h3>🔊 Hang</h3><label class="swr"><span>Hangeffektek és zene</span><input type="checkbox" id="arcSnd" ${SOUND?'checked':''}></label><label class="swr"><span>🎸 Rockzene a játékokban</span><input type="checkbox" id="arcMus" ${SET.music!==false?'checked':''}></label><label class="slr"><span>Hangerő <b id="arcVolV">${SET.vol}%</b></span><input type="range" id="arcVol" min="0" max="100" step="5" value="${SET.vol}"></label></div>
   <div class="panel arc-p"><h3>⚡ Teljesítmény</h3><label class="swr"><span>🔋 Gyenge telefon mód<small data-st="display:block;opacity:.7;font-size:11px">kisebb felbontás, simább futás, kevesebb akku – akadozásnál magától bekapcsol</small></span><input type="checkbox" id="arcLow" ${LOWFX?'checked':''}></label></div>
   <div class="panel arc-p"><h3>📲 Telepítés alkalmazásként</h3>${isInstalled()?'<p class="hint" data-st="margin:0 0 10px">✅ Telepítve, a kezdőképernyőről indul.</p>'+dlPasteHTML():'<p class="hint" data-st="margin:0 0 10px">Androidon egy koppintás, iPhone-on 3 lépés – megmutatjuk, hova kell nyomni.</p><button type="button" class="btn pri" id="instOpen">📲 Telepítés</button>'}</div>
+  <div class="panel arc-p"><h3>⭐ Tetszik a játék?</h3><p class="hint" data-st="margin:0 0 10px">Ha szereted, egy csillag a GitHubon sokat segít.</p><button type="button" class="btn" id="starGh">⭐ Csillag a GitHubon</button></div>
   <p class="arc-foot">Szórakoztató játékgyűjtemény. Szolgálati adatot nem tartalmaz és nem gyűjt. ${FB_ON?'A fiókhoz csak becenév és jelszó kell; a ranglistán a becenév, a rendfokozat és a rekordok látszanak, kizárólag bejelentkezett játékosoknak.':'A rekordok csak ezen a készüléken tárolódnak.'}<br>M.E.D.V.E. Arcade · v${APP_VER} · ${APP_DATE}</p></div></div></div>`;
   {const mo=document.getElementById('arcMore');if(mo)document.body.appendChild(mo)}
   applyDataStyles&&applyDataStyles(m);deckInit();
@@ -3534,6 +3535,7 @@ document.addEventListener('click',e=>{if(!e.target.closest)return;const t=e.targ
   if(e.target.closest('#moreX')||e.target.id==='arcMore'){arcMoreClose();return}if(e.target.closest('[data-chat]')){chatOpen();return}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&ARC.more&&document.getElementById('harc')?.hidden!==false)arcMoreClose()});
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#auLbReset'))lbResetAll()});
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#starGh'))window.open('https://github.com/strattila90-hue/M.-E.-D.-V.-E.-ARCADE','_blank','noopener')});
 document.addEventListener('change',e=>{if(e.target.id==='arcLow'){LOWFX=e.target.checked;LOWAUTO=0;try{localStorage.setItem('medve-lowfx',LOWFX?'1':'0')}catch(x){}toast(LOWFX?'🔋 Gyenge telefon mód BE – a következő játékindítástól':'Gyenge telefon mód KI')}if(e.target.id==='arcSnd'){SOUND=e.target.checked;saveSet();if(SOUND&&ac())sndAdd()}if(e.target.id==='arcMus'){SET.music=e.target.checked;saveSet();toast(SET.music?'🎸 Rockzene bekapcsolva':'Rockzene kikapcsolva')}});
 document.addEventListener('input',e=>{if(e.target.id==='arcVol'){SET.vol=Number(e.target.value);const v=document.getElementById('arcVolV');if(v)v.textContent=SET.vol+'%';saveSet();applySet()}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('rankov')&&!document.getElementById('rankov').hidden)rankClose()});
