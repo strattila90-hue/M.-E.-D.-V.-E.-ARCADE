@@ -39,6 +39,7 @@ const ICONS = {
   boom: ['#ffb02a', '#d9261c', `<polygon points="${pts(10, 15, 7.6)}"/><polygon points="${pts(8, 9.4, 4.6, 16, 16, -1.2)}" fill="${a2}"/><polygon points="${pts(6, 4.2, 2, 16, 16, -.7)}" fill="#fff6c8"/>`],
   white: ['#e8e8e0', '#b8bbae', `<path d="M5 2h2.8v28H5z" fill="#b8bbae"/><path d="M7.8 4c4-2.4 7 2.4 11 0s6-1.4 8.4-.6v13c-2.4-.8-4.4-2.2-8.4.6s-7-2-11 .4z"/>`],
   gas: ['#7cdc5a', '#1a0f0b', `<path d="M2 16l12-11.4V11.6h14v8.8H14v7z" transform="scale(-1 1) translate(-32 0)"/>`],
+  mine: ['#8a8c80', '#ff3b30', `<ellipse cx="16" cy="22" rx="13" ry="6"/><path d="M6 21l2-6h16l2 6z"/><path d="M13 15v-3h6v3z" fill="${a2}"/><path d="M14.4 9h3.2v3h-3.2z"/><polygon points="${pts(8, 4.4, 2, 16, 20)}" fill="${d0}"/><path d="M4 26l2-2M28 26l-2-2M16 29v-3" stroke="${a2}" stroke-width="1.8" fill="none"/>`],
   sat: ['#f2b21c', '#1a0f0b', `<circle cx="16" cy="16" r="13"/>`]
 };
 // ico('coin') → beágyazható SVG; cls: extra osztály. A kitöltés a CSS-ből jön: `.mgi{fill:currentColor}`.

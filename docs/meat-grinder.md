@@ -217,3 +217,21 @@ flag, lock/unlock, check, skull, trophy, pause, close, left/right, play, rotl/ro
 - **Motor és terepjáró-képesség alapon is jobb**: a gyári motor `f` 1,0 → 1,35 (a szorzó 95 → 110), végsebesség 150 → 165, a gyári lánc tapadása
   0,85 → 1,05. Mért emelkedő (alap felszerelés, 9 mp): régen már a 20°-ot sem mászta meg, most a 20°-ot végig, a 25°-ot lassan. A magasabb szintek
   arányosan feljebb kerültek (a legerősebb motor 2,05 → 2,3).
+
+## 4.62.0 – autók, autópálya, Zombi-Gólem, robbanás, hátsó támadás
+
+- **Valódi méretű közúti járművek** (`CT`, `carStep`, `drawCar`; 1 m ≈ 25 egység): személyautó, taxi, kombi, terepjáró, kisbusz, pickup, busz, kamion, nyerges.
+  A rajzolt sziluett = a fizikai profil (a talaj a `gY`-ban kapja a `carBump`-ot), így a PzH ténylegesen ráguruk. A **zúzódás** (`car.c`, 0…1) nő a súly alatt és
+  nekiütközéskor; közben üveg, lemez, ajtó, kerék repül, szikra, por, olajfolt, néha tűz vagy robbanás; végül lapított roncs marad (+kupak, +pont).
+  Dugók (`jam`), pályánkénti típusválaszték (`ctypes`) és sűrűség (`cgap`). A régi roncshalmok is valódi méretűek lettek.
+- **Új pálya: Autópálya-roncsok** (3. pálya, 4000 m): teljesen egyenes aszfalt (`flat`), sávjelzés, fénycsapda-korlát, útjelző portálok, villanyoszlopok,
+  nagy dugók kamionokkal és busszal. Mentés-verzió 4 (a 3.-tól a pályák egyet tolódnak; a régi mentések átkerülnek).
+- **Hosszabb pályák**: 2000 / 3000 / 4000 / 3400 / 4600 m; a hordák és a gólemek a hossz arányában, `hgap` távolságonként jönnek.
+- **Erősebb zombik**: életerő ×1,35, sebesség ×1,1, rádmászva sebzés ×1,35 (`ZSTR`, `ZSPD`, `ZDMG`).
+- **Hátulról támadás** (`spawnRear`): ha a gép ~1,4 mp-nél tovább áll, gyors fajták bukkannak fel mögötte (egyre többen, minél tovább áll), a hátsó fedélzetre másznak;
+  „HÁTULRÓL TÁMADNAK!” figyelmeztetés.
+- **Aknarakó** (`akna`, 4 szint): hátul ellenfél esetén automatikusan aknát hullat. **Javítószerelő** (`javit`, 4 szint): menet közben lassan javítja a páncélt.
+- **Zombi-Gólem** (`golem`, 2400 életerő, 150 egység magas): a löveg csövét megfogja és 10 szeleten elhajlítja (`barrelPose`, `BEND`); amíg fogja, a gép alig halad,
+  a főágyú nem tüzel. Szabadulás: a gólem elpusztítása, heves forgás vagy rakéta. Az elhajlás a mentésben megmarad (`sv.bend`), a **Műhelyben javítható** (`fixBarrel`).
+- **A PzH felrobbanása** (`vehBlast`, `blastStep`): fehér villanás, három tűzgömb, lökéshullám-gyűrűk, szétrepülő cső / kerekek / lemezek / lánctagok füstcsíkkal,
+  időzített másodlagos (lőszer-)robbanások, kormos, égő roncs. A kiégett kinézet olcsó sokszög-fedés (`drawSoot`), nem képszűrő.
