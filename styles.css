@@ -1663,8 +1663,8 @@ button.srcbtn::after{content:'';flex:0 0 auto;width:14px;height:22px;opacity:1;b
 .tkbig:disabled{background:#3a4030;color:#a8ae98;font-size:14px;text-shadow:none;animation:none}
 .tkbig:not(:disabled){animation:tkp .9s infinite alternate}
 .tkbig:active:not(:disabled){transform:translateY(2px);box-shadow:1px 1px 0 #111}
-.tkwheel{display:flex;justify-content:center;margin:4px 0 10px}
-.tkwheel canvas{width:min(280px,78vw);height:auto;aspect-ratio:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.tkscr{display:flex;justify-content:center;margin:4px 0 12px}
+.tkscr canvas{width:min(320px,88vw);height:auto;aspect-ratio:300/204;touch-action:none;cursor:crosshair;border-radius:14px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.55));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
 /* v4.33: Tüzér Kassza – hat fül (új: Bankók), Bankók gyűjtemény-oldal */
 .tknav{grid-template-columns:repeat(6,1fr);gap:3px;padding-left:4px;padding-right:4px}
@@ -1837,3 +1837,68 @@ body.harcon .toast{pointer-events:none}
 .gtcrth{position:absolute;left:-14px;right:-14px;height:34px;bottom:6px;margin-bottom:-17px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;border:3px solid #111;border-radius:10px;background:#ffd24a;color:#111;box-shadow:2px 3px 0 #111;pointer-events:none}
 .gtcrth em{font-family:var(--f-comic,sans-serif);font-size:16px;font-weight:900;font-style:normal}.gtcrth small{font-size:8px;font-weight:800}
 .gtcr.on .gtcrth{transform:scale(1.08)}
+
+/* ===== v4.51: Tüzér Kassza – finomított felület: lágyabb, egységes lekerekítések, melegebb arany és mélyebb olajzöld,
+   csak transform/opacity animációk (a filter: brightness villogás helyett – nem kell minden képkockán újrafesteni) ===== */
+#harc{--tk-gold:#f2c94c;--tk-gold2:#c99a1e;--tk-gold3:#7a5608;--tk-ink:#14170f;--tk-olive:#5b6b3c;--tk-olive2:#323d22;--tk-panel:#1a2213;--tk-panel2:#11170c;--tk-line:rgba(242,201,76,.22);--tk-r:14px;--tk-ease:cubic-bezier(.2,.8,.2,1)}
+@keyframes tkp{from{transform:none}to{transform:scale(1.045)}}
+@keyframes tkshine{0%,55%{transform:translateX(-120%) skewX(-20deg)}100%{transform:translateX(220%) skewX(-20deg)}}
+@keyframes tkup{from{transform:translateY(24px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes tkbadge{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+/* alsó lap: lekerekített felső sarkok, a figyelmeztető csík háttérként (a border-image nem engedte a lekerekítést) */
+.tksheet{border-top:0!important;border-image:none!important;border-radius:20px 20px 0 0!important;padding-top:16px;
+  background:repeating-linear-gradient(45deg,#e8b923 0 9px,#14140f 9px 18px) top/100% 6px no-repeat,radial-gradient(120% 60% at 50% 0,#26301b 0,transparent 70%),linear-gradient(var(--tk-panel),var(--tk-panel2))!important;
+  box-shadow:0 -14px 36px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#6f8048 transparent;animation:tkup .24s var(--tk-ease)}
+.tksheet::-webkit-scrollbar{width:6px}.tksheet::-webkit-scrollbar-thumb{background:#6f8048;border-radius:3px}
+.tksheet h4{border-radius:6px;background:linear-gradient(var(--tk-gold),var(--tk-gold2));box-shadow:0 2px 0 var(--tk-gold3),0 4px 10px rgba(0,0,0,.35)}
+.tksheet .hint{line-height:1.45;color:#d9d2b4;opacity:1}
+.tkx{width:34px;height:34px;border-radius:50%;background:linear-gradient(var(--tk-gold),var(--tk-gold2));box-shadow:0 2px 0 var(--tk-gold3),0 3px 8px rgba(0,0,0,.4);transition:transform .12s var(--tk-ease)}
+.tkx:active{transform:scale(.9)}
+/* sorok, kártyák */
+.tkrow{border-radius:var(--tk-r);border:1px solid rgba(111,128,72,.35);background:linear-gradient(100deg,rgba(111,128,72,.2),rgba(255,255,255,.025) 60%);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:9px 10px}
+.tkrow.gold{background:linear-gradient(100deg,rgba(242,201,76,.22),rgba(255,255,255,.02) 65%);border-color:rgba(242,201,76,.4)}
+.tkrow button,.tkseg button,.tkbtn{border-radius:11px;transition:transform .1s var(--tk-ease),box-shadow .1s,filter .1s}
+.tkrow button{background:linear-gradient(#ffe49a,var(--tk-gold) 45%,var(--tk-gold2));box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 3px 0 var(--tk-gold3),0 4px 8px rgba(0,0,0,.3)}
+.tkrow button:active:not(:disabled),.tkseg button:active,.tkbtn:active{transform:translateY(2px) scale(.98)}
+.tkrow button:disabled{background:linear-gradient(#3e4634,#2f3527);color:#9aa088;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.tkbar{border-radius:99px;background:rgba(0,0,0,.35);box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}.tkbar i{border-radius:inherit;background:linear-gradient(90deg,#7ee07e,#c8ff9a)}
+.tkucard,.tkdens>div,.tkmintbox,.tkdsum,.tkstack,.tkrules,.tkseen{border-radius:var(--tk-r)}
+.tkdens>div{background:linear-gradient(160deg,#222b19,#151b0f);box-shadow:0 2px 0 rgba(0,0,0,.4);transition:transform .15s var(--tk-ease)}
+.tkdens>div.cur{background:linear-gradient(160deg,#3a3414,#1f1c0b);box-shadow:0 0 0 1px rgba(242,201,76,.35),0 6px 16px rgba(242,201,76,.15)}
+/* a bankók most nagy felbontásúak: ne pixelesítsük őket */
+.tkdens img,.tkmintbox img{image-rendering:auto;border-radius:6px;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+.tkdens .tkbar i{background:linear-gradient(90deg,#4fb0e0,#9fe0ff)}
+.tkday{border-radius:12px;background:linear-gradient(#232c1a,#171d10);transition:transform .15s var(--tk-ease)}
+.tkday.now{animation:tkp .9s ease-in-out infinite alternate}
+/* nagy gomb (napi doboz, sorsjegy): fényes, csak a fénycsík mozog rajta */
+.tkbig{position:relative;overflow:hidden;border-radius:16px;border:2px solid #111;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 0 #111,0 8px 16px rgba(0,0,0,.35);background:linear-gradient(#ffe58a,var(--tk-gold) 40%,#c98a06);transition:transform .1s var(--tk-ease),box-shadow .1s}
+.tkbig.spin{background:linear-gradient(#ff7a6a,#e0302a 45%,#9a1016);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 0 #111,0 8px 16px rgba(0,0,0,.35)}
+.tkbig:not(:disabled){animation:none}
+.tkbig:not(:disabled)::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-120%) skewX(-20deg);animation:tkshine 2.4s ease-in-out infinite;pointer-events:none}
+.tkbig:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 0 #111}
+.tkbig:disabled{border-color:#2a2f22;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);background:linear-gradient(#394031,#2b3124)}
+/* alsó menüsor */
+.tknav{background:linear-gradient(#232c19,#0b0f08);border-top:2px solid rgba(242,201,76,.55);box-shadow:0 -6px 18px rgba(0,0,0,.45)}
+.tknav button{border:2px solid #0e120a;border-radius:13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 #0a0d07;background:linear-gradient(#6c7d4a,#3a4629);transition:transform .1s var(--tk-ease),box-shadow .1s}
+.tknav button:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 #0a0d07}
+.tknav button.on,.tknav button[aria-pressed=true]{box-shadow:0 0 0 2px var(--tk-gold),inset 0 1px 0 rgba(255,255,255,.25),0 3px 0 #0a0d07}
+.tknav [data-tk=gift]{background:linear-gradient(#e0443a,#8a1418)}
+.tknav [data-tk=den]{background:linear-gradient(#4aa356,#1d5126)}
+.tknav button.badge::before{animation:tkbadge 1s ease-in-out infinite}
+/* lebegő gombok a játéktéren */
+.tkpush{border-radius:16px!important;border:2px solid #0e120a!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 0 #0a0d07,0 8px 18px rgba(0,0,0,.4)!important;background:linear-gradient(#7a8c4e,#45532f 55%,#323d22);transition:transform .1s var(--tk-ease),box-shadow .1s}
+.tkpush:active{transform:translateY(3px)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 1px 0 #0a0d07!important}
+.tkmint{border-radius:14px;background:linear-gradient(#fff0b0,var(--tk-gold) 45%,var(--tk-gold2));box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 4px 0 var(--tk-gold3),0 8px 16px rgba(0,0,0,.35)}
+#harc .tkultra{border-radius:999px;border-width:1.5px;box-shadow:inset 0 2px 6px rgba(0,0,0,.55),0 4px 0 #070a05,0 8px 18px rgba(0,0,0,.35)}
+.tkchip{border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+#harc .tkmonth{border-radius:999px}
+.tkinfo{border-radius:999px!important;padding:3px 10px!important}
+@media (prefers-reduced-motion:reduce){.tksheet,.tkday.now,.tkbig::after,.tknav button.badge::before,.tkmint,.btn.zsc{animation:none!important}}
+/* a nyitott lap takarja a játéktér lebegő gombjait (ULTRA-csúszka, ÜTEGBE TOL, pénzverde) – eddig rálógtak a lap aljára */
+#harc .tksheet{z-index:8}
+/* v4.52: gyerekzár – platform-tipp a Főképernyő-gombhoz (10 mp után elhalványul, átengedi a koppintást), a lap nem görgethető/frissíthető */
+#harc .tkupin{position:absolute;left:12px;right:12px;top:calc(var(--uh,60px) + 10px);padding:10px 12px;border-radius:14px;background:rgba(12,16,8,.88);border:1.5px solid rgba(242,201,76,.6);color:#f3ecd4;font:600 12px/1.4 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;opacity:0}
+#harc .tkupin.go{animation:tkpin 12s ease forwards}
+@keyframes tkpin{0%{opacity:0;transform:translateY(-6px)}4%,80%{opacity:1;transform:none}100%{opacity:0}}
+html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
