@@ -198,3 +198,14 @@ levágott sarkok, két tónus, sötét kivágások, szegecsek). `ico('név')` ad
 CSS-változóból jön. Készlet: motor, track, fuel, shield, plow, spikes, cannon, mg, rocket, flame, laser, turret, coin (kupak = kapszli), wrench,
 flag, lock/unlock, check, skull, trophy, pause, close, left/right, play, rotl/rotr, warn, zombie, boom, white. A vászonra rajzolt jelek
 (horda-figyelmeztetés, robbanó hordó) is rajzolt alakzatok. Új ikon: új bejegyzés az `ICONS`-ba `[fő szín, kiemelés, SVG-tartalom]`.
+
+## 4.61.0 – városi pálya, erősebb alap motor
+
+- **Új pálya: „Lakott városnegyed”** (2. pálya, 1800 m, `kind: 'city'`): alkonyi égbolt, égő ablakú panelházak két rétegben, utcai lámpák, reklámtáblák,
+  sávjelzés és zebra az úton, villogó rendőrautó, jersey-betonakadályok (`kind: 'jersey'`), taxik és dugó-roncsok, katonai útzárak.
+  A pályák nehézségét mostantól a `lv` (ellenség-sűrűség, roncs-halmok), a `hpm` (ellenség életerő-szorzó) és az `sb` (győzelmi pontbónusz) mező adja
+  (nem a sorszám), így az új pálya beilleszthető anélkül, hogy a többi változna. Mentés-verzió: 3 – a régi mentések 2. és 3. pályája egyet tolódik
+  (`load()`), a kupak és a fejlesztések változatlanok.
+- **Motor és terepjáró-képesség alapon is jobb**: a gyári motor `f` 1,0 → 1,35 (a szorzó 95 → 110), végsebesség 150 → 165, a gyári lánc tapadása
+  0,85 → 1,05. Mért emelkedő (alap felszerelés, 9 mp): régen már a 20°-ot sem mászta meg, most a 20°-ot végig, a 25°-ot lassan. A magasabb szintek
+  arányosan feljebb kerültek (a legerősebb motor 2,05 → 2,3).
