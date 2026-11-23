@@ -164,3 +164,10 @@ csiszolási szálak, szemcse, karcok, rozsda, szegecs, varrat + érintkezési á
   az alsó ága a kiemelkedő talaj fölött fölfelé tolódik (átfekszik a kisebb egyenetlenségeken). Láncszemek, csapszegek, tüskék/bordák a
   futómű-szinttel. A lánc fázisa a talajhoz képest hátrafelé fut (korábban rossz irányba), a kerekek gördülés-helyesen forognak, a
   levegőben a gázra pörög, fékre lassul (`V.trkV`). Gumiabroncsos, csavarozott acél görgők, fogaskerekű hajtókerék.
+
+## 4.56.0 – lefolyó vér a járművön
+
+`bloodOn` / `bloodStep` / `drawBlood` (mg.js): az orrra és a testre fröccsent vér nedvesen **lefolyik** a lemezeken – a „lefelé” a jármű dőlése
+szerint változik, a menetszél hátrafelé fújja a csíkot –, a csík végéről és az alsó élről **csöpög** (a cseppek a talajon tócsát hagynak),
+~45 mp alatt **megszárad** (sötétedik), majd elhalványul. Több vér kerül rá, ha erősebb az orr-előtét, és nagy ellenfeleknél
+(`ZT.big`). Plafon: 54 folt (gyenge telefonon 24).

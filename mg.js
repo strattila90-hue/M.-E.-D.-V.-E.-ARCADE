@@ -396,7 +396,7 @@ function bloat(z) { // puffadt: savas robbanás
   for (let i = 0; i < (LOWFX ? 25 : 55); i++) { const a = rnd(-Math.PI, 0), s = rnd(80, 420); part(z.x, y, Math.cos(a) * s, Math.sin(a) * s, rnd(.8, 1.8), rnd(2, 5), Math.random() < .7 ? '#9acd32' : '#c8e04a', 1) }
   for (let i = 0; i < 6; i++) MG.fx.push({k: 'puff', x: z.x + rnd(-20, 20), y: y + rnd(-20, 10), r: rnd(14, 26), t: 0, d: rnd(.6, 1.1), c: '154,205,50'});
   for (const o of MG.z) if (o !== z && o.st !== 'dead' && Math.abs(o.x - z.x) < 95) damageZ(o, 90, (o.x - z.x) * 3, -200, 'acid');
-  const V = MG.V; if (Math.hypot(V.x - z.x, V.y - y) < 120) { hurt(4.5 * (1 - V.fprot * .6), 'bloat'); MG.V.blood.push({lx: rnd(30, 100), ly: rnd(-22, 10), r: rnd(5, 10), c: '#7f9a1c'}) }
+  const V = MG.V; if (Math.hypot(V.x - z.x, V.y - y) < 120) { hurt(4.5 * (1 - V.fprot * .6), 'bloat'); bloodOn(rnd(30, 100), rnd(-22, 10), rnd(5, 10), '#7f9a1c') }
   MG.dec.push({x: z.x, w: 4, tw: 46, c: '#6f8a12', a: .75, g: 1});
 }
 
@@ -643,11 +643,10 @@ function ebulStep(dt) {
     if (b.g) b.vy += GRAV * dt;
     b.x += b.vx * dt; b.y += b.vy * dt; b.t -= dt;
     const [lx, ly] = vLoc(V, b.x, b.y);
-    if (lx > HB.x0 && lx < HB.x1 && ly > HB.y0 && ly < HB.y1) { b.t = 0; if (b.k === 'acid') { hurt(3.5, 'acid'); for (let i = 0; i < 10; i++) part(b.x, b.y, rnd(-100, 100), rnd(-160, 0), 1, rnd(2, 3.5), '#a8d02a', 1); V.blood.push({lx, ly, r: rnd(4, 8), c: '#7f9a1c'}) } else { hurt(2.6, 'shot'); sparks(b.x, b.y, 3) } }
+    if (lx > HB.x0 && lx < HB.x1 && ly > HB.y0 && ly < HB.y1) { b.t = 0; if (b.k === 'acid') { hurt(3.5, 'acid'); for (let i = 0; i < 10; i++) part(b.x, b.y, rnd(-100, 100), rnd(-160, 0), 1, rnd(2, 3.5), '#a8d02a', 1); bloodOn(lx, ly, rnd(4, 8), '#7f9a1c') } else { hurt(2.6, 'shot'); sparks(b.x, b.y, 3) } }
     else if (b.y > gY(b.x)) { b.t = 0; if (b.k === 'acid') MG.dec.push({x: b.x, w: 3, tw: 16, c: '#7f9a1c', a: .7, g: 1}) }
   }
   MG.ebul = MG.ebul.filter(b => b.t > 0);
-  if (V.blood.length > 34) V.blood.splice(0, V.blood.length - 34);
 }
 
 /* ============================================================================
@@ -680,7 +679,7 @@ function gore(z, vx, vy, pw, how) {
   splatDecal(z.x + vx * .08, 22 * big, bl);
   if (Math.random() < .45) { MG.corpses.push({x: z.x + vx * .12 + rnd(0, 30), t: z.t, s: z.sc * (z.D.h / 44), c: skin(z), sk: z.sk, f: Math.random() < .5 ? 1 : -1}); if (MG.corpses.length > (LOWFX ? 30 : 70)) MG.corpses.shift() }
   // a jármű orra véres lesz
-  if (how === 'hit' || how === 'grind' || how === 'crush') for (let i = 0; i < 2; i++) MG.V.blood.push({lx: FRONT - 14 + MG.V.fext * rnd(.3, 1) + rnd(-6, 8), ly: rnd(-24, 24), r: rnd(3, 8), c: Math.random() < .5 ? bl : '#5a0000'});
+  if (how === 'hit' || how === 'grind' || how === 'crush') { const nb = 2 + (MG.V.fdps > 0 ? 1 : 0) + (MG.V.fdps > 100 ? 1 : 0) + Math.round(((z.D.big || 1) - 1) * 2); for (let i = 0; i < nb; i++) bloodOn(FRONT - 14 + MG.V.fext * rnd(.3, 1) + rnd(-6, 8), rnd(-26, 20), rnd(3, 8) * Math.sqrt(z.D.big || 1), Math.random() < .5 ? bl : '#5a0000') }
   if (how === 'grind') grindSpray(z, MG.V, 3);
 }
 function grindSpray(z, V, mult) { // a dob felfelé-előre köpi a darált húst
@@ -716,8 +715,7 @@ function goreStep(dt) {
   // tócsák szétterülnek
   for (const d of MG.dec) if (d.tw && d.w < d.tw) d.w = Math.min(d.tw, d.w + dt * 40);
   if (MG.dec.length && MG.dec[0].x < V.x - 1400) MG.dec.shift();
-  // csöpög a vér a véres orrból
-  if (V.blood.length > 3 && Math.random() < dt * Math.min(6, V.blood.length * .3)) { const b = V.blood[Math.floor(Math.random() * V.blood.length)]; const [x, y] = vPt(V, b.lx, b.ly + b.r); part(x, y, V.vx * .9, V.vy, 1, 1.6, b.c, 0) }
+  bloodStep(dt);
 }
 function fxStep(dt) {
   for (const d of MG.dust) { d.life -= dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vx *= 1 - dt * 1.4; d.vy *= 1 - dt * 1.1; d.r += d.g * dt }
@@ -1089,6 +1087,48 @@ function drawTrack(c, V, ws, tr, up, live) {
     c.restore();
   }
 }
+
+/* ---------- vér a járművön: kifröccsen, majd lefolyik a lemezeken (gravitáció + menetszél), csöpög, megszárad ---------- */
+function bloodOn(lx, ly, r, c) {
+  const B = MG.V.blood; B.push({lx, ly, r, c, col: c, age: 0, wet: 1, P: [lx, ly], hx: lx, hy: ly, run: 0, mx: r * rnd(5, 9) + rnd(8, 26), cT: 0, dT: rnd(0, 1)});
+  const cap = LOWFX ? 24 : 54; if (B.length > cap) B.shift();
+}
+function mixHex(a, b, t) { if (a.length !== 7) return a; const x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16); const m = (s) => Math.round(((x >> s) & 255) * (1 - t) + ((y >> s) & 255) * t); return `rgb(${m(16)},${m(8)},${m(0)})` }
+function bloodStep(dt) {
+  const V = MG.V, B = V.blood; if (!B.length) return;
+  const cA = Math.cos(V.a), sA = Math.sin(V.a), fwd = V.vx * cA + V.vy * sA, wind = clamp(fwd / 170, -.3, 1.4);
+  for (let i = B.length - 1; i >= 0; i--) {
+    const b = B[i]; b.age += dt; b.wet = Math.max(0, 1 - b.age / 45);
+    if (b.age > 160) { B.splice(i, 1); continue }
+    if ((b.cT -= dt) <= 0) { b.cT = .5; b.col = mixHex(b.c, '#2c0505', Math.min(.7, b.age / 60)) }
+    if (b.wet <= 0) continue;
+    const bottom = b.hy > 34;                                        // a lánctalpra/kötényre ért: tovább már nem folyik
+    if (!bottom && b.run < b.mx) {
+      let dx = sA - wind, dy = cA; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;   // a „lefelé” a test szerint, a menetszél hátrafelé fújja
+      const sp = (7 + b.r * 3.2) * b.wet * (1 + Math.abs(wind) * .5) * dt;
+      b.hx += dx * sp; b.hy += dy * sp; b.run += sp;
+      const n = b.P.length; if (Math.hypot(b.hx - b.P[n - 2], b.hy - b.P[n - 1]) > 2.6 && n < 40) b.P.push(b.hx, b.hy);
+    }
+    // csöpögés a csík végéről / az alsó élről
+    const low = b.hy > 8, rate = (b.run > 6 ? 1.6 : .35) * (low ? 2.2 : 1) * (.4 + b.r * .12) * b.wet;
+    if (Math.random() < dt * rate) { const [x, y] = vPt(V, b.hx, b.hy + 1); part(x, y, V.vx * .92 + rnd(-6, 6), V.vy * .92 + rnd(0, 24), rnd(.7, 1.2), rnd(1.3, 2.4), b.col.length === 7 ? b.col : b.c, 0) }
+  }
+}
+function drawBlood(c, V) {
+  const B = V.blood; if (!B || !B.length) return;
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const b of B) {
+    const a = b.age > 110 ? 1 - (b.age - 110) / 50 : 1; if (a <= 0) continue;
+    c.globalAlpha = .88 * a; c.fillStyle = c.strokeStyle = b.col;
+    if (b.P.length >= 4) {
+      c.lineWidth = Math.max(1.3, b.r * .7); c.beginPath(); c.moveTo(b.P[0], b.P[1]); for (let i = 2; i < b.P.length; i += 2) c.lineTo(b.P[i], b.P[i + 1]); c.lineTo(b.hx, b.hy); c.stroke();
+      c.beginPath(); c.arc(b.hx, b.hy, Math.max(1.1, b.r * .5) * (b.wet > .1 ? 1.15 : .8), 0, 7); c.fill();   // a csík végén vastagabb csepp
+      if (b.wet > .08) { c.globalAlpha = .4 * b.wet * a; c.strokeStyle = '#ffd6cc'; c.lineWidth = .7; c.beginPath(); c.moveTo(b.P[0] - .7, b.P[1]); for (let i = 2; i < b.P.length; i += 2) c.lineTo(b.P[i] - .7, b.P[i + 1]); c.stroke() }   // nedves fény
+    }
+    c.globalAlpha = .9 * a; c.fillStyle = b.col; c.beginPath(); c.arc(b.lx, b.ly, b.r, 0, 7); c.fill();
+  }
+  c.globalAlpha = 1;
+}
 function drawVeh(c, V, now, up, live) {
   c.save(); c.translate(V.x, V.y); c.rotate(V.a);
   const k = PK, tr = V.track || 0, gas = live && MG.inp && MG.inp.gas && V.fuel > 0;
@@ -1138,7 +1178,7 @@ function drawVeh(c, V, now, up, live) {
   // orr-előtét
   drawFront(c, up.elol, now, V);
   // vérfoltok a járművön
-  for (const b of V.blood || []) { c.fillStyle = b.c; c.globalAlpha = .85; c.beginPath(); c.arc(b.lx, b.ly, b.r, 0, 7); c.fill(); c.fillRect(b.lx - 1, b.ly, 2, b.r * 2) }
+  drawBlood(c, V);
   c.globalAlpha = 1;
   c.restore();
 }
