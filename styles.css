@@ -1901,4 +1901,32 @@ body.harcon .toast{pointer-events:none}
 #harc .tkupin.go{animation:tkpin 12s ease forwards}
 @keyframes tkpin{0%{opacity:0;transform:translateY(-6px)}4%,80%{opacity:1;transform:none}100%{opacity:0}}
 html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* v4.53: gyerekzár-feloldás – a visszaszámláló nagyban a képernyő közepén (a lakatot az ujj takarja) */
+#harc .tkubar{position:absolute;left:0;top:calc(var(--uh,60px) - 3px);height:5px;width:100%;transform-origin:left;transform:scaleX(var(--p,0));background:linear-gradient(90deg,#ffd24a,#7dff6a);box-shadow:0 0 12px rgba(255,210,74,.8);pointer-events:none;z-index:2}
+#harc .tkuprog{position:absolute;left:50%;top:42%;width:min(270px,74vw);transform:translate(-50%,-50%) scale(.85);opacity:0;pointer-events:none;text-align:center;transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1);z-index:3}
+#harc .tkulock.hold .tkuprog,#harc .tkulock.miss .tkuprog{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#harc .tkulock.hold::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(10,6,2,.55),rgba(10,6,2,.85) 70%);pointer-events:none;z-index:2}
+#harc .tkuring{--c:#ffd24a;position:relative;width:100%;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;align-content:center;gap:0;
+  background:radial-gradient(circle,#1f1a0c 0 58%,transparent 59%),conic-gradient(var(--c) calc(var(--p,0)*360deg),rgba(255,255,255,.12) 0);
+  box-shadow:0 0 0 3px #111,0 0 0 6px rgba(242,201,76,.35),0 0 40px rgba(255,210,74,calc(.15 + var(--p,0)*.5)),inset 0 0 0 2px rgba(255,255,255,.08)}
+#harc .tkulock.near .tkuring{--c:#7dff6a}
+#harc .tkulock.done .tkuring{--c:#7dff6a;animation:tkudone .7s ease-out}
+#harc .tkuring i{font-style:normal;font-size:34px;line-height:1;margin-bottom:2px}
+#harc .tkuring b{font:400 96px/0.95 var(--f-display,Anton,Impact,sans-serif);color:#ffe08a;text-shadow:0 4px 0 #000,0 0 24px rgba(255,210,74,.55);font-variant-numeric:tabular-nums}
+#harc .tkulock.near .tkuring b,#harc .tkulock.done .tkuring b{color:#b8ff9a;text-shadow:0 4px 0 #000,0 0 24px rgba(125,255,106,.6)}
+#harc .tkuring b.tick{animation:tkutick .35s cubic-bezier(.2,.8,.2,1)}
+#harc .tkuring small{font:700 12px system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#d9d2b4;margin-top:4px}
+#harc .tkuprog p{margin:16px 0 0;padding:8px 14px;display:inline-block;border-radius:999px;background:rgba(0,0,0,.7);border:1.5px solid rgba(242,201,76,.55);font:400 17px var(--f-display,Anton,Impact,sans-serif);letter-spacing:.05em;color:#ffe08a}
+#harc .tkulock.miss .tkuprog p{border-color:#ff5a4a;color:#ffb0a0;animation:tkushake .4s}
+#harc .tkulock.miss .tkuring{--c:#ff5a4a}
+#harc .tkuhold.on{transform:scale(1.12);box-shadow:0 0 0 4px rgba(255,210,74,.5),0 0 22px rgba(255,210,74,.7)}
+#harc .tkuhold.on::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,210,74,.7);animation:tkuripple 1s ease-out infinite;pointer-events:none}
+#harc .tkuhold em{display:none}
+@keyframes tkutick{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes tkudone{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes tkushake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes tkuripple{from{transform:scale(1);opacity:1}to{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){#harc .tkuring b.tick,#harc .tkuhold.on::after,#harc .tkulock.done .tkuring{animation:none}}
 
+#harc .tkuhold{z-index:4}#harc .tkubar{z-index:4}
+#harc .tkulock.done .tkuring small{visibility:hidden}
