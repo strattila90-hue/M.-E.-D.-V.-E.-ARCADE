@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.54.0',APP_DATE='2026.11.23.';
+const APP_VER='4.55.2',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -3274,6 +3274,13 @@ function rkKick(t){const a=AC,o=a.createOscillator(),g=a.createGain();o.frequenc
   rkNoise(t,.012,'highpass',2500,.35)}
 function rkNoise(t,dur,type,f,vol,q){const a=AC,n=a.createBufferSource();n.buffer=NOISE;const fl=a.createBiquadFilter();fl.type=type;fl.frequency.value=f;if(q)fl.Q.value=q;const g=a.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);n.connect(fl).connect(g).connect(ROCK.b.drum);n.start(t,Math.random()*.5,dur+.05)}
 function rkSnare(t,v){rkNoise(t,.16,'bandpass',1900,.55*v,.7);rkNoise(t,.09,'highpass',5000,.25*v);const a=AC,o=a.createOscillator(),g=a.createGain();o.type='triangle';o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(150,t+.05);g.gain.setValueAtTime(.4*v,t);g.gain.exponentialRampToValueAtTime(.001,t+.09);o.connect(g).connect(ROCK.b.drum);o.start(t);o.stop(t+.1)}
+// csapat-hangok: tapsolás (több ember, kicsit széttartó) és kórus-kiáltás („HEY!”), formáns-szűrős fűrészhullámokból
+function rkClap(t){for(let i=0;i<4;i++){const o=i*.009+Math.random()*.006;rkNoise(t+o,.1,'bandpass',1100+i*330,.34,1.1)}rkNoise(t,.2,'bandpass',2600,.18,.8)}
+function rkGang(t,f,dur){const a=AC,B=ROCK.b,g=a.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.5,t+.012);g.gain.setTargetAtTime(.0001,t+Math.max(.08,dur*.45),.07);g.connect(B.drum);
+  for(let v=0;v<6;v++){const o=a.createOscillator();o.type='sawtooth';o.frequency.value=f*(1+(Math.random()-.5)*.018)*(v%3===0?.5:1);o.detune.value=(Math.random()-.5)*45;
+    const fl=a.createBiquadFilter();fl.type='bandpass';fl.Q.value=4;const fq=[560,1700,2600][v%3];fl.frequency.setValueAtTime(fq*.72,t);fl.frequency.linearRampToValueAtTime(fq,t+.07);
+    const vg=a.createGain();vg.gain.value=.22;o.connect(fl).connect(vg).connect(g);o.start(t+v*.004);o.stop(t+dur+.4)}
+  rkNoise(t,.14,'bandpass',2200,.2,.9)}
 function rockStart(id){if(!SOUND||SET.music===false||!ac())return;const S=SONGS[id];if(!S)return;if(ROCK.on){if(ROCK.id===id)return;rockStop(.2)}
   ROCK.on=true;ROCK.id=id;ROCK.S=S;ROCK.bpm=null;ROCK.mi=0;ROCK.mrem=0;ROCK.b=rockBus();ROCK.b.out.gain.setTargetAtTime(.5,AC.currentTime,.6);ROCK.step=0;ROCK.next=AC.currentTime+.12;ROCK.iv=setInterval(rockTick,25)}
 function rockTempo(b){ROCK.bpm=b}
@@ -3285,6 +3292,8 @@ function rockTick(){if(!ROCK.on||!AC)return;const S=ROCK.S,d=60/(ROCK.bpm||S.bpm
     if(S.mel){if(ROCK.mrem<=0){const M=S.mel[ROCK.mi%S.mel.length],sh=S.mshift?S.mshift[Math.floor(ROCK.mi/S.mel.length)%S.mshift.length]:0;if(M[0]!=null)rkGtr(t,rf(S.lroot,M[0]+sh),[0,12],Math.max(.08,M[1]*d*.94),false);ROCK.mrem=M[1];ROCK.mi++}ROCK.mrem--}
     S.bass(bar,r).forEach(e=>{if(e.s===st)rkBass(t,rf(S.root/2,e.n),e.l*d)});
     if(S.kick.includes(st))rkKick(t);
+    if(S.clap&&S.clap(bar).includes(st))rkClap(t);
+    if(S.gang){const gs=S.gang(bar);if(gs.includes(st))rkGang(t,rf(S.root*4,r),gs.long?d*3:d*2)}
     const fill=S.fill!==false&&bar%8===7&&st>=12;if(fill)rkSnare(t,.55+(st-12)*.12);else if(S.snare.includes(st))rkSnare(t,1);
     if(S.hat&&(S.hat===16||st%2===0))rkNoise(t,st%4===2&&S.hat===8?.09:.035,'highpass',7500,st%4===0?.16:.1);
     if(S.crash!==false&&st===0&&bar%4===0)rkNoise(t,1.4,'highpass',4500,.22);
@@ -3295,6 +3304,17 @@ document.addEventListener('visibilitychange',()=>{if(!ROCK.on||!AC)return;
   else if(!ROCK.iv){ROCK.next=AC.currentTime+.1;ROCK.b.out.gain.setTargetAtTime(.5,AC.currentTime,.3);ROCK.iv=setInterval(rockTick,25)}});
 
 
+// Meat Grinder: stadion-hard rock, e-moll, „tappancs-taps” ütem és csapat-kiáltás. E E C D | E E C B
+SONGS.grinder={bpm:126,root:82.41,lroot:329.63,prog:[0,0,-4,-2,0,0,-4,-5],
+  gtr:(b,r)=>{const e=[];const q=b%4;
+    if(q===3){e.push({s:0,n:r,l:3},{s:4,n:r,l:3},{s:8,n:r,l:6},{s:12,n:r+(b%8===7?5:0),l:2,m:true},{s:14,n:r+(b%8===7?7:0),l:2,m:true})}
+    else{for(let s=0;s<16;s+=2)e.push({s,n:r,l:2,m:![0,6,10].includes(s)});if(q===1)e.push({s:14,n:r+3,l:2})}
+    return e},
+  bass:(b,r)=>b%4===3?[{s:0,n:r,l:3},{s:4,n:r,l:3},{s:8,n:r,l:6},{s:14,n:r+7,l:2}]:[0,2,4,6,8,10,12,14].map(s=>({s,n:s===6||s===14?r+7:r,l:2})),
+  kick:[0,4,6,8,10,12],snare:[4,12],hat:8,
+  clap:b=>b%4===3?[0,4,8]:[4,12],
+  gang:b=>{const g=b%4===3?[0,4,8]:b%8===1?[8]:[];g.long=b%4===3;return g},
+  mel:[[7,4],[10,2],[12,2],[10,4],[7,4], [5,4],[7,2],[10,2],[7,4],[5,2],[3,2], [0,4],[3,2],[5,2],[7,6],[null,2], [12,2],[12,2],[10,2],[7,2],[10,6],[null,2]]};
 // klasszikus rock átiratok a Rakodóhoz (közkincs művek): dallam = [hangköz, hossz tizenhatodban]
 Object.assign(SONGS,{
   // Grieg: A hegyi király csarnokában – a tempót a riadó időzítője gyorsítja
