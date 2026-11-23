@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.50.1',APP_DATE='2026.11.19.';
+const APP_VER='4.51.0',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -558,7 +558,7 @@ const DECK_G=[['lovi','TÜZÉR DERBY','Fogadóiroda · PzH, Gidrán, Rába','lin
   ['kassza','TÜZÉR KASSZA','Tap-tap pénzcsináló · ütegkassza','linear-gradient(160deg,#f2c230,#8a5a06 60%,#3a2402)','#2f7a2f','k',1],
   ...ANI_G.map(([g,t,sub,bg,ac,ik,nw])=>[g,t.replace(/<br>/g,' '),esc(sub),bg,ac,ik,nw])];
 const DECK={i:0,raf:0},ART={url:{},busy:false,img:{}};let TK_NOTE_URL=null;
-function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteCv(6).toDataURL());return k==='b'?BEAR_SPRITE:k==='p'||k==='sr'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD}
+function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteURL(6));return k==='b'?BEAR_SPRITE:k==='p'||k==='sr'?(PZH_FULL||PZH_SPRITE):k==='g'||k==='g2'?(GID_FULL||GID_SPRITE):k==='r'?'data:image/svg+xml;utf8,'+encodeURIComponent(SIL_RAW.raba.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#1b1b12"')):SE_CARD}
 /* ===== ÖSSZES PÉNZEM – ZSETON: a játékterem egyetlen pénzneme. 1 zseton = 1 játékindítás (a Tüzér Derbybe a belépés ingyenes, ott a tét 1–50 zseton).
    Bevétel: minden aktívan játszott perc 1 zseton (a Derby kivételével); a Tüzér Kasszából naponta legfeljebb 20 zseton vehető ki;
    mentőöv: ha elfogyott, az érmeverőn 100 koppintás 3 zseton (naponta legfeljebb 3-szor).
@@ -2028,7 +2028,7 @@ const TK_ACH=[
  {id:'rank',n:'Előléptetés',ic:'🎖️',m:()=>Math.max(0,TK.den-9),t:[1,4,7,10,13]}];
 const TK_MED=['#b06a2c','#c0c6cc','#e8b923','#7fd6e8','#ff6ad5'];
 const TK_F={'0':'111101101101111','1':'010110010010111','2':'111001111100111','3':'111001011001111','4':'101101111001001','5':'111100111001111','6':'111100111101111','7':'111001010010010','8':'111101111101111','9':'111101111001111',
- K:'101101110101101',M:'101111111101101',U:'101101101101111',T:'111010010010010',E:'111100110100111',G:'111100101101111',B:'110101110101110',A:'010101111101101',N:'110101101101101',L:'100100100100111',J:'001001001101111',Z:'111001010100111',P:'110101110100100',H:'101101111101101',O:'111101101101111',S:'111100111001111',D:'110101101101110',R:'110101110101101',Y:'101101010010010',F:'111100110100100',I:'111010010010111',V:'101101101101010',X:'101101010101101',C:'111100100100111',' ':'000000000000000','-':'000000111000000','.':'000000000000010'};
+ K:'101101110101101',M:'101111111101101',U:'101101101101111',T:'111010010010010',E:'111100110100111',G:'111100101101111',B:'110101110101110',A:'010101111101101',N:'110101101101101',L:'100100100100111',J:'001001001101111',Z:'111001010100111',P:'110101110100100',H:'101101111101101',O:'111101101101111',S:'111100111001111',D:'110101101101110',R:'110101110101101',Y:'101101010010010',F:'111100110100100',I:'111010010010111',V:'101101101101010',X:'101101010101101',C:'111100100100111',' ':'000000000000000','-':'000000111000000','.':'000000000000010',',':'000000000010100'};
 function tkTxt(c,s,x,y,col,k){k=k||1;c.fillStyle=col;let cx=x;for(const ch of String(s).toUpperCase()){const g=TK_F[ch]||TK_F[' '];for(let i=0;i<15;i++)if(g[i]==='1')c.fillRect(cx+(i%3)*k,y+Math.floor(i/3)*k,k,k);cx+=4*k}return cx-x}
 const TK_SPR={
  raba:['................','..########......','..########.###..','..########.#++#.','..########.####.','.##############.','.##############.','..#+#......#+#..','...#........#...'],
@@ -2050,7 +2050,7 @@ function tkHex(h){const n=parseInt(h.slice(1),16);return [n>>16&255,n>>8&255,n&2
 function tkMixC(a,b,k){const A=tkHex(a),B=tkHex(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*k)).join(',')})`}
 const tkPlain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 // katonai háttér: olajzöld páncéllemez, szegecsek, terepminta, sablonfelirat, figyelmeztető csík, jelzőfények
-function tkFlush(){TK.skc=null;TK.gnc=null;TK.whc=null;TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={};TK.gl={};TK.psc={};TK.nsc=null;TK.bsc=null;TK.rsc={};TK.rlc={};TK.nu={};TK.glw=null;TK.bcv=null}
+function tkFlush(){TK.nf={};TK.skc=null;TK.gnc=null;TK.whc=null;TK.bgc=null;TK.nc={};TK.pc={};TK.silPx={};TK.gl={};TK.psc={};TK.nsc=null;TK.bsc=null;TK.rsc={};TK.rlc={};TK.nu={};TK.glw=null;TK.bcv=null}
 function tkCacheCheck(now){if(now-(TK._cchk||0)<2000)return;TK._cchk=now;try{const b=TK.bgc;if(b&&b.cv){const d=b.cv.getContext('2d').getImageData(2,2,1,1).data;if(d[3]===0)tkFlush()}}catch(e){tkFlush()}}
 addEventListener('visibilitychange',()=>{if(!document.hidden)tkFlush();else if(TK.run)tkSync('now')});addEventListener('pagehide',()=>{if(TK.run)tkSync('now')});addEventListener('pageshow',tkFlush);
 function tkBg(c,W,H,now){const rush=TK.rush>0;if(!TK.bgc||TK.bgc.w!==W||TK.bgc.h!==H){const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
@@ -2152,7 +2152,7 @@ TK_PAL.T='#d8c49a';
 function tkPSC(name){const P=TK.psc||(TK.psc={});if(P[name])return P[name];const S=TK_PS[name];if(!S)return null;const cv=document.createElement('canvas');cv.width=16;cv.height=S.length;const c=cv.getContext('2d');for(let r=0;r<S.length;r++){const row=S[r];for(let q=0;q<16;q++){const ch=row[q];if(!ch||ch==='.'||ch===' ')continue;c.fillStyle=TK_PAL[ch]||'#f0f';c.fillRect(q,r,1,1)}}return P[name]=cv}
 function tkPS(c,name,x,y,k){const cv=tkPSC(name);if(cv)c.drawImage(cv,x,y,16*k,cv.height*k)}
 // ---- a többi játék valódi jármű-sziluettjei, pixelesítve (kéttónusú metszet) ----
-function tkSilLoad(){if(TK.silImg)return;TK.silImg={};for(const k of ['pzh','gidran','raba']){if(!SIL[k])continue;const im=new Image();im.onload=()=>{TK.silPx={};TK.nc={};TK.pc={};TK.nsc=null;TK.bsc=null;TK.nu={}};
+function tkSilLoad(){if(TK.silImg)return;TK.silImg={};for(const k of ['pzh','gidran','raba']){if(!SIL[k])continue;const im=new Image();im.onload=()=>{TK.silPx={};TK.nc={};TK.pc={};TK.nsc=null;TK.bsc=null;TK.nu={};TK.skc=null;TK.gnc=null;TK.nf={}};
   im.src='data:image/svg+xml;utf8,'+encodeURIComponent(SIL[k].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ').replace('fill="currentColor"','fill="#000"'));TK.silImg[k]=im}}
 function tkSilPx(name,w,h,dk,md,lt){const key=[name,w,h,dk,md,lt].join('|');TK.silPx=TK.silPx||{};if(TK.silPx[key])return TK.silPx[key];const im=TK.silImg&&TK.silImg[name];if(!im||!im.complete||!im.naturalWidth)return null;
   const cv=document.createElement('canvas');cv.width=w;cv.height=h;const c=cv.getContext('2d');const ar=im.naturalWidth/im.naturalHeight;let dw=w,dh=w/ar;if(dh>h){dh=h;dw=h*ar}c.drawImage(im,(w-dw)/2,h-dh,dw,dh);
@@ -2162,36 +2162,142 @@ function tkSilPx(name,w,h,dk,md,lt){const key=[name,w,h,dk,md,lt].join('|');TK.s
   return TK.silPx[key]=cv}
 function tkIcon(g,c,x,y,k){if(g.ic.startsWith('sil:')){const nm=g.ic.slice(4),gold=g.gold,cv=tkSilPx(nm,36,16,gold?'#6e4a04':'#1e2614',gold?'#e0aa22':'#55663a',gold?'#fff4b0':'#9fb27a');if(cv){c.drawImage(cv,x-10*k,y-4*k,36*k,16*k);return}tkSpr(c,nm==='gidran'?'gidran':nm,x,y,gold?'#e0aa22':'#4b5a32',gold?'#fff4b0':'#14140f',k);return}tkPS(c,g.ic,x,y,k)}
 function tkIconURL(g){TK.iu=TK.iu||{};if(TK.iu[g.id])return TK.iu[g.id];const cv=document.createElement('canvas');cv.width=72;cv.height=36;const c=cv.getContext('2d');c.imageSmoothingEnabled=false;tkIcon(g,c,20,6,2);const u=cv.toDataURL();if(!g.ic.startsWith('sil:')||tkSilPx(g.ic.slice(4),36,16,'#1e2614','#55663a','#9fb27a'))TK.iu[g.id]=u;return u}
-// ---- pénzjegy / érme (árnyalt, körbevágott) ----
-function tkNoteCv(i){TK.nc=TK.nc||{};if(TK.nc[i])return TK.nc[i];const D=TK_DEN[i],cv=document.createElement('canvas'),c=cv.getContext('2d'),gold=D.t==='g';let cache=true;
-  const px=(x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
-  if(D.t==='c'){const S=40,R=19,cx=19.5,cy=19.5;cv.width=cv.height=S;
-    for(let y=0;y<S;y++)for(let x=0;x<S;x++){const dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy);if(d>R)continue;const a=Math.atan2(dy,dx),lit=(-dx-dy)/(Math.SQRT2*R);let col;
-      if(d>R-2.2)col=(Math.round(a*40)%2)?D.d:tkMixC(D.c,D.d,.35);else if(d>R-4)col=lit>0?D.l:tkMixC(D.c,D.d,.45);
-      else{const k=.5+lit*.45,b=TK_BAYER[(y%4)*4+x%4]/16;col=k+(b-.5)*.18>.62?D.l:k+(b-.5)*.18>.36?D.c:tkMixC(D.c,D.d,.5)}px(x,y,col)}
-    for(let k=0;k<24;k++){const a=k/24*Math.PI*2;px(Math.round(cx+Math.cos(a)*(R-5.6)),Math.round(cy+Math.sin(a)*(R-5.6)),D.d)}
-    const lab=String(D.v),sc=lab.length>2?2:3,w=lab.length*4*sc-sc;tkTxt(c,lab,Math.round(cx-w/2)+1,Math.round(cy-2.5*sc)+1,D.l,sc);tkTxt(c,lab,Math.round(cx-w/2),Math.round(cy-2.5*sc),D.d,sc);
-    tkTxt(c,'FT',Math.round(cx-3.5),Math.round(cy+2.5*sc+2),D.d,1);for(const [x,y] of [[11,9],[12,8],[10,10],[13,8],[9,11]])px(x,y,'rgba(255,255,255,.85)');px(12,9,'#fff')}
-  else{const W=104,H=52;cv.width=W;cv.height=H;const cut=4,inside=(x,y)=>!(x+y<cut||W-1-x+y<cut||x+H-1-y<cut||W-1-x+H-1-y<cut);
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!inside(x,y))continue;const k=y/H,b=TK_BAYER[(y%4)*4+x%4]/16-.5;let base=k+b*.22<.32?D.l:k+b*.22<.72?D.c:null;let col=base||tkMixC(D.c,D.d,.35);
-      const g1=Math.abs((y-26)-10*Math.sin(x/9)-4*Math.sin(x/3.3)),g2=Math.abs((y-26)+9*Math.sin(x/8+1.5));if(g1<.7||g2<.6)col=tkMixC(base||D.c,D.d,.35);px(x,y,col)}
-    for(let x=0;x<W;x++)for(const y of [0,1,H-2,H-1])if(inside(x,y))px(x,y,D.d);for(let y=0;y<H;y++)for(const x of [0,1,W-2,W-1])if(inside(x,y))px(x,y,D.d);
-    for(let x=4;x<W-4;x++){px(x,4,x%2?D.l:D.d);px(x,H-5,x%2?D.d:D.l)}for(let y=4;y<H-4;y++){px(4,y,y%2?D.l:D.d);px(W-5,y,y%2?D.d:D.l)}
-    for(const [rx,ry] of [[7,7],[W-8,7],[7,H-8],[W-8,H-8]])for(let a=0;a<8;a++)px(rx+Math.round(Math.cos(a*.785)*2),ry+Math.round(Math.sin(a*.785)*2),D.d);
-    const mx=29,my=26,ax=21,ay=15;for(let y=my-ay;y<=my+ay;y++)for(let x=mx-ax;x<=mx+ax;x++){const e=((x-mx)/ax)**2+((y-my)/ay)**2;if(e>1)continue;px(x,y,e>.86?D.d:e>.74?D.l:tkMixC(D.l,D.c,.25+(y-my+ay)/(2*ay)*.4))}
-    // jármű: a többi játék sziluettje, pixelesítve
-    const silN=D.e==='raba'||D.e==='gidran'||D.e==='pzh'?D.e:null;let done=false;if(silN){const sp=tkSilPx(silN,36,17,D.d,tkMixC(D.c,D.d,.55),D.l);if(sp){c.globalAlpha=.25;c.drawImage(sp,mx-18+1,my-9+1);c.globalAlpha=1;c.drawImage(sp,mx-18,my-9);done=true}else cache=false}
-    if(D.rk){const R=D.rk,x0=mx-7,x1=mx+7,y0=my-13,y1=my+12,gd='#e8b923';for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const top=y<y0+5&&Math.abs(x-mx)>(y-y0)*1.6;if(top)continue;const edge=x===x0||x===x1||y===y1||Math.abs(x-mx)>=Math.floor((y-y0)*1.6)-0&&y<y0+5;let col=edge?(R.b===1||R.b===2?gd:D.d):tkMixC(D.c,D.d,.55);
-        if(R.b===2&&(x===mx-3||x===mx+3)&&y>y0+3)col=gd;if(R.b==='z'&&x===mx&&y>y0+3)col=gd;px(x,y,col)}px(mx,y0+3,'#c8cfd4');
-      for(let k=0;k<R.s;k++){const sy=y1-5-k*6;for(const [dx,dy] of [[0,-2],[-1,-1],[0,-1],[1,-1],[-2,0],[-1,0],[0,0],[1,0],[2,0],[-1,1],[1,1],[-1,2],[1,2]])px(mx+dx,sy+dy,R.b===0?'#f2f2ea':'#ffd24a')}}
-    else if(!done){tkSpr(c,D.e,mx-16+1,my-9+1,'rgba(0,0,0,.25)','rgba(0,0,0,.25)',2);tkSpr(c,D.e,mx-16,my-9,D.d,D.l,2)}
-    for(let y=6;y<H-6;y++)px(54,y,y%4<2?'#d8dde2':'#8a939a');
-    for(let y=14;y<=36;y++)for(let x=64;x<=84;x++){const e=((x-74)/10)**2+((y-25)/11)**2;if(e<1&&e>.82)px(x,y,tkMixC(D.c,'#ffffff',.35))}tkTxt(c,'TK',70,23,tkMixC(D.c,'#ffffff',.3),1);
-    tkTxt(c,'UTEGBANK',58,7,D.d,1);c.fillStyle=D.d;c.fillRect(62,6,1,1);c.fillRect(64,6,1,1);
-    const lab=tkNoteLab(D.v),sc=lab.length<=4?2:1,w=lab.length*4*sc-sc;tkTxt(c,lab,W-8-w+1,13+1,D.l,sc);tkTxt(c,lab,W-8-w,13,D.d,sc);
-    const nm=tkPlain(D.sn||D.n);tkTxt(c,nm,Math.round((W-(nm.length*4-1))/2)+2,H-12,D.d,1);tkTxt(c,'AA'+String(2741+i*613).slice(-4),W-34,H-19,'#b0201a',1);tkTxt(c,D.ab,8,8,D.d,1);
-    if(gold){for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(inside(x,y)&&(x+y*1.6)%26<2)px(x,y,'rgba(255,255,255,.28)')}for(const [x,y] of [[40,6],[90,30],[12,44],[60,40],[78,10]]){px(x,y,'#fff');px(x-1,y,'#fff8c0');px(x+1,y,'#fff8c0');px(x,y-1,'#fff8c0');px(x,y+1,'#fff8c0')}}}
-  if(cache)TK.nc[i]=cv;return cv}
+// ---- pénzjegy / érme – v4.51: nagy felbontású (3×) rajz, papír- és fémérzet ----
+/* Bankó 312×156, érme 132×132 px – egyszer rajzolódik ki pénznemenként, utána gyorsítótárból megy.
+   Papír: krémszínű alap a pénznem színével átfuttatva, finom rostzaj, színes biztonsági szálak, guilloche-hullámok, rozetta,
+   vízjel-ovális, fémes biztonsági szál, enyhe hajtásvonal és élsötétedés. Érme: recézett perem, domború belső gyűrű, fényes fém. */
+const TK_NW=312,TK_NH=156,TK_CS=132;
+// éles kijelzőn (dpr ≥ 1,5) kétszeres belső felbontás – a rajz koordinátái ugyanazok maradnak
+const tkNK=()=>TK.nk||(TK.nk=(window.devicePixelRatio||1)>1.5?2:1);
+function tkFontsReady(){try{return !document.fonts||document.fonts.check('40px Anton')&&document.fonts.check('700 20px "JetBrains Mono"')}catch(e){return true}}
+function tkFontWait(){if(TK.fw)return;TK.fw=1;try{Promise.all([document.fonts.load('40px Anton'),document.fonts.load('700 20px "JetBrains Mono"')]).then(()=>{TK.nc={};TK.nu={};TK.skc=null;TK.gnc=null;TK.sci=null}).catch(()=>{})}catch(e){}}
+// determinisztikus álvéletlen (pénznemenként mindig ugyanaz a minta)
+function tkRnd(seed){let s=seed*2654435761>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+function tkRRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function tkStar(c,x,y,r,ri,n){n=n||5;ri=ri||r*.42;c.beginPath();for(let k=0;k<n*2;k++){const a=-Math.PI/2+k*Math.PI/n,q=k%2?ri:r;c.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}c.closePath()}
+// papírzaj + rostok: egyetlen getImageData/putImageData menet
+function tkPaperGrain(c,w,h,R,amt){try{const im=c.getImageData(0,0,w,h),d=im.data;for(let p=0;p<d.length;p+=4){if(!d[p+3])continue;const n=(R()-.5)*amt+(R()<.012?-amt*1.4:0);d[p]+=n;d[p+1]+=n;d[p+2]+=n*.9}c.putImageData(im,0,0)}catch(e){}}
+// a jegy közepén álló motívum – vektorosan (jármű-sziluett, löveg, címer, csillag, keresztbe tett csövek, becsapódás, torony, rendfokozat)
+function tkEmblem(c,D,cx,cy,s,ink,hi){const e=D.e;c.save();c.translate(cx,cy);c.lineJoin='round';c.lineCap='round';
+  if(D.rk){const R=D.rk,gd='#e8b923',w=40*s,h=74*s;c.translate(0,2*s);
+    const P=new Path2D();P.moveTo(-w/2,-h/2+16*s);P.lineTo(0,-h/2);P.lineTo(w/2,-h/2+16*s);P.lineTo(w/2,h/2-5*s);P.quadraticCurveTo(w/2,h/2,w/2-5*s,h/2);P.lineTo(-w/2+5*s,h/2);P.quadraticCurveTo(-w/2,h/2,-w/2,h/2-5*s);P.closePath();
+    const g=c.createLinearGradient(-w/2,0,w/2,0);g.addColorStop(0,tkMixC(D.c,D.d,.75));g.addColorStop(.5,tkMixC(D.c,D.d,.5));g.addColorStop(1,tkMixC(D.c,D.d,.8));c.fillStyle=g;c.fill(P);
+    c.lineWidth=(R.b===1||R.b===2?3.2:2.2)*s;c.strokeStyle=R.b===1||R.b===2?gd:ink;c.stroke(P);
+    c.strokeStyle=gd;c.lineWidth=2.4*s;if(R.b===2){for(const dx of [-8,8]){c.beginPath();c.moveTo(dx*s,-h/2+12*s);c.lineTo(dx*s,h/2-3*s);c.stroke()}}if(R.b==='z'){c.beginPath();c.moveTo(0,-h/2+8*s);c.lineTo(0,h/2-3*s);c.stroke()}
+    {const bg=c.createRadialGradient(-1.5*s,-h/2+11*s,.5,0,-h/2+12*s,4.5*s);bg.addColorStop(0,'#fff');bg.addColorStop(1,'#8a939a');c.fillStyle=bg;c.beginPath();c.arc(0,-h/2+12*s,4*s,0,7);c.fill()}
+    for(let k=0;k<R.s;k++){const sy=h/2-14*s-k*15*s;tkStar(c,0,sy,7*s);c.fillStyle=R.b===0?'#f6f4ea':'#ffd24a';c.fill();c.lineWidth=1*s;c.strokeStyle='rgba(0,0,0,.45)';c.stroke()}
+    c.restore();return}
+  const sil=(e==='raba'||e==='gidran'||e==='pzh')&&TK.silImg&&TK.silImg[e];
+  if(sil){const im=sil;if(!im.complete||!im.naturalWidth){c.restore();return false}
+    const w=112*s,ar=im.naturalWidth/im.naturalHeight;let dw=w,dh=w/ar;if(dh>54*s){dh=54*s;dw=dh*ar}
+    const k=TK.silTint||(TK.silTint={}),key=e+ink+hi+Math.round(dw);const K=tkNK();let t=k[key];if(!t){t=document.createElement('canvas');t.width=Math.ceil((dw+4)*K);t.height=Math.ceil((dh+4)*K);const q=t.getContext('2d');q.scale(K,K);q.drawImage(im,2,2,dw,dh);q.globalCompositeOperation='source-in';const g=q.createLinearGradient(0,0,0,dh+4);g.addColorStop(0,hi);g.addColorStop(.35,ink);g.addColorStop(1,ink);q.fillStyle=g;q.fillRect(0,0,dw+4,dh+4);t.w=dw+4;t.h=dh+4;k[key]=t}
+    c.globalAlpha=.28;c.drawImage(t,-t.w/2+2*s,-t.h/2+8*s,t.w,t.h);c.globalAlpha=1;c.drawImage(t,-t.w/2,-t.h/2+6*s,t.w,t.h);
+    c.strokeStyle=ink;c.globalAlpha=.5;c.lineWidth=1.2*s;c.beginPath();c.moveTo(-w*.55,dh/2+7*s);c.lineTo(w*.55,dh/2+7*s);c.stroke();c.globalAlpha=1;c.restore();return true}
+  c.fillStyle=ink;c.strokeStyle=ink;
+  if(e==='gun'){// vontatott tarack ballisztikus ívvel
+    c.save();c.setLineDash([3*s,3*s]);c.lineWidth=1.4*s;c.globalAlpha=.55;c.beginPath();c.moveTo(16*s,-16*s);c.quadraticCurveTo(40*s,-58*s,62*s,-8*s);c.stroke();c.restore();
+    c.lineWidth=6*s;c.beginPath();c.moveTo(-8*s,4*s);c.lineTo(30*s,-20*s);c.stroke();c.lineWidth=8*s;c.beginPath();c.moveTo(-14*s,8*s);c.lineTo(2*s,-2*s);c.stroke();
+    c.lineWidth=4*s;c.beginPath();c.moveTo(-6*s,12*s);c.lineTo(-44*s,24*s);c.stroke();c.beginPath();c.moveTo(-44*s,24*s);c.lineTo(-50*s,22*s);c.stroke();
+    c.beginPath();c.arc(-4*s,16*s,13*s,0,7);c.fill();c.fillStyle=hi;c.beginPath();c.arc(-4*s,16*s,6*s,0,7);c.fill();c.fillStyle=ink;c.beginPath();c.arc(-4*s,16*s,2.5*s,0,7);c.fill();
+    c.fillRect(-22*s,-6*s,20*s,14*s)}
+  else if(e==='seal'){// tüzérosztály-címer babérkoszorúval
+    c.lineWidth=2.5*s;c.beginPath();c.arc(0,0,30*s,0,7);c.stroke();c.lineWidth=1*s;c.beginPath();c.arc(0,0,26*s,0,7);c.stroke();
+    for(let k=0;k<14;k++){for(const sd of [-1,1]){const a=Math.PI/2+sd*(.35+k*.17),x=Math.cos(a)*34*s,y=Math.sin(a)*34*s;c.save();c.translate(x,y);c.rotate(a+sd*.9);c.beginPath();c.ellipse(0,0,5*s,2.2*s,0,0,7);c.fill();c.restore()}}
+    c.beginPath();c.moveTo(-14*s,-12*s);c.lineTo(14*s,-12*s);c.lineTo(14*s,4*s);c.quadraticCurveTo(14*s,16*s,0,22*s);c.quadraticCurveTo(-14*s,16*s,-14*s,4*s);c.closePath();c.fill();
+    c.strokeStyle=hi;c.lineWidth=3*s;c.beginPath();c.moveTo(-9*s,10*s);c.lineTo(9*s,-6*s);c.moveTo(9*s,10*s);c.lineTo(-9*s,-6*s);c.stroke();c.fillStyle=hi;c.beginPath();c.arc(0,-16*s,3*s,0,7);c.fill()}
+  else if(e==='star'){// dandárcsillag
+    c.lineWidth=1.4*s;for(let r=38;r>=30;r-=4){c.beginPath();c.arc(0,0,r*s,0,7);c.stroke()}tkStar(c,0,2*s,26*s,11*s);c.fill();tkStar(c,0,2*s,14*s,6*s);c.fillStyle=hi;c.fill()}
+  else if(e==='xcan'){// keresztbe tett lövegcsövek + parancsnoki zászló
+    for(const sd of [-1,1]){c.save();c.rotate(sd*.62);c.lineWidth=7*s;c.beginPath();c.moveTo(0,32*s);c.lineTo(0,-30*s);c.stroke();c.lineWidth=11*s;c.beginPath();c.moveTo(0,34*s);c.lineTo(0,22*s);c.stroke();c.fillRect(-6*s,-36*s,12*s,6*s);c.restore()}
+    c.lineWidth=2*s;c.beginPath();c.moveTo(0,-4*s);c.lineTo(0,-44*s);c.stroke();c.fillStyle='#c62828';c.beginPath();c.moveTo(0,-44*s);c.lineTo(22*s,-38*s);c.lineTo(0,-31*s);c.closePath();c.fill();c.fillStyle=ink;c.beginPath();c.arc(0,4*s,7*s,0,7);c.fill()}
+  else if(e==='blast'){// becsapódás-tűzgömb
+    const g=c.createRadialGradient(0,0,2*s,0,0,40*s);g.addColorStop(0,'#fff4b0');g.addColorStop(.35,'#ff9a2e');g.addColorStop(.75,'#c62828');g.addColorStop(1,'rgba(60,10,0,0)');c.fillStyle=g;
+    c.beginPath();for(let k=0;k<22;k++){const a=k/22*Math.PI*2,r=(k%2?22:40)*s*(.85+.15*Math.sin(k*3.7));c.lineTo(Math.cos(a)*r,Math.sin(a)*r*.85)}c.closePath();c.fill();c.fillStyle=ink;c.globalAlpha=.6;c.fillRect(-44*s,28*s,88*s,3*s);c.globalAlpha=1}
+  else if(e==='tower'){// Szent Borbála tornya három ablakkal
+    const g=c.createLinearGradient(-16*s,0,16*s,0);g.addColorStop(0,ink);g.addColorStop(.5,tkMixC(ink,hi,.35));g.addColorStop(1,ink);c.fillStyle=g;
+    c.beginPath();c.moveTo(-17*s,34*s);c.lineTo(-13*s,-22*s);for(let k=0;k<4;k++){const x=-13*s+k*8.67*s;c.lineTo(x,-30*s);c.lineTo(x+4.3*s,-30*s);c.lineTo(x+4.3*s,-22*s);c.lineTo(x+8.67*s,-22*s)}c.lineTo(17*s,34*s);c.closePath();c.fill();
+    c.fillStyle=hi;for(const dx of [-6,0,6]){tkRRect(c,dx*s-2*s,-12*s,4*s,10*s,2*s);c.fill()}tkRRect(c,-5*s,18*s,10*s,16*s,5*s);c.fill();
+    c.strokeStyle=hi;c.globalAlpha=.6;c.lineWidth=1.2*s;for(let k=0;k<9;k++){const a=-Math.PI/2+(k-4)*.24;c.beginPath();c.moveTo(Math.cos(a)*36*s,Math.sin(a)*36*s-4*s);c.lineTo(Math.cos(a)*46*s,Math.sin(a)*46*s-4*s);c.stroke()}c.globalAlpha=1}
+  c.restore();return true}
+function tkCoinCv(D,i){const S=TK_CS,K=tkNK(),cv=document.createElement('canvas');cv.width=cv.height=S*K;const c=cv.getContext('2d');c.scale(K,K);const cx=S/2,cy=S/2,R=S/2-2,R2=R-7,R3=R2-6,Rn=tkRnd(i+11);
+  // recézett perem
+  c.fillStyle=D.d;c.beginPath();c.arc(cx,cy,R,0,7);c.fill();c.save();c.translate(cx,cy);for(let k=0;k<120;k++){c.rotate(Math.PI*2/120);c.fillStyle=k%2?tkMixC(D.c,D.d,.25):tkMixC(D.l,D.c,.35);c.fillRect(R-6.5,-.9,6,1.8)}c.restore();
+  // érmetest: fényes fém, bal felülről érkező fény
+  let g=c.createRadialGradient(cx-R*.35,cy-R*.4,R*.05,cx,cy,R2);g.addColorStop(0,D.l);g.addColorStop(.45,tkMixC(D.l,D.c,.55));g.addColorStop(.85,D.c);g.addColorStop(1,tkMixC(D.c,D.d,.45));c.fillStyle=g;c.beginPath();c.arc(cx,cy,R2,0,7);c.fill();
+  // domború belső gyűrű
+  c.lineWidth=3;g=c.createLinearGradient(cx-R2,cy-R2,cx+R2,cy+R2);g.addColorStop(0,'rgba(255,255,255,.85)');g.addColorStop(.5,'rgba(255,255,255,.1)');g.addColorStop(1,'rgba(0,0,0,.45)');c.strokeStyle=g;c.beginPath();c.arc(cx,cy,R3,0,7);c.stroke();
+  g=c.createLinearGradient(cx-R2,cy-R2,cx+R2,cy+R2);g.addColorStop(0,'rgba(0,0,0,.4)');g.addColorStop(1,'rgba(255,255,255,.5)');c.strokeStyle=g;c.lineWidth=1.2;c.beginPath();c.arc(cx,cy,R3-2.4,0,7);c.stroke();
+  // pontsor + körirat
+  c.fillStyle=tkMixC(D.c,D.d,.55);for(let k=0;k<36;k++){const a=k/36*Math.PI*2;if(Math.abs(Math.sin(a/2))<.2)continue;c.beginPath();c.arc(cx+Math.cos(a)*(R3-7),cy+Math.sin(a)*(R3-7),1.1,0,7);c.fill()}
+  c.save();c.translate(cx,cy);c.font='700 9.5px "JetBrains Mono", ui-monospace, monospace';c.textAlign='center';c.textBaseline='middle';const tx='ÜTEGBANK · '+D.n.toUpperCase();const step=.098,a0=-Math.PI/2-(tx.length-1)*step/2;
+  for(let k=0;k<tx.length;k++){c.save();c.rotate(a0+k*step+Math.PI/2);c.fillStyle='rgba(255,255,255,.35)';c.fillText(tx[k],.6,-(R3-15)+.6);c.fillStyle=tkMixC(D.c,D.d,.7);c.fillText(tx[k],0,-(R3-15));c.restore()}c.restore();
+  // motívum: halvány, nagy háttérjel az érték mögött
+  c.save();c.translate(cx,cy+4);c.globalAlpha=.22;c.fillStyle=D.d;c.strokeStyle=D.d;
+  if(i===0){for(let k=0;k<4;k++){c.beginPath();c.arc(0,0,8+k*8,0,7);c.lineWidth=2;c.stroke()}}
+  else if(i===1){tkStar(c,0,0,34,13,8);c.fill()}else{c.lineWidth=9;c.lineCap='round';c.beginPath();c.moveTo(-30,22);c.lineTo(30,-22);c.moveTo(30,22);c.lineTo(-30,-22);c.stroke()}c.restore();
+  // dombornyomott érték, alatta FT
+  const lab=String(D.v),fs=lab.length>2?36:lab.length>1?42:48;c.font=`${fs}px Anton, Impact, sans-serif`;c.textAlign='center';c.textBaseline='alphabetic';const ty=cy+fs*.36;
+  c.fillStyle='rgba(0,0,0,.4)';c.fillText(lab,cx+1.6,ty+1.8);c.fillStyle='rgba(255,255,255,.7)';c.fillText(lab,cx-1.1,ty-1.1);c.fillStyle=tkMixC(D.c,D.d,.35);c.fillText(lab,cx,ty);
+  c.font='14px Anton, Impact, sans-serif';c.fillStyle='rgba(255,255,255,.55)';c.fillText('FT',cx-.7,ty+17.3);c.fillStyle=tkMixC(D.c,D.d,.55);c.fillText('FT',cx,ty+18);
+  // fémes karcok és zaj
+  c.save();c.beginPath();c.arc(cx,cy,R2,0,7);c.clip();c.globalAlpha=.12;c.strokeStyle='#fff';c.lineWidth=.6;for(let k=0;k<26;k++){const r=Rn()*R2,a=Rn()*6.28;c.beginPath();c.arc(cx,cy,r,a,a+.3+Rn()*.6);c.stroke()}c.restore();
+  tkPaperGrain(c,cv.width,cv.height,Rn,10);
+  // tükröződő fény
+  c.save();c.beginPath();c.arc(cx,cy,R,0,7);c.clip();g=c.createLinearGradient(cx-R,cy-R,cx+R*.2,cy+R*.2);g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(.35,'rgba(255,255,255,.12)');g.addColorStop(.55,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(cx-R*.25,cy-R*.3,R*.75,R*.42,-.7,0,7);c.fill();c.restore();
+  return cv}
+function tkNoteCv(i){TK.nc=TK.nc||{};if(TK.nc[i])return TK.nc[i];const D=TK_DEN[i];if(!tkFontsReady())tkFontWait();
+  if(D.t==='c'){const cv=tkCoinCv(D,i);TK.nc[i]=cv;return cv}
+  const W=TK_NW,H=TK_NH,K=tkNK(),cv=document.createElement('canvas'),c=cv.getContext('2d'),gold=D.t==='g',Rn=tkRnd(i*7+3);cv.width=W*K;cv.height=H*K;c.scale(K,K);
+  const paper=gold?'#fff2c0':'#f4ecd6',ink=tkMixC(D.d,D.c,.15),mid=tkMixC(D.c,paper,.35),soft=tkMixC(D.c,paper,.7);
+  tkRRect(c,1,1,W-2,H-2,9);c.save();c.clip();
+  // 1) papíralap: krémszín, a pénznem színével átfuttatva; középen világosabb
+  let g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,tkMixC(D.c,paper,.45));g.addColorStop(.42,tkMixC(D.l,paper,.55));g.addColorStop(.62,tkMixC(D.l,paper,.45));g.addColorStop(1,tkMixC(D.c,paper,.38));c.fillStyle=g;c.fillRect(0,0,W,H);
+  if(gold){g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,'#c98a06');g.addColorStop(.3,'#ffe9a0');g.addColorStop(.55,'#e0aa22');g.addColorStop(.8,'#fff4c0');g.addColorStop(1,'#b07a04');c.globalAlpha=.55;c.fillStyle=g;c.fillRect(0,0,W,H);c.globalAlpha=1}
+  // 2) guilloche-hullámok a teljes felületen (finom vonalháló)
+  c.lineWidth=.55;for(let k=0;k<16;k++){c.strokeStyle=k%2?mid:soft;c.globalAlpha=.55;c.beginPath();for(let x=0;x<=W;x+=3){const y=H/2+(k-7.5)*9+Math.sin(x/23+k*.7)*9+Math.sin(x/9.3+k)*2.6;x?c.lineTo(x,y):c.moveTo(x,y)}c.stroke()}c.globalAlpha=1;
+  // 3) középső színes sáv (a pénznem fő színe), lágy átmenettel
+  g=c.createLinearGradient(0,H*.18,0,H*.82);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.5,tkMixC(D.c,paper,.25));g.addColorStop(1,'rgba(0,0,0,0)');c.globalAlpha=.45;c.fillStyle=g;c.fillRect(0,H*.18,W,H*.64);c.globalAlpha=1;
+  // 4) rozetta a bal oldalon, az embléma mögött
+  const mx=88,my=80;c.save();c.translate(mx,my);c.strokeStyle=mid;c.lineWidth=.6;c.globalAlpha=.6;for(let k=0;k<36;k++){c.rotate(Math.PI/18);c.beginPath();c.ellipse(26,0,30,10,0,0,7);c.stroke()}c.restore();c.globalAlpha=1;
+  // portré-ovális (lágy vignetta) – ide kerül a jármű vagy a jelkép
+  g=c.createRadialGradient(mx,my-6,6,mx,my,62);g.addColorStop(0,tkMixC(D.l,'#ffffff',.55));g.addColorStop(.7,tkMixC(D.l,paper,.4));g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(mx,my,62,46,0,0,7);c.fill();
+  c.strokeStyle=ink;c.globalAlpha=.55;c.lineWidth=1.2;c.beginPath();c.ellipse(mx,my,60,44,0,0,7);c.stroke();c.lineWidth=.6;c.setLineDash([1.5,2.2]);c.beginPath();c.ellipse(mx,my,55,40,0,0,7);c.stroke();c.setLineDash([]);c.globalAlpha=1;
+  if(tkEmblem(c,D,mx,my,1,ink,tkMixC(D.l,'#ffffff',.3))===false)tkSilLoad();/* a sziluett betöltése után a tkSilLoad onload-ja üríti a gyorsítótárat */
+  // 5) vízjel-ovális jobbra (áttetsző, „TK” monogrammal) + fémes biztonsági szál
+  const wx=238,wy=74;g=c.createRadialGradient(wx,wy,3,wx,wy,34);g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.beginPath();c.ellipse(wx,wy,30,36,0,0,7);c.fill();
+  c.font='34px Anton, Impact, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='rgba(255,255,255,.4)';c.fillText('TK',wx,wy+2);c.fillStyle=tkMixC(D.c,paper,.55);c.globalAlpha=.3;c.fillText('TK',wx+1,wy+3);c.globalAlpha=1;
+  {const tx=166;g=c.createLinearGradient(tx-4,0,tx+4,0);g.addColorStop(0,'rgba(80,90,100,.7)');g.addColorStop(.5,gold?'rgba(255,250,210,.95)':'rgba(230,236,242,.95)');g.addColorStop(1,'rgba(70,80,90,.7)');c.fillStyle=g;for(let y=-4;y<H;y+=14){c.fillRect(tx-3,y,6,9)}c.fillStyle='rgba(255,255,255,.25)';c.fillRect(tx-3,0,1,H)}
+  // 6) színes biztonsági rostok
+  for(let k=0;k<34;k++){const x=Rn()*W,y=Rn()*H,a=Rn()*6.28,l=4+Rn()*7;c.strokeStyle=k%3===0?'rgba(200,40,40,.45)':k%3===1?'rgba(40,80,200,.4)':'rgba(30,140,90,.35)';c.lineWidth=.6;c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+Math.cos(a+1)*l*.6,y+Math.sin(a+1)*l*.6,x+Math.cos(a)*l,y+Math.sin(a)*l);c.stroke()}
+  // 7) keret: dupla vonal, mikroírás-szegély, díszes sarkok
+  c.strokeStyle=ink;c.lineWidth=2.2;tkRRect(c,7,7,W-14,H-14,6);c.stroke();c.lineWidth=.8;tkRRect(c,12,12,W-24,H-24,4);c.stroke();
+  c.font='600 5.2px "JetBrains Mono", ui-monospace, monospace';c.fillStyle=ink;c.globalAlpha=.6;c.textAlign='left';c.textBaseline='middle';const mic='UTEGBANK·'.repeat(40);c.fillText(mic,14,9.6,W-28);c.fillText(mic,14,H-9.6,W-28);c.globalAlpha=1;
+  for(const [x,y] of [[16,16],[W-16,16],[16,H-16],[W-16,H-16]]){c.save();c.translate(x,y);c.strokeStyle=ink;c.lineWidth=.8;for(let k=0;k<8;k++){c.rotate(Math.PI/4);c.beginPath();c.ellipse(4,0,4.5,1.8,0,0,7);c.stroke()}c.fillStyle=ink;c.beginPath();c.arc(0,0,1.6,0,7);c.fill();c.restore()}
+  // 8) feliratok: bank neve, értékjelzés (nagy, dombornyomott), név, sorozatszám
+  c.textAlign='left';c.textBaseline='alphabetic';c.font='17px Anton, Impact, sans-serif';c.fillStyle=ink;c.fillText('ÜTEGBANK',182,32);
+  c.font='600 6.5px "JetBrains Mono", ui-monospace, monospace';c.globalAlpha=.75;c.fillText('TÜZÉROSZTÁLY · HADTÁP',182,41);c.globalAlpha=1;
+  {const lab=tkNoteLab(D.v);let fs=44;c.font=`${fs}px Anton, Impact, sans-serif`;const mw=W-196;const tw=c.measureText(lab).width;if(tw>mw){fs=Math.max(18,Math.floor(fs*mw/tw));c.font=`${fs}px Anton, Impact, sans-serif`}
+    c.textAlign='right';const by=H-24;c.fillStyle='rgba(255,255,255,.75)';c.fillText(lab,W-21,by-1);c.fillStyle='rgba(0,0,0,.25)';c.fillText(lab,W-18.5,by+1.5);g=c.createLinearGradient(0,by-fs,0,by);g.addColorStop(0,tkMixC(ink,D.c,.35));g.addColorStop(1,ink);c.fillStyle=g;c.fillText(lab,W-20,by);
+    c.font='11px Anton, Impact, sans-serif';c.fillStyle=ink;c.globalAlpha=.8;c.fillText('FORINT',W-20,by-fs*.82-4);c.globalAlpha=1}
+  c.font='15px Anton, Impact, sans-serif';c.textAlign='left';c.fillStyle=ink;c.fillText(D.ab,22,36);
+  {const nm=D.n.toUpperCase();let nfs=13;c.font=`${nfs}px Anton, Impact, sans-serif`;const tw=c.measureText(nm).width;if(tw>130){nfs=Math.max(8,Math.floor(nfs*130/tw));c.font=`${nfs}px Anton, Impact, sans-serif`}c.textAlign='center';c.fillStyle=ink;c.fillText(nm,mx,H-19)}
+  const ser='AA '+String(2741+i*613).slice(-4)+String(17+i*29).padStart(3,'0');c.font='700 10px "JetBrains Mono", ui-monospace, monospace';c.textAlign='left';c.fillStyle='#b0201a';c.fillText(ser,182,56);
+  c.save();c.translate(W-14,H/2);c.rotate(-Math.PI/2);c.font='700 7.5px "JetBrains Mono", ui-monospace, monospace';c.textAlign='center';c.fillText(ser,0,0);c.restore();
+  // 9) arany/hologram: csillogó átlós fóliacsík és szikrák
+  if(gold){c.save();c.globalCompositeOperation='lighter';g=c.createLinearGradient(0,12,0,H-12);g.addColorStop(0,'rgba(255,120,200,.05)');g.addColorStop(.25,'rgba(255,140,220,.22)');g.addColorStop(.5,'rgba(120,230,255,.26)');g.addColorStop(.75,'rgba(160,255,160,.2)');g.addColorStop(1,'rgba(255,255,120,.05)');c.fillStyle=g;tkRRect(c,148,12,12,H-24,6);c.fill();
+    c.fillStyle='rgba(255,255,255,.9)';for(const [x,y,r] of [[120,20,5],[288,40,5],[36,128,4],[226,100,3],[150,132,3]]){tkStar(c,x,y,r,r*.22,4);c.fill()}c.restore()}
+  // 10) papírérzet: rostzaj, hajtásvonal, élsötétedés, puha fény
+  tkPaperGrain(c,cv.width,cv.height,Rn,gold?9:13);
+  {const fx=W*.5+4;g=c.createLinearGradient(fx-10,0,fx+10,0);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.48,'rgba(0,0,0,.08)');g.addColorStop(.52,'rgba(255,255,255,.22)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(fx-10,0,20,H)}
+  {const fy=H*.5;g=c.createLinearGradient(0,fy-8,0,fy+8);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.5,'rgba(0,0,0,.06)');g.addColorStop(.55,'rgba(255,255,255,.12)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,fy-8,W,16)}
+  g=c.createRadialGradient(W/2,H/2,H*.45,W/2,H/2,W*.62);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(40,24,0,.28)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.restore();
+  // vékony, kissé sötétebb papírél
+  c.strokeStyle='rgba(40,30,10,.45)';c.lineWidth=1.2;tkRRect(c,1.2,1.2,W-2.4,H-2.4,9);c.stroke();
+  TK.nc[i]=cv;return cv}
+// a repülő/fekvő pénz a köteg méretére előre lekicsinyített példányt rajzol (nem a nagy felbontásút) – képkockánként olcsó
+function tkNoteFly(i,w){const src=tkNoteCv(i),d=TK.dpr||1,F=TK.nf||(TK.nf={}),key=i+'|'+Math.round(w)+'|'+d;let cv=F[key];if(cv&&cv.src===src)return cv;
+  cv=document.createElement('canvas');cv.width=Math.max(8,Math.round(w*d));cv.height=Math.max(4,Math.round(w*d*src.height/src.width));const q=cv.getContext('2d');q.imageSmoothingQuality='high';q.drawImage(src,0,0,cv.width,cv.height);cv.src=src;F[key]=cv;return cv}
 function tkNoteLab(v){if(v<1e10)return String(v);for(const [d,u] of [[1e21,'TRD'],[1e18,'TRIO'],[1e15,'BRD'],[1e12,'BIO'],[1e9,'MRD']])if(v>=d)return Math.round(v/d)+' '+u;return String(v)}
 // ---- valós számok, magyar nagyságrendnevekkel ----
 function tkFmt(n){if(!isFinite(n))return '∞';n=Math.floor(n);if(n<1e9)return n.toLocaleString('hu-HU');const S=[[1e24,'kvadrillió'],[1e21,'trilliárd'],[1e18,'trillió'],[1e15,'billiárd'],[1e12,'billió'],[1e9,'milliárd']];
@@ -2293,10 +2399,10 @@ function tkRulesHTML(){return `<details class="tkrules"><summary>📜 Szabályok
 <li><b>Több telefon</b> ugyanazzal a fiókkal: a befizetések összeadódnak, nem vesznek el és nem duplázódnak.</li></ul></details>`}
 function tkSeenHTML(){if(typeof MODE==='undefined'||MODE!=='fb'||!UID)return '<p class="hint">Helyi mód: jelentkezz be, hogy a befizetéseid a ranglistára kerüljenek.</p>';const srv=Number(USERDOC&&USERDOC.tkFt)||0,pend=TK.given>srv;
   return `<p class="tkseen${pend?' pend':''}">${pend?'⏳':'✓'} Rólad a ranglistán (mások ezt látják): <b>${tkFmt(srv)} Ft</b>${pend?` · mentésre vár: ${tkFmt(TK.given-srv)} Ft`:''}</p>`}
-// ---- ajándékok: napi doboz, szerencsekerék, ejtőernyős csomag ----
+// ---- ajándékok: napi doboz, kaparós sorsjegy, ejtőernyős csomag ----
 const tkGiftBase=()=>Math.max(500,TK_DEN[TK.den].v*300,(tkGearInc()+tkAutoInc())*90);
 const tkYday=()=>budDay(srvNow()-864e5);
-const TK_DAILY=[{k:2,t:'💰'},{k:4,t:'💰'},{k:6,t:'💰 + 🎫 15 mp'},{k:9,t:'💰 + 🎡'},{k:12,t:'💰 + 🛒'},{k:16,t:'💰 + 🎫 20 mp'},{k:30,t:'💎 + 🎫 30 mp + 🎡🎡'}];
+const TK_DAILY=[{k:2,t:'💰'},{k:4,t:'💰'},{k:6,t:'💰 + 🎫 15 mp'},{k:9,t:'💰 + 🎟️'},{k:12,t:'💰 + 🛒'},{k:16,t:'💰 + 🎫 20 mp'},{k:30,t:'💎 + 🎫 30 mp + 🎟️🎟️'}];
 function tkDailyDay(){return TK.gift.d===tkYday()?(TK.gift.n%7)+1:1}
 const tkDailyCan=()=>CLK.ok&&TK.gift.d<tkToday();
 const TK_SPIN_CD=3*3600e3;
@@ -2308,43 +2414,73 @@ function tkGiftMoney(v,x,y){v=Math.floor(v);TK.pocket+=v;TK.earned+=v;TK.gifts=(
 function tkFanfare(big){if(!SOUND||!ac())return;const t=AC.currentTime;const N=big?[523.25,659.25,783.99,1046.5,1318.5]:[659.25,783.99,1046.5];N.forEach((f,k)=>{for(const m of [1,2.01]){const o=AC.createOscillator(),g=AC.createGain();o.type=m===1?'triangle':'sine';o.frequency.value=f*m;g.gain.setValueAtTime(.0001,t+k*.09);g.gain.exponentialRampToValueAtTime(m===1?.06:.02,t+k*.09+.01);g.gain.exponentialRampToValueAtTime(.0001,t+k*.09+(k===N.length-1?1.1:.35));o.connect(g).connect(MASTER);o.start(t+k*.09);o.stop(t+k*.09+1.2)}});
   for(let i=0;i<(big?14:6);i++){const tt=t+.25+i*.06,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=2400+Math.random()*1800;g.gain.setValueAtTime(.0001,tt);g.gain.exponentialRampToValueAtTime(.025,tt+.004);g.gain.exponentialRampToValueAtTime(.0001,tt+.18);o.connect(g).connect(MASTER);o.start(tt);o.stop(tt+.2)}}
 function tkDailyClaim(){if(!tkDailyCan())return;const n=tkDailyDay(),R=TK_DAILY[n-1],v=tkGiftMoney(tkGiftBase()*R.k);let ex='';
-  if(n===3){TK.rush=Math.max(TK.rush,15);ex=' + 15 mp Golden Ticket'}if(n===4){TK.spins=(TK.spins||0)+1;ex=' + 1 ingyen pörgetés'}if(n===5){const g=tkFreeGear(tkGiftBase()*30);if(g)ex=' + ajándék: '+g.n}
-  if(n===6){TK.rush=Math.max(TK.rush,20);ex=' + 20 mp Golden Ticket'}if(n===7){TK.rush=Math.max(TK.rush,30);TK.spins=(TK.spins||0)+2;ex=' + 30 mp Golden Ticket + 2 pörgetés'}
+  if(n===3){TK.rush=Math.max(TK.rush,15);ex=' + 15 mp Golden Ticket'}if(n===4){TK.spins=(TK.spins||0)+1;ex=' + 1 ingyen sorsjegy'}if(n===5){const g=tkFreeGear(tkGiftBase()*30);if(g)ex=' + ajándék: '+g.n}
+  if(n===6){TK.rush=Math.max(TK.rush,20);ex=' + 20 mp Golden Ticket'}if(n===7){TK.rush=Math.max(TK.rush,30);TK.spins=(TK.spins||0)+2;ex=' + 30 mp Golden Ticket + 2 sorsjegy'}
   TK.gift={d:tkToday(),n};tkConfetti(TK.W/2,TK.H*.3,n===7?120:60,n===7);tkFanfare(n===7);toast(`🎁 ${n}. napi ajándék: +${tkFmt(v)} Ft${ex}`);tkSave();tkSync(true);tkSheetRender()}
-// szerencsekerék: 8 mező, súlyozott sorsolás
-const TK_WHEEL=[{l:'×3',s:'💰',w:22,c:'#b3141f'},{l:'ARANYLÁZ',s:'🎫',w:12,c:'#14140f'},{l:'×8',s:'💰',w:16,c:'#b3141f'},{l:'FEJLESZTÉS',s:'🔧',w:10,c:'#14140f'},{l:'JACKPOT',s:'💎',w:3,c:'#0e7a3a'},{l:'ESZKÖZ',s:'🛒',w:10,c:'#14140f'},{l:'×15',s:'💰',w:9,c:'#b3141f'},{l:'+1 PÖRGETÉS',s:'🍀',w:8,c:'#14140f'}];
+// v4.51: TÜZÉR SORSJEGY (a szerencsekerék helyett) – 3×3 kaparós mező; 3 egyforma jel = nyeremény. 8 nyereményfajta, súlyozott sorsolás.
+const TK_WHEEL=[{l:'×3',s:'💰',w:22,c:'#b3141f'},{l:'ARANYLÁZ',s:'🎫',w:12,c:'#8a5a06'},{l:'×8',s:'💰',w:16,c:'#b3141f'},{l:'FEJLESZTÉS',s:'🔧',w:10,c:'#1e5bb8'},{l:'JACKPOT',s:'💎',w:3,c:'#0e7a3a'},{l:'ESZKÖZ',s:'🛒',w:10,c:'#5e35b1'},{l:'×15',s:'💰',w:9,c:'#b3141f'},{l:'+1 SORSJEGY',s:'🍀',w:8,c:'#2e7d32'}];
+const TK_SCW=300,TK_SCH=204,TK_SCG={x:14,y:52,w:272,h:140};// a jegy és a kaparható rács mérete (belső egységben)
 function tkSpinStart(){if(!tkSpinCan())return;if((TK.spins||0)>0&&srvNow()-(TK.spinT||0)<TK_SPIN_CD)TK.spins--;else TK.spinT=srvNow();
   const tot=TK_WHEEL.reduce((a,b)=>a+b.w,0);let r=Math.random()*tot,i=0;for(;i<TK_WHEEL.length-1;i++){r-=TK_WHEEL[i].w;if(r<0)break}
-  const seg=Math.PI*2/TK_WHEEL.length,a0=TK.wheelA||0,tgt=-Math.PI/2-(i+.5)*seg+(Math.random()-.5)*seg*.7,d=((tgt-a0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
-  TK.spin={i,a0,a1:a0+Math.PI*2*6+d,t:0,dur:4.6,last:Math.floor(a0/seg)};tkSave();tkSheetRender()}
-function tkSpinTick(dt){const S=TK.spin;if(!S)return;S.t+=dt;const k=Math.min(1,S.t/S.dur),e=1-Math.pow(1-k,3.4);TK.wheelA=S.a0+(S.a1-S.a0)*e;const seg=Math.PI*2/TK_WHEEL.length,cur=Math.floor(TK.wheelA/seg);
-  if(cur!==S.last){S.last=cur;if(SOUND&&ac()){const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1800;g.gain.setValueAtTime(.02,t);g.gain.exponentialRampToValueAtTime(.0001,t+.025);o.connect(g).connect(MASTER);o.start(t);o.stop(t+.03)}}
-  if(k>=1)tkSpinEnd()}
-function tkSpinEnd(){const S=TK.spin;if(!S)return;TK.spin=null;TK.wheelA=S.a1%(Math.PI*2);const W=TK_WHEEL[S.i],B=tkGiftBase();let msg='';
+  // 3× a nyerő jel, a többi 6 mezőn más jelek, mindegyikből legfeljebb 2 (így pontosan egy hármas van)
+  const cells=[i,i,i],cnt={};while(cells.length<9){const j=Math.floor(Math.random()*TK_WHEEL.length);if(j===i||(cnt[j]||0)>=2)continue;cnt[j]=(cnt[j]||0)+1;cells.push(j)}
+  for(let k=cells.length-1;k>0;k--){const q=Math.floor(Math.random()*(k+1));[cells[k],cells[q]]=[cells[q],cells[k]]}
+  TK.spin={i,cells,rev:0,rt:0,dirty:1,sc:0};tkScrMask(TK.spin);tkSave();tkSheetRender();if(SOUND&&ac())tkKaching()}
+// ezüst kaparóréteg (külön vásznon; a kaparás ebből töröl)
+function tkScrMask(S){const K=2,cv=document.createElement('canvas');cv.width=TK_SCW*K;cv.height=TK_SCH*K;const x=cv.getContext('2d');x.scale(K,K);const G=TK_SCG;
+  tkRRect(x,G.x,G.y,G.w,G.h,10);x.save();x.clip();let g=x.createLinearGradient(G.x,G.y,G.x+G.w,G.y+G.h);g.addColorStop(0,'#e9edf0');g.addColorStop(.35,'#a9b2b9');g.addColorStop(.55,'#eef1f3');g.addColorStop(.8,'#9aa3aa');g.addColorStop(1,'#cfd5d9');x.fillStyle=g;x.fillRect(G.x,G.y,G.w,G.h);
+  x.globalAlpha=.18;x.strokeStyle='#5a646c';x.lineWidth=1;for(let q=-G.h;q<G.w;q+=9){x.beginPath();x.moveTo(G.x+q,G.y+G.h);x.lineTo(G.x+q+G.h,G.y);x.stroke()}x.globalAlpha=1;
+  x.font='26px Anton, Impact, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(60,68,76,.55)';x.fillText('KAPARD LE!',TK_SCW/2+1,G.y+G.h/2+1);x.fillStyle='rgba(255,255,255,.85)';x.fillText('KAPARD LE!',TK_SCW/2,G.y+G.h/2);
+  x.font='11px "JetBrains Mono", ui-monospace, monospace';x.fillStyle='rgba(60,68,76,.6)';x.fillText('ÜTEGBANK · SORSJEGY · ÜTEGBANK · SORSJEGY',TK_SCW/2,G.y+G.h/2+26);x.restore();S.mask=cv}
+function tkScrPrize(S){if(S.pz)return S.pz;const K=2,cv=document.createElement('canvas');cv.width=TK_SCW*K;cv.height=TK_SCH*K;const x=cv.getContext('2d');x.scale(K,K);const G=TK_SCG,Rn=tkRnd(7);
+  // jegy: krémszínű papír, piros fejléc, perforált szél
+  let g=x.createLinearGradient(0,0,TK_SCW,TK_SCH);g.addColorStop(0,'#fbf3dc');g.addColorStop(1,'#efe2bf');x.fillStyle=g;tkRRect(x,1,1,TK_SCW-2,TK_SCH-2,14);x.fill();
+  x.save();tkRRect(x,1,1,TK_SCW-2,TK_SCH-2,14);x.clip();g=x.createLinearGradient(0,0,0,44);g.addColorStop(0,'#d32f2f');g.addColorStop(1,'#8e1418');x.fillStyle=g;x.fillRect(0,0,TK_SCW,44);
+  x.fillStyle='#e8b923';for(let q=-20;q<TK_SCW+20;q+=14){x.beginPath();x.moveTo(q,44);x.lineTo(q+7,44);x.lineTo(q+14,48);x.lineTo(q+7,48);x.closePath();x.fill()}
+  x.font='22px Anton, Impact, sans-serif';x.textAlign='left';x.textBaseline='middle';x.fillStyle='rgba(0,0,0,.35)';x.fillText('TÜZÉR SORSJEGY',17,23);x.fillStyle='#ffe08a';x.fillText('TÜZÉR SORSJEGY',16,22);
+  x.font='700 9px "JetBrains Mono", ui-monospace, monospace';x.textAlign='right';x.fillStyle='#fff3d0';x.fillText('3 EGYFORMA = NYEREMÉNY',TK_SCW-14,17);x.fillStyle='rgba(255,243,208,.7)';x.fillText('Nº '+String(Math.floor(Rn()*9e5+1e5)),TK_SCW-14,31);
+  x.restore();
+  const cw=G.w/3,ch=G.h/3;for(let k=0;k<9;k++){const W=TK_WHEEL[S.cells[k]],cx=G.x+(k%3)*cw,cy=G.y+Math.floor(k/3)*ch,win=S.cells[k]===S.i;
+    tkRRect(x,cx+3,cy+3,cw-6,ch-6,8);x.fillStyle=win?'#fff4c8':'#fffaf0';x.fill();x.strokeStyle=W.c;x.globalAlpha=.55;x.lineWidth=1.4;x.stroke();x.globalAlpha=1;
+    x.font='22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(W.s,cx+cw/2,cy+ch/2-8);
+    x.font=`${W.l.length>8?11:16}px Anton, Impact, sans-serif`;x.fillStyle=W.c;x.fillText(W.l.replace('×','X'),cx+cw/2,cy+ch/2+14)}
+  tkPaperGrain(x,cv.width,cv.height,Rn,8);x.strokeStyle='rgba(60,40,10,.35)';x.lineWidth=1.2;tkRRect(x,1,1,TK_SCW-2,TK_SCH-2,14);x.stroke();
+  return S.pz=cv}
+function tkScrDraw(cv,now){const S=TK.spin,c=cv.getContext('2d');if(!S){if(cv.dataset.idle)return;cv.dataset.idle=1;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);const k=cv.width/TK_SCW;c.setTransform(k,0,0,k,0,0);
+    // nincs aktív jegy: lezárt, „kiadásra vár” jegy képe
+    let g=c.createLinearGradient(0,0,TK_SCW,TK_SCH);g.addColorStop(0,'#3a4030');g.addColorStop(1,'#232819');c.fillStyle=g;tkRRect(c,1,1,TK_SCW-2,TK_SCH-2,14);c.fill();c.strokeStyle='rgba(232,185,35,.5)';c.setLineDash([6,5]);c.lineWidth=2;tkRRect(c,8,8,TK_SCW-16,TK_SCH-16,10);c.stroke();c.setLineDash([]);
+    c.font='40px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('🎟️',TK_SCW/2,TK_SCH/2-16);c.font='15px Anton, Impact, sans-serif';c.fillStyle='#e8d9a8';c.fillText(tkSpinCan()?'ÚJ SORSJEGY VÁR RÁD!':'A KÖVETKEZŐ JEGY ÚTON VAN…',TK_SCW/2,TK_SCH/2+28);return}
+  delete cv.dataset.idle;if(!S.dirty&&!S.rev)return;S.dirty=0;const k=cv.width/TK_SCW;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);c.drawImage(tkScrPrize(S),0,0,cv.width,cv.height);
+  if(S.rev){c.setTransform(k,0,0,k,0,0);const G=TK_SCG,cw=G.w/3,ch=G.h/3,p=.5+.5*Math.sin(now/120);c.strokeStyle=`rgba(232,170,20,${(.6+.4*p).toFixed(2)})`;c.lineWidth=3;for(let q=0;q<9;q++)if(S.cells[q]===S.i){tkRRect(c,G.x+(q%3)*cw+2,G.y+Math.floor(q/3)*ch+2,cw-4,ch-4,9);c.stroke()}c.setTransform(1,0,0,1,0,0);
+    if(S.mask){c.globalAlpha=Math.max(0,1-S.rev*3);c.drawImage(S.mask,0,0,cv.width,cv.height);c.globalAlpha=1}}else if(S.mask)c.drawImage(S.mask,0,0,cv.width,cv.height)}
+// kaparás: a mutató útvonalán kör alakban törli az ezüstréteget; ha nagyobbik része lejött, a jegy magától kinyílik
+function tkScrBind(cv){if(!cv||cv.dataset.b)return;cv.dataset.b=1;let last=null;
+  const pt=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*TK_SCW/r.width,(e.clientY-r.top)*TK_SCH/r.height]};
+  const rub=(a,b)=>{const S=TK.spin;if(!S||S.rev||!S.mask)return;const x=S.mask.getContext('2d');x.save();x.globalCompositeOperation='destination-out';x.lineCap='round';x.lineJoin='round';x.lineWidth=30;x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke();x.restore();S.dirty=1;S.sc+=Math.hypot(b[0]-a[0],b[1]-a[1])+4;
+    const n=performance.now();if(n-(TK.scrSnd||0)>70){TK.scrSnd=n;if(SOUND&&AC&&NOISE){const t=AC.currentTime,s2=AC.createBufferSource();s2.buffer=NOISE;const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=3200+Math.random()*900;const g=AC.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.022,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.07);s2.connect(f).connect(g).connect(MASTER);s2.start(t,Math.random());s2.stop(t+.08)}}};
+  cv.addEventListener('pointerdown',e=>{if(!TK.spin)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}last=pt(e);rub(last,[last[0]+.1,last[1]])});
+  cv.addEventListener('pointermove',e=>{if(!last)return;e.preventDefault();const p=pt(e);rub(last,p);last=p});
+  const up=()=>{if(!last)return;last=null;const S=TK.spin;if(S&&!S.rev&&S.sc>260&&tkScrCleared(S)>.55)tkScrReveal()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
+function tkScrCleared(S){try{const G=TK_SCG,K=2,d=S.mask.getContext('2d').getImageData(G.x*K,G.y*K,G.w*K,G.h*K).data;let n=0,z=0;for(let p=3;p<d.length;p+=64){n++;if(d[p]<60)z++}return z/n}catch(e){return 1}}
+function tkScrReveal(){const S=TK.spin;if(!S||S.rev)return;S.rev=.001;S.rt=1.1;S.dirty=1;if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}tkSheetRender()}
+function tkSpinTick(dt){const S=TK.spin;if(!S||!S.rev)return;S.rev+=dt;S.rt-=dt;if(S.rt<=0)tkSpinEnd()}
+function tkSpinEnd(){const S=TK.spin;if(!S)return;TK.spin=null;const W=TK_WHEEL[S.i],B=tkGiftBase();let msg='';
   if(W.l==='×3')msg='+'+tkFmt(tkGiftMoney(B*3))+' Ft';else if(W.l==='×8')msg='+'+tkFmt(tkGiftMoney(B*8))+' Ft';else if(W.l==='×15')msg='+'+tkFmt(tkGiftMoney(B*15))+' Ft';
   else if(W.l==='JACKPOT')msg='JACKPOT! +'+tkFmt(tkGiftMoney(B*60))+' Ft';else if(W.l==='ARANYLÁZ'){TK.rush=Math.max(TK.rush,25);TK.tickets++;msg='25 mp dupla bevétel'}
-  else if(W.l==='FEJLESZTÉS'){TK.upg.tap++;msg='Erős ujj +1 szint ingyen'}else if(W.l==='ESZKÖZ'){const g=tkFreeGear(B*40);msg=g?'ingyen '+g.n:'+'+tkFmt(tkGiftMoney(B*5))+' Ft'}else{TK.spins=(TK.spins||0)+1;msg='még egy pörgetés'}
-  TK.gifts=(TK.gifts||0)+1;const big=W.l==='JACKPOT';tkConfetti(TK.W/2,TK.H*.35,big?160:55,big);tkFanfare(big);toast(`🎡 Szerencsekerék: ${W.s} ${msg}`);tkSave();tkSync(true);tkSheetRender()}
-function tkWheelDraw(cv,now){const c=cv.getContext('2d'),S=cv.width,r=S/2-14,cx=S/2,cy=S/2,n=TK_WHEEL.length,seg=Math.PI*2/n,A=TK.wheelA||0;c.clearRect(0,0,S,S);c.imageSmoothingEnabled=true;
-  c.fillStyle='#3a2402';c.beginPath();c.arc(cx,cy+4,r+12,0,7);c.fill();const rim=c.createLinearGradient(0,0,0,S);rim.addColorStop(0,'#fff0a0');rim.addColorStop(.5,'#c9a227');rim.addColorStop(1,'#6e4a04');c.fillStyle=rim;c.beginPath();c.arc(cx,cy,r+12,0,7);c.fill();
-  for(let i=0;i<n;i++){const a=A+i*seg;c.fillStyle=TK_WHEEL[i].c;c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,a,a+seg);c.closePath();c.fill();c.strokeStyle='#e8b923';c.lineWidth=2;c.stroke();
-    {const am=a+seg/2,fl=Math.cos(am)<0;c.save();c.translate(cx,cy);c.rotate(fl?am+Math.PI:am);c.textAlign=fl?'left':'right';c.fillStyle=TK_WHEEL[i].l==='JACKPOT'?'#fff4b0':'#f3ecd4';c.font=`900 ${TK_WHEEL[i].l.length>8?10:13}px Anton, Impact, sans-serif`;c.fillText(TK_WHEEL[i].l,fl?-(r-10):r-10,4);c.font='15px sans-serif';c.textAlign='center';c.fillText(TK_WHEEL[i].s,fl?-r*.38:r*.38,5);c.restore()}}
-  const sh=c.createRadialGradient(cx-r*.3,cy-r*.4,r*.1,cx,cy,r);sh.addColorStop(0,'rgba(255,255,255,.22)');sh.addColorStop(1,'rgba(0,0,0,.25)');c.fillStyle=sh;c.beginPath();c.arc(cx,cy,r,0,7);c.fill();
-  const nb=24,ph=Math.floor(now/(TK.spin?70:260));for(let i=0;i<nb;i++){const a=i/nb*Math.PI*2,x=cx+Math.cos(a)*(r+6),y=cy+Math.sin(a)*(r+6),on=(i+ph)%2===0;c.fillStyle=on?'#fffbe0':'#7a5a10';c.beginPath();c.arc(x,y,3,0,7);c.fill();if(on){c.fillStyle='rgba(255,240,170,.35)';c.beginPath();c.arc(x,y,6,0,7);c.fill()}}
-  const hub=c.createRadialGradient(cx-5,cy-5,2,cx,cy,22);hub.addColorStop(0,'#fff4b0');hub.addColorStop(1,'#8a5a06');c.fillStyle=hub;c.beginPath();c.arc(cx,cy,20,0,7);c.fill();c.strokeStyle='#3a2402';c.lineWidth=2;c.stroke();c.fillStyle='#3a2402';c.font='900 10px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('MEDVE',cx,cy+4);
-  c.fillStyle='#ff3b30';c.strokeStyle='#14140f';c.lineWidth=2.5;c.beginPath();c.moveTo(cx-13,4);c.lineTo(cx+13,4);c.lineTo(cx,30);c.closePath();c.fill();c.stroke();c.fillStyle='#fff';c.beginPath();c.arc(cx,11,3,0,7);c.fill()}
+  else if(W.l==='FEJLESZTÉS'){TK.upg.tap++;msg='Erős ujj +1 szint ingyen'}else if(W.l==='ESZKÖZ'){const g=tkFreeGear(B*40);msg=g?'ingyen '+g.n:'+'+tkFmt(tkGiftMoney(B*5))+' Ft'}else{TK.spins=(TK.spins||0)+1;msg='még egy sorsjegy'}
+  TK.gifts=(TK.gifts||0)+1;const big=W.l==='JACKPOT';tkConfetti(TK.W/2,TK.H*.35,big?160:55,big);tkFanfare(big);toast(`🎟️ Sorsjegy: ${W.s} ${msg}`);tkSave();tkSync(true);tkSheetRender()}
 function tkGiftHTML(){const can=tkDailyCan(),n=can?tkDailyDay():TK.gift.n,B=tkGiftBase(),sc=tkSpinCan(),left=TK_SPIN_CD-(srvNow()-(TK.spinT||0));
   return `${CLK.ok?'':'<p class="tkseen pend">🌐 Az ajándékokhoz pontos idő kell a szervertől – kapcsolódj a netre. (A telefon órájának átállítása nem számít.)</p>'}<h4>🎁 Napi ajándékdoboz</h4><p class="hint">Minden nap egy doboz – ha naponta visszajössz, egyre nagyobb (7. nap: főnyeremény). Kihagyott nap után az 1. naptól indul újra. Minden ajándék a <b>zsebbe</b> kerül.</p>
   <div class="tkdays">${TK_DAILY.map((R,i)=>{const d=i+1,st=can?(d<n?'done':d===n?'now':''):(d<=n?'done':'');return `<div class="tkday ${st}${d===7?' big':''}"><i>${d}. nap</i><b>${st==='done'?'✅':d===7?'💎':'🎁'}</b><small>${tkShort(B*R.k)} Ft</small><em>${(R.t.replace('💰','').trim()||'&nbsp;')}</em></div>`}).join('')}</div>
   <button type="button" class="tkbig" data-daily ${can?'':'disabled'}>${can?`🎁 KINYITOM – ${n}. nap`:CLK.ok?`Holnap jön a következő (${(n%7)+1}. nap)`:'🌐 Pontos idő kell – kapcsolódj a netre'}</button>
-  <h4 data-st="margin-top:14px">🎡 Szerencsekerék</h4><p class="hint">3 óránként egy ingyen pörgetés${TK.spins>0?` · extra pörgetés: <b>${TK.spins} db</b>`:''}. Nyeremény: pénz (×3 – ×60 a mostani szintedhez mérve), Golden Ticket, ingyen fejlesztés vagy eszköz.</p>
-  <div class="tkwheel"><canvas id="tkWheel" width="280" height="280"></canvas></div>
-  <button type="button" class="tkbig spin" data-spin ${sc?'':'disabled'}>${TK.spin?'Pörög…':sc?'🎰 PÖRGETÉS!':!CLK.ok?'🌐 Pontos idő kell – kapcsolódj a netre':`Következő ingyen pörgetés: <span id="tkSpinLeft">${tkLeftTxt(left)}</span>`}</button>
-  <h4 data-st="margin-top:14px">💸 Pénz-gépágyú</h4><p class="hint">${tkGunIv()/6e4===60?'Óránként egyszer':(tkGunIv()/6e4)+' percenként egyszer ('+zsPerk().i+' '+zsPerk().n+' fokozat)'}, véletlen pillanatban érkezik (a szerver órája szerint). Ha épp nem vagy itt, megvár – de egyszerre csak egy, nem gyűlik fel. Jobb lent <b>tartsd nyomva</b>: a forgócsöves gépágyú felpörög (I → IV → MAX fokozat), MAX-on <b>10× értékű</b> bankókat szór a kerékre – összesen 10 mp-ig. ${TK.mg&&TK.mg.have?'<b>Most itt van, vár rád!</b>':'Úton van…'}</p>
+  <h4 data-st="margin-top:14px">🎟️ Tüzér sorsjegy</h4><p class="hint">3 óránként egy ingyen kaparós jegy${TK.spins>0?` · extra jegy: <b>${TK.spins} db</b>`:''}. Kapard le az ezüst réteget ujjal – <b>3 egyforma jel</b> a nyeremény: pénz (×3 – ×60 a mostani szintedhez mérve), Golden Ticket, ingyen fejlesztés vagy eszköz.</p>
+  <div class="tkscr"><canvas id="tkScr" width="${TK_SCW*2}" height="${TK_SCH*2}"></canvas></div>
+  <button type="button" class="tkbig spin" data-spin ${sc||(TK.spin&&!TK.spin.rev)?'':'disabled'}>${TK.spin?(TK.spin.rev?'🎉 Nyertél!':'✨ MIND LEKAPAROM'):sc?'🎟️ ÚJ SORSJEGY!':!CLK.ok?'🌐 Pontos idő kell – kapcsolódj a netre':`Következő ingyen jegy: <span id="tkSpinLeft">${tkLeftTxt(left)}</span>`}</button>
+  <h4 data-st="margin-top:14px">💸 Pénz-gépágyú</h4><p class="hint">${tkGunIv()/6e4===60?'Óránként egyszer':(tkGunIv()/6e4)+' percenként egyszer ('+zsPerk().i+' '+zsPerk().n+' fokozat)'}, véletlen pillanatban érkezik (a szerver órája szerint). Ha épp nem vagy itt, megvár – de egyszerre csak egy, nem gyűlik fel. Jobb lent <b>tartsd nyomva</b>: a forgócsöves gépágyú felpörög (I → IV → MAX fokozat), MAX-on <b>10× értékű</b> bankókat szór a kasszaládába – összesen 10 mp-ig. ${TK.mg&&TK.mg.have?'<b>Most itt van, vár rád!</b>':'Úton van…'}</p>
   ${tkZsShopHTML()}
   <p class="hint">🪂 Ejtőernyős csomag: 1–2 percenként ajándékcsomag ereszkedik a bázisra – koppints rá, mielőtt elviszik! 🎫 A Golden Ticket is gyakrabban jön. Eddig kinyitott ajándék: <b>${tkFmt(TK.gifts||0)}</b></p>`}
 function tkDropOpen(){const D=TK.drop;if(!D)return;D.open=1;TK.drop=null;const r=Math.random(),B=tkGiftBase();let m;
-  if(r<.6)m='+'+tkFmt(tkGiftMoney(B*(1+Math.random()*3),D.x,D.y))+' Ft';else if(r<.8){TK.rush=Math.max(TK.rush,12);TK.gifts=(TK.gifts||0)+1;m='12 mp dupla bevétel'}else{TK.spins=(TK.spins||0)+1;TK.gifts=(TK.gifts||0)+1;m='+1 szerencsekerék-pörgetés'}
+  if(r<.6)m='+'+tkFmt(tkGiftMoney(B*(1+Math.random()*3),D.x,D.y))+' Ft';else if(r<.8){TK.rush=Math.max(TK.rush,12);TK.gifts=(TK.gifts||0)+1;m='12 mp dupla bevétel'}else{TK.spins=(TK.spins||0)+1;TK.gifts=(TK.gifts||0)+1;m='+1 kaparós sorsjegy'}
   tkConfetti(D.x,D.y+20,50);tkFanfare(false);toast(`🪂 Ajándékcsomag: ${m}`);tkSave()}
 // ---- konfetti, izzósor, reflektor (kaszinós fények) ----
 const TK_CF=['#ffd24a','#ff3b5c','#3bd1ff','#7dff6a','#ffffff','#c77dff','#ff9a2e'];
@@ -2367,17 +2503,17 @@ function tkDropDraw(c,now){const D=TK.drop;if(!D)return;const sw=D.land?0:Math.s
   c.fillStyle=`rgba(255,240,180,${a.toFixed(2)})`;c.font='900 11px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('🎁 AJÁNDÉK – KOPPINTS!',Math.max(72,Math.min(TK.W-72,D.x)),D.y+(D.land?-12:-40))}
 // ---- elrendezés: a futóverseny-sáv a zseb alatt, alatta a koppintható pénz ----
 function tkLay(W,H){const L=TK.lay,isC=TK_DEN[TK.den].t==='c';if(L&&L.W===W&&L.H===H&&L.isC===isC)return L;
-  // fent a ZSEB és a futóverseny, középen a rulettkerék (a cél), lent a köteg (a forrás), alatta a gombsor (ULTRA, ÜTEGBE TOL)
+  // fent a ZSEB és a futóverseny, középen a lőszerláda-kassza (a cél), lent a köteg (a forrás), alatta a gombsor (ULTRA, ÜTEGBE TOL)
   const ry=97,rk=H>=640?3:2,rh=H>=540?(rk===3?81:71):0;/* nagyon alacsony kijelzőn (pl. 320×568) a futóverseny helyén a kerék fér el */
   let bot=H-122;try{const b=document.querySelector('#harc .tkpush'),cr=TK.cv&&TK.cv.getBoundingClientRect();if(b&&cr){const r=b.getBoundingClientRect();if(r.height>0&&r.top-cr.top>H*.45)bot=Math.round(r.top-cr.top-6)}}catch(e){}
-  const top=(rh?ry+rh:72)+26,land=W>H*1.15&&H<520;let sw=Math.round(isC?Math.max(60,Math.min(W*.24,104)):Math.max(124,Math.min(W*.44,210)));if(land)sw=Math.round(Math.min(sw,isC?(H-150)*.6:(H-150)*1.15));
+  const top=(rh?ry+rh:72)+26,land=W>H*1.15&&H<520;let sw=Math.round(isC?Math.max(72,Math.min(W*.34,150)):Math.max(150,Math.min(W*.7,300)));if(land)sw=Math.round(Math.min(sw,isC?(H-150)*.6:(H-150)*1.15));
   // alacsony kijelzőn a köteg legfeljebb a szabad magasság harmadát foglalja (a kerék így sem lesz túl kicsi)
-  else{const mx=(bot-top)*.33-(isC?TK_SNC*3.5:TK_SN*2.2);sw=Math.round(Math.max(isC?52:100,Math.min(sw,mx*2)))}
+  else{const mx=(bot-top)*(H<700?.33:.36)-(isC?TK_SNC*3.5:TK_SN*2.2);sw=Math.round(Math.max(isC?56:110,Math.min(sw,mx*2)))}
   const fh=isC?sw*.5:sw/2,st=isC?Math.max(3.5,sw*.055):2.2,sH=fh+(isC?TK_SNC:TK_SN)*st,wsy=.5;
   let sx=Math.round(W/2),sTop=Math.round(bot-sH-4),cx=Math.round(W/2),cy,wr;
   if(land){// fekvő kijelző: köteg balra lent, kerék jobbra
-    sx=Math.round(W*.28);cx=Math.round(W*.62);wr=Math.max(56,Math.min(W*.2,170,(bot-top-40)/(2*wsy)));cy=Math.round((top+bot)/2)}
-  else{const room=sTop-30-top;wr=Math.max(64,Math.min(W*.4,190,(room-62)/(2*wsy)));cy=Math.round(top+22+wr*wsy+Math.max(0,(room-62-2*wr*wsy)/2))}
+    sx=Math.round(W*.28);cx=Math.round(W*.62);wr=Math.max(56,Math.min(W*.19,170,(bot-top-40)/1.32));cy=Math.round((top+bot)/2)}
+  else{const room=sTop-30-top;wr=Math.max(60,Math.min(W*.4,190,(room-62)/1.32));cy=Math.round(top+22+wr*.56+Math.max(0,(room-62-1.32*wr)/2))}
   return TK.lay={W,H,isC,ry,rh,rk,bot,sw,fh,st,sH,sTop,sx,sy0:sTop+fh/2,cx,cy,wr,wsy,bw:wr*2,bh:wr*2*wsy,lbY:sTop-24}}
 // ---- élő ranglista-futóverseny: a legtöbbet befizetők mini katonái, rangsor szerint (elöl, jobbra az első) ----
 const TK_RUN=[['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','uuuuuus.','.uuuuu..','..dddd..','.dd..dd.','kk....kk'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','.usuuu..','.uuuuu..','..dddd..','..dddd..','...kk...'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','suuuuuu.','.uuuuu..','..dddd..','.dd..dd.','.kk...kk'],['..hhhh..','.hhhhhh.','..sssk..','..ssss..','.uuuuu..','.uusuu..','.uuuuu..','..dddd..','..dddd..','..kk....']];
@@ -2433,13 +2569,13 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
    <div class="tkulock" id="tkULock" hidden><div class="tkuhd"><b>👶 ULTRA KOPPINTÁS</b><span>Koppints bárhová!</span></div><button type="button" class="tkuhold" id="tkUHold" aria-label="Gyerekzár feloldása: tartsd nyomva 15 másodpercig"><i>🔒</i><em id="tkUHt">15</em></button><div class="tkuhint"><b>🔒 GYEREKZÁR BEKAPCSOLVA</b><span>Feloldás: tartsd nyomva a lakatot (jobb fent) 15 mp-ig</span></div></div>`;
   $('#tkClose').onclick=tkClose;$('#tkPush').onclick=()=>tkPush();$('#tkMint').onclick=tkMint;TK.ultra=false;el.classList.remove('tkul');tkUltraInit();
   el.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>tkSheet(b.dataset.tk));
-  Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.wheelA=TK.wheelA||-Math.PI/2-Math.PI/8;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.rings=[];TK.sp=[];TK.bs=0;TK.bv=0;TK.shake=0;TK.flash=0;TK.pkB=0;TK.pileB=0;TK.thr=[];TK.land=[];TK.stB=0;TK.stX=0;TK.skc=null;TK.gnc=null;TK.mgHold=null;TK.mgS=0;TK.mgAcc=0;TK.mgSum=0;TK.mgSumT=9;TK.mgBan=null;TK.mgOut=null;TK.mgA=null;if(!TK.mg)TK.mg={n:srvNow()+(2+Math.random()*4)*6e4,have:0,fuel:0};TK.mgIn=TK.mg.have?0:1;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
+  Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.rings=[];TK.sp=[];TK.bs=0;TK.bv=0;TK.shake=0;TK.flash=0;TK.pkB=0;TK.pileB=0;TK.thr=[];TK.land=[];TK.stB=0;TK.stX=0;TK.skc=null;TK.gnc=null;TK.mgHold=null;TK.mgS=0;TK.mgAcc=0;TK.mgSum=0;TK.mgSumT=9;TK.mgBan=null;TK.mgOut=null;TK.mgA=null;if(!TK.mg)TK.mg={n:srvNow()+(2+Math.random()*4)*6e4,have:0,fuel:0};TK.mgIn=TK.mg.have?0:1;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
   const cv=TK.cv;cv.addEventListener('pointerdown',tkDown);cv.addEventListener('pointerup',tkUp);cv.addEventListener('pointercancel',tkUp);cv.addEventListener('lostpointercapture',tkUp);
   TK.key=e=>{if(e.type==='keydown'&&(e.key===' '||e.key==='Enter')){e.preventDefault();tkTap(TK.W/2,tkLay(TK.W,TK.H).cy)}if(e.type==='keydown'&&e.key==='ArrowUp')tkPush()};addEventListener('keydown',TK.key);addEventListener('keyup',TK.key);
   clkReady(tkClockFix);
   if(!TK.uteg)tkStartScreen();else $('#tkStart').hidden=true;
   playCount('kassza');tkMusic(true);TK.last=performance.now();TK.raf=requestAnimationFrame(tkLoop);TK.saveI=setInterval(()=>{tkSave();tkSync()},5000)}
-function tkStartScreen(){const s=$('#tkStart');s.hidden=false;s.innerHTML=`<h3>Tüzér Kassza</h3><p>Koppints vagy pöccints – a lenti köteg legfelső bankója a rulettkerékre repül, az értéke a zsebedbe kerül. A zsebedben gyűlő pénzt az <b>⇡ ÜTEGBE TOL</b> gombbal teszed az <b>ütegkasszába</b>, ez számít a ranglistán. Óránként egyszer megérkezik a <b>💸 pénz-gépágyú</b> is: tartsd nyomva! A <b>Pénzverdében</b> gyárthatod le a következő pénznemet (1 → 10 → 100 … 1 milliárd Ft, majd a rendfokozat-jegyek: Őrmestertől Alezredesig, Osztályparancsnoki, Tüzér Rettenet és a legfelső, a <b>Szent Borbála-jegy</b> – oda kb. fél év eljutni), a <b>Piacon</b> NATO-szintű felszerelést, drónt, járművet és bázisfejlesztést veszel – mind látszik a bázisodon. A <b>🎁 Ajándék</b> fülön napi doboz és szerencsekerék vár, időnként ejtőernyős csomag is érkezik.</p>${tkRulesHTML()}<div class="dinfo"><b>Melyik ütegbe gyűjtesz?</b></div><div class="tkutegs">${TK_UTEG.map(u=>`<button type="button" class="tkbtn tkubtn" data-u="${u}" data-st="--uc:${tkUC(u)[0]};--ut:${tkUC(u)[1]}">${u}</button>`).join('')}</div><p class="hint">Később az Ütegek fülön átigazolhatsz.</p>`;
+function tkStartScreen(){const s=$('#tkStart');s.hidden=false;s.innerHTML=`<h3>Tüzér Kassza</h3><p>Koppints vagy pöccints – a lenti köteg legfelső bankója a lőszerládás kasszatálcára repül, az értéke a zsebedbe kerül. A zsebedben gyűlő pénzt az <b>⇡ ÜTEGBE TOL</b> gombbal teszed az <b>ütegkasszába</b>, ez számít a ranglistán. Óránként egyszer megérkezik a <b>💸 pénz-gépágyú</b> is: tartsd nyomva! A <b>Pénzverdében</b> gyárthatod le a következő pénznemet (1 → 10 → 100 … 1 milliárd Ft, majd a rendfokozat-jegyek: Őrmestertől Alezredesig, Osztályparancsnoki, Tüzér Rettenet és a legfelső, a <b>Szent Borbála-jegy</b> – oda kb. fél év eljutni), a <b>Piacon</b> NATO-szintű felszerelést, drónt, járművet és bázisfejlesztést veszel – mind látszik a bázisodon. A <b>🎁 Ajándék</b> fülön napi doboz és kaparós sorsjegy vár, időnként ejtőernyős csomag is érkezik.</p>${tkRulesHTML()}<div class="dinfo"><b>Melyik ütegbe gyűjtesz?</b></div><div class="tkutegs">${TK_UTEG.map(u=>`<button type="button" class="tkbtn tkubtn" data-u="${u}" data-st="--uc:${tkUC(u)[0]};--ut:${tkUC(u)[1]}">${u}</button>`).join('')}</div><p class="hint">Később az Ütegek fülön átigazolhatsz.</p>`;
   s.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{TK.uteg=b.dataset.u;tkSave();tkSync('now');s.hidden=true;toast(`🏆 ${TK.uteg} – gyűjtsünk!`)})}
 function tkClose(){if(TK.ultra)return;/* gyerekzár alatt nem zárható be */try{TK.mgHold=null;tkGunSnd(false);if(TK.spin)tkSpinEnd();tkMusic(false);TK.run=false;clearInterval(TK.saveI);tkSave();tkSync('now')}catch(e){}gClose(TK)}
 // ---- bevitel ----
@@ -2472,7 +2608,7 @@ function tkUltraOff(){TK.ultra=false;const lk=$('#tkULock');if(lk)lk.hidden=true
 function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>now-t<1000);if(TK.tapsSec.length>=15)return;TK.tapsSec.push(now);
   TK.combo=now-TK.lastTap<330?Math.min(10+TK.upg.combo*4,TK.combo+1):Math.max(0,TK.combo-3);TK.lastTap=now;TK.taps++;
   const crit=Math.random()<Math.min(.2,TK.upg.crit*.01);if(crit)TK.crits=(TK.crits||0)+1;TK.bestCombo=Math.max(TK.bestCombo||0,TK.combo);const v=tkTapV()*(1+TK.combo*(.01+TK.upg.combo*.005))*(crit?5:1);tkEarn(v);
-  // a pénz azonnal a zsebbe kerül; a köteg legfelső bankója/érméje elrepül a kerékre (a koppintás oldala felé ívelve), a felirat a becsapódásnál pattan ki
+  // a pénz azonnal a zsebbe kerül; a köteg legfelső bankója/érméje elrepül a kasszatálcára (a koppintás oldala felé ívelve), a felirat a becsapódásnál pattan ki
   const L=tkLay(TK.W,TK.H);tkThrow(TK.den,v,{crit,bend:Math.max(-90,Math.min(90,(x-L.sx-(TK.stX||0))*.35))+(Math.random()-.5)*40});TK.stB=1;
   if(crit&&navigator.vibrate)try{navigator.vibrate(18)}catch(e){}tkJingle(TK.den,crit)}
 function tkPush(){const v=Math.floor(TK.pocket);if(v<1){toast('A zsebed üres – koppints a pénzre!');return}if(!TK.uteg){tkStartScreen();return}
@@ -2483,7 +2619,7 @@ function tkMint(){const n=TK.den+1;if(n>=TK_DEN.length)return;if(!CLK.ok&&(TK_DE
 // ---- fülek ----
 function tkSheet(id){const s=$('#tkSheet');if(!s.hidden&&TK.sheet===id){s.hidden=true;TK.sheet=null;return}TK.sheet=id;TK.sig='';s.hidden=false;TK.open=TK.open||{};tkSheetRender();s.scrollTop=0}
 function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=TK.sheet;let h='';
-  if(id==='upg'){const n=TK.den+1;h=`<h4>🏦 Pénzverde</h4>`+(n<TK_DEN.length?`<div class="tkmintbox"><img src="${tkNoteCv(n).toDataURL()}" alt=""><div><b>${TK_DEN[n].n}</b><small>${tkFmt(TK_DEN[n].v)} Ft névérték · ${TK_DEN[n].m}<br>Ezután minden koppintás ${tkFmt(TK_DEN[n].v)} Ft alapértékű.</small></div><button type="button" data-mint ${TK.pocket<tkMintCost(n)||tkMintWait(n)>0?'disabled':''}>${tkMintWait(n)>0?'⏳ '+tkLeftTxt(tkMintWait(n)):'Pénzverde'}<br>${tkFmt(tkMintCost(n))} Ft</button></div>${TK_DEN[n].wd?`<p class="hint">🎖️ <b>Előléptetés:</b> ehhez a pénznemhez az előző legyártása óta <b>${TK_DEN[n].wd} nap szolgálati idő</b> kell${tkMintWait(n)>0?` – még ${tkLeftTxt(tkMintWait(n))}`:' – letelt ✓'}. A Szent Borbála-jegyig kb. fél év.</p>`:''}`:'<p class="hint">Minden pénznemet legyártottál – a legmagasabb a Szent Borbála-jegy. Borbála óvja az ütegedet! 🙏</p>')+
+  if(id==='upg'){const n=TK.den+1;h=`<h4>🏦 Pénzverde</h4>`+(n<TK_DEN.length?`<div class="tkmintbox"><img src="${tkNoteURL(n)}" alt=""><div><b>${TK_DEN[n].n}</b><small>${tkFmt(TK_DEN[n].v)} Ft névérték · ${TK_DEN[n].m}<br>Ezután minden koppintás ${tkFmt(TK_DEN[n].v)} Ft alapértékű.</small></div><button type="button" data-mint ${TK.pocket<tkMintCost(n)||tkMintWait(n)>0?'disabled':''}>${tkMintWait(n)>0?'⏳ '+tkLeftTxt(tkMintWait(n)):'Pénzverde'}<br>${tkFmt(tkMintCost(n))} Ft</button></div>${TK_DEN[n].wd?`<p class="hint">🎖️ <b>Előléptetés:</b> ehhez a pénznemhez az előző legyártása óta <b>${TK_DEN[n].wd} nap szolgálati idő</b> kell${tkMintWait(n)>0?` – még ${tkLeftTxt(tkMintWait(n))}`:' – letelt ✓'}. A Szent Borbála-jegyig kb. fél év.</p>`:''}`:'<p class="hint">Minden pénznemet legyártottál – a legmagasabb a Szent Borbála-jegy. Borbála óvja az ütegedet! 🙏</p>')+
     `<h4 data-st="margin-top:12px">🔧 Fejlesztések</h4>`+TK_UPG.map(u=>{const lv=TK.upg[u.id],c=tkUpgCost(u),mx=lv>=u.max;return `<div class="tkrow"><div><b>${u.n}</b> <i>${lv}. szint</i><small>${u.d}</small></div><button type="button" data-ub="${u.id}" ${mx||TK.pocket<c?'disabled':''}>${mx?'MAX':tkFmt(c)+' Ft'}</button></div>`}).join('')+`<p class="hint">Koppintás: <b>${tkFmt(tkTapV())} Ft</b> · Automata: <b>${tkFmtR(tkAutoInc())} Ft/mp</b> · Ütegszellem: <b>×${(1+.1*Math.log10(1+TK.given)).toFixed(2)}</b></p>`}
   if(id==='gear')h=`<h4>🛒 Piac – NATO-szintű beszerzések</h4><p class="hint">Árak: nyilvános piaci, gyártói és sajtóadatokon alapuló <b>becslések</b> euróban, élő árfolyamon forintra váltva (1 € ≈ ${TK.huf.toFixed(2).replace('.',',')} Ft). Minden eszköz termel és megjelenik a bázisodon.</p><div class="tkseg">${[1,10,100,1000,'max'].map(q=>`<button type="button" data-qty="${q}" class="${(TK.qty||1)===q?'on':''}">${q==='max'?'MAX':'×'+q}</button>`).join('')}</div>`+TK_CAT.map(([ck,cn])=>`<div class="tkcat">${cn}</div>`+TK_GEAR.filter(g=>g.c===ck).map(g=>{const n=TK.own[g.id]||0,q=tkQ(g),c=tkBulk(g,q);return `<div class="tkrow${g.gold?' gold':''}"><img class="tkic" src="${tkIconURL(g)}" alt=""><div><b>${g.n}</b> <i>× ${n} ${TK_UNIT[g.id]||'db'}</i><small>kb. ${tkFmt(g.p)} € ≈ ${tkFmt(tkGP(g))} Ft · ${g.src}<br>+${tkFmtR(tkGInc(g)*tkMult())} Ft/mp</small></div><button type="button" data-gb="${g.id}" ${TK.pocket<c?'disabled':''}>${q>1?'×'+q+'<br>':''}${tkFmt(c)} Ft</button></div>`}).join('')).join('');
   if(id==='ach')h=tkDmHTML()+`<h4 data-st="margin-top:12px">🎖️ Érdemek – szintenként fejlődnek</h4><p class="hint">Minden elért fokozat +3% az összes bevételre.</p>`+TK_ACH.map(a=>{const l=tkAchLvl(a),v=a.m(),nx=a.t[l];return `<div class="tkrow"><div><b>${a.ic} ${a.n}</b> <i data-st="color:${l?TK_MED[l-1]:'#888'}">${l?['I','II','III','IV','V'][l-1]+'. fokozat':'még nincs'}</i><small>${nx!=null?`Következő: ${tkFmt(v)} / ${tkFmt(nx)}`:'Legmagasabb fokozat elérve!'}</small><span class="tkbar"><i data-st="width:${nx!=null?Math.min(100,v/nx*100):100}%"></i></span></div><span class="tkmed">${[0,1,2,3,4].map(k=>`<i data-st="background:${k<l?TK_MED[k]:'#333'}"></i>`).join('')}</span></div>`}).join('')+
@@ -2499,7 +2635,7 @@ function tkSheetRender(){const s=$('#tkSheet');if(!s||s.hidden)return;const id=T
   s.querySelectorAll('[data-gb]').forEach(b=>b.onclick=()=>{const g=TK_GEAR.find(q=>q.id===b.dataset.gb),q=tkQ(g),c=tkBulk(g,q);if(TK.pocket<c)return;TK.pocket-=c;TK.own[g.id]=(TK.own[g.id]||0)+q;TK.newBuy={g,t:0};tkKaching();toast(`🛒 Beszerezve: ${q}× ${g.n}`);tkSave();tkSync(true);tkSheetRender()});s.querySelectorAll('[data-qty]').forEach(b=>b.onclick=()=>{TK.qty=b.dataset.qty==='max'?'max':+b.dataset.qty;tkSheetRender()});
   s.querySelectorAll('[data-mv]').forEach(b=>b.onclick=e=>{e.stopPropagation();TK.uteg=b.dataset.mv;tkSave();tkSync('now');toast(`Átigazoltál: ${TK.uteg} – a befizetéseid veled jönnek`);tkSheetRender()});
   s.querySelectorAll('[data-uo]').forEach(b=>b.onclick=()=>{TK.open[b.dataset.uo]=!TK.open[b.dataset.uo];tkSheetRender()});s.querySelectorAll('[data-uth]').forEach(b=>b.onclick=()=>{TK.uth=true;tkSheetRender()});s.querySelectorAll('[data-utw]').forEach(b=>b.onclick=()=>{TK.uth=false;TK.utw=b.dataset.utw==='1';tkSheetRender()});s.querySelectorAll('[data-dmc]').forEach(b=>b.onclick=()=>tkDmClaim(+b.dataset.dmc));
-  s.querySelectorAll('[data-zsbuy]').forEach(b=>b.onclick=()=>tkZsBuy(b.dataset.zsbuy));{const dg=s.querySelector('[data-daily]');if(dg)dg.onclick=tkDailyClaim;const sp=s.querySelector('[data-spin]');if(sp)sp.onclick=tkSpinStart;const wc=s.querySelector('#tkWheel');if(wc)tkWheelDraw(wc,performance.now())}
+  s.querySelectorAll('[data-zsbuy]').forEach(b=>b.onclick=()=>tkZsBuy(b.dataset.zsbuy));{const dg=s.querySelector('[data-daily]');if(dg)dg.onclick=tkDailyClaim;const sp=s.querySelector('[data-spin]');if(sp)sp.onclick=()=>TK.spin?tkScrReveal():tkSpinStart();const wc=s.querySelector('#tkScr');if(wc){tkScrBind(wc);if(TK.spin)TK.spin.dirty=1;tkScrDraw(wc,performance.now())}}
   s.querySelectorAll('canvas[data-pile]').forEach(cv=>{const c=cv.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(tkPileCv(Number(cv.dataset.pile),120,70,cv.dataset.u||''),0,0)})}
 function tkUsers(){let a=[];try{a=(typeof arr==='function'?arr('users'):[]).map(u=>Object.assign({},u,{tkGive:u.tkFt||0,tkOwn:u.tkOwnF||{},tkW:u.tkWk===tkWeek()?(u.tkWg||0):0}))}catch(e){}const me=typeof UID!=='undefined'?UID:null;let mine=a.find(u=>u.id===me);
   if(!mine){mine={id:'me',name:(typeof USERDOC!=='undefined'&&USERDOC&&USERDOC.name)||'Te'};a=a.concat([mine])}mine=Object.assign({},mine,{tkGive:Math.max(TK.given,mine.tkGive||0),tkUteg:TK.uteg||mine.tkUteg,tkOwn:TK.own,tkW:TK.wk===tkWeek()?TK.wg:0});return a.map(u=>u.id===mine.id?mine:u)}
@@ -2522,7 +2658,7 @@ function tkTopGivers(){const f=TK.utw?'tkW':'tkGive';return tkUsers().filter(u=>
 function tkEquiv(v){const g=TK_GEAR.filter(q=>!q.gold&&tkGP(q)<=v).sort((a,b)=>a.p-b.p).pop();if(!g)return 'még egy MRE-re sem elég';const n=Math.floor(v/tkGP(g));return `≈ ${tkFmt(n)} db ${g.n.replace(/ \(.*\)/,'').replace(/,.*$/,'')} ára`}
 // ---- Bankók oldal: a teljes gyűjtemény, mennyi van meg eddig ----
 const TK_DGRP=[['🪙 Érmék',0,2],['💵 Bankjegyek',3,9],['🎖️ Rendfokozat-jegyek',10,19],['👑 Csúcsjegyek',20,22]];
-function tkNoteURL(i){const N=TK.nu||(TK.nu={});if(N[i])return N[i];const cv=tkNoteCv(i),u=cv.toDataURL();if(TK.nc&&TK.nc[i]===cv)N[i]=u;return u}
+function tkNoteURL(i){const N=TK.nu||(TK.nu={});if(N[i])return N[i];const cv=tkNoteCv(i),sm=document.createElement('canvas'),fw=TK_DEN[i].t==='c'?TK_CS:TK_NW,fh=TK_DEN[i].t==='c'?TK_CS:TK_NH;sm.width=fw;sm.height=fh;{const q=sm.getContext('2d');q.imageSmoothingQuality='high';q.drawImage(cv,0,0,fw,fh)}let u=sm.toDataURL('image/webp',.9);if(!u.startsWith('data:image/webp'))u=sm.toDataURL();if(TK.nc&&TK.nc[i]===cv)N[i]=u;return u}
 function tkDenHTML(){const have=TK.den+1,all=TK_DEN.length,nx=TK.den+1;
   const card=(d,i)=>{const got=i<=TK.den,cur=i===TK.den,next=i===nx,wt=next?tkMintWait(i):0;
     return `<div class="${got?'got':'lock'}${cur?' cur':''}${next?' next':''}"><span class="no">${i+1}.</span>${cur?'<em class="tg">EZT NYOMOD</em>':next?'<em class="tg nx">KÖVETKEZŐ</em>':got?'<em class="tg ok">✓ MEGVAN</em>':''}<img src="${tkNoteURL(i)}" alt="" loading="lazy"><b>${got||next?d.n:'???'}</b><small>${tkFmt(d.v)} Ft${got?' · '+d.m:'<br>🏦 '+tkFmt(tkMintCost(i))+' Ft'+(d.wd?' + '+d.wd+' nap szolgálat':'')}</small>${next?`<span class="tkbar"><i data-st="width:${Math.min(100,TK.pocket/tkMintCost(i)*100).toFixed(1)}%"></i></span>${wt>0?`<small>⏳ még ${tkLeftTxt(wt)}</small>`:''}`:''}</div>`};
@@ -2619,33 +2755,55 @@ function tkBase(c,W,H,now){const gy=H*.735,own=TK.own,y0=Math.floor(gy-44),d=TK.
   if(TK.newBuy){const N=TK.newBuy;N.t+=1/60;const a=Math.min(1,N.t*3,(3-N.t)*2);if(a>0){c.globalAlpha=a;c.fillStyle='rgba(0,0,0,.65)';c.fillRect(W/2-120,gy-70,240,34);c.fillStyle='#ffe08a';c.font='900 13px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('BESZEREZVE: '+N.g.n.toUpperCase(),W/2,gy-48);c.globalAlpha=1}if(N.t>3)TK.newBuy=null}}
 function tkGlow(rush){const G=TK.glw||(TK.glw={}),k=rush===2?2:rush?1:0;if(G[k])return G[k];const cv=document.createElement('canvas');cv.width=cv.height=96;const x=cv.getContext('2d'),g=x.createRadialGradient(48,48,0,48,48,48);g.addColorStop(0,k===2?'rgba(255,252,230,.95)':rush?'rgba(255,200,80,.22)':'rgba(255,215,120,.12)');if(k===2)g.addColorStop(.35,'rgba(255,220,130,.35)');g.addColorStop(1,'rgba(255,215,120,0)');x.fillStyle=g;x.fillRect(0,0,96,96);return G[k]=cv}
 // forgó sugárkoszorú a pénz mögött (előre kirajzolva; a kombóval erősödik)
-function tkWheelCv(R){const dp=Math.min(2,TK.dpr||1),key=Math.round(R)+'|'+dp,W=TK.whc;if(W&&W.key===key)return W.cv;const P=Math.ceil((R+4)*dp),cv=document.createElement('canvas');cv.width=cv.height=P*2;const x=cv.getContext('2d');x.scale(dp,dp);x.translate(P/dp,P/dp);
-  const ro=R,rp=R*.93,ri=R*.77,N=37,ORD=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
-  x.fillStyle='rgba(0,0,0,.45)';x.beginPath();x.arc(1.5,3,ro+2,0,7);x.fill();// beégetett árnyék (futásidőben nincs shadowBlur)
-  let g=x.createRadialGradient(0,0,rp,0,0,ro);g.addColorStop(0,'#5a3410');g.addColorStop(.5,'#8a5a22');g.addColorStop(1,'#3a200a');x.fillStyle=g;x.beginPath();x.arc(0,0,ro,0,7);x.fill();// fa perem
-  x.strokeStyle='#e8c35a';x.lineWidth=1.6;x.beginPath();x.arc(0,0,ro-.8,0,7);x.stroke();
-  for(let i=0;i<N;i++){const a0=i/N*6.2832-Math.PI/2,a1=(i+1)/N*6.2832-Math.PI/2,n=ORD[i];x.fillStyle=n===0?'#1d8a3a':i%2?'#151515':'#b3171e';x.beginPath();x.arc(0,0,rp,a0,a1);x.arc(0,0,ri,a1,a0,true);x.closePath();x.fill();
-    x.save();x.rotate((a0+a1)/2+Math.PI/2);x.fillStyle='#f4ecd4';x.font=`bold ${Math.max(6,Math.round(R*.075))}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(String(n),0,-(rp+ri)/2);x.restore()}
-  x.strokeStyle='#d9b24a';x.lineWidth=1.1;x.beginPath();for(let i=0;i<N;i++){const a=i/N*6.2832-Math.PI/2;x.moveTo(Math.cos(a)*ri,Math.sin(a)*ri);x.lineTo(Math.cos(a)*rp,Math.sin(a)*rp)}x.stroke();// arany elválasztók
-  x.lineWidth=1.8;x.beginPath();x.arc(0,0,rp,0,7);x.stroke();x.beginPath();x.arc(0,0,ri,0,7);x.stroke();
-  g=x.createRadialGradient(0,0,0,0,0,ri);g.addColorStop(0,'#2a1c08');g.addColorStop(.8,'#3c2a0e');g.addColorStop(1,'#6a4a16');x.fillStyle=g;x.beginPath();x.arc(0,0,ri-1,0,7);x.fill();// belső tál
-  x.fillStyle='rgba(255,236,170,.9)';for(let i=0;i<8;i++){const a=i/8*6.2832;x.beginPath();x.arc(Math.cos(a)*(ro-(ro-rp)/2),Math.sin(a)*(ro-(ro-rp)/2),Math.max(1.4,R*.018),0,7);x.fill()}// arany szegecsek a peremen
-  {const b=Math.max(5,R*.085);x.fillStyle='rgba(0,0,0,.4)';x.beginPath();x.arc(1,2,b*1.3,0,7);x.fill();x.fillStyle='#8a6410';for(let i=0;i<4;i++){x.save();x.rotate(i*Math.PI/2);x.fillRect(-b*.22,-b*2.6,b*.44,b*2.6);x.beginPath();x.arc(0,-b*2.6,b*.42,0,7);x.fill();x.restore()}const g2=x.createRadialGradient(-b*.4,-b*.4,1,0,0,b*1.2);g2.addColorStop(0,'#fff4c0');g2.addColorStop(.5,'#e0b53a');g2.addColorStop(1,'#6e4a04');x.fillStyle=g2;x.beginPath();x.arc(0,0,b*1.2,0,7);x.fill()}// arany tengelydísz
-  cv.r=P/dp;TK.whc={key,cv};return cv}
-function tkBallCv(){if(TK.blc)return TK.blc;const cv=document.createElement('canvas');cv.width=cv.height=20;const x=cv.getContext('2d'),g=x.createRadialGradient(7,7,1,10,10,9);g.addColorStop(0,'#ffffff');g.addColorStop(.6,'#e6e6e0');g.addColorStop(1,'#8a8a80');x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.arc(11,12,8,0,7);x.fill();x.fillStyle=g;x.beginPath();x.arc(10,10,8,0,7);x.fill();return TK.blc=cv}
+/* v4.51: a rulettkerék helyett LŐSZERLÁDA-KASSZA – olajzöld, festett faláda acél sarokvasakkal, kötélfüllel, elöl sárga-fekete
+   csíkkal; benne zöld posztós számlálótálca arany célgyűrűvel. Perspektívában, egyszer kirajzolva (gyorsítótár), képkockánként egy drawImage. */
+function tkTrayCv(R){const dp=Math.min(2,TK.dpr||1),key=Math.round(R)+'|'+dp,T=TK.whc;if(T&&T.key===key)return T;
+  const hw=R*1.1,hh=R*.56,dep=Math.max(9,R*.17),pad=18,rr=Math.max(8,R*.1),W=Math.ceil(2*hw+2*pad),H=Math.ceil(2*hh+dep+2*pad),cv=document.createElement('canvas');cv.width=Math.ceil(W*dp);cv.height=Math.ceil(H*dp);
+  const x=cv.getContext('2d');x.scale(dp,dp);x.translate(pad+hw,pad+hh);const Rn=tkRnd(Math.round(R));
+  // árnyék a láda alatt (egyszeri, a gyorsítótárba beégetve)
+  x.save();x.shadowColor='rgba(0,0,0,.6)';x.shadowBlur=16;x.shadowOffsetY=10;x.fillStyle='#1a2010';tkRRect(x,-hw,-hh,2*hw,2*hh+dep,rr);x.fill();x.restore();
+  // elülső oldallap: festett deszkák, sablonfelirat
+  let g=x.createLinearGradient(0,hh-rr,0,hh+dep);g.addColorStop(0,'#55663a');g.addColorStop(1,'#2a3520');x.fillStyle=g;tkRRect(x,-hw,0,2*hw,hh+dep,rr);x.fill();
+  x.strokeStyle='rgba(0,0,0,.35)';x.lineWidth=1;x.beginPath();x.moveTo(-hw+4,hh+dep*.52);x.lineTo(hw-4,hh+dep*.52);x.stroke();
+  x.save();x.beginPath();x.rect(-hw,hh,2*hw,5);x.clip();for(let q=-hw-10;q<hw+10;q+=10){x.fillStyle='#e8b923';x.beginPath();x.moveTo(q,hh);x.lineTo(q+5,hh);x.lineTo(q+10,hh+5);x.lineTo(q+5,hh+5);x.closePath();x.fill()}x.restore();
+  x.font=`${Math.max(8,Math.round(dep*.5))}px Anton, Impact, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(232,220,160,.62)';x.fillText('Ü T E G K A S S Z A   ·   7 / 1 2 0   ·   H A D T Á P',0,hh+dep*.62,hw*1.6);
+  // fedőlap-keret (perem)
+  g=x.createLinearGradient(0,-hh,0,hh);g.addColorStop(0,'#7d8f52');g.addColorStop(.5,'#5d6e3e');g.addColorStop(1,'#4b5a32');x.fillStyle=g;tkRRect(x,-hw,-hh,2*hw,2*hh,rr);x.fill();
+  x.strokeStyle='rgba(255,255,220,.28)';x.lineWidth=1.2;tkRRect(x,-hw+.6,-hh+.6,2*hw-1.2,2*hh-1.2,rr);x.stroke();
+  x.strokeStyle='rgba(0,0,0,.18)';x.lineWidth=.7;for(let k=0;k<14;k++){const yy=-hh+3+Rn()*(2*hh-6);x.beginPath();x.moveTo(-hw+6,yy);x.bezierCurveTo(-hw*.3,yy+Rn()*3-1.5,hw*.3,yy+Rn()*3-1.5,hw-6,yy);x.stroke()}
+  // posztós tálca (zöld filc), belső árnyékkal
+  const t=R*.11,ty=t*.62,iw=hw-t,ih=hh-ty,ir=rr*.6;
+  x.fillStyle='#0d1a0e';tkRRect(x,-iw-1.5,-ih-1.5,2*iw+3,2*ih+3,ir+1.5);x.fill();
+  g=x.createRadialGradient(0,ih*.15,R*.08,0,0,iw*1.05);g.addColorStop(0,'#2f7346');g.addColorStop(.6,'#1f5232');g.addColorStop(1,'#123620');x.fillStyle=g;tkRRect(x,-iw,-ih,2*iw,2*ih,ir);x.fill();
+  x.save();tkRRect(x,-iw,-ih,2*iw,2*ih,ir);x.clip();
+  g=x.createLinearGradient(0,-ih,0,-ih+ty*2.6);g.addColorStop(0,'rgba(0,0,0,.55)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(-iw,-ih,2*iw,ty*2.6);
+  g=x.createLinearGradient(-iw,0,-iw+t*1.4,0);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(-iw,-ih,t*1.4,2*ih);
+  // filcen: halvány varrás-szegély, felirat, keresztbe tett lövegcsövek, arany célgyűrű beosztással
+  x.setLineDash([4,3]);x.strokeStyle='rgba(232,195,90,.32)';x.lineWidth=1;tkRRect(x,-iw+6,-ih+4,2*iw-12,2*ih-8,ir*.7);x.stroke();x.setLineDash([]);
+  x.save();x.scale(1,.62);x.font=`${Math.max(10,Math.round(R*.13))}px Anton, Impact, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(232,195,90,.42)';x.fillText('ÜTEGKASSZA',0,-ih*.72/.62);x.font=`${Math.max(7,Math.round(R*.065))}px "JetBrains Mono", ui-monospace, monospace`;x.fillStyle='rgba(232,195,90,.3)';x.fillText('BEFIZETÉS  ·  SZÁMLÁLÓTÁLCA',0,ih*.76/.62);x.restore();
+  const gr=R*.52,gq=gr*.5;x.strokeStyle='rgba(232,195,90,.75)';x.lineWidth=2;x.beginPath();x.ellipse(0,0,gr,gq,0,0,7);x.stroke();x.lineWidth=.8;x.strokeStyle='rgba(232,195,90,.45)';x.beginPath();x.ellipse(0,0,gr*.86,gq*.86,0,0,7);x.stroke();
+  for(let k=0;k<36;k++){const a=k/36*6.2832,l=k%3?.94:.88;x.beginPath();x.moveTo(Math.cos(a)*gr,Math.sin(a)*gq);x.lineTo(Math.cos(a)*gr*l,Math.sin(a)*gq*l);x.stroke()}
+  x.save();x.scale(1,.5);x.globalAlpha=.2;x.strokeStyle='#e8c35a';x.lineCap='round';for(const sd of [-1,1]){x.save();x.rotate(sd*.62);x.lineWidth=R*.07;x.beginPath();x.moveTo(0,R*.3);x.lineTo(0,-R*.3);x.stroke();x.restore()}x.fillStyle='#e8c35a';x.beginPath();x.arc(0,0,R*.06,0,7);x.fill();x.restore();
+  x.restore();
+  // acél sarokvasak szegecsekkel, oldalt kötélfül
+  for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){x.save();x.translate(sx*hw,sy*hh);x.scale(-sx,-sy);const L=R*.2,Wd=R*.06;g=x.createLinearGradient(0,0,L,L*.5);g.addColorStop(0,'#c8cfd4');g.addColorStop(1,'#5a646c');x.fillStyle=g;x.beginPath();x.moveTo(0,rr*.4);x.quadraticCurveTo(0,0,rr*.4,0);x.lineTo(L,0);x.lineTo(L,Wd);x.lineTo(Wd,Wd*.62);x.lineTo(Wd*.62,L*.5);x.lineTo(0,L*.5);x.closePath();x.fill();x.strokeStyle='rgba(0,0,0,.45)';x.lineWidth=.8;x.stroke();
+    x.fillStyle='#eef2f4';for(const [px,py] of [[L*.75,Wd*.5],[Wd*.45,L*.38]]){x.beginPath();x.arc(px,py,Math.max(1.2,R*.012),0,7);x.fill()}x.restore()}
+  for(const sd of [-1,1]){x.save();x.translate(sd*hw,hh*.15);x.strokeStyle='#3a2a14';x.lineWidth=Math.max(3,R*.035);x.lineCap='round';x.beginPath();x.ellipse(sd*R*.035,0,R*.05,hh*.38,0,sd>0?-Math.PI/2:Math.PI/2,sd>0?Math.PI/2:Math.PI*1.5);x.stroke();x.strokeStyle='#b89458';x.lineWidth=Math.max(1.6,R*.02);x.stroke();x.restore()}
+  tkPaperGrain(x,cv.width,cv.height,Rn,9);
+  const o={key,cv,ox:pad+hw,oy:pad+hh,w:W,h:H,hw,hh,dep};TK.whc=o;return o}
 function tkRays(){if(TK.glw&&TK.glw.r)return TK.glw.r;const S=192,cv=document.createElement('canvas');cv.width=cv.height=S;const x=cv.getContext('2d'),g=x.createRadialGradient(S/2,S/2,S*.12,S/2,S/2,S/2);g.addColorStop(0,'rgba(255,236,160,.85)');g.addColorStop(.55,'rgba(255,214,110,.3)');g.addColorStop(1,'rgba(255,200,80,0)');x.fillStyle=g;const N=14;for(let i=0;i<N;i++){const a=i/N*6.2832,w=(i%2?.085:.13);x.beginPath();x.moveTo(S/2,S/2);x.arc(S/2,S/2,S/2,a-w,a+w);x.closePath();x.fill()}(TK.glw=TK.glw||{}).r=cv;return cv}
 // ---- fő ciklus ----
 /* ===== v4.44: KÖTEG LENT – A PÉNZ BEREPÜL A KERÉKRE =====
    Lent rendezett bankóköteg (érménél érmeoszlop), mint amikor kézben számoljuk a pénzt. Koppintásra vagy pöccintésre a legfelső bankó
-   ívben a rulettkerékre repül: pörög, átfordul, a kerék síkjába dől, ott a kerékkel együtt forog, aztán beszívódik a kasszába.
+   ívben a lőszerláda posztós tálcájára repül: pörög, átfordul, a tálca síkjába dől, egy pillanatig ott fekszik, aztán beszívódik a kasszába.
    Gyorsaság (bármilyen telefonon): a köteg egyszer kirajzolt kép (rétegenként sötétedő bankók, beégetett árnyék); repülő vagy fekvő
    pénzenként képkockánként egyetlen drawImage egy setTransform-mal – nincs shadowBlur, nincs képkockánkénti gradiens, és felső korlát
    van a darabszámon (repülő 40, fekvő 12, szikra 90). */
 const TK_SN=12,TK_SNC=10;
-const tkWA=()=>LOWFX?0:(TK.wa||0);// gyenge telefonon a kerék áll – a ráesett pénz se forogjon vele
+const tkWA=()=>0;// a láda áll: a ráesett pénz ott marad, ahová esett, aztán beszívódik
 function tkStackCv(L){const i=TK.den,d=TK.dpr||1,isC=L.isC,sw=L.sw,key=i+'|'+sw+'|'+d,S=TK.skc;if(S&&S.key===key)return S;const img=tkNoteCv(i),D=TK_DEN[i];
   const pad=12,N=isC?TK_SNC:TK_SN,st=L.st,fh=L.fh,Wl=sw+pad*2,Hl=L.sH+pad*2,cv=document.createElement('canvas');cv.width=Math.ceil(Wl*d);cv.height=Math.ceil(Hl*d);
-  const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.imageSmoothingEnabled=false;const cx=pad+sw/2,by=pad+L.sH;
+  const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';const cx=pad+sw/2,by=pad+L.sH;
   // beégetett, puha árnyék a köteg alatt
   x.fillStyle='rgba(0,0,0,.2)';x.beginPath();x.ellipse(cx+3,by-1,sw*.58,8,0,0,6.2832);x.fill();x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.ellipse(cx+2,by-2,sw*.5,5,0,0,6.2832);x.fill();
   if(isC){// érmeoszlop: alulról felfelé, recézett peremmel; a mélyebb érmék sötétebbek
@@ -2656,7 +2814,7 @@ function tkStackCv(L){const i=TK.den,d=TK.dpr||1,isC=L.isC,sw=L.sw,key=i+'|'+sw+
       x.fillStyle='rgba(255,255,255,.22)';x.fillRect(c0-rx*.72,yc,rx*.22,st);
       x.drawImage(img,c0-rx,yc-ry,rx*2,ry*2);if(j){x.fillStyle=`rgba(0,0,0,${(.1+k*.3).toFixed(2)})`;x.beginPath();x.ellipse(c0,yc,rx,ry,0,0,6.2832);x.fill()}}}
   else{// bankóköteg: a bankók egymáson, kézzel rendezve (alig elcsúszva), lefelé egyre sötétebb élekkel
-    const t=document.createElement('canvas');t.width=Math.ceil((sw+4)*d);t.height=Math.ceil((fh+4)*d);const q=t.getContext('2d');q.setTransform(d,0,0,d,0,0);q.imageSmoothingEnabled=false;
+    const t=document.createElement('canvas');t.width=Math.ceil((sw+4)*d);t.height=Math.ceil((fh+4)*d);const q=t.getContext('2d');q.setTransform(d,0,0,d,0,0);q.imageSmoothingEnabled=true;q.imageSmoothingQuality='high';
     for(let j=N-1;j>=0;j--){const jx=j?((j*37)%5-2)*.8:0,ja=j?((j*53)%7-3)*.005:0,k=j/N;
       q.globalCompositeOperation='source-over';q.clearRect(0,0,sw+4,fh+4);q.drawImage(img,2,2,sw,fh);if(j){q.globalCompositeOperation='source-atop';q.fillStyle=`rgba(12,8,0,${(.14+k*.42).toFixed(2)})`;q.fillRect(0,0,sw+4,fh+4)}
       x.save();x.translate(cx+jx,pad+fh/2+j*st);x.rotate(ja);x.drawImage(t,-sw/2-2,-fh/2-2,sw+4,fh+4);if(j&&j%3===0){x.fillStyle='rgba(255,250,225,.18)';x.fillRect(-sw/2+4,fh/2-1,sw-8,1)}x.restore()}}
@@ -2664,19 +2822,19 @@ function tkStackCv(L){const i=TK.den,d=TK.dpr||1,isC=L.isC,sw=L.sw,key=i+'|'+sw+
 function tkStackDraw(c,L,now,dt,G){const S=tkStackCv(L);TK.stB=Math.max(0,(TK.stB||0)-dt*7);
   // a gépágyú mellett a köteg kicsit balra húzódik
   let tg=0;if(G&&TK.mg.have){const lim=G.x-48*G.gs;if(L.sx+L.sw/2>lim)tg=Math.max(10+L.sw/2-L.sx,lim-L.sx-L.sw/2)}TK.stX=(TK.stX||0)+(tg-(TK.stX||0))*Math.min(1,dt*6);
-  const sx=L.sx+TK.stX,b=TK.stB,sq=b*.04,w=S.Wl*(1+sq*.4),h=S.Hl*(1-sq);c.drawImage(S.cv,sx-w/2,L.sTop-S.pad+S.Hl-h,w,h);
+  const sx=L.sx+TK.stX,b=TK.stB,sq=b*.04,w=S.Wl*(1+sq*.4),h=S.Hl*(1-sq);if(b>.01)c.drawImage(S.cv,sx-w/2,L.sTop-S.pad+S.Hl-h,w,h);else{const dp=TK.dpr||1;c.imageSmoothingEnabled=false;c.drawImage(S.cv,Math.round((sx-w/2)*dp)/dp,Math.round((L.sTop-S.pad)*dp)/dp,w,h);c.imageSmoothingEnabled=true}
   // arany pénznemnél és Golden Ticket alatt végigfutó fény a legfelső bankón
   if(!L.isC&&(TK_DEN[TK.den].t==='g'||TK.rush>0)){const x0=sx-L.sw/2,y0=L.sTop+S.Hl-h,shp=((now/900)%1.6)-.3,g=c.createLinearGradient(x0+shp*L.sw,0,x0+shp*L.sw+L.sw*.25,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,250,200,.35)');g.addColorStop(1,'rgba(255,255,255,0)');c.globalCompositeOperation='lighter';c.fillStyle=g;c.fillRect(x0+3,y0+3,L.sw-6,L.fh-6);c.globalCompositeOperation='source-over'}
   // tipp, ha egy ideje nem koppintott: pulzáló nyíl a köteg fölött (kezdőknek felirattal)
   if(now-(TK.lastTap||0)>2500&&!TK.thr.length&&!(TK.mgHold!=null)){const a=.45+.45*Math.sin(now/260),yy=L.sTop-6-Math.abs(Math.sin(now/300))*6;c.textAlign='center';c.fillStyle=`rgba(255,224,138,${a.toFixed(2)})`;c.font='900 18px sans-serif';c.fillText('⇡',sx,yy);
     if((TK.taps||0)<80){const ty=L.sTop+L.fh*.5+5;c.fillStyle='rgba(0,0,0,.62)';c.fillRect(sx-62,ty-13,124,18);c.fillStyle='#ffe08a';c.font='900 12px Anton, Impact, sans-serif';c.fillText('KOPPINTS · PÖCCINTS!',sx,ty)}}}
-// egy bankó/érme elindul a köteg tetejéről (vagy a gépágyú csövéből) a kerék egy véletlen pontjára
+// egy bankó/érme elindul a köteg tetejéről (vagy a gépágyú csövéből) a kasszatálca egy véletlen pontjára
 function tkThrow(i,v,o){const L=tkLay(TK.W,TK.H),isC=TK_DEN[i].t==='c',r=Math.sqrt(Math.random())*L.wr*.4,a=Math.random()*6.2832,lx=Math.cos(a)*r,ly=Math.sin(a)*r,ex=L.cx+lx,ey=L.cy+ly*L.wsy,
     x0=o.x0!=null?o.x0:L.sx+(TK.stX||0),y0=o.y0!=null?o.y0:L.sy0,g=!!o.gun,lift=Math.max(40,(y0-ey)*.5);
   TK.thr.push({i,v,t:0,d:g?.3:.36+Math.random()*.05,x0,y0,mx:(x0+ex)/2+(o.bend||0)*(g?.4:1),my:g?(y0+ey)/2-24:ey-lift,ex,ey,lx,ly,th:(Math.random()-.5)*1.3,a0:o.a0||0,
-    sp:isC?0:(Math.random()<(g?.6:.35)?(Math.random()<.5?-6.2832:6.2832):0),fl:isC?3+Math.floor(Math.random()*2):1,q0:isC?.5:1,k0:g?.32:1,k1:isC?Math.min(.62,L.wr*.42/L.sw):Math.min(.62,L.wr*.72/L.sw),crit:o.crit,gun:g});
+    sp:isC?0:(Math.random()<(g?.6:.35)?(Math.random()<.5?-6.2832:6.2832):0),fl:isC?3+Math.floor(Math.random()*2):1,q0:isC?.5:1,k0:g?.32:1,k1:isC?Math.min(.75,L.wr*.5/L.sw):Math.min(.8,L.wr*1.0/L.sw),crit:o.crit,gun:g});
   if(TK.thr.length>40)TK.thr.splice(0,TK.thr.length-40)}
-function tkLand(f,L){const wa=tkWA();TK.land.push({i:f.i,a:Math.atan2(f.ly,f.lx)-wa,r:Math.hypot(f.lx,f.ly),rel:f.th-wa,k:f.k1,t:0});if(TK.land.length>12)TK.land.splice(0,TK.land.length-12);
+function tkLand(f,L){const wa=tkWA();TK.land.push({i:f.i,a:Math.atan2(f.ly,f.lx)-wa,r:Math.hypot(f.lx,f.ly),rel:f.th-wa,k:f.k1,t:0});if(TK.land.length>8)TK.land.splice(0,TK.land.length-8);
   TK.bs=Math.min(TK.bs||0,f.crit?-.08:f.gun?-.025:-.04);TK.pkB=1;
   if(!f.gun||Math.random()<.5){TK.rings.push({x:f.ex,y:f.ey,t:0,crit:f.crit});if(TK.rings.length>8)TK.rings.shift()}
   const ns=LOWFX?(f.crit?8:f.gun?1:2):(f.crit?16:f.gun?3:6);for(let i=0;i<ns;i++){const a=Math.random()*6.2832,v=(f.crit?190:120)+Math.random()*180;TK.sp.push({x:f.ex,y:f.ey,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.6-90,t:0,d:.25+Math.random()*.28,h:f.crit})}if(TK.sp.length>90)TK.sp.splice(0,TK.sp.length-90);
@@ -2686,11 +2844,11 @@ function tkLand(f,L){const wa=tkWA();TK.land.push({i:f.i,a:Math.atan2(f.ly,f.lx)
 function tkThrowDraw(c,dt,L,dp,ox,oy){const A=TK.thr;if(!A.length)return;let k=0;for(const f of A){f.t+=dt;if(f.t>=f.d){tkLand(f,L);continue}A[k++]=f}A.length=k;
   for(const f of A){const u=f.t/f.d,p=.45*u+.55*(1-(1-u)*(1-u)),a=(1-p)*(1-p),b2=2*(1-p)*p,x=a*f.x0+b2*f.mx+p*p*f.ex,y=a*f.y0+b2*f.my+p*p*f.ey,isC=TK_DEN[f.i].t==='c',
       kk=(f.k0+(f.k1-f.k0)*p)*(1+(f.gun?.08:.14)*Math.sin(Math.PI*u)),q=f.q0+(L.wsy-f.q0)*u*u,ro=f.a0+(f.th+f.sp-f.a0)*p,ky=kk*Math.cos(f.fl*6.2832*p),co=Math.cos(ro),si=Math.sin(ro),w=L.sw,h=isC?w:w/2;
-    c.setTransform(dp*kk*co,dp*kk*q*si,-dp*ky*si,dp*ky*q*co,dp*(x+ox),dp*(y+oy));c.drawImage(tkNoteCv(f.i),-w/2,-h/2,w,h)}
+    c.setTransform(dp*kk*co,dp*kk*q*si,-dp*ky*si,dp*ky*q*co,dp*(x+ox),dp*(y+oy));c.drawImage(tkNoteFly(f.i,w),-w/2,-h/2,w,h)}
   c.setTransform(dp,0,0,dp,ox*dp,oy*dp)}
-function tkLandDraw(c,dt,L,dp,ox,oy){const A=TK.land;if(!A.length)return;let k=0;for(const p of A){p.t+=dt;if(p.t<1.15)A[k++]=p}A.length=k;const q=L.wsy,wa=tkWA();
-  for(const p of A){const u=p.t<.8?0:(p.t-.8)/.35,e=u*u,an=p.a+wa,rr=p.r*(1-e),k1=p.k*(1-e*.7),ro=p.rel+wa,co=Math.cos(ro),si=Math.sin(ro),w=L.sw,h=TK_DEN[p.i].t==='c'?w:w/2;
-    c.globalAlpha=1-e;c.setTransform(dp*k1*co,dp*k1*q*si,-dp*k1*si,dp*k1*q*co,dp*(L.cx+Math.cos(an)*rr+ox),dp*(L.cy+Math.sin(an)*rr*q+oy));c.drawImage(tkNoteCv(p.i),-w/2,-h/2,w,h)}
+function tkLandDraw(c,dt,L,dp,ox,oy){const A=TK.land;if(!A.length)return;let k=0;for(const p of A){p.t+=dt;if(p.t<.9)A[k++]=p}A.length=k;const q=L.wsy,wa=tkWA();
+  for(const p of A){const u=p.t<.6?0:(p.t-.6)/.3,e=u*u,an=p.a+wa,rr=p.r*(1-e),k1=p.k*(1-e*.7),ro=p.rel+wa,co=Math.cos(ro),si=Math.sin(ro),w=L.sw,h=TK_DEN[p.i].t==='c'?w:w/2;
+    c.globalAlpha=1-e;c.setTransform(dp*k1*co,dp*k1*q*si,-dp*k1*si,dp*k1*q*co,dp*(L.cx+Math.cos(an)*rr+ox),dp*(L.cy+Math.sin(an)*rr*q+oy));c.drawImage(tkNoteFly(p.i,w),-w/2,-h/2,w,h)}
   c.globalAlpha=1;c.setTransform(dp,0,0,dp,ox*dp,oy*dp)}
 /* ===== PÉNZ-GÉPÁGYÚ: óránként egyszer, véletlen pillanatban érkezik (a szerver órája szerint – a telefon órájának állítása nem hozza előbb).
    Ha épp nincs nyitva a Kassza, megvár (egyszerre legfeljebb egy – nem gyűlik fel); gyerekzár alatt pihen.
@@ -2740,7 +2898,7 @@ function tkGunCv(){const d=TK.dpr||1,i=TK.den,G=TK.gnc;if(G&&G.d===d&&G.i===i)re
   R(-29,-3,24,9,'#3a2804');R(-28,-2,22,7,'#e0b53a');R(-28,-2,22,2,'#fff0a0');tkTxt(x,'FT',-21,-1,'#5a3a00',1);// arany névtábla
   x.fillStyle='#11160c';x.beginPath();x.arc(-12,15,9,0,6.2832);x.fill();x.fillStyle='#36412a';x.beginPath();x.arc(-12,15,7,0,6.2832);x.fill();R(-13,14,2,2,'#c9a227');// motor
   R(-33,-31,37,18,'#11160c');R(-32,-30,35,16,'#6a4a1a');R(-32,-30,35,3,'#8a6a2a');// bankótár a mostani pénznemmel
-  if(isC){for(let k=0;k<3;k++)x.drawImage(img,-31+k*11,-29,12,12)}else{for(let k=2;k>=0;k--)x.drawImage(img,-31+k,-34+k*2,32,16)}
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';if(isC){for(let k=0;k<3;k++)x.drawImage(img,-31+k*11,-29,12,12)}else{for(let k=2;k>=0;k--)x.drawImage(img,-31+k,-34+k*2,32,16)}x.imageSmoothingEnabled=false;
   R(4,-22,6,10,'#11160c');R(5,-21,4,9,'#4b5a32');// adagoló
   R(14,-13,10,27,'#11160c');R(15,-12,8,25,'#c9a227');R(15,-12,8,4,'#fff0a0');R(15,9,8,4,'#7a5a10');// csőforgató ház
   const o={cv,d,i,px,py,W,H};if(TK.nc&&TK.nc[i]===img)TK.gnc=o;return o}
@@ -2777,17 +2935,18 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
   tkBase(c,W,H,now);
   const G=TK.mg&&!TK.ultra&&(TK.mg.have||TK.mgOut)?tkGunPos(L):null;
   // az üteg kasszájának felirata a köteg fölött (ha elfér, és épp nincs ott a gépágyú)
-  if(!G&&L.lbY-14>L.cy+L.wr*L.wsy+30){const ly=L.lbY,w=Math.min(300,W-16);c.textAlign='center';c.fillStyle='rgba(0,0,0,.55)';c.fillRect(W/2-w/2,ly-12,w,17);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-w/2,ly-12,5,17);c.fillRect(W/2+w/2-5,ly-12,5,17)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(S.lab,W/2,ly)}
-  // KASZINÓ-RULETTKERÉK – a cél, ahová a pénz berepül. Asztallapként, perspektívában fekszik; egyszer kirajzolt, gyorsítótárazott kép,
-  // képkockánként csak egy forgatott drawImage + a golyó. A kombóval és a gépágyúval gyorsul, Golden Ticket alatt pörög; gyenge telefonon (LOWFX) áll, csak a golyó fut.
-  const D=TK_DEN[TK.den],cx=L.cx,cy=L.cy,wy=L.wr*L.wsy,cmx=10+TK.upg.combo*4,ck=Math.min(1,TK.combo/cmx);
-  {const R=L.wr,sp=.3+ck*1.6+(TK.rush>0?2.2:0)+(TK.mgS||0)*2.5;TK.wsp=(TK.wsp||sp)+(sp-(TK.wsp||sp))*Math.min(1,dt*2);TK.wa=((TK.wa||0)+TK.wsp*dt)%6.2832;TK.wb=((TK.wb||0)-TK.wsp*1.7*dt)%6.2832;
-    const bs=TK.bs||0,wc=tkWheelCv(R);c.save();c.translate(cx,cy);c.scale(1-bs*.5,L.wsy*(1+bs));if(LOWFX)c.drawImage(wc,-wc.r,-wc.r,wc.r*2,wc.r*2);else{c.save();c.rotate(TK.wa);c.drawImage(wc,-wc.r,-wc.r,wc.r*2,wc.r*2);c.restore()}
-    const br=R*.86;c.drawImage(tkBallCv(),Math.cos(TK.wb)*br-5,Math.sin(TK.wb)*br-5,10,10);c.restore()}
-  // a kerékre érkezett pénz: a kerékkel együtt forog, aztán beszívódik a kasszába
+  if(!G&&L.lbY-14>L.cy+L.wr*.75+34){const ly=L.lbY,w=Math.min(300,W-16);c.textAlign='center';c.fillStyle='rgba(0,0,0,.55)';c.fillRect(W/2-w/2,ly-12,w,17);if(TK.uteg){c.fillStyle=tkUC(TK.uteg)[0];c.fillRect(W/2-w/2,ly-12,5,17);c.fillRect(W/2+w/2-5,ly-12,5,17)}c.fillStyle='#f3d77a';c.font='900 12px Anton, Impact, sans-serif';c.fillText(S.lab,W/2,ly)}
+  // LŐSZERLÁDA-KASSZA – a cél, ahová a pénz berepül. Egyszer kirajzolt, gyorsítótárazott kép, képkockánként egy drawImage;
+  // a célgyűrűn körbefutó fény a kombóval és a gépágyúval gyorsul, a gyűrű a kombóval egyre jobban izzik (gyenge telefonon a fény áll).
+  const D=TK_DEN[TK.den],cx=L.cx,cy=L.cy,wy=L.wr*.56+Math.max(9,L.wr*.17)+2,cmx=10+TK.upg.combo*4,ck=Math.min(1,TK.combo/cmx);
+  {const R=L.wr,sp=.3+ck*1.6+(TK.rush>0?2.2:0)+(TK.mgS||0)*2.5;TK.wsp=(TK.wsp||sp)+(sp-(TK.wsp||sp))*Math.min(1,dt*2);TK.wb=((TK.wb||0)+TK.wsp*1.3*dt)%6.2832;
+    const bs=TK.bs||0,T=tkTrayCv(R),sq=Math.abs(bs)>.004;c.imageSmoothingEnabled=sq;c.save();if(sq){c.translate(cx,cy);c.scale(1-bs*.5,1+bs)}else{c.translate(Math.round((cx-T.ox)*dp)/dp+T.ox,Math.round((cy-T.oy)*dp)/dp+T.oy)}c.drawImage(T.cv,-T.ox,-T.oy,T.w,T.h);
+    const gr=R*.52,gq=gr*L.wsy,gl=.18+ck*.6+(TK.rush>0?.25:0);c.globalCompositeOperation='lighter';c.strokeStyle=TK.rush>0?'#fff0a0':ck>=.85?'#ff9a4a':'#ffd24a';c.globalAlpha=Math.min(1,gl);c.lineWidth=2+ck*2;c.beginPath();c.ellipse(0,0,gr,gq,0,0,6.2832);c.stroke();
+    if(!LOWFX){const a=TK.wb,gs=R*.34;c.globalAlpha=.55+ck*.4;c.drawImage(tkGlow(TK.rush>0?1:0),Math.cos(a)*gr-gs/2,Math.sin(a)*gq-gs/2,gs,gs)}c.globalAlpha=1;c.globalCompositeOperation='source-over';c.restore();c.imageSmoothingEnabled=true}
+  // a tálcára érkezett pénz: egy pillanatig ott fekszik, aztán beszívódik a kasszába
   tkLandDraw(c,dt,L,dp,ox,oy);
   // felirat a kerék fölött: gépágyú (ha van) › gépágyú-összesítő › Golden Ticket › a pénznem neve
-  {c.textAlign='center';const ly=cy-wy-8,M=TK.mg,sh=(t,col,fs)=>{c.font=`900 ${fs}px Anton, Impact, sans-serif`;c.fillStyle='rgba(20,12,0,.85)';c.fillText(t,cx+1.5,ly+1.5);c.fillStyle=col;c.fillText(t,cx,ly)},fs=W<360?14:17;
+  {c.textAlign='center';const ly=cy-L.wr*.56-10,M=TK.mg,sh=(t,col,fs)=>{c.font=`900 ${fs}px Anton, Impact, sans-serif`;c.fillStyle='rgba(20,12,0,.85)';c.fillText(t,cx+1.5,ly+1.5);c.fillStyle=col;c.fillText(t,cx,ly)},fs=W<360?14:17;
     if(M&&M.have&&!TK.ultra){const fire=TK.mgHold!=null,lv=tkGunLv(),bl=Math.floor(now/90)%2;if(fire)sh((lv===5?'MAX ×10':`${TK_MG_LV[lv-1]}. FOKOZAT ×${lv*2}`)+' · +'+tkShort(TK.mgSum||0)+' FT',lv===5?(bl?'#ff6a3a':'#ffe08a'):'#ffd24a',fs+1);else{c.globalAlpha=.6+.4*Math.sin(now/200);sh(M.fuel<TK_MG_T-.05?`💸 TARTSD NYOMVA ↘ · MÉG ${M.fuel.toFixed(1).replace('.',',')} MP`:'💸 PÉNZ-GÉPÁGYÚ – TARTSD NYOMVA ↘','#ffe08a',fs);c.globalAlpha=1}}
     else if(TK.mgSumT<1.8&&TK.mgSum>0){c.globalAlpha=Math.min(1,(1.8-TK.mgSumT)*2.5);sh('💸 +'+tkShort(TK.mgSum)+' FT','#ffe08a',fs+3);c.globalAlpha=1}
     else if(TK.rush>0)sh(`🎫 GOLDEN TICKET · DUPLA BEVÉTEL · ${Math.ceil(TK.rush)} mp`,'#ffe08a',14);
@@ -2807,15 +2966,15 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
   tkThrowDraw(c,dt,L,dp,ox,oy);
   // felugró számok: rugalmasan „kipattannak”, sötét árnyékkal
   if(TK.pop.length){let k=0,fs=0;for(const p of TK.pop){p.t+=dt;if(p.t>=.95)continue;TK.pop[k++]=p;const z=p.crit||p.gift?20:15,sc=p.t<.1?.5+p.t*8:Math.max(1,1.3-(p.t-.1)*2),tx=p.crit?p.s+' TELITALÁLAT!':p.s;if(z!==fs){fs=z;c.font=`900 ${z}px Anton, Impact, sans-serif`}c.setTransform(dp*sc,0,0,dp*sc,dp*(Math.max(40,Math.min(W-40,p.x))+ox),dp*(p.y-p.t*70+oy));c.globalAlpha=Math.max(0,Math.min(1,(0.95-p.t)*3));c.fillStyle='rgba(20,12,0,.8)';c.fillText(tx,1.5,1.5);c.fillStyle=p.crit?'#ff5a4a':p.gift?'#7dff6a':p.cb>=cmx*.85?'#ff9a2e':'#ffe08a';c.fillText(tx,0,0)}TK.pop.length=k;c.setTransform(dp,0,0,dp,ox*dp,oy*dp);c.globalAlpha=1;if(k>24)TK.pop.splice(0,k-24)}
-  tkDropDraw(c,now);
+  c.imageSmoothingEnabled=false;tkDropDraw(c,now);
   // zseb-számláló: a szöveg legfeljebb ~12×/mp frissül (koppintáskor azonnal), a rajz betű-gyorsítótárból megy
   if(TK.pkD||now-(TK.pkT||0)>80||TK.pkS==null){TK.pkT=now;TK.pkD=0;const v=Math.floor(TK.pocket);if(v!==TK.pkV||TK.pkS==null){TK.pkV=v;TK.pkS=tkPlain(tkFmt(v)+' FT').replace(/[  ]/g,' ')}}
   {const tx=TK.pkS,k=W<360?2:3,w=tx.length*4*k-k,x0=Math.round(W/2-w/2),y0=62,pb=TK.pkB||0;if(pb>0){const s2=1+pb*.05,yc=y0+2.5*k;c.setTransform(dp*s2,0,0,dp*s2,dp*(W/2*(1-s2)+ox),dp*(yc*(1-s2)+oy))}c.fillStyle='rgba(0,0,0,.55)';c.fillRect(x0-10,y0-14,w+20,5*k+20);c.strokeStyle='#c9a227';c.lineWidth=2;c.strokeRect(x0-10,y0-14,w+20,5*k+20);/* álló arany keret szegecsekkel a villogó izzósor helyett (nincs mozgó fény, nincs fényösszeadás) */{const fx=x0-16,fy=y0-20,fw=w+32,fh=5*k+32,gc=TK.rush>0?'#ffe9a0':'#e0b53a';c.strokeStyle='#4a3606';c.lineWidth=4;c.strokeRect(fx,fy,fw,fh);c.strokeStyle=gc;c.lineWidth=2;c.strokeRect(fx,fy,fw,fh);c.fillStyle=gc;for(const [px,py] of [[fx,fy],[fx+fw,fy],[fx,fy+fh],[fx+fw,fy+fh],[fx+fw/2,fy],[fx+fw/2,fy+fh]]){c.fillRect(px-2.5,py-2.5,5,5)}c.fillStyle='#4a3606';for(const [px,py] of [[fx,fy],[fx+fw,fy],[fx,fy+fh],[fx+fw,fy+fh],[fx+fw/2,fy],[fx+fw/2,fy+fh]])c.fillRect(px-.5,py-.5,1,1)}
     c.fillStyle='#c9a227';c.font='900 9px sans-serif';c.textAlign='center';c.fillText('ZSEB',W/2,y0-4);tkTxtF(c,tx,x0+k,y0+k,'#3a2a04',k);tkTxtF(c,tx,x0,y0,TK.rush>0?'#fff4b0':'#ffe08a',k);if(pb>0)c.setTransform(dp,0,0,dp,ox*dp,oy*dp)}
-  if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=70;c.save();c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);if(!LOWFX){c.shadowColor='#ffd24a';c.shadowBlur=18}c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
+  if(TK.gold){const G=TK.gold,im=tkNoteCv(9),s=84;c.save();c.imageSmoothingEnabled=true;c.translate(G.x,G.y);c.rotate(Math.sin(G.t*4)*.25);if(!LOWFX){c.shadowColor='#ffd24a';c.shadowBlur=18}c.drawImage(im,-s/2,-s/4,s,s/2);c.restore();c.fillStyle='#ffe08a';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('GOLDEN TICKET – koppints!',G.x,G.y-24)}
   if(TK.newDen){const N=TK.newDen;N.t+=dt;const a=Math.min(1,N.t*3,(3.2-N.t)*2);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(0,0,0,.65)';c.fillRect(0,H*.13,W,60);c.fillStyle='#ffcf3a';c.font='900 20px Anton, Impact, sans-serif';c.textAlign='center';c.fillText('ÚJ PÉNZNEM: '+TK_DEN[N.i].n.toUpperCase(),W/2,H*.13+26);c.fillStyle='#f3ecd4';c.font='bold 11px sans-serif';c.fillText(TK_DEN[N.i].m,W/2,H*.13+44);c.globalAlpha=1;if(N.t>3.2)TK.newDen=null}
   if(TK.mgBan){const N=TK.mgBan;N.t+=dt;const a=Math.min(1,N.t*3,(3.6-N.t)*2);c.globalAlpha=Math.max(0,a);c.fillStyle='rgba(0,0,0,.72)';c.fillRect(0,H*.13,W,60);c.fillStyle='#ffcf3a';c.font=`900 ${W<360?17:20}px Anton, Impact, sans-serif`;c.textAlign='center';c.fillText('💸 MEGÉRKEZETT A PÉNZ-GÉPÁGYÚ!',W/2,H*.13+26);c.fillStyle='#f3ecd4';c.font='bold 11px sans-serif';c.fillText('Tartsd nyomva: 10 mp, MAX fokozaton 10× érték',W/2,H*.13+44);c.globalAlpha=1;if(N.t>3.6)TK.mgBan=null}
-  if(TK.flyUp){const F=TK.flyUp;F.t+=dt;const k=F.t/.8,im=tkNoteCv(TK.den),sw=TK_DEN[TK.den].t==='c'?36:60;c.globalAlpha=Math.max(0,1-k);const ty=gy-(pile.ph||0)*.6,py=74;c.globalAlpha=Math.max(0,Math.min(1,(1-k)*4));for(let i=0;i<8;i++){const kk=Math.max(0,Math.min(1,k*1.25-i*.03)),e=kk*kk*(3-2*kk);c.drawImage(im,W/2-sw/2+Math.sin(i*2+kk*5)*46*(1-e),py+(ty-py)*e-Math.sin(e*3.14)*60,sw*(1-e*.4),sw*(1-e*.4)*im.height/im.width)}c.globalAlpha=1;if(F.t>.8){TK.flyUp=null;TK.pileB=1;const m=LOWFX?10:26;for(let i=0;i<m;i++){const a=-Math.random()*3.1416,v=120+Math.random()*260;TK.sp.push({x:W/2+(Math.random()-.5)*60,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,d:.4+Math.random()*.4,h:i%4===0})}}}
+  if(TK.flyUp){const F=TK.flyUp;F.t+=dt;const k=F.t/.8,im=tkNoteCv(TK.den),sw=TK_DEN[TK.den].t==='c'?44:84;c.imageSmoothingEnabled=true;c.globalAlpha=Math.max(0,1-k);const ty=gy-(pile.ph||0)*.6,py=74;c.globalAlpha=Math.max(0,Math.min(1,(1-k)*4));for(let i=0;i<8;i++){const kk=Math.max(0,Math.min(1,k*1.25-i*.03)),e=kk*kk*(3-2*kk);c.drawImage(im,W/2-sw/2+Math.sin(i*2+kk*5)*46*(1-e),py+(ty-py)*e-Math.sin(e*3.14)*60,sw*(1-e*.4),sw*(1-e*.4)*im.height/im.width)}c.globalAlpha=1;if(F.t>.8){TK.flyUp=null;TK.pileB=1;const m=LOWFX?10:26;for(let i=0;i<m;i++){const a=-Math.random()*3.1416,v=120+Math.random()*260;TK.sp.push({x:W/2+(Math.random()-.5)*60,y:ty,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,d:.4+Math.random()*.4,h:i%4===0})}}}
   tkConfDraw(c,dt);
   // HUD + pénzverde-gomb: a DOM-ot ~6×/mp frissítjük, nem képkockánként
   if(now-(TK.hudT||0)>160){TK.hudT=now;const set=(e,v)=>{if(e&&e.textContent!==v)e.textContent=v};set(E.pocket,tkShort(TK.pocket));{/* a 🏆 számláló az üteg közös kasszáját mutatja (minden ütegtárs befizetése), a saját rész a címkében */const tot=TK.stc&&TK.stc.u===TK.uteg?Math.max(TK.stc.sum||0,TK.given):TK.given;set(E.given,tkShort(tot));const ti=`${TK.uteg||'Üteg'} kasszája összesen: ${tkFmt(tot)} Ft – ebből te: ${tkFmt(TK.given)} Ft`;if(E.chip&&E.chip.title!==ti)E.chip.title=ti}{const un=({'1. üteg':'1. ÜTEG','2. üteg':'2. ÜTEG','3. üteg':'3. ÜTEG','Kiképző üteg':'KIK. Ü.','Törzsüteg':'TÖRZS','Felderítő':'FELD.','Szakjavító':'SZJ.'})[TK.uteg]||'ÜTEG';const pend=typeof MODE!=='undefined'&&MODE==='fb'&&UID&&TK.given>(Number(USERDOC&&USERDOC.tkFt)||0);set(E.un,un+(pend?' ⏳':''));const ch=E.chip;if(ch&&ch.dataset.u!==(TK.uteg||'')){ch.dataset.u=TK.uteg||'';const uc=tkUC(TK.uteg);ch.style.setProperty('--uc',uc[0]);ch.style.setProperty('--ut',uc[1])}}
@@ -2823,7 +2982,7 @@ function tkLoop(now){const cv=TK.cv;if(!cv||!TK.run)return;const c=TK.ctx||(TK.c
     const nx=TK.den+1,mb=E.mint;if(mb){const can=nx<TK_DEN.length&&TK.pocket>=tkMintCost(nx)&&tkMintWait(nx)<=0;if(mb.hidden===can)mb.hidden=!can;const tx=can?`🏦 PÉNZVERDE: ${TK_DEN[nx].n}`:'';if(mb.textContent!==tx)mb.textContent=tx}
     if(!TK._mc||now-TK._mc>1000){TK._mc=now;set(E.month,'📅 Hónap vége: '+tkWeekLeft())}}
   if((TK.uiT=(TK.uiT||0)+dt)>.4){TK.uiT=0;const sh=E.sheet;{const D=tkDM(),can=D.list.some(q=>!q.done&&tkDmProg(q)>=q.goal);if(E.navAch)E.navAch.classList.toggle('badge',can);if(E.navGift)E.navGift.classList.toggle('badge',tkGiftCan());if(TK.sheet==='gift'){const sl=$('#tkSpinLeft');if(sl)sl.textContent=tkLeftTxt(TK_SPIN_CD-(srvNow()-(TK.spinT||0)));else if(!TK.spin&&tkSpinCan()&&$('#tkSheet [data-spin]:disabled')||tkDailyCan()&&$('#tkSheet [data-daily]:disabled'))tkSheetRender()}}if(sh&&(TK.sheet==='upg'||TK.sheet==='gear'||TK.sheet==='den')){const mw=TK.den+1<TK_DEN.length?tkMintWait(TK.den+1):0,sig=TK.sheet==='den'?'den'+TK.den+(TK.den+1<TK_DEN.length?Math.min(50,Math.floor(TK.pocket/tkMintCost(TK.den+1)*50)):0)+'|'+Math.ceil(mw/6e4):TK.sheet+TK.den+JSON.stringify(TK.upg)+JSON.stringify(TK.own)+(TK.den+1<TK_DEN.length&&TK.pocket>=tkMintCost(TK.den+1)?1:0)+(mw>0?Math.ceil(mw/6e4):0)+TK_UPG.map(u=>TK.pocket>=tkUpgCost(u)?1:0).join('')+TK_GEAR.map(g=>TK.pocket>=tkGearCost(g)?1:0).join('');if(sig!==TK.sig){TK.sig=sig;const st=sh.scrollTop;tkSheetRender();sh.scrollTop=st}}}
-  if(TK.sheet==='gift'){const wc=$('#tkWheel');if(wc)tkWheelDraw(wc,now)}
+  if(TK.sheet==='gift'){const wc=$('#tkScr');if(wc)tkScrDraw(wc,now)}
   TK.raf=requestAnimationFrame(tkLoop)}
 
 /* ===== v4.1: filmszerű konvoj – mozi-sávok, rádiófeliratok, lassítás, rendezett jelenetek ===== */

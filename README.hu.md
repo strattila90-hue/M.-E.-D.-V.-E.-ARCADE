@@ -13,10 +13,19 @@
 
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.50.1** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.51.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.51.0:** **Tüzér Kassza – papírérzetű bankók, fényes érmék, lőszerláda-kassza és kaparós sorsjegy.**
+- **Bankók és érmék újrarajzolva:** a pixeles bankó helyett háromszoros felbontású (éles kijelzőn hatszoros), papírérzetű jegy: krémszínű alap a pénznem színével, rostzaj, színes biztonsági szálak, guilloche-hullámok, rozetta, vízjel-ovális, fémes biztonsági szál, mikroírás-szegély, sorozatszám, finom hajtásvonal. A járművek (Rába, Gidrán, PzH) sima sziluettek, a többi jelkép (tarack, címer, dandárcsillag, keresztbe tett csövek, tűzgömb, Borbála-torony, rendfokozati váll-lapok) vektoros. Az érmék recézett peremmel, domború belső gyűrűvel, dombornyomott értékkel és tükröződő fénnyel készülnek.
+- **Nagyobb pénz:** a köteg a képernyő szélességének kb. 70%-a (érménél 36%), a tálcára eső bankó is nagyobb.
+- **A rulettkerék helyett lőszerláda-kassza:** olajzöld faláda acél sarokvasakkal, kötélfüllel, elöl sárga-fekete csíkkal; benne zöld posztós számlálótálca arany célgyűrűvel. A gyűrű a kombóval egyre jobban izzik, körbefut rajta egy fény. Nem forog, ezért kevesebbet kell rajzolni (lassított CPU-s mérésben üresjáratban kb. 20%-kal rövidebb képkocka).
+- **A szerencsekerék helyett kaparós Tüzér sorsjegy** (Ajándék fül): 3×3 mező ezüst kaparóréteggel, ujjal lekaparható (kaparás-hanggal); ha a nagyobbik része lejött, magától kinyílik, a „Mind lekaparom” gomb egyből felfedi. 3 egyforma jel a nyeremény – a nyereményfajták és esélyek ugyanazok, mint a keréknél, a 3 óránkénti ingyen jegy és az extra jegyek (napi doboz, ejtőernyős csomag) is maradnak.
+- **Simább futás:** a repülő és fekvő pénz előre lekicsinyített példányt rajzol, a láda és a köteg 1:1 képpontban, szűrés nélkül kerül ki; a tálcán egyszerre legfeljebb 8 bankó fekszik.
+- **Szebb felület (CSS):** lekerekített felső sarkú alsó lap felcsúszó animációval, melegebb arany és mélyebb olajzöld, puhább árnyékok, egységes lekerekítések; a villogó (`filter: brightness`) animációk helyett csak `transform`/`opacity` mozog (nem kell újrafesteni), a nagy gombokon fénycsík fut végig; csökkentett mozgás beállításnál az animációk állnak.
+- **Javítva:** nyitott lapnál az ULTRA-csúszka és az ÜTEGBE TOL gomb rálógott a lap aljára; a ZSEB-kijelzőn a tizedesvessző szóközként jelent meg („4 46 billió” → „4,46 billió”).
 
 **v4.50.1:** **Csillag-gomb a Továbbiak menüben** (⭐ Csillag a GitHubon, a repó oldalát nyitja új lapon), plusz angol README, licenc és közreműködési útmutató. A játékmenet nem változott.
 
