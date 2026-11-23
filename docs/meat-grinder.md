@@ -199,6 +199,14 @@ CSS-változóból jön. Készlet: motor, track, fuel, shield, plow, spikes, cann
 flag, lock/unlock, check, skull, trophy, pause, close, left/right, play, rotl/rotr, warn, zombie, boom, white. A vászonra rajzolt jelek
 (horda-figyelmeztetés, robbanó hordó) is rajzolt alakzatok. Új ikon: új bejegyzés az `ICONS`-ba `[fő szín, kiemelés, SVG-tartalom]`.
 
+## 4.60.0 – gyorsabb elakadás-kérdés, lánc–talaj kapcsolat
+
+- **Elakadás** (`askStuck`): a játék megáll és megkérdezi, **feladod-e**, ha a gép ~3 mp-ig áll (4 mp, ha rajta vannak a zombik), vagy 4 mp alatt
+  28 egységnél (2,8 m) kevesebbet jut előre (pl. ide-oda ringatózik), illetve 2,2 mp-ig fejjel lefelé áll. A „Tovább próbálom” 5 mp haladékot ad.
+  Az első gáz / mozgás előtt nem kérdez. Kifogyott üzemanyagnál 1,2 mp után azonnal vége.
+- **Lánc és talaj** (`TKO`, `trackPath`): a talajjal a lánc **külső felülete** érintkezik (korábban a kerék pereme, ezért a lánc kb. 6 egységet belesüllyedt),
+  a lánc a kerekek között megereszkedik, a hajtó/feszítőkerék körüli ívek és az alsó ág soha nem mennek a talaj alá, kiemelkedő talajon fölfelé tolódnak.
+
 ## 4.61.0 – városi pálya, erősebb alap motor
 
 - **Új pálya: „Lakott városnegyed”** (2. pálya, 1800 m, `kind: 'city'`): alkonyi égbolt, égő ablakú panelházak két rétegben, utcai lámpák, reklámtáblák,

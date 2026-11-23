@@ -258,12 +258,13 @@ const HULL = [[-120, -46], [-60, -54], [0, -52], [12, -24], [100, -18], [108, 4]
 const HB = {x0: -124, x1: FRONT + 2, y0: -56, y1: 32};   // találati doboz
 // Felfüggesztés: a 7 futógörgő egyenként rugózik (rugó + lengéscsillapító + ütközőgumi). Az 1. szint a kopott gyári
 // torziós rúd; a futómű-fejlesztések nagyobb lengést, lágyabb-de-stabil rugót és erősebb csillapítást adnak.
+const TKO = 6;                           // a lánc vastagsága a kerék peremén: a talajjal a lánc külső felülete érintkezik, nem a kerék
 const ENV = [-.78, -.42, 0, .42, .78];   // a kerék talaj-burkolója: 5 mintapont a kerék szélességében
 const SUSV = lv => { const T = 11 + lv * 1.2; return {T, k: 107 / T * (1.15 + lv * .06), cs: 1.3 + lv * .2} };   // közepes keménység: kb. 35% beülés, csillapítási tényező ~0,5
 function makeVeh() {
   const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), el = ST('elol'), ag = ST('agyu'), bo = ST('boost'), tk = ST('tank');
   const mass = 1 + MG.sv.up.pancel * .04 + MG.sv.up.elol * .03, su = SUSV(MG.sv.up.futomu);
-  const V = {x: 220, y: gY(220) - 34, a: 0, vx: 0, vy: 0, w: 0, mass, I: 3900 * mass,
+  const V = {x: 220, y: gY(220) - 42, a: 0, vx: 0, vy: 0, w: 0, mass, I: 3900 * mass,
     F: 110 * mo.f, vmax: mo.v, grip: fu.g, cr: fu.cr, tilt: 3.4 * fu.tl, hp: pa.hp, hp0: pa.hp, dr: pa.dr,
     fm: el.m, fdps: el.dps, fsr: el.sr, fext: el.ext, fprot: el.fp, fuel: tk.l, fuel0: tk.l,
     ammo: ag.am, rl: 0, rl0: ag.rl, boost: bo.cap, boost0: bo.cap, bth: bo.th,
@@ -285,7 +286,7 @@ function vehStep(V, dt, inp) {
     const W = WHEELS[wi];
     let px, py, nx, ny, tx, ty, Fn, vn, vt, rx, ry;   // érintkezési pont, talaj-normális/érintő, terhelés
     if (W.s) { // hajtó- és feszítőkerék: merev, csak ütőszerűen ér a talajhoz (kátyú-kiugrás, farol)
-      [px, py] = vPt(V, W.lx, W.ly); const h = gY(px), d = py + W.r - h;
+      [px, py] = vPt(V, W.lx, W.ly); const h = gY(px), d = py + W.r + TKO - h;
       if (d <= 0) continue;
       const sl = gSl(px), il = 1 / Math.hypot(1, sl); tx = il; ty = sl * il; nx = sl * il; ny = -il;
       rx = px - V.x; ry = py - V.y; const pvx = V.vx - V.w * ry, pvy = V.vy + V.w * rx; vn = pvx * nx + pvy * ny; vt = pvx * tx + pvy * ty;
@@ -296,7 +297,7 @@ function vehStep(V, dt, inp) {
     }
     // futógörgő: a kerékagy a teljesen kirugózott helyzetből (T/2 a névleges fölé) tolódik fölfelé a talaj miatt
     const [dx0, dy0] = vPt(V, W.lx, 21 + T / 2), cPrev = V.sc[wi], pxc = dx0 + sA * cPrev;
-    let hc = 1e9; for (const e of ENV) { const o = e * W.r, hh = gY(pxc + o) - Math.sqrt(W.r * W.r - o * o); if (hh < hc) hc = hh }
+    let hc = 1e9; const RR = W.r + TKO; for (const e of ENV) { const o = e * RR, hh = gY(pxc + o) - Math.sqrt(RR * RR - o * o); if (hh < hc) hc = hh }
     const creq = (dy0 - hc) / cMax, target = Math.min(creq, T);
     let cNew, touch;
     if (target >= cPrev) { cNew = Math.max(0, target); touch = creq > 0 }
@@ -310,7 +311,7 @@ function vehStep(V, dt, inp) {
     if (creq > T) F += 38 * (creq - T) + 3 * Math.max(0, cv);              // ütközőgumi
     F = Math.max(0, F) * V.mass;
     const hx = dx0 + sA * cNew, hy = dy0 - cA * cNew;                        // kerékagy a világban
-    px = hx; py = hy + W.r;
+    px = hx; py = hy + W.r + TKO;
     const sl = gSl(px), il = 1 / Math.hypot(1, sl); tx = il; ty = sl * il; nx = sl * il; ny = -il;
     const ux = sA, uy = -cA;                                                 // a test „fölfelé” tengelye
     // a rugóerő a test fölfelé-tengelyén hat az agyon
@@ -373,7 +374,7 @@ function newRun(si) {
   MG.trk = buildStage(si);
   MG.V = makeVeh();
   Object.assign(MG, {t: 0, z: [], grab: [], dust: [], flames: [], beams: [], parts: [], gibs: [], guts: [], dec: [], corpses: [], fx: [], shells: [], ebul: [], txt: [], tracers: [],
-    kills: 0, kt: {}, hurtBy: {}, pts: 0, cash: 0, combo: 0, comboT: 0, bestCombo: 0, shake: 0, slow: 1, end: null, endT: 0, maxX: 220, hordeMsg: 0, sndT: {}});
+    kills: 0, kt: {}, hurtBy: {}, started: 0, askK: 0, grace: 0, pxT: 0, pxX: 220, pts: 0, cash: 0, combo: 0, comboT: 0, bestCombo: 0, shake: 0, slow: 1, end: null, endT: 0, maxX: 220, hordeMsg: 0, sndT: {}});
   MG.cam = {x: MG.V.x - 200, y: MG.V.y - 260, s: 1};
   MG.inp = {gas: 0, brk: 0, tl: 0, tr: 0, boost: 0, fire: 0, fireH: 0, flame: 0};
   MG.trk.props.forEach(p => { p.y = gY(p.x); p.dead = 0 });
@@ -484,9 +485,16 @@ function update(dt) {
   if (!MG.end) {
     const sp = Math.hypot(V.vx, V.vy);
     if (V.x >= T.fin) finish('win');
-    if (Math.cos(V.a) < -.25 && V.hullHit) { V.flipT += dt; if (V.flipT > 2.4) finish('flip') } else V.flipT = Math.max(0, V.flipT - dt);
-    if (V.fuel <= 0) { if (sp < 6) V.noFuelT += dt; if (V.noFuelT > 1.6) finish('fuel') }
-    if (sp < 5 && V.fuel > 0) { V.stuckT += dt; const lim = MG.grab.length || MG.z.some(z => z.st !== 'dead' && Math.abs(z.x - V.x) < 120) ? 9 : 6; if (V.stuckT > lim) finish('stuck') } else V.stuckT = Math.max(0, V.stuckT - dt * 2);
+    if (inp.gas || inp.brk || V.x > 260) MG.started = 1;
+    // felborulva: rövid idő után megkérdezi, feladod-e (a billentéssel még vissza lehet fordulni)
+    if (Math.cos(V.a) < -.25 && V.hullHit) { V.flipT += dt; if (V.flipT > 2.2) askStuck('flip') } else V.flipT = Math.max(0, V.flipT - dt);
+    if (V.fuel <= 0) { if (sp < 8) V.noFuelT += dt; if (V.noFuelT > 1.2) finish('fuel') }
+    // megállt / nem halad: ha ~3 mp-ig áll, vagy 4 mp alatt alig jutott előre (pl. ide-oda ringatózik), megkérdezi, feladod-e
+    if (MG.started && V.fuel > 0) {
+      if (sp < 8) V.stuckT += dt; else V.stuckT = Math.max(0, V.stuckT - dt * 2);
+      if (V.stuckT > (MG.grab.length ? 4 : 3)) askStuck('stuck');
+      if (MG.t - MG.pxT >= 4) { if (MG.maxX - MG.pxX < 28 && MG.t > MG.grace) askStuck('stuck'); MG.pxT = MG.t; MG.pxX = MG.maxX }
+    }
     if (V.y > 3000) finish('flip');
   } else { MG.endT -= dt / MG.slow; if (MG.endT <= 0 && !MG.endShown) { MG.endShown = 1; showResult() } }
 }
@@ -1007,7 +1015,7 @@ function draw(now) {
   if (V.hp / V.hp0 < .25 && !MG.end) { c.fillStyle = `rgba(200,0,0,${.08 + .06 * Math.sin(now / 120)})`; c.fillRect(0, 0, W, H) }
   if (MG.comboShow) { const k = MG.comboShow.t; c.save(); c.translate(W / 2, H * .3); const s = 1 + Math.max(0, k - 1) * 2; c.scale(s, s); c.font = `900 ${Math.min(42, 22 + MG.comboShow.n)}px Anton, Impact, sans-serif`; c.textAlign = 'center'; c.globalAlpha = Math.min(1, k * 2); c.fillStyle = '#000'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 2, 2); c.fillStyle = MG.comboShow.n >= 12 ? '#ff3b30' : '#ffd24a'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 0, 0); c.restore() }
   if (MG.hordeMsg > 0 && Math.sin(now / 110) > -.3) { c.font = '900 26px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('HORDA ELŐTTED', W / 2 + 2, H * .2 + 2); c.fillStyle = '#ff5a3a'; c.fillText('HORDA ELŐTTED', W / 2, H * .2); const tw = c.measureText('HORDA ELŐTTED').width / 2 + 26; drawWarn(c, W / 2 - tw, H * .2 - 11, 15); drawWarn(c, W / 2 + tw, H * .2 - 11, 15) }
-  if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.4 - V.flipT).toFixed(1), W / 2, H * .42) }
+  if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.2 - V.flipT).toFixed(1), W / 2, H * .42) }
 }
 
 function drawWarn(c, x, y, r) { c.save(); c.translate(x, y); c.fillStyle = '#000'; c.beginPath(); c.moveTo(1.5, -r + 1.5); c.lineTo(r + 1.5, r * .85 + 1.5); c.lineTo(-r + 1.5, r * .85 + 1.5); c.fill(); c.fillStyle = '#f2b21c'; c.beginPath(); c.moveTo(0, -r); c.lineTo(r, r * .85); c.lineTo(-r, r * .85); c.closePath(); c.fill(); c.fillStyle = '#1a0f0b'; c.fillRect(-1.5, -r * .35, 3, r * .75); c.fillRect(-1.5, r * .5, 3, 3); c.restore() }
@@ -1267,21 +1275,25 @@ function disc(c, cx, cy, r, base) { // gömbölyű alkatrész (turbó, tárcsa):
 const TR_N = 5;   // egy futófelület-szakasz mintapontjai
 function trackPath(V, ws, live) {
   const pts = [], T = 2.6, n = ws.length, P = (x, y) => pts.push(x, y);
-  const A = ws[0], Z = ws[n - 1];
-  // hátsó kerék körül: felülről hátra, lefelé
-  for (let u = 0; u <= 6; u++) { const th = -Math.PI / 2 - u / 6 * Math.PI, r = A.r + T; P(A.cx + Math.cos(th) * r, A.cy + Math.sin(th) * r) }
-  // alsó ág: kerékpáronként külső érintő, a talajra „ráfekvő” közbenső pontokkal
+  const A = ws[0], Z = ws[n - 1], HW = 3.2, cA = Math.max(.3, Math.cos(V.a));
+  // a talaj „helyi” y-ja a jármű adott oszlopában (a test dőlését figyelembe véve): ide fekszik rá a lánc külső felülete
+  const gnd = (lx, y) => { let yl = y; for (let it = 0; it < 2; it++) { const [wx, wy] = vPt(V, lx, yl); yl += (gY(wx) - wy) / cA } return yl - HW };
+  // hátsó kerék körül: felülről hátra, lefelé (az alsó íven a talaj fölé tolja)
+  for (let u = 0; u <= 6; u++) { const th = -Math.PI / 2 - u / 6 * Math.PI, r = A.r + T; let x = A.cx + Math.cos(th) * r, y = A.cy + Math.sin(th) * r; if (live && Math.sin(th) > 0 && !A.s0) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 14) } P(x, y) }
+  // alsó ág: kerékpáronként külső érintő; a lánc megereszkedik a kerekek között, és rátapad a talajra / a kiemelkedő talaj fölfelé tolja
   for (let i = 0; i < n - 1; i++) {
     const a = ws[i], b = ws[i + 1], dx = b.cx - a.cx, dy = b.cy - a.cy, L = Math.hypot(dx, dy), phi = Math.atan2(dy, dx), be = Math.asin(clamp((a.r - b.r) / L, -.5, .5)), th = phi + Math.PI / 2 - be, nx = Math.cos(th), ny = Math.sin(th);
     const x1 = a.cx + nx * (a.r + T), y1 = a.cy + ny * (a.r + T), x2 = b.cx + nx * (b.r + T), y2 = b.cy + ny * (b.r + T);
     for (let k = 0; k < TR_N; k++) {
       const f = k / TR_N; let x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f;
-      if (live && k > 0 && !a.s && !b.s) { const [wx, wy] = vPt(V, x, y), gl = vLoc(V, wx, gY(wx))[1] - .6; if (gl < y) y = Math.max(gl, y - 9) }   // a láncot a kiemelkedő talaj fölfelé tolja
+      const sag = Math.sin(f * Math.PI) * (a.s || b.s ? 4.6 : 2.8);            // a lógó lánc a súlyától megereszkedik
+      if (live) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 12); else y = Math.min(y + sag, g) }
+      else y += sag;
       P(x, y);
     }
   }
   // elülső kerék körül: alulról előre, fölfelé
-  for (let u = 0; u <= 6; u++) { const th = Math.PI / 2 - u / 6 * Math.PI, r = Z.r + T; P(Z.cx + Math.cos(th) * r, Z.cy + Math.sin(th) * r) }
+  for (let u = 0; u <= 6; u++) { const th = Math.PI / 2 - u / 6 * Math.PI, r = Z.r + T; let x = Z.cx + Math.cos(th) * r, y = Z.cy + Math.sin(th) * r; if (live && Math.sin(th) > 0) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 14) } P(x, y) }
   // felső ág: lehajló, két támgörgő között megülő lánc
   const x1 = Z.cx, y1 = Z.cy - Z.r - T, x2 = A.cx, y2 = A.cy - A.r - T;
   for (let k = 1; k < 12; k++) { const f = k / 12; P(x1 + (x2 - x1) * f, y1 + (y2 - y1) * f + Math.sin(f * Math.PI) * 3.2) }
@@ -1560,8 +1572,18 @@ function keys(e) {
   if (k === ' ' || k === 'f' || k === 'F') { if (d) MG.inp.fire = 1; MG.inp.fireH = d; e.preventDefault() }
   if ((k === 'p' || k === 'P' || k === 'Escape') && d && MG.phase === 'play') pause(!MG.paused);
 }
+// elakadás / felborulás: a játék megáll, és megkérdezi, feladod-e (a „Tovább” ad még 5 mp haladékot)
+function askStuck(kind) {
+  if (MG.askK || MG.end || MG.phase !== 'play') return;
+  MG.askK = kind; MG.paused = true; for (const [, k] of BTN) MG.inp[k] = 0; MG.inp.fireH = 0;
+  const scr = $('#mgScr'); if (!scr) return;
+  const dist = n0(Math.floor((MG.V.x - 220) / UM));
+  scr.innerHTML = `<div class="mgcard mgpause mgask"><h3>${ico(kind === 'flip' ? 'rotr' : 'warn')} ${kind === 'flip' ? 'FELBORULTÁL' : 'ELAKADTÁL'}</h3><p>${kind === 'flip' ? 'A PzH a tetején fekszik.' : 'A gép nem halad tovább.'} Eddig <b>${dist} m</b>, ${ico('skull')} ${MG.kills}.<br>Feladod, és megkapod a jutalmat az eddigiekért?</p><button type="button" class="btn pri" data-act="giveup">${ico('white')} Feladom</button> <button type="button" class="btn line" data-act="resume">${ico('play')} Tovább próbálom</button></div>`;
+  scr.hidden = false;
+}
 function pause(on) {
   MG.paused = !!on && MG.phase === 'play';
+  if (!MG.paused && MG.askK) { MG.askK = 0; MG.V.stuckT = -2; MG.V.flipT = 0; MG.grace = MG.t + 5; MG.pxT = MG.t; MG.pxX = MG.maxX }
   const scr = $('#mgScr'); if (!scr) return;
   if (MG.paused) { scr.innerHTML = `<div class="mgcard mgpause"><h3>${ico('pause')} SZÜNET</h3><p>Táv: <b>${n0(Math.floor((MG.V.x - 220) / UM))} m</b> · ${ico('skull')} ${MG.kills}</p><button type="button" class="btn pri" data-act="resume">${ico('play')} Folytatás</button> <button type="button" class="btn line" data-act="giveup">${ico('white')} Feladom</button></div>`; scr.hidden = false }
   else if (MG.phase === 'play') { scr.innerHTML = ''; scr.hidden = true; MG.last = performance.now() }
