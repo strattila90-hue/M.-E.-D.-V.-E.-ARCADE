@@ -13,7 +13,7 @@ const UM = 10;              // egység / méter
 const STEP = 16;            // talaj-mintavétel (egység)
 const GRAV = 300;           // gravitáció (egység/s²)
 const SAVE_KEY = 'medve-mg-v1';
-const VER = 2;
+const VER = 3;
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -26,17 +26,17 @@ function mulberry(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79
    ============================================================================ */
 const UPG = [
   {k: 'motor', n: 'Motor', ic: 'motor', lv: [
-    {n: 'MTU MT 881 (gyári)', d: 'Fáradt, 1000 LE-s dízel.', s: {f: 1, v: 150}},
-    {n: 'Egyenes kipufogók', d: 'Levágott dobok, hangos és dühös. +18% erő.', c: 160, s: {f: 1.18, v: 172}},
-    {n: 'Turbófeltöltő', d: 'Roncstelepi turbó, drótozva. +40% erő.', c: 520, r: 350, s: {f: 1.4, v: 200}},
-    {n: 'Iker-turbó + intercooler', d: 'Két turbó, hűtőrács a tornyon.', c: 1500, r: 900, s: {f: 1.68, v: 235}},
-    {n: 'Kompresszoros szörny', d: 'Tetőből kiálló feltöltő, ékszíjjal.', c: 4200, r: 2000, s: {f: 2.05, v: 280}}]},
+    {n: 'MTU MT 881 (felújított)', d: '1000 LE-s dízel: alapból is jól mászik, tapad.', s: {f: 1.35, v: 165}},
+    {n: 'Egyenes kipufogók', d: 'Levágott dobok, hangos és dühös. +11% erő.', c: 160, s: {f: 1.5, v: 185}},
+    {n: 'Turbófeltöltő', d: 'Roncstelepi turbó, drótozva. +26% erő.', c: 520, r: 350, s: {f: 1.7, v: 210}},
+    {n: 'Iker-turbó + intercooler', d: 'Két turbó, hűtőrács a tornyon.', c: 1500, r: 900, s: {f: 1.95, v: 240}},
+    {n: 'Kompresszoros szörny', d: 'Tetőből kiálló feltöltő, ékszíjjal.', c: 4200, r: 2000, s: {f: 2.3, v: 285}}]},
   {k: 'futomu', n: 'Futómű', ic: 'track', lv: [
-    {n: 'Kopott lánctalp', d: 'Gyári felfüggesztés, csúszik.', s: {g: .85, cr: 0, tl: 1}},
-    {n: 'Új lánctagok', d: 'Jobb tapadás emelkedőn.', c: 140, s: {g: 1, cr: .15, tl: 1.12}},
-    {n: 'Tüskés lánctalp', d: 'Acéltüskék a tagokon. Nagy tapadás.', c: 480, r: 300, s: {g: 1.15, cr: .28, tl: 1.25}},
-    {n: 'Megerősített torziós rudak', d: 'Bírja az ugratásokat.', c: 1300, r: 800, s: {g: 1.28, cr: .42, tl: 1.38}},
-    {n: 'Versenyfutómű', d: 'Gázrugók, tökéletes levegő-irányítás.', c: 3600, r: 1800, s: {g: 1.42, cr: .55, tl: 1.55}}]},
+    {n: 'Gyári lánctalp', d: 'Közepes tapadás, rugózó görgők.', s: {g: 1.05, cr: 0, tl: 1}},
+    {n: 'Új lánctagok', d: 'Jobb tapadás emelkedőn.', c: 140, s: {g: 1.15, cr: .15, tl: 1.12}},
+    {n: 'Tüskés lánctalp', d: 'Acéltüskék a tagokon. Nagy tapadás.', c: 480, r: 300, s: {g: 1.25, cr: .28, tl: 1.25}},
+    {n: 'Megerősített torziós rudak', d: 'Bírja az ugratásokat.', c: 1300, r: 800, s: {g: 1.35, cr: .42, tl: 1.38}},
+    {n: 'Versenyfutómű', d: 'Gázrugók, tökéletes levegő-irányítás.', c: 3600, r: 1800, s: {g: 1.48, cr: .55, tl: 1.55}}]},
   {k: 'tank', n: 'Üzemanyag', ic: 'fuel', lv: [
     {n: 'Gyári tartály (maradék)', d: 'Alig valami lötyög benne.', s: {l: 60}},
     {n: '2 kanna a farokon', d: '+30 liter.', c: 120, s: {l: 90}},
@@ -106,13 +106,16 @@ const UPK = Object.fromEntries(UPG.map(u => [u.k, u]));
 const STAGES = [
   {n: 'Kiürített külváros', s: 'A város széle. Csoszogók és futók.', len: 1200, seed: 1101, amp: [36, 16, 6],
     sky: ['#2b0d0a', '#7a2a12', '#d9772f', '#f2b45a'], far: '#3a1a14', mid: '#24130f', gr: ['#4a3a2a', '#2a2018'], road: '#2e2a26',
-    feat: 1.0, horde: [320, 640, 950, 1120], hsz: [14, 22], mix: [['walker', 6], ['runner', 2], ['bloater', .6], ['spitter', .3], ['lurker', .9], ['hound', .8]], bonus: 400},
+    feat: 1.0, horde: [320, 640, 950, 1120], hsz: [14, 22], mix: [['walker', 6], ['runner', 2], ['bloater', .6], ['spitter', .3], ['lurker', .9], ['hound', .8]], bonus: 400, lv: 0, hpm: 1, sb: 1000},
+  {n: 'Lakott városnegyed', s: 'Panelházak, dugók, utcai barikádok. A lakók már nem lakók.', len: 1800, seed: 4421, amp: [24, 11, 4], kind: 'city',
+    sky: ['#0b0f2c', '#35285f', '#b8527a', '#ffb07a'], far: '#241c40', mid: '#181330', gr: ['#4a4a53', '#25252c'], road: '#34343c',
+    feat: 1.1, horde: [300, 620, 920, 1220, 1480, 1680], hsz: [16, 26], mix: [['walker', 5], ['runner', 3], ['bloater', 1], ['spitter', .6], ['soldier', .8], ['riot', .6], ['lurker', 1.1], ['hound', 1.1], ['cyborg', .3]], bonus: 1400, lv: .6, hpm: 1.08, sb: 1500, mil: 1},
   {n: 'Rozsdaövezet', s: 'Gyárak, martalóc katonák, puffadtak.', len: 2000, seed: 2207, amp: [62, 24, 8],
     sky: ['#14110c', '#3b3a1c', '#8a7a34', '#c9b45e'], far: '#26261a', mid: '#18180f', gr: ['#47402e', '#25221a'], road: '#2a2924',
-    feat: 1.3, horde: [300, 700, 1050, 1400, 1700, 1900], hsz: [18, 30], mix: [['walker', 5], ['runner', 3], ['bloater', 1.4], ['spitter', 1], ['soldier', 1.3], ['riot', .8], ['lurker', 1.2], ['hound', 1.4], ['spider', .8], ['snail', .6], ['cyborg', .6]], brute: [1500], bonus: 900},
+    feat: 1.3, horde: [300, 700, 1050, 1400, 1700, 1900], hsz: [18, 30], mix: [['walker', 5], ['runner', 3], ['bloater', 1.4], ['spitter', 1], ['soldier', 1.3], ['riot', .8], ['lurker', 1.2], ['hound', 1.4], ['spider', .8], ['snail', .6], ['cyborg', .6]], brute: [1500], bonus: 900, lv: 1, hpm: 1.15, sb: 2000},
   {n: 'Fertőzött laktanya', s: 'A menedék a laktanya mögött. Óriások.', len: 3000, seed: 3313, amp: [95, 34, 10],
     sky: ['#05060c', '#1c1630', '#5a2a4a', '#b8484a'], far: '#1a1424', mid: '#100c16', gr: ['#3a3434', '#1c1a1c'], road: '#262428',
-    feat: 1.6, horde: [350, 800, 1200, 1600, 2000, 2350, 2700, 2900], hsz: [24, 40], mix: [['walker', 4], ['runner', 4], ['bloater', 1.6], ['spitter', 1.4], ['soldier', 1.6], ['riot', 1.4], ['brute', .25], ['lurker', 1.4], ['hound', 1.6], ['spider', 1.3], ['snail', 1], ['cyborg', 1.2], ['kraken', .5], ['twin', .6], ['tower', .12]], brute: [1300, 2200, 2800], bonus: 2000}
+    feat: 1.6, horde: [350, 800, 1200, 1600, 2000, 2350, 2700, 2900], hsz: [24, 40], mix: [['walker', 4], ['runner', 4], ['bloater', 1.6], ['spitter', 1.4], ['soldier', 1.6], ['riot', 1.4], ['brute', .25], ['lurker', 1.4], ['hound', 1.6], ['spider', 1.3], ['snail', 1], ['cyborg', 1.2], ['kraken', .5], ['twin', .6], ['tower', .12]], brute: [1300, 2200, 2800], bonus: 2000, lv: 2, hpm: 1.3, sb: 3000, stars: 1}
 ];
 
 /* ============================================================================
@@ -142,14 +145,17 @@ const ZT = {
    5. ÁLLAPOT, MENTÉS
    ============================================================================ */
 const MG = {raf: 0, run: false};
-function blankSave() { return {v: VER, cash: 0, up: Object.fromEntries(UPG.map(u => [u.k, 0])), best: [0, 0, 0], done: [0, 0, 0], unl: 1, tot: 0, runs: 0, kills: 0, stage: 0} }
+function blankSave() { return {v: VER, cash: 0, up: Object.fromEntries(UPG.map(u => [u.k, 0])), best: STAGES.map(() => 0), done: STAGES.map(() => 0), unl: 1, tot: 0, runs: 0, kills: 0, stage: 0} }
 function load() {
   let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') } catch (e) {}
   const b = blankSave(); if (!s || typeof s !== 'object') return b;
   const o = Object.assign(b, s); o.up = Object.assign(blankSave().up, s.up || {});
   for (const u of UPG) o.up[u.k] = clamp(o.up[u.k] | 0, 0, u.lv.length - 1);
   o.cash = Math.max(0, Math.floor(+o.cash || 0)); o.unl = clamp(o.unl | 0, 1, STAGES.length); o.stage = clamp(o.stage | 0, 0, o.unl - 1);
-  for (const k of ['best', 'done']) if (!Array.isArray(o[k])) o[k] = [0, 0, 0];
+  for (const k of ['best', 'done']) if (!Array.isArray(o[k])) o[k] = [];
+  // 3-as mentés-verzió: a városi pálya a 2. helyre került – a régi 2. és 3. pálya eredményei egyet tolódnak
+  if ((s.v | 0) < 3) { o.best.splice(1, 0, 0); o.done.splice(1, 0, 0); if (o.unl >= 2) o.unl++; if (o.stage >= 1) o.stage++; o.unl = clamp(o.unl, 1, STAGES.length); o.stage = clamp(o.stage, 0, o.unl - 1) }
+  o.v = VER; for (const k of ['best', 'done']) { while (o[k].length < STAGES.length) o[k].push(0); o[k] = o[k].slice(0, STAGES.length).map(v => Math.max(0, +v || 0)) }
   return o;
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(MG.sv)) } catch (e) {} }
@@ -160,7 +166,7 @@ const bestAll = () => Math.max(...MG.sv.best);
    6. PÁLYAÉPÍTÉS: talaj, akadályok, ellenség-ütemterv
    ============================================================================ */
 function buildStage(si) {
-  const S = STAGES[si], R = mulberry(S.seed), L = S.len * UM + 1400, N = Math.ceil(L / STEP) + 4;
+  const S = STAGES[si], lv = S.lv, city = S.kind === 'city', R = mulberry(S.seed), L = S.len * UM + 1400, N = Math.ceil(L / STEP) + 4;
   const g = new Float32Array(N), P = [R() * 6, R() * 6, R() * 6];
   for (let i = 0; i < N; i++) {
     const x = i * STEP, k = clamp((x - 400) / 900, 0, 1);
@@ -180,22 +186,22 @@ function buildStage(si) {
       for (let k = 0; k <= n; k++) g[i0 + k] += D * Math.sin(Math.PI * k / n);
       deco.push({k: 'crater', x: x + n * STEP / 2});
     } else if (t < .78) { // roncsautó-halom: rá lehet hajtani
-      const cars = 1 + Math.floor(R() * (si + 2)), w = 50 + cars * 16, n = Math.ceil(w / STEP) + 2, H = 16 + cars * 12;
+      const cars = 1 + Math.floor(R() * (lv + 2 + (city ? 1 : 0))), w = 50 + cars * 16, n = Math.ceil(w / STEP) + 2, H = 16 + cars * 12;
       for (let k = 0; k <= n; k++) g[i0 + k] -= H * Math.pow(Math.sin(Math.PI * k / n), .6);
-      wrecks.push({x: x + n * STEP / 2, w, cars, seed: Math.floor(R() * 1e6), c: ['#6a2f22', '#3d4a52', '#7a6a3a', '#4a4a44', '#5a1f1f'][Math.floor(R() * 5)]});
+      wrecks.push({x: x + n * STEP / 2, w, cars, seed: Math.floor(R() * 1e6), c: (city ? ['#c9a227', '#2f5a8a', '#8a2a2a', '#c8c8c0', '#3a3a3a', '#2a6a4a'] : ['#6a2f22', '#3d4a52', '#7a6a3a', '#4a4a44', '#5a1f1f'])[Math.floor(R() * (city ? 6 : 5))], city});
     } else { // barikád / hordók / kannák – nem domborzat, hanem tárgy
       const kk = R();
-      props.push(kk < .45 ? {k: 'barr', x, hp: 120 + si * 90, w: 26, h: 34, kind: R() < .5 ? 'sand' : 'wood'} : kk < .75 ? {k: 'boom', x, w: 14, h: 20} : {k: 'fuel', x, w: 14, h: 18});
+      props.push(kk < .45 ? {k: 'barr', x, hp: 120 + lv * 90, w: 26, h: 34, kind: city ? (R() < .6 ? 'jersey' : 'wood') : R() < .5 ? 'sand' : 'wood'} : kk < .75 ? {k: 'boom', x, w: 14, h: 20} : {k: 'fuel', x, w: 14, h: 18});
     }
     x += (900 + R() * 1300) / S.feat;
   }
   // kupakládák és kannák elszórva
-  for (let m = 220; m < S.len; m += 160 + R() * 180) props.push(R() < .55 ? {k: 'fuel', x: m * UM, w: 14, h: 18} : {k: 'cash', x: m * UM, w: 16, h: 14, v: 20 + Math.floor(R() * 25) + si * 15});
+  for (let m = 220; m < S.len; m += 160 + R() * 180) props.push(R() < .55 ? {k: 'fuel', x: m * UM, w: 14, h: 18} : {k: 'cash', x: m * UM, w: 16, h: 14, v: 20 + Math.floor(R() * 25) + Math.round(lv * 15)});
   // ellenség-ütemterv
   const wsum = S.mix.reduce((a, b) => a + b[1], 0);
   const pickT = (dm) => { let r = R() * wsum; for (const [k, w] of S.mix) { const ww = (k === 'brute' || k === 'kraken') && dm < 900 || k === 'tower' && dm < 1400 ? 0 : w; if ((r -= ww) <= 0) return k } return 'walker' };
-  for (let m = 45; m < S.len; m += 14 + R() * 26 / (1 + si * .25)) {
-    const n = 1 + Math.floor(R() * (2 + si + m / 600));
+  for (let m = 45; m < S.len; m += 14 + R() * 26 / (1 + lv * .25 + (city ? .25 : 0))) {
+    const n = 1 + Math.floor(R() * (2 + lv + m / 600));
     for (let j = 0; j < n; j++) spawns.push({x: m * UM + j * rnd(12, 30), t: pickT(m)});
   }
   for (const hm of S.horde) { // horda: sűrű tömeg, előtte figyelmeztetés
@@ -205,13 +211,20 @@ function buildStage(si) {
   }
   for (const bm of S.brute || []) spawns.push({x: bm * UM, t: 'brute'});
   // katonák barikád mögött
-  if (si >= 1) for (let m = 500; m < S.len - 100; m += 380 + R() * 300) { props.push({k: 'barr', x: m * UM, hp: 260, w: 30, h: 38, kind: 'sand'}); spawns.push({x: m * UM + 40, t: 'soldier'}, {x: m * UM + 70, t: 'soldier'}) }
+  if (lv >= 1 || S.mil) for (let m = 500; m < S.len - 100; m += (S.mil ? 520 : 380) + R() * 300) { props.push({k: 'barr', x: m * UM, hp: 260, w: 30, h: 38, kind: city ? 'jersey' : 'sand'}); spawns.push({x: m * UM + 40, t: 'soldier'}, {x: m * UM + 70, t: 'soldier'}) }
   for (let pass = 0; pass < 2; pass++) { let pv = g[0]; for (let i = 1; i < N - 1; i++) { const cur = g[i]; g[i] = (pv + 2 * cur + g[i + 1]) / 4; pv = cur } }
   spawns.sort((a, b) => a.x - b.x); props.sort((a, b) => a.x - b.x);
   // háttér: város-sziluett
   const sky = [], mids = [];
+  if (city) { // lakott negyed: magas panelházak égő ablakokkal, közelebb lépcsőházak, utcai lámpák, reklámtáblák
+    for (let bx = -200; bx < L * .3 + 2000; bx += 36 + R() * 56) sky.push({x: bx, w: 44 + R() * 56, h: 130 + R() * 240, br: R() < .22 ? R() * .35 : 0, win: 1, sd: Math.floor(R() * 1e6)});
+    for (let bx = 0; bx < L * .6 + 2000; bx += 70 + R() * 130) { const t = R(); mids.push({x: bx, k: t < .5 ? 'block' : t < .72 ? 'lamp' : t < .86 ? 'sign' : 'tree', h: 70 + R() * 90, s: R(), sd: Math.floor(R() * 1e6)}) }
+    for (let m = 120; m < S.len; m += 240 + R() * 160) deco.push({k: 'lamp', x: m * UM});
+    for (let m = 300; m < S.len - 200; m += 700 + R() * 500) deco.push({k: 'siren', x: m * UM + 60});
+  } else {
   for (let bx = -200; bx < L * .3 + 2000; bx += 30 + R() * 70) sky.push({x: bx, w: 30 + R() * 60, h: 60 + R() * 170, br: R() < .45 ? R() * .5 : 0, win: R() < .5});
   for (let bx = 0; bx < L * .6 + 2000; bx += 60 + R() * 160) mids.push({x: bx, k: R() < .45 ? 'tree' : R() < .6 ? 'pole' : 'house', h: 40 + R() * 70, s: R()});
+  }
   return {si, S, g, N, L, fin: S.len * UM + 200, wrecks, props, spawns, sp: 0, deco, sky, mids};
 }
 // Talaj: Catmull-Rom görbe a 16 egységes mintapontok között (nincs „törés” a csúcsokban, a meredekség is folytonos)
@@ -245,13 +258,14 @@ const HULL = [[-120, -46], [-60, -54], [0, -52], [12, -24], [100, -18], [108, 4]
 const HB = {x0: -124, x1: FRONT + 2, y0: -56, y1: 32};   // találati doboz
 // Felfüggesztés: a 7 futógörgő egyenként rugózik (rugó + lengéscsillapító + ütközőgumi). Az 1. szint a kopott gyári
 // torziós rúd; a futómű-fejlesztések nagyobb lengést, lágyabb-de-stabil rugót és erősebb csillapítást adnak.
+const TKO = 6;                           // a lánc vastagsága a kerék peremén: a talajjal a lánc külső felülete érintkezik, nem a kerék
 const ENV = [-.78, -.42, 0, .42, .78];   // a kerék talaj-burkolója: 5 mintapont a kerék szélességében
 const SUSV = lv => { const T = 11 + lv * 1.2; return {T, k: 107 / T * (1.15 + lv * .06), cs: 1.3 + lv * .2} };   // közepes keménység: kb. 35% beülés, csillapítási tényező ~0,5
 function makeVeh() {
   const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), el = ST('elol'), ag = ST('agyu'), bo = ST('boost'), tk = ST('tank');
   const mass = 1 + MG.sv.up.pancel * .04 + MG.sv.up.elol * .03, su = SUSV(MG.sv.up.futomu);
-  const V = {x: 220, y: gY(220) - 34, a: 0, vx: 0, vy: 0, w: 0, mass, I: 3900 * mass,
-    F: 95 * mo.f, vmax: mo.v, grip: fu.g, cr: fu.cr, tilt: 3.4 * fu.tl, hp: pa.hp, hp0: pa.hp, dr: pa.dr,
+  const V = {x: 220, y: gY(220) - 42, a: 0, vx: 0, vy: 0, w: 0, mass, I: 3900 * mass,
+    F: 110 * mo.f, vmax: mo.v, grip: fu.g, cr: fu.cr, tilt: 3.4 * fu.tl, hp: pa.hp, hp0: pa.hp, dr: pa.dr,
     fm: el.m, fdps: el.dps, fsr: el.sr, fext: el.ext, fprot: el.fp, fuel: tk.l, fuel0: tk.l,
     ammo: ag.am, rl: 0, rl0: ag.rl, boost: bo.cap, boost0: bo.cap, bth: bo.th,
     track: 0, contact: 0, air: 0, flipT: 0, stuckT: 0, noFuelT: 0, grind: 0, mgA: 0, mgT: 0, mgCd: 0, boosting: 0, blood: [], lastLand: 0,
@@ -272,7 +286,7 @@ function vehStep(V, dt, inp) {
     const W = WHEELS[wi];
     let px, py, nx, ny, tx, ty, Fn, vn, vt, rx, ry;   // érintkezési pont, talaj-normális/érintő, terhelés
     if (W.s) { // hajtó- és feszítőkerék: merev, csak ütőszerűen ér a talajhoz (kátyú-kiugrás, farol)
-      [px, py] = vPt(V, W.lx, W.ly); const h = gY(px), d = py + W.r - h;
+      [px, py] = vPt(V, W.lx, W.ly); const h = gY(px), d = py + W.r + TKO - h;
       if (d <= 0) continue;
       const sl = gSl(px), il = 1 / Math.hypot(1, sl); tx = il; ty = sl * il; nx = sl * il; ny = -il;
       rx = px - V.x; ry = py - V.y; const pvx = V.vx - V.w * ry, pvy = V.vy + V.w * rx; vn = pvx * nx + pvy * ny; vt = pvx * tx + pvy * ty;
@@ -283,7 +297,7 @@ function vehStep(V, dt, inp) {
     }
     // futógörgő: a kerékagy a teljesen kirugózott helyzetből (T/2 a névleges fölé) tolódik fölfelé a talaj miatt
     const [dx0, dy0] = vPt(V, W.lx, 21 + T / 2), cPrev = V.sc[wi], pxc = dx0 + sA * cPrev;
-    let hc = 1e9; for (const e of ENV) { const o = e * W.r, hh = gY(pxc + o) - Math.sqrt(W.r * W.r - o * o); if (hh < hc) hc = hh }
+    let hc = 1e9; const RR = W.r + TKO; for (const e of ENV) { const o = e * RR, hh = gY(pxc + o) - Math.sqrt(RR * RR - o * o); if (hh < hc) hc = hh }
     const creq = (dy0 - hc) / cMax, target = Math.min(creq, T);
     let cNew, touch;
     if (target >= cPrev) { cNew = Math.max(0, target); touch = creq > 0 }
@@ -297,7 +311,7 @@ function vehStep(V, dt, inp) {
     if (creq > T) F += 38 * (creq - T) + 3 * Math.max(0, cv);              // ütközőgumi
     F = Math.max(0, F) * V.mass;
     const hx = dx0 + sA * cNew, hy = dy0 - cA * cNew;                        // kerékagy a világban
-    px = hx; py = hy + W.r;
+    px = hx; py = hy + W.r + TKO;
     const sl = gSl(px), il = 1 / Math.hypot(1, sl); tx = il; ty = sl * il; nx = sl * il; ny = -il;
     const ux = sA, uy = -cA;                                                 // a test „fölfelé” tengelye
     // a rugóerő a test fölfelé-tengelyén hat az agyon
@@ -360,7 +374,7 @@ function newRun(si) {
   MG.trk = buildStage(si);
   MG.V = makeVeh();
   Object.assign(MG, {t: 0, z: [], grab: [], dust: [], flames: [], beams: [], parts: [], gibs: [], guts: [], dec: [], corpses: [], fx: [], shells: [], ebul: [], txt: [], tracers: [],
-    kills: 0, kt: {}, hurtBy: {}, pts: 0, cash: 0, combo: 0, comboT: 0, bestCombo: 0, shake: 0, slow: 1, end: null, endT: 0, maxX: 220, hordeMsg: 0, sndT: {}});
+    kills: 0, kt: {}, hurtBy: {}, started: 0, askK: 0, grace: 0, pxT: 0, pxX: 220, pts: 0, cash: 0, combo: 0, comboT: 0, bestCombo: 0, shake: 0, slow: 1, end: null, endT: 0, maxX: 220, hordeMsg: 0, sndT: {}});
   MG.cam = {x: MG.V.x - 200, y: MG.V.y - 260, s: 1};
   MG.inp = {gas: 0, brk: 0, tl: 0, tr: 0, boost: 0, fire: 0, fireH: 0, flame: 0};
   MG.trk.props.forEach(p => { p.y = gY(p.x); p.dead = 0 });
@@ -369,7 +383,7 @@ function newRun(si) {
 function driftDecal(x) { MG.dec.push({x, w: rnd(10, 28), c: '#3a0808', a: .5, g: 1, tw: 0}) }
 
 function spawnZ(s) {
-  const D = ZT[s.t], z = {t: s.t, D, x: s.x, y: gY(s.x), vx: 0, vy: 0, hp: D.hp * (1 + MG.trk.si * .15), st: 'walk', ph: Math.random() * 6, spd: rnd(D.spd[0], D.spd[1]),
+  const D = ZT[s.t], z = {t: s.t, D, x: s.x, y: gY(s.x), vx: 0, vy: 0, hp: D.hp * MG.trk.S.hpm, st: 'walk', ph: Math.random() * 6, spd: rnd(D.spd[0], D.spd[1]),
     dir: -1, hitT: 0, hitCd: 0, cd: rnd(1, 3), armL: D.mon ? 0 : 1, armR: D.mon ? 0 : 1, head: D.mon ? 0 : 1, down: 0, bleed: 0, sc: rnd(.92, 1.1), sk: Math.floor(Math.random() * 4), horde: s.horde};
   z.hp0 = z.hp; MG.z.push(z);
 }
@@ -471,9 +485,16 @@ function update(dt) {
   if (!MG.end) {
     const sp = Math.hypot(V.vx, V.vy);
     if (V.x >= T.fin) finish('win');
-    if (Math.cos(V.a) < -.25 && V.hullHit) { V.flipT += dt; if (V.flipT > 2.4) finish('flip') } else V.flipT = Math.max(0, V.flipT - dt);
-    if (V.fuel <= 0) { if (sp < 6) V.noFuelT += dt; if (V.noFuelT > 1.6) finish('fuel') }
-    if (sp < 5 && V.fuel > 0) { V.stuckT += dt; const lim = MG.grab.length || MG.z.some(z => z.st !== 'dead' && Math.abs(z.x - V.x) < 120) ? 9 : 6; if (V.stuckT > lim) finish('stuck') } else V.stuckT = Math.max(0, V.stuckT - dt * 2);
+    if (inp.gas || inp.brk || V.x > 260) MG.started = 1;
+    // felborulva: rövid idő után megkérdezi, feladod-e (a billentéssel még vissza lehet fordulni)
+    if (Math.cos(V.a) < -.25 && V.hullHit) { V.flipT += dt; if (V.flipT > 2.2) askStuck('flip') } else V.flipT = Math.max(0, V.flipT - dt);
+    if (V.fuel <= 0) { if (sp < 8) V.noFuelT += dt; if (V.noFuelT > 1.2) finish('fuel') }
+    // megállt / nem halad: ha ~3 mp-ig áll, vagy 4 mp alatt alig jutott előre (pl. ide-oda ringatózik), megkérdezi, feladod-e
+    if (MG.started && V.fuel > 0) {
+      if (sp < 8) V.stuckT += dt; else V.stuckT = Math.max(0, V.stuckT - dt * 2);
+      if (V.stuckT > (MG.grab.length ? 4 : 3)) askStuck('stuck');
+      if (MG.t - MG.pxT >= 4) { if (MG.maxX - MG.pxX < 28 && MG.t > MG.grace) askStuck('stuck'); MG.pxT = MG.t; MG.pxX = MG.maxX }
+    }
     if (V.y > 3000) finish('flip');
   } else { MG.endT -= dt / MG.slow; if (MG.endT <= 0 && !MG.endShown) { MG.endShown = 1; showResult() } }
 }
@@ -889,14 +910,19 @@ function draw(now) {
     const cv = document.createElement('canvas'); cv.width = Math.max(1, W * MG.dpr | 0); cv.height = Math.max(1, H * MG.dpr | 0); const x = cv.getContext('2d'); x.scale(MG.dpr, MG.dpr);
     const sg = x.createLinearGradient(0, 0, 0, H); S.sky.forEach((col, i) => sg.addColorStop(i / (S.sky.length - 1), col)); x.fillStyle = sg; x.fillRect(0, 0, W, H);
     const sr = Math.min(W, H) * .5, sgl = x.createRadialGradient(W * .72, H * .3, 0, W * .72, H * .3, sr); sgl.addColorStop(0, 'rgba(255,240,200,.95)'); sgl.addColorStop(.07, 'rgba(255,225,160,.75)'); sgl.addColorStop(.3, 'rgba(255,170,90,.22)'); sgl.addColorStop(1, 'rgba(255,120,60,0)'); x.fillStyle = sgl; x.fillRect(0, 0, W, H);
-    for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(255,255,255,${(.15 + (i * 7 % 10) / 22).toFixed(2)})`; if (T.si === 2) x.fillRect((i * 97.3) % W, (i * 53.1) % (H * .45), 1.4, 1.4) }
+    for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(255,255,255,${(.15 + (i * 7 % 10) / 22).toFixed(2)})`; if (T.S.stars) x.fillRect((i * 97.3) % W, (i * 53.1) % (H * .45), 1.4, 1.4) }
     cv.si = T.si; cv.W = W; cv.H = H; cv.d = MG.dpr; MG.skyC = cv;
   }
   c.drawImage(MG.skyC, 0, 0, W, H);
   // távoli rom-város (parallax)
   const px1 = MG.cam.x * .15, hor = H * .62 - (MG.cam.y + 300) * sc * .08;
   c.fillStyle = S.far;
-  for (const b of T.sky) { const x = (b.x - px1) * sc * .8; if (x < -100 || x > W + 100) continue; const w = b.w * sc * .8, h = b.h * sc * .8; c.beginPath(); c.moveTo(x, hor); c.lineTo(x, hor - h); if (b.br) { c.lineTo(x + w * .3, hor - h * (1 - b.br * .4)); c.lineTo(x + w * .55, hor - h * .8); c.lineTo(x + w * .7, hor - h * (1 - b.br)); } c.lineTo(x + w, hor - h * (b.br ? .6 : 1)); c.lineTo(x + w, hor); c.fill() }
+  for (const b of T.sky) { const x = (b.x - px1) * sc * .8; if (x < -100 || x > W + 100) continue; const w = b.w * sc * .8, h = b.h * sc * .8; c.beginPath(); c.moveTo(x, hor); c.lineTo(x, hor - h); if (b.br) { c.lineTo(x + w * .3, hor - h * (1 - b.br * .4)); c.lineTo(x + w * .55, hor - h * .8); c.lineTo(x + w * .7, hor - h * (1 - b.br)); } c.lineTo(x + w, hor - h * (b.br ? .6 : 1)); c.lineTo(x + w, hor); c.fill();
+    if (b.win && S.kind === 'city') { // égő ablakok: két árnyalat, a rácsba pontokat szórva (köteg-rajz: csak két kitöltés / épület)
+      const gx = 7 * sc, gy = 9 * sc, cw = 3.4 * sc, ch = 4.6 * sc; let sd = b.sd | 0; const rn = () => { sd = (sd * 1664525 + 1013904223) | 0; return ((sd >>> 8) & 0xffff) / 65536 };
+      c.beginPath(); for (let yy = hor - h + 10 * sc; yy < hor - 12 * sc; yy += gy) for (let xx = x + 5 * sc; xx < x + w - 6 * sc; xx += gx) if (rn() < .2) c.rect(xx, yy, cw, ch); c.fillStyle = 'rgba(255,196,110,.78)'; c.fill();
+      c.beginPath(); for (let yy = hor - h + 10 * sc; yy < hor - 12 * sc; yy += gy) for (let xx = x + 5 * sc; xx < x + w - 6 * sc; xx += gx) if (rn() < .08) c.rect(xx, yy, cw, ch); c.fillStyle = 'rgba(130,200,255,.6)'; c.fill(); c.fillStyle = S.far }
+  }
   c.fillRect(0, hor, W, H - hor);
   { const hz = c.createLinearGradient(0, hor - 90 * sc, 0, hor + 10); hz.addColorStop(0, 'rgba(255,170,100,0)'); hz.addColorStop(1, 'rgba(255,170,100,.16)'); c.fillStyle = hz; c.fillRect(0, hor - 90 * sc, W, 100 * sc); c.fillStyle = S.far }
   // füstoszlopok
@@ -907,6 +933,16 @@ function draw(now) {
   for (const m of T.mids) { const x = (m.x - px2) * sc, h = m.h * sc; if (x < -80 || x > W + 80) continue;
     if (m.k === 'tree') { c.fillRect(x - 2 * sc, hor2 - h, 4 * sc, h); c.strokeStyle = S.mid; c.lineWidth = 2 * sc; c.beginPath(); c.moveTo(x, hor2 - h * .7); c.lineTo(x - 14 * sc, hor2 - h * .95); c.moveTo(x, hor2 - h * .55); c.lineTo(x + 16 * sc, hor2 - h * .8); c.stroke() }
     else if (m.k === 'pole') { c.fillRect(x - 1.5 * sc, hor2 - h * 1.2, 3 * sc, h * 1.2); c.fillRect(x - 12 * sc, hor2 - h * 1.15, 24 * sc, 2.5 * sc); c.strokeStyle = S.mid; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 12 * sc, hor2 - h * 1.13); c.quadraticCurveTo(x + 60 * sc, hor2 - h, x + 140 * sc, hor2 - h * 1.13); c.stroke() }
+    else if (m.k === 'block') { // panelház: ablak-rácsok, erkélyek, tetőantenna
+      const ww = (62 + m.s * 40) * sc, hh = (m.h * 1.5) * sc; c.fillStyle = S.mid; c.fillRect(x, hor2 - hh, ww, hh);
+      let sd = m.sd | 0; const rn = () => { sd = (sd * 1664525 + 1013904223) | 0; return ((sd >>> 8) & 0xffff) / 65536 }, gx = 9 * sc, gy = 12 * sc;
+      c.beginPath(); for (let yy = hor2 - hh + 8 * sc; yy < hor2 - 10 * sc; yy += gy) for (let xx = x + 6 * sc; xx < x + ww - 8 * sc; xx += gx) if (rn() < .3) c.rect(xx, yy, 5 * sc, 7 * sc); c.fillStyle = 'rgba(255,190,100,.85)'; c.fill();
+      c.beginPath(); for (let yy = hor2 - hh + 8 * sc; yy < hor2 - 10 * sc; yy += gy) for (let xx = x + 6 * sc; xx < x + ww - 8 * sc; xx += gx) if (rn() < .1) c.rect(xx, yy, 5 * sc, 7 * sc); c.fillStyle = 'rgba(120,190,255,.7)'; c.fill();
+      c.fillStyle = 'rgba(0,0,0,.25)'; for (let yy = hor2 - hh + 18 * sc; yy < hor2 - 12 * sc; yy += gy * 2) c.fillRect(x + 3 * sc, yy, ww - 6 * sc, 1.6 * sc);
+      c.fillStyle = S.mid; c.fillRect(x + ww * .3, hor2 - hh - 8 * sc, 2 * sc, 8 * sc); c.fillRect(x + ww * .62, hor2 - hh - 5 * sc, 7 * sc, 5 * sc);
+      c.fillStyle = S.mid }
+    else if (m.k === 'lamp') { c.fillRect(x - 1.4 * sc, hor2 - h * .9, 2.8 * sc, h * .9); c.fillRect(x - 1.4 * sc, hor2 - h * .9, 14 * sc, 2.4 * sc); const gl = c.createRadialGradient(x + 13 * sc, hor2 - h * .9 + 3 * sc, 0, x + 13 * sc, hor2 - h * .9 + 3 * sc, 22 * sc); gl.addColorStop(0, 'rgba(255,214,140,.9)'); gl.addColorStop(1, 'rgba(255,170,80,0)'); c.fillStyle = gl; c.fillRect(x - 12 * sc, hor2 - h * .9 - 20 * sc, 50 * sc, 46 * sc); c.fillStyle = S.mid }
+    else if (m.k === 'sign') { c.fillRect(x, hor2 - h * .9, 2.4 * sc, h * .9); c.fillRect(x + 20 * sc, hor2 - h * .9, 2.4 * sc, h * .9); c.fillStyle = 'rgba(40,30,70,.95)'; c.fillRect(x - 6 * sc, hor2 - h * 1.35, 36 * sc, 22 * sc); c.fillStyle = m.s < .5 ? 'rgba(255,90,120,.85)' : 'rgba(90,220,255,.8)'; c.fillRect(x - 3 * sc, hor2 - h * 1.35 + 3 * sc, 30 * sc, 4 * sc); c.fillRect(x - 3 * sc, hor2 - h * 1.35 + 11 * sc, 18 * sc, 3 * sc); c.fillStyle = S.mid }
     else { c.fillRect(x, hor2 - h * .7, 60 * sc, h * .7); c.beginPath(); c.moveTo(x - 4 * sc, hor2 - h * .7); c.lineTo(x + 30 * sc, hor2 - h); c.lineTo(x + 50 * sc, hor2 - h * .82); c.lineTo(x + 64 * sc, hor2 - h * .7); c.fill() } }
   c.fillRect(0, hor2, W, H - hor2);
   { const hz = c.createLinearGradient(0, hor2 - 70 * sc, 0, hor2 + 6); hz.addColorStop(0, 'rgba(60,30,20,0)'); hz.addColorStop(1, 'rgba(60,30,20,.2)'); c.fillStyle = hz; c.fillRect(0, hor2 - 70 * sc, W, 76 * sc) }
@@ -924,6 +960,10 @@ function draw(now) {
   c.strokeStyle = S.road; c.lineWidth = 7; c.beginPath(); for (let xx = i0 * STEP; xx <= i1 * STEP; xx += STEP / 2) { if (xx === i0 * STEP) c.moveTo(xx, gY(xx) + 3); else c.lineTo(xx, gY(xx) + 3) } c.stroke();
   c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.5; c.stroke();
   c.strokeStyle = 'rgba(255,200,140,.16)'; c.lineWidth = 1.2; c.beginPath(); for (let xx = i0 * STEP; xx <= i1 * STEP; xx += STEP) { if (xx === i0 * STEP) c.moveTo(xx, gY(xx) - .6); else c.lineTo(xx, gY(xx) - .6) } c.stroke();
+  if (S.kind === 'city') { // útburkolat: szaggatott sávjelzés, zebra, csatornafedél
+    c.fillStyle = 'rgba(236,214,140,.5)'; for (let xx = Math.floor(x0 / 92) * 92; xx < x1; xx += 92) { const sl = gSl(xx); c.save(); c.translate(xx, gY(xx) + 1.4); c.rotate(Math.atan(sl)); c.fillRect(0, -.5, 36, 1.7); c.restore() }
+    c.fillStyle = 'rgba(240,240,230,.38)'; for (let zx = Math.floor(x0 / 1250) * 1250 + 640; zx < x1; zx += 1250) for (let k = 0; k < 8; k++) { const xx = zx + k * 11; if (xx < x0 || xx > x1) continue; const sl = gSl(xx); c.save(); c.translate(xx, gY(xx) + 1.2); c.rotate(Math.atan(sl)); c.fillRect(0, -.6, 6, 2.1); c.restore() }
+  }
   // kavicsok
   c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = i0; i <= i1; i += 2) { const h = (i * 7919) % 13; c.fillRect(i * STEP + h, T.g[i] + 10 + h, 3, 2) }
   // tócsák (vér, sav, korom)
@@ -934,6 +974,7 @@ function draw(now) {
   // roncsok, figyelmeztető táblák
   for (const w of T.wrecks) if (w.x > x0 - 100 && w.x < x1 + 100) drawWreck(c, w);
   for (const d of T.deco) if (d.k === 'warn' && d.x > x0 - 40 && d.x < x1 + 40) drawSign(c, d.x, gY(d.x));
+  for (const d of T.deco) if ((d.k === 'lamp' || d.k === 'siren') && d.x > x0 - 60 && d.x < x1 + 60) drawCityDeco(c, d, now);
   for (const p of T.props) if (!p.dead && p.x > x0 - 40 && p.x < x1 + 40) drawProp(c, p, now);
   // ellenségek
   for (const z of MG.z) if (z.x > x0 - 60 && z.x < x1 + 60) drawZ(c, z, now);
@@ -974,7 +1015,7 @@ function draw(now) {
   if (V.hp / V.hp0 < .25 && !MG.end) { c.fillStyle = `rgba(200,0,0,${.08 + .06 * Math.sin(now / 120)})`; c.fillRect(0, 0, W, H) }
   if (MG.comboShow) { const k = MG.comboShow.t; c.save(); c.translate(W / 2, H * .3); const s = 1 + Math.max(0, k - 1) * 2; c.scale(s, s); c.font = `900 ${Math.min(42, 22 + MG.comboShow.n)}px Anton, Impact, sans-serif`; c.textAlign = 'center'; c.globalAlpha = Math.min(1, k * 2); c.fillStyle = '#000'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 2, 2); c.fillStyle = MG.comboShow.n >= 12 ? '#ff3b30' : '#ffd24a'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 0, 0); c.restore() }
   if (MG.hordeMsg > 0 && Math.sin(now / 110) > -.3) { c.font = '900 26px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('HORDA ELŐTTED', W / 2 + 2, H * .2 + 2); c.fillStyle = '#ff5a3a'; c.fillText('HORDA ELŐTTED', W / 2, H * .2); const tw = c.measureText('HORDA ELŐTTED').width / 2 + 26; drawWarn(c, W / 2 - tw, H * .2 - 11, 15); drawWarn(c, W / 2 + tw, H * .2 - 11, 15) }
-  if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.4 - V.flipT).toFixed(1), W / 2, H * .42) }
+  if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.2 - V.flipT).toFixed(1), W / 2, H * .42) }
 }
 
 function drawWarn(c, x, y, r) { c.save(); c.translate(x, y); c.fillStyle = '#000'; c.beginPath(); c.moveTo(1.5, -r + 1.5); c.lineTo(r + 1.5, r * .85 + 1.5); c.lineTo(-r + 1.5, r * .85 + 1.5); c.fill(); c.fillStyle = '#f2b21c'; c.beginPath(); c.moveTo(0, -r); c.lineTo(r, r * .85); c.lineTo(-r, r * .85); c.closePath(); c.fill(); c.fillStyle = '#1a0f0b'; c.fillRect(-1.5, -r * .35, 3, r * .75); c.fillRect(-1.5, r * .5, 3, 3); c.restore() }
@@ -1002,10 +1043,24 @@ function drawWreck(c, w) {
     c.restore();
   }
 }
+function drawCityDeco(c, d, now) {
+  const x = d.x, y = gY(x);
+  if (d.k === 'lamp') { // utcai lámpa: acél oszlop, ívelt kar, meleg fény
+    c.fillStyle = '#26262c'; c.fillRect(x - 2, y - 92, 4, 92); c.beginPath(); c.moveTo(x - 2, y - 92); c.quadraticCurveTo(x + 2, y - 110, x + 24, y - 104); c.lineTo(x + 24, y - 100); c.quadraticCurveTo(x + 6, y - 106, x + 2, y - 88); c.fill();
+    c.fillStyle = '#d8d4c0'; c.fillRect(x + 18, y - 104, 12, 3);
+    const fl = Math.sin(now / 90 + x) > .93 ? .5 : 1; c.globalCompositeOperation = 'lighter'; c.globalAlpha = .6 * fl; c.drawImage(flameSpr(0), x + 4, y - 128, 44, 44); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+    c.fillStyle = 'rgba(255,214,140,.07)'; c.beginPath(); c.moveTo(x + 22, y - 101); c.lineTo(x + 70, y); c.lineTo(x - 30, y); c.fill();
+  } else { // rendőrautó villogó fénye
+    const ph = Math.floor(now / 160) % 2; c.fillStyle = '#e8e8e0'; c.fillRect(x - 24, y - 16, 48, 11); c.fillStyle = '#1f2a6a'; c.fillRect(x - 24, y - 9, 48, 4); c.fillStyle = '#111'; c.fillRect(x - 12, y - 25, 24, 9);
+    c.fillStyle = '#16161a'; c.beginPath(); c.arc(x - 14, y - 4, 4.5, 0, 7); c.arc(x + 14, y - 4, 4.5, 0, 7); c.fill();
+    c.globalCompositeOperation = 'lighter'; c.fillStyle = ph ? 'rgba(255,40,40,.95)' : 'rgba(60,110,255,.95)'; c.fillRect(ph ? x - 9 : x + 1, y - 29, 8, 4); c.globalAlpha = .7; c.drawImage(flameSpr(ph ? 1 : 0), x + (ph ? -48 : 22), y - 62, 64, 64); c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  }
+}
 function drawProp(c, p, now) {
   const x = p.x, y = p.y;
   if (p.k === 'barr') {
-    if (p.kind === 'wood') { c.fillStyle = '#6a4a2a'; for (let i = 0; i < 4; i++) c.fillRect(x - p.w / 2, y - p.h + i * 9, p.w, 6); c.fillStyle = '#3a2a1a'; c.fillRect(x - p.w / 2 + 3, y - p.h, 4, p.h); c.fillRect(x + p.w / 2 - 7, y - p.h, 4, p.h); c.strokeStyle = '#8a8a8a'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(x - p.w / 2 + i * 8, y - p.h - 4); c.arc(x - p.w / 2 + i * 8, y - p.h - 4, 4, 0, 7) } c.stroke() }
+    if (p.kind === 'jersey') { c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x - p.w / 2 + 2, y - 1, p.w, 2); c.fillStyle = '#9a9a92'; c.beginPath(); c.moveTo(x - p.w / 2, y); c.lineTo(x - p.w / 2 + 4, y - 14); c.lineTo(x - p.w / 2 + 8, y - p.h + 6); c.lineTo(x + p.w / 2 - 8, y - p.h + 6); c.lineTo(x + p.w / 2 - 4, y - 14); c.lineTo(x + p.w / 2, y); c.closePath(); c.fill(); c.fillStyle = '#d9a21c'; for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(x - p.w / 2 + 7 + i * 7, y - p.h + 7); c.lineTo(x - p.w / 2 + 11 + i * 7, y - p.h + 7); c.lineTo(x - p.w / 2 + 9 + i * 7, y - 12); c.lineTo(x - p.w / 2 + 5 + i * 7, y - 12); c.fill() } c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 1; c.strokeRect(x - p.w / 2 + 8, y - p.h + 6, p.w - 16, 3) }
+    else if (p.kind === 'wood') { c.fillStyle = '#6a4a2a'; for (let i = 0; i < 4; i++) c.fillRect(x - p.w / 2, y - p.h + i * 9, p.w, 6); c.fillStyle = '#3a2a1a'; c.fillRect(x - p.w / 2 + 3, y - p.h, 4, p.h); c.fillRect(x + p.w / 2 - 7, y - p.h, 4, p.h); c.strokeStyle = '#8a8a8a'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(x - p.w / 2 + i * 8, y - p.h - 4); c.arc(x - p.w / 2 + i * 8, y - p.h - 4, 4, 0, 7) } c.stroke() }
     else { for (let r = 0; r < 4; r++) for (let i = 0; i < 3 - (r > 2 ? 1 : 0); i++) { c.fillStyle = (r + i) % 2 ? '#8a7a52' : '#9a8a60'; c.beginPath(); c.ellipse(x - p.w / 2 + 6 + i * 10 + (r % 2) * 4, y - 5 - r * 9, 6.5, 5, 0, 0, 7); c.fill() } }
   } else if (p.k === 'boom') { c.fillStyle = '#a01e14'; c.fillRect(x - 7, y - 20, 14, 20); c.fillStyle = '#5a0e08'; c.fillRect(x - 7, y - 15, 14, 2); c.fillRect(x - 7, y - 7, 14, 2); c.fillStyle = '#ffd24a'; for (let i = 0; i < 3; i++) { const a0 = i * 2.094 - 1.57 - .52; c.beginPath(); c.moveTo(x, y - 10); c.arc(x, y - 10, 4.4, a0, a0 + 1.04); c.closePath(); c.fill() } c.fillStyle = '#5a0e08'; c.beginPath(); c.arc(x, y - 10, 1.2, 0, 7); c.fill() }
   else if (p.k === 'fuel') { const b = Math.sin(now / 250 + x) * 2; c.fillStyle = '#c0392b'; c.fillRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = '#7a1e14'; c.fillRect(x - 3, y - 22 + b, 6, 4); c.strokeStyle = '#ffd24a'; c.lineWidth = 1; c.strokeRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = 'rgba(255,210,74,.25)'; c.beginPath(); c.arc(x, y - 10 + b, 16, 0, 7); c.fill() }
@@ -1220,21 +1275,25 @@ function disc(c, cx, cy, r, base) { // gömbölyű alkatrész (turbó, tárcsa):
 const TR_N = 5;   // egy futófelület-szakasz mintapontjai
 function trackPath(V, ws, live) {
   const pts = [], T = 2.6, n = ws.length, P = (x, y) => pts.push(x, y);
-  const A = ws[0], Z = ws[n - 1];
-  // hátsó kerék körül: felülről hátra, lefelé
-  for (let u = 0; u <= 6; u++) { const th = -Math.PI / 2 - u / 6 * Math.PI, r = A.r + T; P(A.cx + Math.cos(th) * r, A.cy + Math.sin(th) * r) }
-  // alsó ág: kerékpáronként külső érintő, a talajra „ráfekvő” közbenső pontokkal
+  const A = ws[0], Z = ws[n - 1], HW = 3.2, cA = Math.max(.3, Math.cos(V.a));
+  // a talaj „helyi” y-ja a jármű adott oszlopában (a test dőlését figyelembe véve): ide fekszik rá a lánc külső felülete
+  const gnd = (lx, y) => { let yl = y; for (let it = 0; it < 2; it++) { const [wx, wy] = vPt(V, lx, yl); yl += (gY(wx) - wy) / cA } return yl - HW };
+  // hátsó kerék körül: felülről hátra, lefelé (az alsó íven a talaj fölé tolja)
+  for (let u = 0; u <= 6; u++) { const th = -Math.PI / 2 - u / 6 * Math.PI, r = A.r + T; let x = A.cx + Math.cos(th) * r, y = A.cy + Math.sin(th) * r; if (live && Math.sin(th) > 0 && !A.s0) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 14) } P(x, y) }
+  // alsó ág: kerékpáronként külső érintő; a lánc megereszkedik a kerekek között, és rátapad a talajra / a kiemelkedő talaj fölfelé tolja
   for (let i = 0; i < n - 1; i++) {
     const a = ws[i], b = ws[i + 1], dx = b.cx - a.cx, dy = b.cy - a.cy, L = Math.hypot(dx, dy), phi = Math.atan2(dy, dx), be = Math.asin(clamp((a.r - b.r) / L, -.5, .5)), th = phi + Math.PI / 2 - be, nx = Math.cos(th), ny = Math.sin(th);
     const x1 = a.cx + nx * (a.r + T), y1 = a.cy + ny * (a.r + T), x2 = b.cx + nx * (b.r + T), y2 = b.cy + ny * (b.r + T);
     for (let k = 0; k < TR_N; k++) {
       const f = k / TR_N; let x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f;
-      if (live && k > 0 && !a.s && !b.s) { const [wx, wy] = vPt(V, x, y), gl = vLoc(V, wx, gY(wx))[1] - .6; if (gl < y) y = Math.max(gl, y - 9) }   // a láncot a kiemelkedő talaj fölfelé tolja
+      const sag = Math.sin(f * Math.PI) * (a.s || b.s ? 4.6 : 2.8);            // a lógó lánc a súlyától megereszkedik
+      if (live) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 12); else y = Math.min(y + sag, g) }
+      else y += sag;
       P(x, y);
     }
   }
   // elülső kerék körül: alulról előre, fölfelé
-  for (let u = 0; u <= 6; u++) { const th = Math.PI / 2 - u / 6 * Math.PI, r = Z.r + T; P(Z.cx + Math.cos(th) * r, Z.cy + Math.sin(th) * r) }
+  for (let u = 0; u <= 6; u++) { const th = Math.PI / 2 - u / 6 * Math.PI, r = Z.r + T; let x = Z.cx + Math.cos(th) * r, y = Z.cy + Math.sin(th) * r; if (live && Math.sin(th) > 0) { const g = gnd(x, y); if (y > g) y = Math.max(g, y - 14) } P(x, y) }
   // felső ág: lehajló, két támgörgő között megülő lánc
   const x1 = Z.cx, y1 = Z.cy - Z.r - T, x2 = A.cx, y2 = A.cy - A.r - T;
   for (let k = 1; k < 12; k++) { const f = k / 12; P(x1 + (x2 - x1) * f, y1 + (y2 - y1) * f + Math.sin(f * Math.PI) * 3.2) }
@@ -1513,8 +1572,18 @@ function keys(e) {
   if (k === ' ' || k === 'f' || k === 'F') { if (d) MG.inp.fire = 1; MG.inp.fireH = d; e.preventDefault() }
   if ((k === 'p' || k === 'P' || k === 'Escape') && d && MG.phase === 'play') pause(!MG.paused);
 }
+// elakadás / felborulás: a játék megáll, és megkérdezi, feladod-e (a „Tovább” ad még 5 mp haladékot)
+function askStuck(kind) {
+  if (MG.askK || MG.end || MG.phase !== 'play') return;
+  MG.askK = kind; MG.paused = true; for (const [, k] of BTN) MG.inp[k] = 0; MG.inp.fireH = 0;
+  const scr = $('#mgScr'); if (!scr) return;
+  const dist = n0(Math.floor((MG.V.x - 220) / UM));
+  scr.innerHTML = `<div class="mgcard mgpause mgask"><h3>${ico(kind === 'flip' ? 'rotr' : 'warn')} ${kind === 'flip' ? 'FELBORULTÁL' : 'ELAKADTÁL'}</h3><p>${kind === 'flip' ? 'A PzH a tetején fekszik.' : 'A gép nem halad tovább.'} Eddig <b>${dist} m</b>, ${ico('skull')} ${MG.kills}.<br>Feladod, és megkapod a jutalmat az eddigiekért?</p><button type="button" class="btn pri" data-act="giveup">${ico('white')} Feladom</button> <button type="button" class="btn line" data-act="resume">${ico('play')} Tovább próbálom</button></div>`;
+  scr.hidden = false;
+}
 function pause(on) {
   MG.paused = !!on && MG.phase === 'play';
+  if (!MG.paused && MG.askK) { MG.askK = 0; MG.V.stuckT = -2; MG.V.flipT = 0; MG.grace = MG.t + 5; MG.pxT = MG.t; MG.pxX = MG.maxX }
   const scr = $('#mgScr'); if (!scr) return;
   if (MG.paused) { scr.innerHTML = `<div class="mgcard mgpause"><h3>${ico('pause')} SZÜNET</h3><p>Táv: <b>${n0(Math.floor((MG.V.x - 220) / UM))} m</b> · ${ico('skull')} ${MG.kills}</p><button type="button" class="btn pri" data-act="resume">${ico('play')} Folytatás</button> <button type="button" class="btn line" data-act="giveup">${ico('white')} Feladom</button></div>`; scr.hidden = false }
   else if (MG.phase === 'play') { scr.innerHTML = ''; scr.hidden = true; MG.last = performance.now() }
@@ -1600,7 +1669,7 @@ function showResult() {
   const V = MG.V, T = MG.trk, si = T.si, S = T.S, sv = MG.sv, E = MG.end;
   const dist = Math.max(0, Math.floor((Math.min(MG.maxX, T.fin) - 220) / UM)), win = E.kind === 'win';
   const distCash = Math.floor(dist * .55), winCash = win ? S.bonus : 0, total = MG.cash + distCash + winCash;
-  const score = dist + MG.pts + (win ? 1000 * (si + 1) : 0);
+  const score = dist + MG.pts + (win ? S.sb : 0);
   sv.cash += total; sv.runs++; sv.kills += MG.kills; sv.tot += dist;
   const newBest = dist > sv.best[si]; if (newBest) sv.best[si] = dist;
   let unlocked = false; if (win) { if (!sv.done[si]) sv.done[si] = 1; if (si + 1 < STAGES.length && sv.unl < si + 2) { sv.unl = si + 2; unlocked = true } }
