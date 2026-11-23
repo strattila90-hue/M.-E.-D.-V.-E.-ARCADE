@@ -3,6 +3,7 @@
 // Részletes leírás, hangolási táblák és bővítési útmutató: docs/meat-grinder.md
 import {$,AC,MASTER,NOISE,SOUND,LOWFX,ac,boom,snare,esc,n0,toast,medveWrap,rockStart,rockStop,playCount,gSave,gBoard,D_WHEELS,PK,PCX,PBY,drBodyImg,drBarrelImg} from './app.js';
 import {monSprite} from './mgmon.js';
+import {ico} from './mgico.js';
 
 /* ============================================================================
    1. ALAPÁLLANDÓK
@@ -24,42 +25,42 @@ function mulberry(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79
    és a hozzá tartozó számértékek (s: stat). Új szint = új elem a lv tömbben, ennyi.
    ============================================================================ */
 const UPG = [
-  {k: 'motor', n: 'Motor', ic: '⚙️', lv: [
+  {k: 'motor', n: 'Motor', ic: 'motor', lv: [
     {n: 'MTU MT 881 (gyári)', d: 'Fáradt, 1000 LE-s dízel.', s: {f: 1, v: 150}},
     {n: 'Egyenes kipufogók', d: 'Levágott dobok, hangos és dühös. +18% erő.', c: 160, s: {f: 1.18, v: 172}},
     {n: 'Turbófeltöltő', d: 'Roncstelepi turbó, drótozva. +40% erő.', c: 520, r: 350, s: {f: 1.4, v: 200}},
     {n: 'Iker-turbó + intercooler', d: 'Két turbó, hűtőrács a tornyon.', c: 1500, r: 900, s: {f: 1.68, v: 235}},
     {n: 'Kompresszoros szörny', d: 'Tetőből kiálló feltöltő, ékszíjjal.', c: 4200, r: 2000, s: {f: 2.05, v: 280}}]},
-  {k: 'futomu', n: 'Futómű', ic: '🛞', lv: [
+  {k: 'futomu', n: 'Futómű', ic: 'track', lv: [
     {n: 'Kopott lánctalp', d: 'Gyári felfüggesztés, csúszik.', s: {g: .85, cr: 0, tl: 1}},
     {n: 'Új lánctagok', d: 'Jobb tapadás emelkedőn.', c: 140, s: {g: 1, cr: .15, tl: 1.12}},
     {n: 'Tüskés lánctalp', d: 'Acéltüskék a tagokon. Nagy tapadás.', c: 480, r: 300, s: {g: 1.15, cr: .28, tl: 1.25}},
     {n: 'Megerősített torziós rudak', d: 'Bírja az ugratásokat.', c: 1300, r: 800, s: {g: 1.28, cr: .42, tl: 1.38}},
     {n: 'Versenyfutómű', d: 'Gázrugók, tökéletes levegő-irányítás.', c: 3600, r: 1800, s: {g: 1.42, cr: .55, tl: 1.55}}]},
-  {k: 'tank', n: 'Üzemanyag', ic: '⛽', lv: [
+  {k: 'tank', n: 'Üzemanyag', ic: 'fuel', lv: [
     {n: 'Gyári tartály (maradék)', d: 'Alig valami lötyög benne.', s: {l: 60}},
     {n: '2 kanna a farokon', d: '+30 liter.', c: 120, s: {l: 90}},
     {n: 'Hordó + kannák', d: '+70 liter.', c: 420, r: 250, s: {l: 130}},
     {n: 'Tetőre szíjazott hordók', d: '+120 liter.', c: 1150, r: 700, s: {l: 180}},
     {n: 'Külső póttartály', d: 'Hegesztett, ronda, hatalmas. +190 liter.', c: 3200, r: 1600, s: {l: 250}}]},
-  {k: 'pancel', n: 'Páncélzat', ic: '🛡️', lv: [
+  {k: 'pancel', n: 'Páncélzat', ic: 'shield', lv: [
     {n: 'Gyári páncél (rozsdás)', d: '100 szerkezeti pont.', s: {hp: 100, dr: 0}},
     {n: 'Hegesztett lemezek', d: '150 pont, -10% sérülés.', c: 180, s: {hp: 150, dr: .1}},
     {n: 'Rácspáncél-ketrec', d: '210 pont, -20% sérülés.', c: 600, r: 400, s: {hp: 210, dr: .2}},
     {n: 'Sínacél + gumiköpeny', d: '280 pont, -30% sérülés.', c: 1700, r: 1000, s: {hp: 280, dr: .3}},
     {n: 'Guruló erőd', d: '360 pont, -40% sérülés, tetőtüskék.', c: 4600, r: 2200, s: {hp: 360, dr: .4}}]},
-  {k: 'elol', n: 'Orr-előtét', ic: '🔪', lv: [
+  {k: 'elol', n: 'Orr-előtét', ic: 'plow', lv: [
     {n: 'Csupasz orr', d: 'A test maga üt. Kicsi sebzés, nagy fékeződés.', s: {m: 1, dps: 0, sr: 0, ext: 0, fp: 0}},
     {n: 'Tolólap (dózer)', d: '×1,4 ütés, -25% lassulás.', c: 220, s: {m: 1.4, dps: 15, sr: .25, ext: 12, fp: .2}},
     {n: 'Tüskés eke', d: '×1,8 ütés, folyamatos szúrás.', c: 700, r: 450, s: {m: 1.8, dps: 55, sr: .38, ext: 16, fp: .3}},
     {n: 'Kombájn-tálca', d: '×2,4 ütés, forgó motolla – behúzza őket.', c: 1900, r: 1100, s: {m: 2.4, dps: 140, sr: .52, ext: 26, fp: .4}},
     {n: 'HÚSDARÁLÓ (iker-dob)', d: '×3 ütés, két fűrészdob. Ledarál mindent.', c: 5200, r: 2300, s: {m: 3, dps: 300, sr: .68, ext: 30, fp: .55}}]},
-  {k: 'oldal', n: 'Oldalvédelem', ic: '🌵', lv: [
+  {k: 'oldal', n: 'Oldalvédelem', ic: 'spikes', lv: [
     {n: 'Nincs', d: 'A zombik könnyen felkapaszkodnak.', s: {dps: 0, gr: 0}},
     {n: 'Szögesdrót-tekercs', d: 'Sebzi a kapaszkodókat, -30% felmászás.', c: 150, s: {dps: 14, gr: .3}},
     {n: 'Oldaltüskék', d: 'Hegyes vasak a lánctalp-kötényen.', c: 560, r: 350, s: {dps: 42, gr: .5}},
     {n: 'Láncfűrész-sor', d: 'Körbefutó fűrészlánc. Senki nem marad rajta.', c: 1800, r: 1200, s: {dps: 110, gr: .75}}]},
-  {k: 'agyu', n: 'Fő fegyver', ic: '💥', lv: [
+  {k: 'agyu', n: 'Fő fegyver', ic: 'cannon', lv: [
     {n: '155 mm – lőszer nélkül', d: 'A cső be van dugva. Dísznek szép.', s: {am: 0, rl: 9, dm: 0, rad: 0}},
     {n: '2 db DM121 gránát', d: 'TŰZ gomb: hordákat tép szét.', c: 260, s: {am: 2, rl: 8, dm: 320, rad: 115}},
     {n: '3 gránát, kézi töltés', d: 'Gyorsabb töltés.', c: 800, r: 500, s: {am: 3, rl: 6.5, dm: 400, rad: 130}},
@@ -67,30 +68,30 @@ const UPG = [
     {n: '8 gránát, MRSI-sorozat', d: 'Szőnyeg-tűz a horda közepébe.', c: 5000, r: 2400, s: {am: 8, rl: 3.5, dm: 600, rad: 180}},
     {n: '20 gránát, forgótáras tár', d: 'Tartsd nyomva a TŰZ gombot: folyamatos sorozat (kb. 1 lövés / 1,4 mp).', c: 9000, r: 2500, s: {am: 20, rl: 1.4, dm: 650, rad: 190}},
     {n: '60 gránát – automata ágyú', d: '60 db gránát, kb. 2 lövés/mp sorozattűz. Hordaírtó.', c: 16000, r: 2800, s: {am: 60, rl: .5, dm: 720, rad: 200}}]},
-  {k: 'gepp', n: 'Kiegészítő fegyver', ic: '🔫', lv: [
+  {k: 'gepp', n: 'Kiegészítő fegyver', ic: 'mg', lv: [
     {n: 'Nincs', d: 'A parancsnoki kupola üres.', s: {rt: 0, dm: 0, rg: 0}},
     {n: 'FN MAG géppuska', d: 'Automatikusan lő az elöl lévőkre.', c: 240, s: {rt: 7, dm: 7, rg: 480}},
     {n: 'Iker MAG', d: 'Két cső, dupla tűzgyorsaság.', c: 760, r: 450, s: {rt: 13, dm: 7, rg: 500}},
     {n: 'M2HB 12,7 mm', d: 'Nehézgéppuska, átüti a páncélosokat.', c: 2000, r: 1200, s: {rt: 8, dm: 17, rg: 620}},
     {n: 'Forgócsöves minigun', d: 'Fémeső.', c: 4800, r: 2200, s: {rt: 24, dm: 10, rg: 640}}]},
-  {k: 'boost', n: 'Rakétahajtás', ic: '🚀', lv: [
+  {k: 'boost', n: 'Rakétahajtás', ic: 'rocket', lv: [
     {n: 'Nincs', d: 'Csak a motor tol.', s: {cap: 0, th: 0}},
     {n: 'JATO rakéta', d: '3 mp tolóerő, ugratáshoz.', c: 380, r: 200, s: {cap: 3, th: 1}},
     {n: 'Iker rakéta', d: '5 mp, erősebb.', c: 1300, r: 800, s: {cap: 5, th: 1.25}},
     {n: 'Utánégető-köteg', d: '7,5 mp, repülés majdnem.', c: 3800, r: 1900, s: {cap: 7.5, th: 1.5}}]},
-  {k: 'lang', n: 'Lángszóró', ic: '🔥', lv: [
+  {k: 'lang', n: 'Lángszóró', ic: 'flame', lv: [
     {n: 'Nincs', d: 'Nincs lángszóró.', s: {fl: 0, fr: 0, fd: 0}},
     {n: 'Gyújtó-lángszóró', d: 'Rövid lángcsóva az orr fölé (LÁNG gomb / G). A zombik égve rohangálnak és gyújtják egymást.', c: 700, r: 300, s: {fl: 6, fr: 150, fd: 55}},
     {n: 'Tartályos lángszóró', d: 'Nagyobb tartály, hosszabb láng.', c: 2000, r: 900, s: {fl: 10, fr: 210, fd: 95}},
     {n: 'Napalm-fúvóka', d: 'Ragadós, tovább égő láng. 15 mp tüzelés.', c: 4400, r: 1800, s: {fl: 15, fr: 270, fd: 150}},
     {n: 'Sárkánytorok', d: 'Hatalmas lángcsóva, ami él, az ég.', c: 7800, r: 2600, s: {fl: 22, fr: 340, fd: 230}}]},
-  {k: 'lezer', n: 'Lézer', ic: '🔴', lv: [
+  {k: 'lezer', n: 'Lézer', ic: 'laser', lv: [
     {n: 'Nincs', d: 'Nincs lézer.', s: {nb: 0, dps: 0, rg: 0, pi: 0}},
     {n: 'Diódás lézer', d: 'Automatikusan a legközelebbi ellenfelet égeti.', c: 900, r: 500, s: {nb: 1, dps: 60, rg: 330, pi: 0}},
     {n: 'Impulzus-lézer', d: 'Átvág a soron: a sugár útjában minden ellenfelet éget.', c: 2600, r: 1200, s: {nb: 1, dps: 115, rg: 420, pi: 1}},
     {n: 'Iker-lézer', d: 'Két sugár, két célpont.', c: 5400, r: 2000, s: {nb: 2, dps: 170, rg: 480, pi: 1}},
     {n: 'Plazma-lézer', d: 'Három átható sugár: a horda szétolvad.', c: 9000, r: 2700, s: {nb: 3, dps: 250, rg: 560, pi: 1}}]},
-  {k: 'torony', n: 'Automata torony', ic: '🎯', lv: [
+  {k: 'torony', n: 'Automata torony', ic: 'turret', lv: [
     {n: 'Nincs', d: 'Nincs torony.', s: {rt: 0, dm: 0, rg: 0, nb: 0}},
     {n: 'Tetőtorony – géppuska', d: 'Automata, 360°-ban lő: a rád mászókat is leszedi.', c: 800, r: 400, s: {rt: 6, dm: 8, rg: 360, nb: 1}},
     {n: 'Iker automata', d: 'Gyorsabb, két csővel.', c: 2200, r: 1000, s: {rt: 11, dm: 10, rg: 430, nb: 1}},
@@ -431,7 +432,7 @@ function finish(kind, why) {
   if (MG.end) return;
   MG.end = {kind, why}; MG.endT = kind === 'win' ? 3.2 : 2.4; MG.slow = .35;
   MG.inp.gas = MG.inp.brk = MG.inp.boost = 0;
-  if (kind === 'win') { MG.shake = .4; toast('🏁 Elérted a menedéket!') }
+  if (kind === 'win') { MG.shake = .4; toast('Elérted a menedéket!') }
   if (kind === 'dead') { const V = MG.V; boomFx(V.x, V.y - 20, 1.3); for (let i = 0; i < 26; i++) sparks(V.x + rnd(-50, 50), V.y + rnd(-40, 10), 1) }
 }
 
@@ -972,10 +973,11 @@ function draw(now) {
   if (MG.hurtT > 0) { const vg = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .7); vg.addColorStop(0, 'rgba(160,0,0,0)'); vg.addColorStop(1, `rgba(160,0,0,${MG.hurtT * 1.4})`); c.fillStyle = vg; c.fillRect(0, 0, W, H) }
   if (V.hp / V.hp0 < .25 && !MG.end) { c.fillStyle = `rgba(200,0,0,${.08 + .06 * Math.sin(now / 120)})`; c.fillRect(0, 0, W, H) }
   if (MG.comboShow) { const k = MG.comboShow.t; c.save(); c.translate(W / 2, H * .3); const s = 1 + Math.max(0, k - 1) * 2; c.scale(s, s); c.font = `900 ${Math.min(42, 22 + MG.comboShow.n)}px Anton, Impact, sans-serif`; c.textAlign = 'center'; c.globalAlpha = Math.min(1, k * 2); c.fillStyle = '#000'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 2, 2); c.fillStyle = MG.comboShow.n >= 12 ? '#ff3b30' : '#ffd24a'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 0, 0); c.restore() }
-  if (MG.hordeMsg > 0 && Math.sin(now / 110) > -.3) { c.font = '900 26px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('⚠ HORDA ELŐTTED ⚠', W / 2 + 2, H * .2 + 2); c.fillStyle = '#ff5a3a'; c.fillText('⚠ HORDA ELŐTTED ⚠', W / 2, H * .2) }
+  if (MG.hordeMsg > 0 && Math.sin(now / 110) > -.3) { c.font = '900 26px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('HORDA ELŐTTED', W / 2 + 2, H * .2 + 2); c.fillStyle = '#ff5a3a'; c.fillText('HORDA ELŐTTED', W / 2, H * .2); const tw = c.measureText('HORDA ELŐTTED').width / 2 + 26; drawWarn(c, W / 2 - tw, H * .2 - 11, 15); drawWarn(c, W / 2 + tw, H * .2 - 11, 15) }
   if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.4 - V.flipT).toFixed(1), W / 2, H * .42) }
 }
 
+function drawWarn(c, x, y, r) { c.save(); c.translate(x, y); c.fillStyle = '#000'; c.beginPath(); c.moveTo(1.5, -r + 1.5); c.lineTo(r + 1.5, r * .85 + 1.5); c.lineTo(-r + 1.5, r * .85 + 1.5); c.fill(); c.fillStyle = '#f2b21c'; c.beginPath(); c.moveTo(0, -r); c.lineTo(r, r * .85); c.lineTo(-r, r * .85); c.closePath(); c.fill(); c.fillStyle = '#1a0f0b'; c.fillRect(-1.5, -r * .35, 3, r * .75); c.fillRect(-1.5, r * .5, 3, 3); c.restore() }
 function drawFinish(c, x, y, now) {
   c.fillStyle = '#3a3a34'; c.fillRect(x - 6, y - 150, 12, 150); c.fillRect(x + 150, y - 150, 12, 150);
   c.fillStyle = '#5a4a2a'; c.fillRect(x - 10, y - 160, 176, 22);
@@ -1005,7 +1007,7 @@ function drawProp(c, p, now) {
   if (p.k === 'barr') {
     if (p.kind === 'wood') { c.fillStyle = '#6a4a2a'; for (let i = 0; i < 4; i++) c.fillRect(x - p.w / 2, y - p.h + i * 9, p.w, 6); c.fillStyle = '#3a2a1a'; c.fillRect(x - p.w / 2 + 3, y - p.h, 4, p.h); c.fillRect(x + p.w / 2 - 7, y - p.h, 4, p.h); c.strokeStyle = '#8a8a8a'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(x - p.w / 2 + i * 8, y - p.h - 4); c.arc(x - p.w / 2 + i * 8, y - p.h - 4, 4, 0, 7) } c.stroke() }
     else { for (let r = 0; r < 4; r++) for (let i = 0; i < 3 - (r > 2 ? 1 : 0); i++) { c.fillStyle = (r + i) % 2 ? '#8a7a52' : '#9a8a60'; c.beginPath(); c.ellipse(x - p.w / 2 + 6 + i * 10 + (r % 2) * 4, y - 5 - r * 9, 6.5, 5, 0, 0, 7); c.fill() } }
-  } else if (p.k === 'boom') { c.fillStyle = '#a01e14'; c.fillRect(x - 7, y - 20, 14, 20); c.fillStyle = '#5a0e08'; c.fillRect(x - 7, y - 15, 14, 2); c.fillRect(x - 7, y - 7, 14, 2); c.fillStyle = '#ffd24a'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillText('☢', x, y - 9) }
+  } else if (p.k === 'boom') { c.fillStyle = '#a01e14'; c.fillRect(x - 7, y - 20, 14, 20); c.fillStyle = '#5a0e08'; c.fillRect(x - 7, y - 15, 14, 2); c.fillRect(x - 7, y - 7, 14, 2); c.fillStyle = '#ffd24a'; for (let i = 0; i < 3; i++) { const a0 = i * 2.094 - 1.57 - .52; c.beginPath(); c.moveTo(x, y - 10); c.arc(x, y - 10, 4.4, a0, a0 + 1.04); c.closePath(); c.fill() } c.fillStyle = '#5a0e08'; c.beginPath(); c.arc(x, y - 10, 1.2, 0, 7); c.fill() }
   else if (p.k === 'fuel') { const b = Math.sin(now / 250 + x) * 2; c.fillStyle = '#c0392b'; c.fillRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = '#7a1e14'; c.fillRect(x - 3, y - 22 + b, 6, 4); c.strokeStyle = '#ffd24a'; c.lineWidth = 1; c.strokeRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = 'rgba(255,210,74,.25)'; c.beginPath(); c.arc(x, y - 10 + b, 16, 0, 7); c.fill() }
   else if (p.k === 'cash') { const b = Math.sin(now / 250 + x) * 2; c.fillStyle = '#5a4a2a'; c.fillRect(x - 8, y - 14 + b, 16, 14); c.fillStyle = '#c9a227'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(x - 5 + i * 3.5, y - 15 + b, 2.4, 0, 7); c.fill() } c.fillStyle = 'rgba(157,255,122,.2)'; c.beginPath(); c.arc(x, y - 8 + b, 16, 0, 7); c.fill() }
 }
@@ -1456,20 +1458,20 @@ function sndHorde() { if (!sOk()) return; try { const a = AC, t = a.currentTime;
 /* ============================================================================
    12. FELÜLET: kezdőlap, műhely, eredmény, HUD, irányítás
    ============================================================================ */
-const BTN = [['mgBrk', 'brk', '◀', 'FÉK'], ['mgTl', 'tl', '↺', 'BILLENT'], ['mgTr', 'tr', '↻', 'BILLENT'], ['mgGas', 'gas', '▶', 'GÁZ'], ['mgBoost', 'boost', '🚀', 'RAKÉTA'], ['mgFlame', 'flame', '🔥', 'LÁNG']];
+const BTN = [['mgBrk', 'brk', 'left', 'FÉK'], ['mgTl', 'tl', 'rotl', 'BILLENT'], ['mgTr', 'tr', 'rotr', 'BILLENT'], ['mgGas', 'gas', 'right', 'GÁZ'], ['mgBoost', 'boost', 'rocket', 'RAKÉTA'], ['mgFlame', 'flame', 'flame', 'LÁNG']];
 function mgOpen() {
   const el = $('#harc'); el.hidden = false; el.classList.add('mgon'); document.body.classList.add('harcon');
   MG.sv = load();
-  el.innerHTML = `<div class="hbar mgbar"><div class="htitle">MEAT <b>GRINDER</b></div><div class="hstat"><span>🪙 Kupak <b id="mgCash">0</b></span><span class="mgdst">Táv <b id="mgDst">0</b> m</span></div><button type="button" class="hx mgp" id="mgPause" aria-label="Szünet" hidden>❚❚</button><button type="button" class="hx" id="mgClose" aria-label="Bezárás">✕</button></div>
+  el.innerHTML = `<div class="hbar mgbar"><div class="htitle">MEAT <b>GRINDER</b></div><div class="hstat"><span>${ico('coin')} Kupak <b id="mgCash">0</b></span><span class="mgdst">Táv <b id="mgDst">0</b> m</span></div><button type="button" class="hx mgp" id="mgPause" aria-label="Szünet" hidden>${ico('pause')}</button><button type="button" class="hx" id="mgClose" aria-label="Bezárás">${ico('close')}</button></div>
   <div class="mgwrap" id="mgWrap"><canvas id="mgCv" aria-label="Meat Grinder játéktér"></canvas>
    <div class="mghud" id="mgHud" hidden>
-    <div class="mgprog"><i id="mgProg"></i><em id="mgBestM"></em><span>🏁</span></div>
-    <div class="mggau"><div><small>⛽ ÜZEMANYAG</small><div class="mgbarr fuel"><i id="mgFuel"></i></div></div><div><small>🛡️ PÁNCÉL</small><div class="mgbarr hp"><i id="mgHp"></i></div></div><div id="mgBoW"><small>🚀 RAKÉTA</small><div class="mgbarr bo"><i id="mgBo"></i></div></div><div id="mgFlW"><small>🔥 LÁNG</small><div class="mgbarr fl"><i id="mgFl"></i></div></div></div>
-    <div class="mginfo"><span><b id="mgKmh">0</b> km/h</span><span>☠ <b id="mgKills">0</b></span><span>🪙 <b id="mgRunCash">0</b></span><span id="mgAmmoW">💥 <b id="mgAmmo">0</b></span><span id="mgGrab" class="mggrab" hidden></span></div>
+    <div class="mgprog"><i id="mgProg"></i><em id="mgBestM"></em><span>${ico('flag')}</span></div>
+    <div class="mggau"><div><small>${ico('fuel')} ÜZEMANYAG</small><div class="mgbarr fuel"><i id="mgFuel"></i></div></div><div><small>${ico('shield')} PÁNCÉL</small><div class="mgbarr hp"><i id="mgHp"></i></div></div><div id="mgBoW"><small>${ico('rocket')} RAKÉTA</small><div class="mgbarr bo"><i id="mgBo"></i></div></div><div id="mgFlW"><small>${ico('flame')} LÁNG</small><div class="mgbarr fl"><i id="mgFl"></i></div></div></div>
+    <div class="mginfo"><span><b id="mgKmh">0</b> km/h</span><span>${ico('skull')} <b id="mgKills">0</b></span><span>${ico('coin')} <b id="mgRunCash">0</b></span><span id="mgAmmoW">${ico('cannon')} <b id="mgAmmo">0</b></span><span id="mgGrab" class="mggrab" hidden></span></div>
    </div>
    <div class="mgctl" id="mgCtl" hidden>
-    ${BTN.map(([id, k, ic, lb]) => `<button type="button" class="mgb mg-${k}" id="${id}" data-k="${k}"><b>${ic}</b><small>${lb}</small></button>`).join('')}
-    <button type="button" class="mgb mg-fire" id="mgFire"><b>💥</b><small>TŰZ</small><i id="mgRl"></i></button>
+    ${BTN.map(([id, k, ic, lb]) => `<button type="button" class="mgb mg-${k}" id="${id}" data-k="${k}"><b>${ico(ic)}</b><small>${lb}</small></button>`).join('')}
+    <button type="button" class="mgb mg-fire" id="mgFire"><b>${ico('boom')}</b><small>TŰZ</small><i id="mgRl"></i></button>
    </div>
    <div class="mgscr" id="mgScr"></div>
   </div>`;
@@ -1514,7 +1516,7 @@ function keys(e) {
 function pause(on) {
   MG.paused = !!on && MG.phase === 'play';
   const scr = $('#mgScr'); if (!scr) return;
-  if (MG.paused) { scr.innerHTML = `<div class="mgcard mgpause"><h3>⏸ SZÜNET</h3><p>Táv: <b>${n0(Math.floor((MG.V.x - 220) / UM))} m</b> · ☠ ${MG.kills}</p><button type="button" class="btn pri" data-act="resume">▶ Folytatás</button> <button type="button" class="btn line" data-act="giveup">🏳 Feladom</button></div>`; scr.hidden = false }
+  if (MG.paused) { scr.innerHTML = `<div class="mgcard mgpause"><h3>${ico('pause')} SZÜNET</h3><p>Táv: <b>${n0(Math.floor((MG.V.x - 220) / UM))} m</b> · ${ico('skull')} ${MG.kills}</p><button type="button" class="btn pri" data-act="resume">${ico('play')} Folytatás</button> <button type="button" class="btn line" data-act="giveup">${ico('white')} Feladom</button></div>`; scr.hidden = false }
   else if (MG.phase === 'play') { scr.innerHTML = ''; scr.hidden = true; MG.last = performance.now() }
   for (const [, k] of BTN) MG.inp[k] = 0;
 }
@@ -1541,10 +1543,10 @@ function showTitle() {
   $('#mgScr').innerHTML = `<div class="mgcard mgtitle">
    <div class="mglogo"><span>MEAT</span><b>GRINDER</b><small>HÚSDARÁLÓ · PzH 2000 a zombi-apokalipszisben</small></div>
    <p>Juss el a <b>pálya végén lévő menedékig</b>! A PzH 2000-esed gyárilag egy rozsdás roncs – minden menet után a megtett távért és a ledarált zombikért <b>kupakot</b> kapsz, ebből a <b>Műhelyben</b> barkácsolsz rá motort, lánctalpat, páncélt, tartályt, ekét, kombájn-tálcát, húsdarálót, tüskéket, ágyúlőszert és géppuskát.</p>
-   <ul class="mghelp"><li><b>▶ GÁZ / ◀ FÉK</b> – gyorsítás, fék, tolatás</li><li><b>↺ ↻ BILLENT</b> – a levegőben forgatod a járművet (ugratásnál!)</li><li><b>💥 TŰZ</b> – 155 mm-es gránát a horda közepébe</li><li><b>🚀 RAKÉTA</b> – tolóerő, ha megvan a fejlesztés</li><li>Billentyűzet: ←/→, ↑/↓, Space, Shift, P</li></ul>
+   <ul class="mghelp"><li><b>${ico('right')} GÁZ / ${ico('left')} FÉK</b> – gyorsítás, fék, tolatás</li><li><b>${ico('rotl')} ${ico('rotr')} BILLENT</b> – a levegőben forgatod a járművet (ugratásnál!)</li><li><b>${ico('boom')} TŰZ</b> – 155 mm-es gránát a horda közepébe (nyomva tartva sorozat)</li><li><b>${ico('rocket')} RAKÉTA</b> – tolóerő, ha megvan a fejlesztés</li><li><b>${ico('flame')} LÁNG</b> – lángszóró; a lézer és az automata torony magától lő</li><li>Billentyűzet: ←/→, ↑/↓, Space (tűz), G (láng), Shift, P</li></ul>
    <div class="mgstats"><span>Legjobb táv<b>${n0(bestAll())} m</b></span><span>Ledarálva<b>${n0(sv.kills)}</b></span><span>Menetek<b>${n0(sv.runs)}</b></span></div>
-   <button type="button" class="btn pri mgbig" data-act="shop">🔧 MŰHELY ÉS INDULÁS</button>
-   <button type="button" class="btn line rkstart" data-rank="drone">🏆 Rekordjaim</button>
+   <button type="button" class="btn pri mgbig" data-act="shop">${ico('wrench')} MŰHELY ÉS INDULÁS</button>
+   <button type="button" class="btn line rkstart" data-rank="drone">${ico('trophy')} Rekordjaim</button>
    ${gBoard('droneBest', false, v => n0(v) + ' p')}
   </div>`;
 }
@@ -1554,22 +1556,22 @@ function showShop() {
   const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), tk = ST('tank'), el = ST('elol'), ag = ST('agyu'), gp = ST('gepp'), od = ST('oldal');
   const cards = UPG.map(u => {
     const L = sv.up[u.k], cur = u.lv[L], nx = u.lv[L + 1], max = !nx, lock = nx && nx.r && b < nx.r, poor = nx && sv.cash < nx.c;
-    return `<div class="mgup${max ? ' max' : ''}${lock ? ' lock' : ''}"><div class="mguh"><span class="mgic">${u.ic}</span><div><small>${esc(u.n)}</small><b>${esc(cur.n)}</b></div></div>
+    return `<div class="mgup${max ? ' max' : ''}${lock ? ' lock' : ''}"><div class="mguh"><span class="mgic">${ico(u.ic)}</span><div><small>${esc(u.n)}</small><b>${esc(cur.n)}</b></div></div>
      <div class="mgpips">${u.lv.slice(1).map((_, i) => `<i class="${i < L ? 'on' : ''}"></i>`).join('')}</div>
-     ${max ? '<div class="mgnx">✔ Maximális szint</div>' : `<div class="mgnx"><b>${esc(nx.n)}</b><span>${esc(nx.d)}</span></div>
-     ${lock ? `<button type="button" class="mgbuy" disabled>🔒 ${n0(nx.r)} m után</button>` : `<button type="button" class="mgbuy${poor ? ' poor' : ''}" data-act="buy" data-k="${u.k}">🪙 ${n0(nx.c)}</button>`}`}</div>`;
+     ${max ? `<div class="mgnx">${ico('check')} Maximális szint</div>` : `<div class="mgnx"><b>${esc(nx.n)}</b><span>${esc(nx.d)}</span></div>
+     ${lock ? `<button type="button" class="mgbuy" disabled>${ico('lock')} ${n0(nx.r)} m után</button>` : `<button type="button" class="mgbuy${poor ? ' poor' : ''}" data-act="buy" data-k="${u.k}">${ico('coin')} ${n0(nx.c)}</button>`}`}</div>`;
   }).join('');
   const stg = STAGES.map((s, i) => { const lk = i >= sv.unl, on = i === sv.stage, pct = clamp(sv.best[i] / s.len * 100, 0, 100);
-    return `<button type="button" class="mgstg${on ? ' on' : ''}${lk ? ' lock' : ''}" data-act="stage" data-i="${i}" ${lk ? 'disabled' : ''}><small>${i + 1}. PÁLYA · ${n0(s.len)} m</small><b>${lk ? '🔒 ' : ''}${esc(s.n)}</b><span>${esc(s.s)}</span><div class="mgsp"><i data-st="width:${pct.toFixed(0)}%"></i></div><em>${sv.done[i] ? '🏁 Teljesítve' : 'Legjobb: ' + n0(sv.best[i]) + ' m'}</em></button>` }).join('');
+    return `<button type="button" class="mgstg${on ? ' on' : ''}${lk ? ' lock' : ''}" data-act="stage" data-i="${i}" ${lk ? 'disabled' : ''}><small>${i + 1}. PÁLYA · ${n0(s.len)} m</small><b>${lk ? ico('lock') + ' ' : ''}${esc(s.n)}</b><span>${esc(s.s)}</span><div class="mgsp"><i data-st="width:${pct.toFixed(0)}%"></i></div><em>${sv.done[i] ? ico('flag') + ' Teljesítve' : 'Legjobb: ' + n0(sv.best[i]) + ' m'}</em></button>` }).join('');
   $('#mgScr').innerHTML = `<div class="mgcard mgshop">
-   <div class="mgshh"><h3>🔧 MŰHELY</h3><div class="mgcash">🪙 <b>${n0(sv.cash)}</b> kupak</div></div>
+   <div class="mgshh"><h3>${ico('wrench')} MŰHELY</h3><div class="mgcash">${ico('coin')} <b>${n0(sv.cash)}</b> kupak</div></div>
    <canvas class="mgprev" id="mgPrev" aria-label="A jármű a fejlesztésekkel"></canvas>
    <div class="mgsts">${statRow('Végsebesség', mo.v, 280)}${statRow('Húzóerő', mo.f * fu.g, 2.05 * 1.42)}${statRow('Üzemanyag', tk.l, 250)}${statRow('Páncél', pa.hp * (1 + pa.dr), 360 * 1.4)}${statRow('Darálás', el.m * 40 + el.dps / 3 + od.dps / 4, 3 * 40 + 100 + 28)}${statRow('Tűzerő', firePower(sv.up), firePower(Object.fromEntries(UPG.map(u => [u.k, u.lv.length - 1]))))}</div>
    <div class="mglbl">PÁLYA</div><div class="mgstgs">${stg}</div>
-   <button type="button" class="btn pri mgbig" data-act="go">▶ INDULÁS – ${esc(STAGES[sv.stage].n)}</button>
+   <button type="button" class="btn pri mgbig" data-act="go">${ico('play')} INDULÁS – ${esc(STAGES[sv.stage].n)}</button>
    <div class="mglbl">FEJLESZTÉSEK <small>– a feltételek a legnagyobb megtett távhoz kötöttek</small></div>
    <div class="mgups">${cards}</div>
-   <div class="mgfoot"><button type="button" class="btn line" data-act="title">◀ Vissza</button> <button type="button" class="btn line" data-act="quit">Kilépés</button> <button type="button" class="btn line mgrst" data-act="reset">Mentés törlése</button></div>
+   <div class="mgfoot"><button type="button" class="btn line" data-act="title">${ico('left')} Vissza</button> <button type="button" class="btn line" data-act="quit">Kilépés</button> <button type="button" class="btn line mgrst" data-act="reset">Mentés törlése</button></div>
   </div>`;
   $('#mgCash').textContent = n0(sv.cash);
   const pc = $('#mgPrev'); if (pc) { const r = pc.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); pc.width = r.width * d; pc.height = r.height * d; MG.prev = {c: pc.getContext('2d'), W: r.width, H: r.height, d} }
@@ -1581,11 +1583,11 @@ function firePower(up) {
 }
 function buy(k) {
   const u = UPK[k], sv = MG.sv, nx = u.lv[sv.up[k] + 1]; if (!nx) return;
-  if (nx.r && bestAll() < nx.r) { toast(`🔒 Ehhez legalább ${n0(nx.r)} m-t kell megtenned egy menetben.`); return }
-  if (sv.cash < nx.c) { toast(`🪙 Ehhez ${n0(nx.c)} kupak kell – most ${n0(sv.cash)} van.`); return }
+  if (nx.r && bestAll() < nx.r) { toast(`Ehhez legalább ${n0(nx.r)} m-t kell megtenned egy menetben.`); return }
+  if (sv.cash < nx.c) { toast(`Ehhez ${n0(nx.c)} kupak kell – most ${n0(sv.cash)} van.`); return }
   sv.cash -= nx.c; sv.up[k]++; save(); sndPick(); try { if (sOk()) boom(AC.currentTime, .25, 90) } catch (e) {}
   const sc = $('#mgScr .mgshop'), top = sc ? sc.scrollTop : 0; showShop(); const s2 = $('#mgScr .mgshop'); if (s2) s2.scrollTop = top;
-  toast(`${u.ic} ${nx.n} felszerelve!`);
+  toast(`${nx.n} felszerelve!`);
 }
 function startRun() {
   const si = MG.sv.stage; newRun(si); setPhase('play'); MG.paused = false; MG.endShown = 0; MG.last = performance.now();
@@ -1605,15 +1607,15 @@ function showResult() {
   save();
   let rec = {best: score, rec: false}; try { rec = gSave('droneBest', score, 'medve-drone-best') } catch (e) {}
   setPhase('menu'); engStop(); try { rockStop(1.5) } catch (e) {}
-  const why = {win: '🏁 ELÉRTED A MENEDÉKET!', dead: '💥 SZÉTSZEDTÉK A PzH-T', flip: '🙃 FELBORULTÁL', fuel: '⛽ KIFOGYOTT AZ ÜZEMANYAG', stuck: '🧟 ELAKADTÁL A HORDÁBAN', quit: '🏳 FELADTAD'}[E.kind] || 'VÉGE';
+  const why = {win: ico('flag') + ' ELÉRTED A MENEDÉKET!', dead: ico('boom') + ' SZÉTSZEDTÉK A PzH-T', flip: ico('rotr') + ' FELBORULTÁL', fuel: ico('fuel') + ' KIFOGYOTT AZ ÜZEMANYAG', stuck: ico('zombie') + ' ELAKADTÁL A HORDÁBAN', quit: ico('white') + ' FELADTAD'}[E.kind] || 'VÉGE';
   const kl = Object.entries(MG.kt).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${esc(ZT[k].n)} <b>×${n}</b></span>`).join('');
   $('#mgScr').innerHTML = `<div class="mgcard mgres${win ? ' win' : ''}"><h3>${why}</h3>
-   <div class="mgrd"><div class="mgprog sm"><i data-st="width:${clamp(dist / S.len * 100, 0, 100).toFixed(1)}%"></i><span>🏁</span></div><b>${n0(dist)} m</b> / ${n0(S.len)} m ${newBest ? '<em class="hrec">ÚJ TÁVREKORD!</em>' : ''}</div>
+   <div class="mgrd"><div class="mgprog sm"><i data-st="width:${clamp(dist / S.len * 100, 0, 100).toFixed(1)}%"></i><span>${ico('flag')}</span></div><b>${n0(dist)} m</b> / ${n0(S.len)} m ${newBest ? '<em class="hrec">ÚJ TÁVREKORD!</em>' : ''}</div>
    <div class="mgkl">${kl || '<span>Egy zombit sem daráltál le.</span>'}</div>
-   <table class="mgtab"><tr><td>Megtett táv (${n0(dist)} m)</td><td>+${n0(distCash)}</td></tr><tr><td>Zombik, ládák (${MG.kills} ☠)</td><td>+${n0(MG.cash)}</td></tr>${win ? `<tr><td>Menedék-jutalom</td><td>+${n0(winCash)}</td></tr>` : ''}<tr class="tot"><td>Kupak összesen</td><td>🪙 +${n0(total)}</td></tr></table>
-   <p class="mgsc">Pontszám: <b class="hred">${n0(score)}</b> ${rec.rec ? '<b class="hrec">🏆 ÚJ REKORD!</b>' : '· Rekord: <b>' + n0(rec.best) + '</b>'}<br><small>táv + zombik pontja${MG.bestCombo > 2 ? ' + kombó (legjobb ×' + MG.bestCombo + ')' : ''}${win ? ' + menedék-bónusz' : ''}</small></p>
-   ${unlocked ? `<p class="mgunl">🔓 Új pálya nyílt: <b>${esc(STAGES[si + 1].n)}</b></p>` : ''}
-   <button type="button" class="btn pri mgbig" data-act="shop">🔧 MŰHELY</button> <button type="button" class="btn line" data-act="go">↻ Újra</button> <button type="button" class="btn line" data-act="quit">Kilépés</button>
+   <table class="mgtab"><tr><td>Megtett táv (${n0(dist)} m)</td><td>+${n0(distCash)}</td></tr><tr><td>Zombik, ládák (${MG.kills} ${ico('skull')})</td><td>+${n0(MG.cash)}</td></tr>${win ? `<tr><td>Menedék-jutalom</td><td>+${n0(winCash)}</td></tr>` : ''}<tr class="tot"><td>Kupak összesen</td><td>${ico('coin')} +${n0(total)}</td></tr></table>
+   <p class="mgsc">Pontszám: <b class="hred">${n0(score)}</b> ${rec.rec ? `<b class="hrec">${ico('trophy')} ÚJ REKORD!</b>` : '· Rekord: <b>' + n0(rec.best) + '</b>'}<br><small>táv + zombik pontja${MG.bestCombo > 2 ? ' + kombó (legjobb ×' + MG.bestCombo + ')' : ''}${win ? ' + menedék-bónusz' : ''}</small></p>
+   ${unlocked ? `<p class="mgunl">${ico('unlock')} Új pálya nyílt: <b>${esc(STAGES[si + 1].n)}</b></p>` : ''}
+   <button type="button" class="btn pri mgbig" data-act="shop">${ico('wrench')} MŰHELY</button> <button type="button" class="btn line" data-act="go">${ico('rotr')} Újra</button> <button type="button" class="btn line" data-act="quit">Kilépés</button>
   </div>`;
   $('#mgCash').textContent = n0(sv.cash);
 }
@@ -1625,7 +1627,7 @@ function hudUpd() {
   w('mgProg', (V.x - 220) / (T.fin - 220)); w('mgFuel', V.fuel / V.fuel0); w('mgHp', V.hp / V.hp0); w('mgBo', V.boost0 ? V.boost / V.boost0 : 0); w('mgRl', V.rl0 ? V.rl / V.rl0 : 0); w('mgFl', V.flame0 ? V.flame / V.flame0 : 0);
   const fe = $('#mgFuel'); if (fe) fe.parentNode.classList.toggle('low', V.fuel / V.fuel0 < .2);
   const he = $('#mgHp'); if (he) he.parentNode.classList.toggle('low', V.hp / V.hp0 < .3);
-  const gr = $('#mgGrab'); if (gr) { gr.hidden = !MG.grab.length; if (MG.grab.length) gr.textContent = `🧟 ${MG.grab.length} rajtad!` }
+  const gr = $('#mgGrab'); if (gr) { gr.hidden = !MG.grab.length; if (MG.grab.length) gr.innerHTML = `${ico('zombie')} ${MG.grab.length} rajtad!` }
   const fb = $('#mgFire'); if (fb) fb.classList.toggle('cd', V.rl > 0 || V.ammo <= 0);
 }
 
