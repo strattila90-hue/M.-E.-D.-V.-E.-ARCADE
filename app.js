@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.53.0',APP_DATE='2026.11.23.';
+const APP_VER='4.54.0',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -473,7 +473,7 @@ function harcHudDraw(c,W,H,now){const G=harcG();c.textAlign='left';c.font='900 1
   if(HARC.msg&&HARC.msg.t>0){HARC.msg.t-=1/60;c.globalAlpha=Math.min(1,HARC.msg.t*2);c.font='bold 12px sans-serif';const tw=Math.min(W-20,c.measureText(HARC.msg.s).width+20);c.fillStyle='rgba(0,0,0,.6)';c.fillRect((W-tw)/2,56,tw,22);c.fillStyle='#fff';c.textAlign='center';c.fillText(HARC.msg.s,W/2,71,W-30);c.globalAlpha=1}
   for(const p of HARC.pops){c.globalAlpha=Math.min(1,p.t*2);c.fillStyle=p.bad?'#ff6b5a':p.big?'#ffd24a':'#fff';c.font=p.big?'900 18px Anton, Impact, sans-serif':'bold 12px sans-serif';c.textAlign='center';c.fillText(p.s,p.x,p.y-(1-p.t)*24);c.globalAlpha=1}
   const b=HARC.banner;if(b&&b.t>0){c.globalAlpha=Math.min(1,b.t*1.5);c.fillStyle='rgba(0,0,0,.55)';c.fillRect(0,H*.3,W,b.b?64:42);c.fillStyle='#ffd24a';c.font='900 22px Anton, Impact, sans-serif';c.textAlign='center';c.fillText(b.a,W/2,H*.3+28);if(b.b){c.fillStyle='#ff8a7a';c.font='bold 13px sans-serif';c.fillText(b.b,W/2,H*.3+50)}c.globalAlpha=1}}
-const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' p'],['drone','DroneRun','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkhBest','medve-rkh-best',false,v=>rkM(v)],['sere','SERE','sereBest','medve-sere-best',false,v=>seFmt(v)],['kassza','Kassza','tkFt','medve-tkft-best',false,v=>tkFmt(v)+' Ft']];
+const RANKG=[['harc','H.A.R.C.','harcBest','medve-harc-best',false,v=>n0(v)+' p'],['drone','Meat Grinder','droneBest','medve-drone-best',false,v=>n0(v)+' p'],['terep','Terep','gtBest','medve-gt-best',true,v=>(v/1000).toFixed(1)+' s'],['konvoj','Konvoj','gkBest','medve-gk-best',false,v=>n0(v)+' p'],['rakodo','Rakodó','rkhBest','medve-rkh-best',false,v=>rkM(v)],['sere','SERE','sereBest','medve-sere-best',false,v=>seFmt(v)],['kassza','Kassza','tkFt','medve-tkft-best',false,v=>tkFmt(v)+' Ft']];
 const NF={harc:'harcN',drone:'droneN',terep:'gtN',konvoj:'gkN',rakodo:'rkN',sere:'sereN',kassza:'tkN'};
 const uname=u=>(u.rank?u.rank+' ':'')+(u.name||'?');
 const uplays=u=>Object.values(NF).reduce((t,k)=>t+(u[k]||0),0);
@@ -510,7 +510,7 @@ function rankFill(g){const o=$('#rankov');if(!o)return;o.querySelectorAll('[data
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-rank]');if(!b)return;e.preventDefault();e.stopPropagation();rankOpen(b.dataset.rank)},true);
 const SE_CARD='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060a18"/><stop offset="1" stop-color="#1d2740"/></linearGradient></defs><rect width="160" height="80" rx="10" fill="url(#g)"/><circle cx="132" cy="15" r="8" fill="#f4f1dc"/><circle cx="136" cy="12" r="7" fill="#0a1020"/><circle cx="20" cy="12" r="1" fill="#fff"/><circle cx="60" cy="8" r="1" fill="#fff"/><circle cx="96" cy="18" r="1" fill="#fff"/><path d="M0 62 L10 38 L20 62 L28 30 L40 62 L48 44 L56 62Z" fill="#0b1610"/><path d="M104 62 L112 40 L120 62 L128 32 L138 62 L146 44 L156 62Z" fill="#0b1610"/><ellipse cx="124" cy="46" rx="14" ry="4" fill="#0a0e0a"/><rect x="121" y="30" width="6" height="14" rx="2" fill="#0a0e0a"/><circle cx="124" cy="27" r="3.5" fill="#0a0e0a"/><polygon points="118,36 64,66 96,66" fill="rgba(255,245,200,.33)"/><rect y="62" width="160" height="18" fill="#0d120c"/><rect x="36" y="56" width="26" height="6" rx="3" fill="#5f6440"/><rect x="40" y="52" width="12" height="5" rx="2" fill="#4a4d30"/><circle cx="66" cy="58" r="3.4" fill="#c99b76"/><path d="M62 57 a4.5 4.5 0 0 1 9 0z" fill="#454a2c"/><circle cx="50" cy="61" r="9" fill="#15281a"/><circle cx="38" cy="61" r="7" fill="#15281a"/><circle cx="72" cy="61" r="6" fill="#15281a"/><path d="M84 20 l8 -3 l2 2 l-8 3z" fill="#2b3320"/><circle cx="88" cy="22" r="1.2" fill="#ff3b3b"/></svg>`);
 // főmenü: anime „versus” képernyő – 6 átlósan felvágott panel, villám alakú vágással
-const ANI_G=[['harc','M.E.D.V.E.<br>H.A.R.C.','Gránátvihar','linear-gradient(150deg,#e0262f,#5a0610)','#ffd24a','b'],['drone','DroneRun','PzH 2000 vs. drón','linear-gradient(210deg,#e8781e,#3d1604)','#ff3b3b','p'],
+const ANI_G=[['harc','M.E.D.V.E.<br>H.A.R.C.','Gránátvihar','linear-gradient(150deg,#e0262f,#5a0610)','#ffd24a','b'],['drone','MEAT<br>GRINDER','Húsdaráló · zombihorda','linear-gradient(210deg,#b3160e,#2a0402)','#ffd24a','p',1],
   ['terep','Gidrán<br>Terep','4×4 terep · 3 pálya','linear-gradient(150deg,#b39a3a,#2c2a0e)','#4fd1ff','g'],['konvoj','Gidrán<br>Konvoj','IED, les, drónok','linear-gradient(210deg,#2f7aa8,#081a2a)','#ffb43e','g2'],
   ['rakodo','Rába<br>Rakodó','Torony a világűrig','linear-gradient(150deg,#f0c43a,#4a3606)','#ff5a4e','r'],['sere','SERE<br>Kitörés','Hány napot bírsz?','linear-gradient(210deg,#2fa36a,#04140d)','#f3d77a','s',1]];
 function aniPolys(){const L=[0,35,68,100],R=[0,29,62,100],SX=[58,42,58,42],yb=(k,x)=>L[k]+(R[k]-L[k])*x/100,P=[];
@@ -523,7 +523,7 @@ const MEDAL_SVG=`<svg viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg" a
 <circle r="34" fill="url(#mg)" stroke="#6a4a0c" stroke-width="2"/><circle r="27" fill="url(#me)" stroke="#f3d77a" stroke-width="1.5"/>
 <path d="M0 -17L4.9 -6.7L16 -5.3L7.8 2.3L9.9 13.3L0 8L-9.9 13.3L-7.8 2.3L-16 -5.3L-4.9 -6.7Z" fill="url(#mg)" stroke="#6a4a0c" stroke-width="1"/>
 <text y="23" text-anchor="middle" font-family="Anton,Impact,sans-serif" font-size="8" letter-spacing="1" fill="#f3d77a">MEDVE</text></g></svg>`;
-const DAILY_G=['harc','drone','terep','konvoj','rakodo','sere','kassza'],DAILY_N={harc:'M.E.D.V.E. H.A.R.C.',drone:'DroneRun',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó',sere:'SERE Kitörés',kassza:'Tüzér Kassza'};
+const DAILY_G=['harc','drone','terep','konvoj','rakodo','sere','kassza'],DAILY_N={harc:'M.E.D.V.E. H.A.R.C.',drone:'Meat Grinder',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó',sere:'SERE Kitörés',kassza:'Tüzér Kassza'};
 function dailyKey(){return budDay()}
 function dailyGame(){const n=budDayN()-1;return DAILY_G[[3,0,5,1,6,2,4][n%7]]}
 function dailyState(){let o={};try{o=JSON.parse(localStorage.getItem('medve-daily')||'{}')}catch(e){}return o}
@@ -568,7 +568,7 @@ function deckImg(k){if(k==='k')return TK_NOTE_URL||(TK_NOTE_URL=tkNoteURL(6));re
 const WAL_KEY='medve-zs1',WAL_OLD='medve-wal1',WAL_START=10,WAL_KAS=20,WAL_TAPS=100,WAL_TAPWIN=3,WAL_TAPDAY=3,WAL_SYNC=120000,WAL_DAYCAP=30,WAL={};
 /* ===== v4.45: a zseton értelme – BOLT, FOLYTATÁS, TAGSÁGI FOKOZAT =====
    Bolt (Tüzér Kassza, Ajándék fül): extra pénz-gépágyú 15 zseton (napi 3), Golden Ticket 8 zseton (napi 5).
-   Folytatás vereség után: H.A.R.C., DroneRun, Shot&Run (gép ellen) – menetenként egyszer, 3 zseton (Gyémánt fokozaton 2).
+   Folytatás vereség után: H.A.R.C., Shot&Run (gép ellen) – menetenként egyszer, 3 zseton (Gyémánt fokozaton 2).
    Tagsági fokozat az ÖSSZESEN ELKÖLTÖTT zseton szerint (játékindítás, bolt, folytatás, a Derby futamonkénti nettó vesztesége).
    Csak a telefonon tárolódik (WAL.sp) – a fiók szerverszabálya (zsOk) nem változott; a költés a zs-t csak csökkenti, azt a szabály mindig elfogadja. */
 const ZS_SHOP={gun:{c:15,day:3,n:'Pénz-gépágyú'},gt:{c:8,day:5,n:'Golden Ticket'}},ZS_CONT=3;
@@ -644,7 +644,7 @@ function walFill(){const o=$('#walov');if(!o||o.hidden)return;if(WAL.ft===undefi
    <div class="walsec"><h4>🏦 Kivét a Tüzér Kasszából</h4><p>A Kassza zsebedben <b>${tkFmt(p)} Ft</b> van; ez <b>${n0(V)} zsetont</b> ér (a nagyságrend számít, nem az összeg). Amennyit kiveszel, a zsebed ugyanakkora hányada megy el.</p>
     <div class="walbtns">${[10,25,50,100].map(k=>{const z=left<0?0:walTakeZs(p,k,left);return `<button type="button" data-waltake="${k}"${z<1?' disabled':''}><b>${k===100?'Mind':k+'%'}</b><small>+${n0(z)} zseton</small></button>`}).join('')}</div>
     <small>${left<0?'A kivéthez pontos idő kell (net).':`Napi keret: ${WAL_KAS} zseton · ma még ${n0(left)} vehető ki.`}</small></div>
-   <div class="walsec"><h4>🕹️ Mire költöd?</h4><ul class="walspend"><li><b>Játékindítás</b><span>1 zseton</span></li><li><b>Folytatás vereség után</b> – H.A.R.C., DroneRun, Shot&amp;Run (gép ellen), menetenként egyszer<span>${zsContCost()} zseton</span></li><li><b>💸 Pénz-gépágyú most</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gun'))}×<span>${ZS_SHOP.gun.c} zseton</span></li><li><b>🎫 Golden Ticket</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gt'))}×<span>${ZS_SHOP.gt.c} zseton</span></li><li><b>Tüzér Derby</b> – a belépés ingyenes, tét futamonként<span>1–50 zseton</span></li></ul><p>Minden elköltött zseton a <b>tagsági fokozatodat</b> is emeli.${zero?'':' Az érmeverő akkor jelenik meg, ha elfogyott a zsetonod.'}</p><button type="button" class="cb c-gold walgo" data-walgo>${ic('play')}<span>Tüzér Derby</span></button></div>`}
+   <div class="walsec"><h4>🕹️ Mire költöd?</h4><ul class="walspend"><li><b>Játékindítás</b><span>1 zseton</span></li><li><b>Folytatás vereség után</b> – H.A.R.C., Shot&amp;Run (gép ellen), menetenként egyszer<span>${zsContCost()} zseton</span></li><li><b>💸 Pénz-gépágyú most</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gun'))}×<span>${ZS_SHOP.gun.c} zseton</span></li><li><b>🎫 Golden Ticket</b> – Tüzér Kassza, Ajándék fül · ma még ${Math.max(0,zsBuyLeft('gt'))}×<span>${ZS_SHOP.gt.c} zseton</span></li><li><b>Tüzér Derby</b> – a belépés ingyenes, tét futamonként<span>1–50 zseton</span></li></ul><p>Minden elköltött zseton a <b>tagsági fokozatodat</b> is emeli.${zero?'':' Az érmeverő akkor jelenik meg, ha elfogyott a zsetonod.'}</p><button type="button" class="cb c-gold walgo" data-walgo>${ic('play')}<span>Tüzér Derby</span></button></div>`}
 // tagsági fokozat: az összesen elköltött zseton szerint; mostani előnyök, haladás a következőig, a teljes létra
 function walLvHTML(){const l=zsLv(),L=ZS_LV[l],N=ZS_LV[l+1],sp=WAL.sp||0,pc=N?Math.min(100,(sp-L.s)/(N.s-L.s)*100):100;
   return `<div class="walsec walsecLv"><h4>${L.i} Tagsági fokozat: ${L.n}</h4><p>Eddig elköltve: <b>${zsTxt(sp)}</b>${N?` · a(z) ${N.i} <b>${N.n}</b> fokozatig még ${n0(N.s-sp)}`:' · elérted a legfelső fokozatot!'}</p><div class="walprog"><i data-st="width:${pc.toFixed(1)}%"></i></div><small>Most: ${zsPerkTxt(L)}</small>
@@ -691,7 +691,7 @@ document.addEventListener('keydown',e=>{if(!document.getElementById('deck')||doc
 function gameStart(k){dailyMark(k);if(!gamesOn()){toast('A játékokat az admin kikapcsolta.');return}if(FB_ON&&!UID&&navigator.onLine){toast(AUTHREADY?'Előbb lépj be vagy regisztrálj!':'Kapcsolódás… várj egy pillanatot.');arcMore('auth');return}
   // játéktermi érme: minden indítás 100 Ft (a Derbyben a tét a költség). Ha nincs rá pénz, a tárca nyílik meg az érmeverővel.
   if(k!=='lovi'){if(walFt(0)<1){walOpen('Nincs zsetonod a játékhoz – koppints 100-at az érmeverőn, és kapsz '+WAL_TAPWIN+'-at!');return}walFt(-1)}
-  k==='harc'?harcOpen():k==='drone'?droneOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():k==='lovi'?lvOpen():gvOpen()}
+  k==='harc'?harcOpen():k==='drone'?mgOpen():k==='terep'?gtOpen():k==='rakodo'?rkOpen():k==='sere'?seOpen():k==='kassza'?tkOpen():k==='shotrun'?srOpen():k==='lovi'?lvOpen():gvOpen()}
 document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('#main [data-game]');if(!g)return;e.stopPropagation();
   if(g.classList.contains('dtile')&&+g.dataset.i!==DECK.i){deckGo(+g.dataset.i);return}
   if(g.classList.contains('dtile')){g.classList.add('go');try{sndClink()}catch(x){}setTimeout(()=>{g.classList.remove('go');gameStart(g.dataset.game)},matchMedia('(prefers-reduced-motion: reduce)').matches?0:220);return}
@@ -3849,7 +3849,7 @@ const IS_IPAD=/iPad/i.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxT
 const isInstalled=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
 // --- meghívókód: játék + meghívó neve + ellenőrző bájt, olvasható 32-es ábécével (nincs O/I/L/U), 5-ös csoportokban ---
 const DL_AB='0123456789ABCDEFGHJKMNPQRSTVWXYZ',DL_GAMES=['','harc','drone','terep','konvoj','rakodo','sere','kassza'];
-const DL_GNAME={harc:'M.E.D.V.E. H.A.R.C.',drone:'DroneRun',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó',sere:'SERE Kitörés'};
+const DL_GNAME={harc:'M.E.D.V.E. H.A.R.C.',drone:'Meat Grinder',terep:'Gidrán Terep',konvoj:'Gidrán Konvoj',rakodo:'Rába Rakodó',sere:'SERE Kitörés'};
 const DL_KEY='medve-deeplink',DL_SKIP='medve-dl-skip',DL_TTL=48*3600e3;
 function dlCrc(a){let c=0x5A;for(const b of a){c^=b;for(let i=0;i<8;i++)c=c&0x80?((c<<1)^0x07)&255:(c<<1)&255}return c}
 function dlEncode(g,nick){let nb=Array.from(new TextEncoder().encode(String(nick||'').trim().slice(0,16)));while(nb.length>24)nb.pop();
@@ -4368,13 +4368,19 @@ harc(c,I){aSky(c,[[0,'#ff2a3a'],[.6,'#a00818'],[1,'#3a0208']]);aRays(c,360,380,2
   for(const [x,y,s,r] of [[160,330,1.25,-.6],[575,420,1.05,.7],[250,120,.85,.3],[500,110,.9,-.4]]){aSpeed(c,x,y-60,10,30,110,'rgba(255,240,200,.7)',4);aGrenade(c,x,y,s,r)}
   aSpr(c,I.bear,360,490,410,{ol:8});
   aSfx(c,'GOTCHA!',360,165,96,-.08,'#fff35a','#ffb000');aSfx(c,'WHAM!',585,470,70,.2,'#ffffff','#ffd2d2');aCorners(c,'rgba(40,0,0,.6)')},
-drone(c,I){aSky(c,[[0,'#3b0f05'],[.5,'#c2410c'],[.85,'#ffae42'],[1,'#ffd27a']]);aRays(c,360,330,20,'rgba(255,230,160,.18)');
-  aHill(c,[[0,610],[200,570],[420,600],[720,560]],'#5a2a10','rgba(0,0,0,.3)');
-  const tx=[[180,190],[420,140],[600,260],[300,330]];c.strokeStyle='#fff36a';c.lineCap='round';for(const [x,y] of tx){c.lineWidth=7;c.strokeStyle=INK;c.beginPath();c.moveTo(450,600);c.lineTo(x+(AR()-.5)*30,y+20);c.stroke();c.lineWidth=3;c.strokeStyle='#fff36a';c.stroke()}
-  aDrone(c,180,190,1.05,-.15);aDrone(c,600,260,.9,.12);aDrone(c,300,330,.75,.05);aBoom(c,420,140,.62);
-  for(let i=0;i<9;i++){const ox=420+(AR()-.5)*200,oy=150+AR()*140;aShape(c,[[0,0],[14,4],[6,13]].map(([x,y])=>[ox+x,oy+y]),'#3a3a3a',3)}
-  aSpr(c,I.pzh,360,600,560,{rot:-.04});aHLines(c,0,720,760,940,28,'rgba(0,0,0,.25)',5);
-  aSfx(c,'BZZZ!',180,90,80,-.15,'#ffffff','#ffe0a0');aSfx(c,'POW!',560,420,92,.14,'#fff35a','#ff6a1a');aCorners(c,'rgba(40,10,0,.6)')},
+drone(c,I){aSky(c,[[0,'#1a0302'],[.45,'#7a0e08'],[.8,'#e0461a'],[1,'#ffb050']]);aRays(c,360,360,20,'rgba(255,200,140,.16)');
+  aShape(c,aBlob(560,200,58,58,22,.03),'#ffd9a0',6);
+  aHill(c,[[0,640],[200,600],[420,630],[720,590]],'#2a0c06','rgba(0,0,0,.35)');
+  const zb=(x,y,s,r)=>{c.save();c.translate(x,y);c.rotate(r||0);c.scale(s,s);aInk(c,[[0,0],[-10,-60]],false,22);aInk(c,[[0,0],[-10,-60]],false,14,'#3a4a5a');aInk(c,[[-10,-60],[-14,-120]],false,34);aInk(c,[[-10,-60],[-14,-120]],false,26,'#5a3a3a');
+    aInk(c,[[-14,-110],[-70,-104]],false,16);aInk(c,[[-14,-110],[-70,-104]],false,9,'#8fae72');aInk(c,[[-12,-100],[-66,-88]],false,16);aInk(c,[[-12,-100],[-66,-88]],false,9,'#8fae72');
+    aShape(c,aBlob(-16,-142,20,22,14,.06),'#8fae72',6);c.fillStyle='#ff2a1a';c.fillRect(-30,-148,7,5);c.restore()};
+  zb(560,610,1.05,.05);zb(650,620,.9,-.08);zb(470,600,.8,.12);zb(690,560,.7,.02);
+  for(let i=0;i<26;i++){const ox=330+(AR()-.5)*260,oy=380+AR()*200;aShape(c,aBlob(ox,oy,6+AR()*12,5+AR()*9,8,.3),AR()<.5?'#b3160e':'#7a0606',3)}
+  for(let i=0;i<5;i++){const ox=260+AR()*240,oy=300+AR()*120;aInk(c,[[ox,oy],[ox+20,oy-14],[ox+38,oy+4],[ox+56,oy-8]],false,9,'#d0707a')}
+  aSpr(c,I.pzh,300,640,560,{rot:-.05});
+  aShape(c,[[470,520],[520,470],[540,600],[480,640]],'#6a6a5e',6);for(let k=0;k<6;k++)aShape(c,[[532,488+k*22],[566,498+k*22],[534,506+k*22]],'#e8e8e0',3);
+  aHLines(c,0,720,760,940,28,'rgba(0,0,0,.3)',5);
+  aSfx(c,'SPLAT!',170,110,92,-.15,'#ffffff','#ff4a3a');aSfx(c,'GRIND!',560,420,84,.14,'#fff35a','#b3160e');aCorners(c,'rgba(40,0,0,.7)')},
 terep(c,I){aSky(c,[[0,'#2fa4d8'],[.55,'#8fe0ff'],[1,'#f3e3a0']]);aRays(c,560,170,18,'rgba(255,255,255,.25)');aShape(c,aBlob(560,170,62,62,24,.03),'#fff3a6',6);
   aHill(c,[[0,520],[180,470],[360,520],[540,450],[720,500]],'#8aa94a','rgba(40,60,10,.3)');
   aHill(c,[[0,700],[140,690],[300,610],[420,560],[470,600],[560,760],[720,780]],'#8a5a2a','rgba(40,20,0,.35)');
@@ -4436,12 +4442,14 @@ function gRefitAll(){const h=document.getElementById('harc');if(!h||h.hidden)ret
 
 /* ===== lustán betöltött játékmodulok: a SERE és a Shot&Run külön fájlban van, így a kezdőlap sokkal gyorsabban indul.
    A kezdőlap után a háttérben előre letöltődnek (és a service worker offline is tárolja őket), így a megnyitásuk azonnali. ===== */
-let SEM=null,SRM=null,LVM=null;const LAZY={};
-function lazyMod(k){return LAZY[k]||(LAZY[k]=(k==='sr'?import('./sr.js'):k==='lv'?import('./lv.js'):import('./sere.js')).then(m=>{if(k==='sr')SRM=m;else if(k==='lv')LVM=m;else SEM=m;return m}).catch(e=>{LAZY[k]=null;throw e}))}
+let SEM=null,SRM=null,LVM=null,MGM=null;const LAZY={};
+function lazyMod(k){return LAZY[k]||(LAZY[k]=(k==='sr'?import('./sr.js'):k==='lv'?import('./lv.js'):k==='mg'?import('./mg.js'):import('./sere.js')).then(m=>{if(k==='sr')SRM=m;else if(k==='lv')LVM=m;else if(k==='mg')MGM=m;else SEM=m;return m}).catch(e=>{LAZY[k]=null;throw e}))}
 function lazyOpen(k,fn){let t=setTimeout(()=>{t=0;toast('Betöltés…')},400);lazyMod(k).then(m=>{clearTimeout(t);m[fn]()}).catch(e=>{clearTimeout(t);console.warn(e);toast('A játék nem töltődött be – ellenőrizd a netet, és próbáld újra.')})}
 function srOpen(){lazyOpen('sr','srOpen')}
 function seOpen(){lazyOpen('se','seOpen')}
 function lvOpen(){lazyOpen('lv','lvOpen')}
+// MEAT GRINDER (a korábbi DroneRun helyén): mg.js, a ranglista-mezője továbbra is droneBest
+function mgOpen(){lazyOpen('mg','mgOpen')}
 if(/[?&]sr=/i.test(location.search))lazyMod('sr').catch(()=>{});// Shot&Run meghívó link: azonnal kell
-setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500);setTimeout(()=>lazyMod('lv').catch(()=>{}),3000)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
+setTimeout(()=>{const go=()=>{lazyMod('sr').catch(()=>{});setTimeout(()=>lazyMod('se').catch(()=>{}),1500);setTimeout(()=>lazyMod('lv').catch(()=>{}),3000);setTimeout(()=>lazyMod('mg').catch(()=>{}),4500)};'requestIdleCallback' in window?requestIdleCallback(go,{timeout:5000}):go()},2500);
 export {srvNow,$,AC,AUTHREADY,DB,D_WHEELS,GID_FULL,GID_SPRITE,gidWheel,SIL_RAW,brass,gidFullSet,walFt,walOpen,walSpend,zsPay,zsContCost,zsDeathHTML,LOWFX,MASTER,MODE,NOISE,PBY,PCX,PK,PZH_FULL,PZH_SPRITE,ROCK,S,SONGS,SOUND,UID,USERDOC,V,ac,boom,drBarrelImg,drBodyImg,esc,gBoard,gSave,gameStart,ic,medveWrap,n0,pad,playCount,pzhFullSet,rkRadioSnd,rockStart,rockStop,rockTempo,seFmt,seH,snare,sndBoom,sndClink,sndFar,sndMega,sndPing,sndPop,sndThud,st,tkFmt,tkWallet,toast};

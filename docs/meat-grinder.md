@@ -1,0 +1,133 @@
+# MEAT GRINDER (Húsdaráló) – fejlesztési leírás és iránymutatás
+
+A **Meat Grinder** a korábbi **DroneRun** helyére került (4.54.0). Műfaja: oldalnézetes, poszt-apokaliptikus
+„juss el a végéig, közben fejlessz” autós játék – hasonló felépítésű, mint az Earn to Die-féle játékok, de saját
+grafikával, saját járművel (PzH 2000) és saját tartalommal.
+
+- Kód: `mg.js` (önálló ES-modul, az `app.js` lustán tölti be: `lazyMod('mg')`, `mgOpen()`).
+- Stílus: `styles.css` végén, `/* MEAT GRINDER */` blokk; minden szabály `#harc .mg…` / `#harc.mgon` alatt.
+- Ranglista: a régi mezők maradtak (`droneBest`, `droneN`, `medve-drone-best`), így a Firestore-szabályokat
+  nem kellett módosítani. A menü-, ranglista- és napi kihívás-nevek „Meat Grinder”-re változtak.
+- Mentés: `localStorage['medve-mg-v1']` (kupak, fejlesztési szintek, pályánkénti legjobb táv, megnyitott pályák).
+- A régi DroneRun-kód (`droneOpen`, `drLoop` stb.) még az `app.js`-ben van, de a menüből már nem érhető el.
+  A Shot&Run használ belőle közös részeket (`D_WHEELS`, `drBodyImg`, …), ezért törlés előtt ezt ellenőrizni kell.
+
+## Játékmenet
+
+1. **Cél:** a pálya végén lévő **MENEDÉK** kapuig eljutni. 3 pálya: Kiürített külváros (1200 m), Rozsdaövezet
+   (2000 m), Fertőzött laktanya (3000 m). Egy pálya teljesítése nyitja a következőt.
+2. **Menet vége:** elfogyott az üzemanyag és megállt a jármű · 0-ra csökkent a páncél · 2,4 mp-ig fejjel lefelé ·
+   6–9 mp-ig elakadt · feladás (szünetmenü).
+3. **Jutalom (kupak):** 0,55 kupak / megtett méter + ellenfelenkénti díj + kupakládák + menedék-jutalom.
+4. **Műhely:** 9 fejlesztési kategória, szintenként ár és **távfeltétel** (a legnagyobb egy menetben megtett táv).
+   Így a fejlesztés a megtett távolsághoz és – a tartályon keresztül – az üzemanyaghoz kötött.
+5. **Pontszám (ranglista):** `megtett méter + ellenfelek pontja (+ kombó-bónusz) + 1000 × pálya sorszáma, ha célba értél`.
+   Kombó: 1,3 mp-en belüli ölések láncolata; 3-tól ×N kiírás, 7-től „VÉRFÜRDŐ!”, 12-től „HÚSDARÁLÓ!”.
+
+### Irányítás
+
+| Érintés | Billentyű | Hatás |
+|---|---|---|
+| ▶ GÁZ | → / D | gyorsítás |
+| ◀ FÉK | ← / A | fék, álló helyzetből tolatás |
+| ↺ / ↻ BILLENT | ↑ W / ↓ S | forgatás (levegőben erősen, földön enyhén) |
+| 💥 TŰZ | Space / F | 155 mm-es gránát (ha van lőszer-fejlesztés) |
+| 🚀 RAKÉTA | Shift | tolóerő a jármű tengelye mentén |
+| ❚❚ | P / Esc | szünet |
+
+Fekvő tájolásban is játszható (a többi játékkal ellentétben ott nem kér forgatást).
+
+## Fejlesztések (`UPG` tömb)
+
+| Kategória | Mit ad | Szintek |
+|---|---|---|
+| Motor | húzóerő-szorzó `f`, végsebesség `v` | gyári → kipufogó → turbó → iker-turbó → kompresszoros szörny |
+| Futómű | tapadás `g`, ütésvédelem `cr`, levegő-irányítás `tl` | kopott → új tagok → tüskés lánc → torziós rudak → versenyfutómű |
+| Üzemanyag | tartály literben `l` | 60 → 90 → 130 → 180 → 250 L |
+| Páncélzat | páncélpont `hp`, sérüléscsökkentés `dr` | gyári → lemezek → rácsketrec → sínacél → guruló erőd (tetőtüskék) |
+| Orr-előtét | ütés-szorzó `m`, folyamatos darálás `dps`, kisebb lassulás `sr`, orrhossz `ext`, orrvédelem `fp` | csupasz → dózerlap → tüskés eke → kombájn-tálca → HÚSDARÁLÓ |
+| Oldalvédelem | kapaszkodók sebzése `dps`, felmászás csökkentése `gr` | nincs → szögesdrót → tüskék → láncfűrész |
+| Fő fegyver | lőszer `am`, töltés `rl`, sebzés `dm`, sugár `rad` | bedugott cső → 2 / 3 / 5 / 8 gránát |
+| Kiegészítő fegyver | tűzgyorsaság `rt`, sebzés `dm`, hatótáv `rg` | nincs → FN MAG → iker MAG → M2HB → minigun |
+| Rakétahajtás | idő `cap` (mp), tolóerő `th` | nincs → JATO → iker → utánégető |
+
+Minden szint látszik a járművön is (`drawVeh` / `drawFront`): kannák, hordók, rácsok, tüskék, kipufogók,
+kompresszor, géppuska, rakéták, eke/motolla/darálódobok.
+
+## Ellenfelek (`ZT` objektum)
+
+| Típus | Életerő | Jellemző |
+|---|---|---|
+| Csoszogó | 62 | lassú, tömegben jön, felmászik |
+| Futó | 44 | gyors, ugrik, gyakran felkapaszkodik |
+| Puffadt | 120 | szétrobbanva savat fröcsköl (sebzi a járművet és a többi zombit) |
+| Köpködő | 70 | ívben savat köp |
+| Martalóc katona | 75 | barikád mögül lő |
+| Rohamzombi | 230 | pajzs: lassú ütésnél csak 45% sebzés, a géppuska is gyengén fogja (M2HB-ig) |
+| Óriás | 800 | fal: megállítja a járművet és üt; csak nagy sebességnél esik el |
+
+A pályán 15–40 fős **hordák** vannak (figyelmeztető tábla + „⚠ HORDA ELŐTTED”), az ellenfelek életereje
+pályánként +15%. Nehéz megölni őket: az ütés sebzése `(relatív sebesség / 10)^1,35 × 2,4 × orr-szorzó`,
+lassú ütközésnél semmi – ilyenkor nekifeszülnek, lassítanak, felmásznak, vagy elesnek és a lánctalp eltapossa őket.
+Sérülten leszakad a karjuk, véreznek.
+
+## Fizika (`vehStep`)
+
+- **Jármű: az eredeti PzH 2000 modell** – ugyanaz a kép (`img/sprite5.webp` test, `img/sprite6.webp` cső) és
+  ugyanaz a 9 kerekes futómű-geometria (`D_WHEELS`, `PK`, `PCX`, `PBY`), mint a DroneRunban és a Shot&Runban;
+  a „Mad Max” fejlesztések erre a sziluettre vannak rárajzolva.
+- Merev test (x, y, szög, sebességek), 7 futógörgő + hajtó- és feszítőkerék rugós-csillapított kontaktussal,
+  a test sarkai külön ütköznek (tető- és orrütés sebez). Al-lépésekben fut (≥ 240 Hz).
+- Vonóerő tapadáshoz kötve (`grip × normálerő`), motorerő a végsebesség felé csökken; a kapaszkodó zombik lefogják.
+- Talaj: 16 egységenként mintavett magasságtérkép, pályánként rögzített maggal (minden menetben ugyanaz a pálya,
+  így megtanulható). Elemek: rámpa (ugrató, hirtelen leszakad), kráter, roncsautó-halom, barikád, robbanó hordó,
+  üzemanyag-kanna, kupakláda.
+- 1 m = 10 egység, gravitáció 300 egység/s².
+
+## Gore-rendszer
+
+- **Folyadék-cseppek** (`MG.parts`): sebesség irányába nyúlnak, a földre érve tócsát hagynak; vér (piros), nyálka/sav (zöld).
+- **Tócsák** (`MG.dec`): a talaj lejtésével forgatott ellipszisek, idővel szétterülnek.
+- **Húscafatok** (`MG.gibs`): szabálytalan húsdarabok, csont, fej, kar, láb; pattognak, vércsíkot húznak.
+- **Belek** (`MG.guts`): Verlet-lánc (7–11 pont) távolság-kényszerrel, talajjal ütközik.
+- **Tetemek** a földön, **véres jármű** (foltok az orron, csöpög), a darálódob felfelé köpi a húst.
+- Darabszám-plafonok: `LOWFX` (gyenge telefon mód) mellett kb. a fele.
+
+## Teszt
+
+A fejlesztés közben Playwright „robotpilótával” végigvezetett menetek (800×450, fekvő):
+
+| Felszereltség | Pálya | Eredmény |
+|---|---|---|
+| alap (minden 0) | 1. | kb. 508 m, kifogyott az üzemanyag |
+| közepes (főleg 2. szint) | 1. | célba ért |
+| közepes | 2. | kb. 1100–1450 m |
+| maximális | 1., 2., 3. | mind célba ért (a 3.-on 9 páncélponttal) |
+
+Konzolhiba egyik menetben sem volt; a képkockaszám a fej nélküli böngészőben végig ~120 FPS.
+
+## Bővítési útmutató
+
+- **Új fejlesztési szint:** új elem az adott `UPG[…].lv` tömb végére (`n`, `d`, `c` ár, `r` távfeltétel, `s` statok).
+  A műhely, a mentés és a szint-pöttyök automatikusan követik. Ha új stat kell, a `makeVeh()`-ben kösd be.
+- **Új fejlesztési kategória:** új objektum az `UPG`-be + felhasználás a `makeVeh()`-ben + rajz a `drawVeh()`-ben.
+  A régi mentések automatikusan 0. szintet kapnak (`load()`).
+- **Új ellenfél:** új kulcs a `ZT`-be, viselkedés a `zStep()`-ben (`z.t === '…'`), rajz a `zBody()`-ban,
+  és súly a pályák `mix` listájában.
+- **Új pálya:** új elem a `STAGES`-be (hossz, mag, színek, horda-pozíciók, keverék, jutalom). A pályaválasztó és a
+  megnyitás (`sv.unl`) automatikus; a `blankSave().best/done` tömbök hosszát is növeld.
+- **Új akadály:** a `buildStage()` `props` listájába új `k`, ütközés a `propStep()`-ben, rajz a `drawProp()`-ban.
+- **Hangolás:** az ütés-képlet a `zStep()` „ELÖL” ágában, a sebzések a `hurt()` hívásoknál, a fogyasztás a
+  `vehStep()` végén (`burn`), a jutalom a `showResult()`-ban. Az `MG.hurtBy` sebzésforrásonként összesít
+  (hangoláshoz hasznos).
+- **Teljesítmény:** minden effekt-lista plafonos; új effektnél adj hozzá plafont, és `LOWFX` alatt csökkentsd.
+- **Verzió:** új kiadásnál az `app.js` `APP_VER` és a `sw.js` `CACHE` értékét együtt emeld (az `mg.js` benne van a
+  service worker offline listájában).
+
+## Ötletek a folytatáshoz
+
+- Végtelen mód a 3. pálya után (egyre sűrűbb hordák), napi kihívás-pálya véletlen maggal.
+- Mentés szinkronizálása Firestore-ba (ehhez új mezők és szabálymódosítás kell).
+- Fényező/festés-választó a műhelyben, matricák.
+- Helikopteres utánpótlás-ledobás, éjszakai pálya fényszóróval.
+- Saját zenei téma (most a régi DroneRun rockzenéje szól).
