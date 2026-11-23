@@ -178,3 +178,15 @@ A főmenü Meat Grinder lapja (`ART_SCN.drone` az `app.js`-ben) képregény-posz
 óriás PzH 2000 hátsó rakétákkal, tetőtüskékkel és véres húsdaráló-dobokkal, szétrepülő húscafatok, lefolyó vér a felső szélről, „HÚSDARÁLÓ!”
 felirat. A horda a Corridor szörnyeiből áll (Hústorony, Polip-Isten, Pókanya, Kopó, Nyurga – `mgmon.js`, az `artAssets` tölti be).
 Az aktív lapon lassú ráközelítés, izzó keret és felszálló parázs fut (`styles.css` vége; `prefers-reduced-motion` mellett kikapcsol).
+
+## 4.58.0 – új fegyverek, életszerűbb zombik és vér
+
+- **Fő ágyú**: két új szint – 20 gránát (forgótáras tár) és **60 gránát** (automata ágyú, kb. 2 lövés/mp). A TŰZ gomb / Space / F **nyomva tartva** sorozatot lő.
+- **Lángszóró** (`lang`, 4 szint): LÁNG gomb / G billentyű. Kúp alakú láng a fúvókából (`NZ`); az ellenfelek égnek (`burn`/`bd`), a tüzet továbbadják egymásnak,
+  a robbanó hordók felrobbannak. A tartály lassan töltődik, ha nem tüzelsz.
+- **Lézer** (`lezer`, 4 szint): automatikus; a legközelebbi célpontokat égeti (1–3 sugár), az Impulzus-lézertől kezdve a sugár útjában minden ellenfelet (`pi`).
+- **Automata torony** (`torony`, 4 szint): a tetőn hátul, 360°-ban lő, a rádmászókat előbb leszedi; Gatling és páncéltörő iker-gatling szint.
+- A műhely „Tűzerő” csíkja (`firePower`) az összes fegyvert számolja. Régi mentések kompatibilisek (az új kategóriák 0. szintről indulnak).
+- **Zombik**: új, emberi arányú rajz (`zBody`): görnyedt törzs, hajlító térdű lábak, két előrenyújtott kar (felkar ruha, alkar bőr), előre lógó fej nyitott
+  állkapoccsal és izzó szemmel; típusonként ruházat (katona: sisak, mellény, puska; rohamzombi: sisak, pajzs; puffadt: dagadt has; köpködő: nyálzsák).
+- **Vér**: nem ragad: a folt csíkot húz (gravitáció + menetszél), a farka követi, fogy és lecsöpög – ~10–30 mp alatt lemegy a gépről.

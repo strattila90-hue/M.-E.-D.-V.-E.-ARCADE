@@ -2028,3 +2028,9 @@ html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action
 @keyframes mgEmber{from{transform:translateY(0);opacity:.95}to{transform:translateY(-70%);opacity:0}}
 @media (prefers-reduced-motion:reduce){.dtile[data-game="drone"].on .dbg img,.dtile[data-game="drone"].on .dbg::after{animation:none}}
 .dtile[data-game="drone"] .dbg img{object-position:68% 40%}
+
+/* Meat Grinder: lángszóró gomb + mérő */
+#harc .mg-flame{right:104px;bottom:calc(94px + env(safe-area-inset-bottom,0px));background:linear-gradient(160deg,#e8741c,#7a1a04)}
+#harc .mgbarr.fl i{background:linear-gradient(90deg,#ff3b1c,#ffb02a)}
+@media (orientation:landscape) and (max-height:500px){#harc .mg-flame{right:248px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
+@media (max-width:380px){#harc .mg-flame{right:92px}}
