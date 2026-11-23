@@ -130,4 +130,22 @@ Konzolhiba egyik menetben sem volt; a képkockaszám a fej nélküli böngésző
 - Mentés szinkronizálása Firestore-ba (ehhez új mezők és szabálymódosítás kell).
 - Fényező/festés-választó a műhelyben, matricák.
 - Helikopteres utánpótlás-ledobás, éjszakai pálya fényszóróval.
-- Saját zenei téma (most a régi DroneRun rockzenéje szól).
+- (Kész, 4.55.0) Saját zenei téma: `SONGS.grinder` az `app.js`-ben.
+
+
+## 4.55.0 – fejlesztések
+
+- **Valódi felfüggesztés** (`vehStep`): a 7 futógörgő egyenként rugózik (rugó + lengéscsillapító, visszarugózáskor keményebb,
+  ütközőgumi a végén, véges sebességű kirugózás). A kerék a talajhoz **5 pontos burkolóval** illeszkedik. A futómű-fejlesztés
+  (`SUSV`) nagyobb lengést és keményebb csillapítást ad. A hajtó- és feszítőkerék merev, csak ütőszerűen ér a talajhoz.
+  A vonóerő a rugó normálterheléséhez kötött (gyorsításkor/fékezéskor a jármű ténylegesen bólint). Kirajzolva: lengőkarok,
+  csillapítók, a lánctalp követi a kerekeket (`V.sy`). A talaj Catmull-Rom görbe (`gY`/`gSl`), a pálya simítva.
+- **Por** a lánctalp alól és landoláskor (`MG.dust`), jármű-árnyék, vignetta, napfény, köd-rétegek, additív robbanás-fény.
+- **Kamera**: közelebb (kb. 1,6–2×), frame-rate független követés, előre- és függőleges előrenézés.
+- **Felbontás + lag**: a képpont-arány max 2,5 (korábban 2); `qualityGov` a képkocka-idő alapján automatikusan csökkenti/emeli
+  (`MG.q`). Az ég egy gyorsítótárazott réteg.
+- **Új szörnyek** az ALONE IN THE CORRIDOR-ból (`mgmon.js`, pixel-art sprite-ok): Nyurga, Bőrtelen Kopó, Pókanya, Csigaszörny,
+  Kiborg-Bio, Polip-Isten, Sziámi Iker (halálakor két Nyurgára hasad), Hústorony (fal, mint az Óriás). A `ZT` jelzői:
+  `leap` (ugrik), `rng` (`gun`/`acid`: távolról lő), `stand`, `wall` (megállítja a járművet), `big`, `bar`, `mon`.
+  Halálukkor a sprite darabokra esik szét (`chunk` húscafatok).
+- **Zene**: `grinder` – csapatos stadion-hard rock (e-moll, taps-stomp, tapsolás, „HEY!” kórus). `rkClap`/`rkGang` az `app.js`-ben.
