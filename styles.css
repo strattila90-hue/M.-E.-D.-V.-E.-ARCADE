@@ -2034,3 +2034,18 @@ html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action
 #harc .mgbarr.fl i{background:linear-gradient(90deg,#ff3b1c,#ffb02a)}
 @media (orientation:landscape) and (max-height:500px){#harc .mg-flame{right:248px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:380px){#harc .mg-flame{right:92px}}
+
+/* Meat Grinder: saját rajzolt piktogramok (mgico.js) */
+.mgi{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.24em;fill:currentColor;flex:none;overflow:visible}
+#harc .mgb b .mgi{width:30px;height:30px;vertical-align:middle;filter:drop-shadow(0 1px 0 rgba(0,0,0,.55))}
+#harc .mgic{display:grid;place-items:center}#harc .mgic .mgi{width:34px;height:34px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+#harc .hx .mgi{width:19px;height:19px;vertical-align:middle}
+#harc .mggau small .mgi{width:13px;height:13px;vertical-align:-.2em;margin-right:2px}
+#harc .mginfo .mgi{width:1.2em;height:1.2em}
+#harc .mgcard h3 .mgi{width:1.05em;height:1.05em;vertical-align:-.14em}
+#harc .mgbuy .mgi,#harc .mgcash .mgi,#harc .mgtab .mgi{width:1.2em;height:1.2em}
+#harc .btn .mgi{width:1.15em;height:1.15em;vertical-align:-.22em}
+#harc .mgprog span .mgi{width:1.3em;height:1.3em}
+#harc .mggrab .mgi{color:#8fae72}
+#harc .mgi,.btn .mgi,.hx .mgi{fill:currentColor;stroke:none}
+#harc .mgbuy .mgi-coin{color:#3b2a06!important;--ic2:#f2d36a!important}

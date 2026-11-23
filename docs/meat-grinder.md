@@ -190,3 +190,11 @@ Az aktív lapon lassú ráközelítés, izzó keret és felszálló parázs fut 
 - **Zombik**: új, emberi arányú rajz (`zBody`): görnyedt törzs, hajlító térdű lábak, két előrenyújtott kar (felkar ruha, alkar bőr), előre lógó fej nyitott
   állkapoccsal és izzó szemmel; típusonként ruházat (katona: sisak, mellény, puska; rohamzombi: sisak, pajzs; puffadt: dagadt has; köpködő: nyálzsák).
 - **Vér**: nem ragad: a folt csíkot húz (gravitáció + menetszél), a farka követi, fogy és lecsöpög – ~10–30 mp alatt lemegy a gépről.
+
+## 4.59.0 – saját rajzolt piktogramok
+
+A Meat Grinder minden emoji-ikonja le lett cserélve a `mgico.js` saját, egyedi SVG-piktogramjaira (katonai sablon-stílus: vastag, 45°-ban
+levágott sarkok, két tónus, sötét kivágások, szegecsek). `ico('név')` ad beágyazható SVG-t; a szín a `color`, a kiemelés a `--ic2`, a kivágás a `--ic0`
+CSS-változóból jön. Készlet: motor, track, fuel, shield, plow, spikes, cannon, mg, rocket, flame, laser, turret, coin (kupak = kapszli), wrench,
+flag, lock/unlock, check, skull, trophy, pause, close, left/right, play, rotl/rotr, warn, zombie, boom, white. A vászonra rajzolt jelek
+(horda-figyelmeztetés, robbanó hordó) is rajzolt alakzatok. Új ikon: új bejegyzés az `ICONS`-ba `[fő szín, kiemelés, SVG-tartalom]`.
