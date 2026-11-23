@@ -2015,3 +2015,16 @@ html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action
  #harc .mgprev{height:110px}
 }
 #harc.mgplay .mgbar .hstat span:first-child{display:none}
+
+/* Meat Grinder poszter a főmenüben: lassú ráközelítés, izzó keret, felszálló parázs (csak az aktív lapon) */
+.dtile[data-game="drone"]{border-color:#1a0504}
+.dtile[data-game="drone"].on{box-shadow:6px 6px 0 #111,0 0 26px rgba(255,70,20,.55)}
+.dtile[data-game="drone"].on .dbg img{animation:mgKen 11s ease-in-out infinite alternate;transform-origin:62% 62%}
+.dtile[data-game="drone"] .dbg::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;background:
+ radial-gradient(circle at 12% 92%,#ffb347 0 1.6px,transparent 2.4px),radial-gradient(circle at 30% 98%,#ff7a2a 0 1.4px,transparent 2.2px),radial-gradient(circle at 52% 94%,#ffd24a 0 1.8px,transparent 2.6px),
+ radial-gradient(circle at 70% 99%,#ff6a1a 0 1.5px,transparent 2.3px),radial-gradient(circle at 88% 95%,#ffb347 0 1.7px,transparent 2.5px),radial-gradient(circle at 40% 100%,#ff9a3a 0 1.3px,transparent 2px);background-size:100% 100%}
+.dtile[data-game="drone"].on .dbg::after{opacity:1;animation:mgEmber 4.2s linear infinite}
+@keyframes mgKen{from{transform:scale(1)}to{transform:scale(1.09) translate(-1.2%,-1%)}}
+@keyframes mgEmber{from{transform:translateY(0);opacity:.95}to{transform:translateY(-70%);opacity:0}}
+@media (prefers-reduced-motion:reduce){.dtile[data-game="drone"].on .dbg img,.dtile[data-game="drone"].on .dbg::after{animation:none}}
+.dtile[data-game="drone"] .dbg img{object-position:68% 40%}

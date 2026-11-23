@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.56.0',APP_DATE='2026.11.23.';
+const APP_VER='4.57.0',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -4388,19 +4388,53 @@ harc(c,I){aSky(c,[[0,'#ff2a3a'],[.6,'#a00818'],[1,'#3a0208']]);aRays(c,360,380,2
   for(const [x,y,s,r] of [[160,330,1.25,-.6],[575,420,1.05,.7],[250,120,.85,.3],[500,110,.9,-.4]]){aSpeed(c,x,y-60,10,30,110,'rgba(255,240,200,.7)',4);aGrenade(c,x,y,s,r)}
   aSpr(c,I.bear,360,490,410,{ol:8});
   aSfx(c,'GOTCHA!',360,165,96,-.08,'#fff35a','#ffb000');aSfx(c,'WHAM!',585,470,70,.2,'#ffffff','#ffd2d2');aCorners(c,'rgba(40,0,0,.6)')},
-drone(c,I){aSky(c,[[0,'#1a0302'],[.45,'#7a0e08'],[.8,'#e0461a'],[1,'#ffb050']]);aRays(c,360,360,20,'rgba(255,200,140,.16)');
-  aShape(c,aBlob(560,200,58,58,22,.03),'#ffd9a0',6);
-  aHill(c,[[0,640],[200,600],[420,630],[720,590]],'#2a0c06','rgba(0,0,0,.35)');
+drone(c,I){aSky(c,[[0,'#10010a'],[.3,'#4e0816'],[.58,'#c4301a'],[.82,'#ff7a2a'],[1,'#ffc062']]);aRays(c,540,300,28,'rgba(255,214,150,.2)');
+  // nap + félárnyék-pontozás
+  {const g=c.createRadialGradient(540,250,60,540,250,300);g.addColorStop(0,'rgba(255,200,120,.55)');g.addColorStop(1,'rgba(255,120,40,0)');c.fillStyle=g;c.fillRect(0,0,ART_W,ART_H)}aShape(c,aBlob(540,250,96,96,26,.03),'#ffe6b0',7);aDots(c,'rgba(255,80,24,.5)',13,(x,y)=>{const d=Math.hypot(x-540,y-250);return d>96&&d<250?(250-d)/32:0});
+  // füstoszlopok
+  for(let k=0;k<7;k++){aCloud(c,95+k*6,470-k*40,.5+k*.07,k%2?'#2a0a0c':'#3a1210',3)}
+  for(let k=0;k<6;k++){aCloud(c,300-k*5,480-k*34,.45+k*.07,k%2?'#2a0a0c':'#421410',3)}
+  // romváros: ég felé nyúló, égő házak
+  const bld=(x,w,h,top)=>{const p=[[x,720],[x,720-h],[x+w*.3,720-h-top],[x+w*.55,720-h+top*.4],[x+w,720-h-top*.6],[x+w,720]];aShape(c,p,'#220609',6);aHatch(c,p,-.8,15,'rgba(255,120,40,.18)',2);
+    for(let i=0;i<Math.floor(w/22);i++)for(let j=0;j<Math.floor(h/36);j++)if(AR()<.34){c.fillStyle=AR()<.6?'#ff9a2a':'#ffd24a';c.fillRect(x+9+i*20,720-h+14+j*34,9,13)}};
+  bld(-10,100,260,30);bld(90,86,330,50);bld(190,110,210,26);bld(380,96,300,44);bld(480,110,230,28);bld(600,130,350,56);
+  aHill(c,[[0,700],[200,680],[420,705],[720,670]],'#1c0507','rgba(0,0,0,.4)');
+  // égő roncsok az úton
+  for(const [fx,fy,fs] of [[150,690,1],[450,700,.8]]){aShape(c,aStar(fx,fy-30,46*fs,22*fs,9),'#ff6a1a',5);aShape(c,aStar(fx,fy-28,26*fs,12*fs,8),'#ffe08a',3)}
+  // zombihorda a sorompóban (jobbra, az orr felé fordulva)
   const zb=(x,y,s,r)=>{c.save();c.translate(x,y);c.rotate(r||0);c.scale(s,s);aInk(c,[[0,0],[-10,-60]],false,22);aInk(c,[[0,0],[-10,-60]],false,14,'#3a4a5a');aInk(c,[[-10,-60],[-14,-120]],false,34);aInk(c,[[-10,-60],[-14,-120]],false,26,'#5a3a3a');
     aInk(c,[[-14,-110],[-70,-104]],false,16);aInk(c,[[-14,-110],[-70,-104]],false,9,'#8fae72');aInk(c,[[-12,-100],[-66,-88]],false,16);aInk(c,[[-12,-100],[-66,-88]],false,9,'#8fae72');
     aShape(c,aBlob(-16,-142,20,22,14,.06),'#8fae72',6);c.fillStyle='#ff2a1a';c.fillRect(-30,-148,7,5);c.restore()};
-  zb(560,610,1.05,.05);zb(650,620,.9,-.08);zb(470,600,.8,.12);zb(690,560,.7,.02);
-  for(let i=0;i<26;i++){const ox=330+(AR()-.5)*260,oy=380+AR()*200;aShape(c,aBlob(ox,oy,6+AR()*12,5+AR()*9,8,.3),AR()<.5?'#b3160e':'#7a0606',3)}
-  for(let i=0;i<5;i++){const ox=260+AR()*240,oy=300+AR()*120;aInk(c,[[ox,oy],[ox+20,oy-14],[ox+38,oy+4],[ox+56,oy-8]],false,9,'#d0707a')}
-  aSpr(c,I.pzh,300,640,560,{rot:-.05});
-  aShape(c,[[470,520],[520,470],[540,600],[480,640]],'#6a6a5e',6);for(let k=0;k<6;k++)aShape(c,[[532,488+k*22],[566,498+k*22],[534,506+k*22]],'#e8e8e0',3);
-  aHLines(c,0,720,760,940,28,'rgba(0,0,0,.3)',5);
-  aSfx(c,'SPLAT!',170,110,92,-.15,'#ffffff','#ff4a3a');aSfx(c,'GRIND!',560,420,84,.14,'#fff35a','#b3160e');aCorners(c,'rgba(40,0,0,.7)')},
+  zb(690,690,.8,-.04);zb(610,700,.72,.1);zb(530,696,.66,-.1);zb(430,690,.6,.06);
+  // a Corridor szörnyei: Hústorony, Polip-Isten, Pókanya, Kopó
+  if(I.mon){c.imageSmoothingEnabled=false;
+    aSpr(c,I.mon('tower',1),630,500,200,{ol:6});aSpr(c,I.mon('kraken',2),640,650,240,{ol:6});
+    aSpr(c,I.mon('spider',1),570,470,200,{ol:6,rot:-.22});aSpr(c,I.mon('hound',2),680,780,160,{ol:5,rot:.12});aSpr(c,I.mon('lurker',0),610,730,150,{ol:5});
+    c.imageSmoothingEnabled=true}
+  // út + por
+  aHill(c,[[0,760],[260,742],[520,768],[720,740]],'#2c0e08','rgba(0,0,0,.45)');
+  aCloud(c,60,770,1.3,'#8a5a3a',6);aCloud(c,200,800,1,'#a06a44',5);
+  // a PzH 2000: óriás, felfelé dőlve
+  aSpr(c,I.pzh,372,630,820,{rot:-.05,ol:9});
+  // Mad Max pótlások: hátsó rakéták + tűz, tetőtüskék, húsdaráló-dobok az orron
+  for(let k=0;k<3;k++){const y=560+k*24;aShape(c,[[-12,y],[80,y+2],[80,y+19],[-12,y+17]],'#8a8c84',5);aShape(c,[[76,y+1],[96,y+4],[96,y+16],[76,y+19]],'#a8352b',4)}
+  aShape(c,aStar(-30,596,84,32,10),'#ff8a1e',6);aShape(c,aStar(-20,597,46,18,9),'#fff2b0',4);
+  for(let i=0;i<14;i++){const x=110+i*30;aShape(c,[[x,556],[x+10,534],[x+20,556]],'#c9cbc2',4)}
+  c.save();for(const [cx,cy,rv] of [[566,608,1],[566,676,-1]]){aShape(c,aStar(cx,cy,60,44,14),'#d6d8d0',7);aHatch(c,aStar(cx,cy,60,44,14),-.7,9,'rgba(0,0,0,.3)',2);aShape(c,aBlob(cx,cy,34,34,16,.02),'#5c5e58',6);aShape(c,aBlob(cx,cy,12,12,10,.02),'#1c1c1a',4);
+    c.fillStyle='rgba(150,6,6,.75)';for(let i=0;i<7;i++){c.beginPath();c.arc(cx+Math.cos(i*1.9)*40,cy+Math.sin(i*2.3)*40,4+AR()*4,0,7);c.fill()}}c.restore();
+  // lefolyó vér a gépen
+  for(let i=0;i<9;i++){const x=440+i*14,y=585+AR()*30;aInk(c,[[x,y],[x+AR()*4,y+40+AR()*60]],false,5+AR()*3,'#9a0a0a')}
+  // szétrepülő húscafatok, csontok, kar
+  for(let i=0;i<22;i++){const ox=540+AR()*170,oy=470+AR()*250;aShape(c,aBlob(ox,oy,7+AR()*13,6+AR()*9,8,.35),AR()<.55?'#c01818':'#e8909a',3)}
+  for(let i=0;i<7;i++){const ox=520+AR()*180,oy=440+AR()*220;aInk(c,[[ox,oy],[ox+26,oy-12]],false,8,'#efe6cf')}
+  aBoom(c,668,610,.55);
+  // gyorsító vonalak, szikrák, hamu
+  aHLines(c,0,340,430,900,34,'rgba(255,230,190,.45)',5);
+  c.fillStyle='#ffd24a';for(let i=0;i<46;i++){const x=AR()*720,y=300+AR()*560;c.fillRect(x,y,2+AR()*4,2+AR()*3)}
+  // vér a felső szélről csorog
+  for(let i=0;i<9;i++){const x=30+i*78+AR()*30,l=40+AR()*110;aShape(c,[[x,-4],[x+22,-4],[x+16,l],[x+11,l+16],[x+6,l]],'#8a0808',4);aShape(c,aBlob(x+11,l+14,9,12,10,.06),'#b01010',3)}
+  aSfx(c,'HÚSDARÁLÓ!',360,150,112,-.06,'#fff35a','#e0261a');aSfx(c,'SPLAT!',150,330,84,-.16,'#ffffff','#ff4a3a');aSfx(c,'GRIND!',600,300,76,.14,'#fff35a','#b3160e');
+  aVignette(c,'rgba(20,0,0,.62)');aCorners(c,'rgba(40,0,0,.7)')},
 terep(c,I){aSky(c,[[0,'#2fa4d8'],[.55,'#8fe0ff'],[1,'#f3e3a0']]);aRays(c,560,170,18,'rgba(255,255,255,.25)');aShape(c,aBlob(560,170,62,62,24,.03),'#fff3a6',6);
   aHill(c,[[0,520],[180,470],[360,520],[540,450],[720,500]],'#8aa94a','rgba(40,60,10,.3)');
   aHill(c,[[0,700],[140,690],[300,610],[420,560],[470,600],[560,760],[720,780]],'#8a5a2a','rgba(40,20,0,.35)');
@@ -4440,7 +4474,8 @@ async function artAssets(){if(ART.ready)return ART.ready;ART.ready=(async()=>{tr
   const [pzh,gid,bear,raba]=await Promise.all([artLoad(PZH_FULL||PZH_SPRITE),artLoad(GID_FULL||GID_SPRITE),artLoad(BEAR_SPRITE),artLoad('data:image/svg+xml;utf8,'+encodeURIComponent(rb))]);
   let note=null;try{note=tkNoteCv(6)}catch(e){}
   try{await Promise.race([document.fonts.load('100px Bangers'),new Promise(r=>setTimeout(r,1500))])}catch(e){}
-  return {pzh,gid,bear,raba,note}})();return ART.ready}
+  let mon=null;try{const M=await import('./mgmon.js');mon=(t,f)=>M.monSprite(t,f||0)}catch(e){}
+  return {pzh,gid,bear,raba,note,mon}})();return ART.ready}
 function artApply(g){const u=ART.url[g];if(!u)return;document.querySelectorAll(`img[data-art="${g}"]`).forEach(i=>{if(i.getAttribute('src')!==u){i.onload=()=>i.classList.add('ok');i.src=u}})}
 async function artMake(g){if(ART.url[g]||!ART_SCN[g])return;const I=await artAssets(),cv=document.createElement('canvas');cv.width=ART_W;cv.height=ART_H;const c=cv.getContext('2d');
   AR=artRng(g.length*977+g.charCodeAt(0)*31);try{ART_SCN[g](c,I)}catch(e){console.warn('art',g,e)}
