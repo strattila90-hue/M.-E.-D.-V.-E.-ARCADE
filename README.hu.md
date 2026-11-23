@@ -22,6 +22,7 @@ M.E.D.V.E. H.A.R.C., Meat Grinder, Gidrán Terep, Gidrán Konvoj, Rába Rakodó,
 - **Cél:** a pálya végi menedékig eljutni; 3 pálya (1200 / 2000 / 3000 m), mindegyik teljesítése nyitja a következőt. A menet véget ér, ha elfogy az üzemanyag, szétszedik a járművet, felborulsz vagy elakadsz.
 - **Műhely, 9 kategória, 4–5 szint:** motor, futómű/lánctalp, üzemanyagtartály, páncélzat, orr-előtét (dózerlap → tüskés eke → kombájn-tálca → iker-dobos húsdaráló), oldalvédelem (szögesdrót → tüskék → láncfűrész), 155 mm-es ágyú, géppuska (MAG → iker MAG → M2HB → minigun), rakétahajtás. A fejlesztések a legnagyobb megtett távhoz kötöttek, és mind látszanak a járművön.
 - **Ellenfelek:** csoszogó, futó, puffadt (savas robbanás), köpködő, martalóc katona, pajzsos rohamzombi, óriás; 15–40 fős hordák. Nehéz megölni őket: lassú ütközésnél nekifeszülnek, felmásznak, a kapaszkodók sebeznek.
+- **Jármű:** az eredeti PzH 2000 modell (a DroneRun képe és 9 kerekes futóműve), rajta a barkácsolt fejlesztésekkel.
 - **Fizika:** rugós futógörgők, tapadás, levegőben billentés, rámpák, kráterek, roncsautó-halmok, barikádok, robbanó hordók.
 - **Gore:** folyadékszerű vér- és nyálkacseppek, szétterülő tócsák, húscafatok, csontok, leszakadó végtagok, Verlet-belek, véres, csöpögő jármű.
 - **Pontozás:** megtett táv + ledarált zombik (+ kombó, + menedék-bónusz); a ranglista a régi DroneRun-mezőt használja. Fekvő tájolásban is játszható.

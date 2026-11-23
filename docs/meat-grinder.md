@@ -73,7 +73,10 @@ Sérülten leszakad a karjuk, véreznek.
 
 ## Fizika (`vehStep`)
 
-- Merev test (x, y, szög, sebességek), 6 futógörgő + hajtó- és feszítőkerék rugós-csillapított kontaktussal,
+- **Jármű: az eredeti PzH 2000 modell** – ugyanaz a kép (`img/sprite5.webp` test, `img/sprite6.webp` cső) és
+  ugyanaz a 9 kerekes futómű-geometria (`D_WHEELS`, `PK`, `PCX`, `PBY`), mint a DroneRunban és a Shot&Runban;
+  a „Mad Max” fejlesztések erre a sziluettre vannak rárajzolva.
+- Merev test (x, y, szög, sebességek), 7 futógörgő + hajtó- és feszítőkerék rugós-csillapított kontaktussal,
   a test sarkai külön ütköznek (tető- és orrütés sebez). Al-lépésekben fut (≥ 240 Hz).
 - Vonóerő tapadáshoz kötve (`grip × normálerő`), motorerő a végsebesség felé csökken; a kapaszkodó zombik lefogják.
 - Talaj: 16 egységenként mintavett magasságtérkép, pályánként rögzített maggal (minden menetben ugyanaz a pálya,
