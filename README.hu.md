@@ -13,10 +13,12 @@
 
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.52.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.53.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
 M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.53.0:** **Tüzér Kassza – látványos gyerekzár-feloldás.** A 15 mp-es visszaszámláló eddig a lakat gombján volt, amit a nyomva tartó ujj eltakart. Most a lakat lenyomásakor a képernyő elsötétül, és középen nagy, körkörös haladásjelző jelenik meg óriási, másodpercenként „pattanó” számmal (rövid rezgéssel). Az utolsó 3 mp-ben zöldre vált („Mindjárt…”), a végén kinyílik a lakat („Feloldva!”). A fejléc alján haladássáv is fut, a lakat körül fénygyűrű lüktet. Ha korán elengedik, piros „Elengedted – kezdd újra!” üzenet jelenik meg.
 
 **v4.52.0:** **Tüzér Kassza – erősebb gyerekzár (ULTRA koppintás) iOS-en és Androidon.**
 - **Vissza gomb / visszahúzás:** a zár alatt több „csapda” előzmény-bejegyzés fogja meg, és a gyerek minden koppintása (ami felhasználói érintés) pótolja őket – így a Chrome sem ugorja át őket, akárhányszor nyomják a vissza gombot. Feloldáskor a csapdák eltűnnek, utána a vissza gomb megint a játékot zárja be.

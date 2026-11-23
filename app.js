@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.52.0',APP_DATE='2026.11.23.';
+const APP_VER='4.53.0',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2566,7 +2566,7 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
     <nav class="tknav"><button type="button" data-tk="upg">🔧<b>Fejlesztés</b></button><button type="button" data-tk="gear">🛒<b>Piac</b></button><button type="button" data-tk="den">💵<b>Bankók</b></button><button type="button" data-tk="gift">🎁<b>Ajándék</b></button><button type="button" data-tk="ach">🎖️<b>Érdemek</b></button><button type="button" data-tk="uteg">🏆<b>Ütegek</b></button></nav>
     <div class="tksheet" id="tkSheet" hidden></div></div>
    <div class="hstart" id="tkStart"></div>
-   <div class="tkulock" id="tkULock" hidden><div class="tkuhd"><b>👶 ULTRA KOPPINTÁS</b><span>Koppints bárhová!</span></div><button type="button" class="tkuhold" id="tkUHold" aria-label="Gyerekzár feloldása: tartsd nyomva 15 másodpercig"><i>🔒</i><em id="tkUHt">15</em></button><div class="tkuhint"><b>🔒 GYEREKZÁR BEKAPCSOLVA</b><span>Feloldás: tartsd nyomva a lakatot (jobb fent) 15 mp-ig</span></div><div class="tkupin"></div></div>`;
+   <div class="tkulock" id="tkULock" hidden><div class="tkuhd"><b>👶 ULTRA KOPPINTÁS</b><span>Koppints bárhová!</span></div><button type="button" class="tkuhold" id="tkUHold" aria-label="Gyerekzár feloldása: tartsd nyomva 15 másodpercig"><i>🔒</i><em id="tkUHt">15</em></button><div class="tkuhint"><b>🔒 GYEREKZÁR BEKAPCSOLVA</b><span>Feloldás: tartsd nyomva a lakatot (jobb fent) 15 mp-ig</span></div><div class="tkupin"></div><div class="tkubar" aria-hidden="true"></div><div class="tkuprog" aria-hidden="true"><div class="tkuring"><i id="tkULk">🔒</i><b id="tkUBig">15</b><small>másodperc</small></div><p id="tkUMsg">Tartsd nyomva a lakatot…</p></div></div>`;
   $('#tkClose').onclick=tkClose;$('#tkPush').onclick=()=>tkPush();$('#tkMint').onclick=tkMint;TK.ultra=false;el.classList.remove('tkul');tkUltraInit();
   el.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>tkSheet(b.dataset.tk));
   Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.rings=[];TK.sp=[];TK.bs=0;TK.bv=0;TK.shake=0;TK.flash=0;TK.pkB=0;TK.pileB=0;TK.thr=[];TK.land=[];TK.stB=0;TK.stX=0;TK.skc=null;TK.gnc=null;TK.mgHold=null;TK.mgS=0;TK.mgAcc=0;TK.mgSum=0;TK.mgSumT=9;TK.mgBan=null;TK.mgOut=null;TK.mgA=null;if(!TK.mg)TK.mg={n:srvNow()+(2+Math.random()*4)*6e4,have:0,fuel:0};TK.mgIn=TK.mg.have?0:1;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
@@ -2598,10 +2598,21 @@ function tkUltraInit(){const tr=$('#tkUTrack'),kn=$('#tkUKnob'),lk=$('#tkULock')
   lk.addEventListener('pointerdown',e=>{tkUltraKeep();if(e.target.closest('#tkUHold'))return;e.preventDefault();if(typeof GP!=='undefined'&&GP){gpSet(false);return}if(!TK.run)return;
     const r=TK.cv.getBoundingClientRect();tkPress(Math.max(0,Math.min(r.width,e.clientX-r.left)),Math.max(0,Math.min(r.height,e.clientY-r.top)))});
   lk.addEventListener('contextmenu',e=>e.preventDefault());
-  let hi=null,h0=0;const stop=()=>{if(hi){clearInterval(hi);hi=null}hb.style.setProperty('--p',0);ht.textContent='15';hb.classList.remove('on')};
-  hb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tkUltraKeep();try{hb.setPointerCapture(e.pointerId)}catch(_){}stop();h0=performance.now();hb.classList.add('on');
-    hi=setInterval(()=>{const t=(performance.now()-h0)/1000;hb.style.setProperty('--p',Math.min(1,t/15).toFixed(3));ht.textContent=String(Math.max(0,Math.ceil(15-t)));if(t>=15){stop();tkUltraOff()}},100)});
-  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>hb.addEventListener(t,stop));hb.addEventListener('contextmenu',e=>e.preventDefault())}
+  /* feloldás: a lakat nyomva tartása 15 mp. A visszaszámláló NEM a lakaton van (azt az ujj takarja), hanem nagyban a képernyő
+     közepén – körkörös haladásjelző, másodpercenként „pattanó” szám, a fejléc alján haladássáv; elengedésre üzenet, a végén kinyíló lakat. */
+  const big=$('#tkUBig'),msg=$('#tkUMsg'),lki=$('#tkULk'),T=15;let hi=null,h0=0,lastS=T,done=false;
+  const setP=v=>{lk.style.setProperty('--p',v.toFixed(3));hb.style.setProperty('--p',v.toFixed(3))};
+  const stop=(early)=>{if(hi){clearInterval(hi);hi=null}hb.classList.remove('on');if(done)return;setP(0);ht.textContent=String(T);lk.classList.remove('hold','near');
+    if(early){lk.classList.remove('miss');void lk.offsetWidth;lk.classList.add('miss');msg.textContent='Elengedted – kezdd újra!';big.textContent=String(T);clearTimeout(lk._mt);lk._mt=setTimeout(()=>lk.classList.remove('miss'),1400)}};
+  hb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tkUltraKeep();try{hb.setPointerCapture(e.pointerId)}catch(_){}stop();done=false;h0=performance.now();lastS=T;
+    hb.classList.add('on');lk.classList.remove('miss','done');lk.classList.add('hold');big.textContent=String(T);lki.textContent='🔒';msg.textContent='Tartsd nyomva a lakatot…';
+    hi=setInterval(()=>{const t=(performance.now()-h0)/1000,p=Math.min(1,t/T),left=Math.max(0,Math.ceil(T-t));setP(p);
+      if(left!==lastS){lastS=left;big.textContent=String(left);ht.textContent=String(left);big.classList.remove('tick');void big.offsetWidth;big.classList.add('tick');if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}
+        if(left<=3)lk.classList.add('near');msg.textContent=left<=3?'Mindjárt…':'Tartsd nyomva a lakatot…'}
+      if(t>=T){done=true;clearInterval(hi);hi=null;lk.classList.remove('near');lk.classList.add('done');lki.textContent='🔓';big.textContent='✓';msg.textContent='Feloldva!';
+        setTimeout(()=>{tkUltraOff();done=false;lk.classList.remove('hold','done');setP(0);ht.textContent=String(T)},750)}},50)});
+  const rel=e=>{if(!hi)return;const t=(performance.now()-h0)/1000;stop(t>.35&&t<T)};
+  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>hb.addEventListener(t,rel));hb.addEventListener('contextmenu',e=>e.preventDefault())}
 /* ===== v4.52: GYEREKZÁR-ŐR (ULTRA koppintás alatt) =====
    - Android „vissza”: több előzmény-bejegyzés („csapda”), mindig érintés közben beszúrva – a Chrome az érintés nélkül
      beszúrt bejegyzéseket a vissza gombnál átugorja, ezért a gyerek koppintásai közben folyamatosan pótoljuk őket.
