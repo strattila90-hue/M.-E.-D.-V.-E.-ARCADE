@@ -2049,3 +2049,8 @@ html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action
 #harc .mggrab .mgi{color:#8fae72}
 #harc .mgi,.btn .mgi,.hx .mgi{fill:currentColor;stroke:none}
 #harc .mgbuy .mgi-coin{color:#3b2a06!important;--ic2:#f2d36a!important}
+
+/* Meat Grinder: elhajlott cső javítása a műhelyben */
+#harc .mgfix{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:12px 0 4px;padding:10px 12px;border:1.5px solid #c0392b;border-radius:12px;background:linear-gradient(135deg,rgba(120,20,12,.55),rgba(40,8,6,.7));text-align:left}
+#harc .mgfix div{flex:1 1 200px}#harc .mgfix b{display:block;font-size:13px}#harc .mgfix span{display:block;font-size:11.5px;opacity:.85;margin-top:2px}
+#harc .mgfix .mgi{width:1.3em;height:1.3em;margin-right:6px}#harc .mgfix .mgbuy{width:auto;flex:0 0 auto;padding:8px 14px}
