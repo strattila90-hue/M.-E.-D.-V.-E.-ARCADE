@@ -156,3 +156,11 @@ A fejlesztések (páncéllemezek, ketrec, tüskék, kipufogók, turbó/kompressz
 rozsdás-hegesztett acélnak néznek ki. Segédek a `mg.js`-ben (`drawVeh` előtt): `metalTile`/`mt` (gyorsítótárazott lemez: színátmenet,
 csiszolási szálak, szemcse, karcok, rozsda, szegecs, varrat + érintkezési árnyék), `mpoly`, `spike`/`spikeH`, `pipe`, `disc`.
 Új alkatrésznél ezekkel rajzolj, a szín `#rrggbb` legyen.
+
+## 4.55.2 – közepes rugózás, valósághűbb lánc
+
+- Rugózás közepesre hangolva (`SUSV`): kb. 35% beülés állva, csillapítási tényező ~0,5, 11–16 egység lengés a futómű szintjétől függően.
+- Lánctalp (`trackPath`/`drawTrack`): a lánc a kerekek külső érintői mentén fut, a hajtó/feszítőkerék körül körbeível, a felső ága megereszkedik,
+  az alsó ága a kiemelkedő talaj fölött fölfelé tolódik (átfekszik a kisebb egyenetlenségeken). Láncszemek, csapszegek, tüskék/bordák a
+  futómű-szinttel. A lánc fázisa a talajhoz képest hátrafelé fut (korábban rossz irányba), a kerekek gördülés-helyesen forognak, a
+  levegőben a gázra pörög, fékre lassul (`V.trkV`). Gumiabroncsos, csavarozott acél görgők, fogaskerekű hajtókerék.

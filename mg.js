@@ -225,7 +225,7 @@ const HB = {x0: -124, x1: FRONT + 2, y0: -56, y1: 32};   // találati doboz
 // Felfüggesztés: a 7 futógörgő egyenként rugózik (rugó + lengéscsillapító + ütközőgumi). Az 1. szint a kopott gyári
 // torziós rúd; a futómű-fejlesztések nagyobb lengést, lágyabb-de-stabil rugót és erősebb csillapítást adnak.
 const ENV = [-.78, -.42, 0, .42, .78];   // a kerék talaj-burkolója: 5 mintapont a kerék szélességében
-const SUSV = lv => { const T = 13 + lv * 1.7; return {T, k: 107 / T * (.9 + lv * .07), cs: .8 + lv * .22} };
+const SUSV = lv => { const T = 11 + lv * 1.2; return {T, k: 107 / T * (1.15 + lv * .06), cs: 1.3 + lv * .2} };   // közepes keménység: kb. 35% beülés, csillapítási tényező ~0,5
 function makeVeh() {
   const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), el = ST('elol'), ag = ST('agyu'), bo = ST('boost'), tk = ST('tank');
   const mass = 1 + MG.sv.up.pancel * .04 + MG.sv.up.elol * .03, su = SUSV(MG.sv.up.futomu);
@@ -235,7 +235,7 @@ function makeVeh() {
     ammo: ag.am, rl: 0, rl0: ag.rl, boost: bo.cap, boost0: bo.cap, bth: bo.th,
     track: 0, contact: 0, air: 0, flipT: 0, stuckT: 0, noFuelT: 0, grind: 0, mgA: 0, mgT: 0, mgCd: 0, boosting: 0, blood: [], lastLand: 0,
     susT: su.T, ks: su.k, cs: su.cs, sc: new Float32Array(WHEELS.length), sv: new Float32Array(WHEELS.length), sy: new Float32Array(WHEELS.length), sT: new Uint8Array(WHEELS.length), pitchRate: 0};
-  for (let i = 0; i < WHEELS.length; i++) if (!WHEELS[i].s) { V.sc[i] = su.T * .42; V.sy[i] = su.T / 2 - V.sc[i] }
+  for (let i = 0; i < WHEELS.length; i++) if (!WHEELS[i].s) { V.sc[i] = su.T * .35; V.sy[i] = su.T / 2 - V.sc[i] }
   return V;
 }
 function vPt(V, lx, ly) { const c = Math.cos(V.a), s = Math.sin(V.a); return [V.x + lx * c - ly * s, V.y + lx * s + ly * c] }
@@ -322,7 +322,7 @@ function vehStep(V, dt, inp) {
   V.vx += fx / V.mass * dt; V.vy += fy / V.mass * dt; V.w += tq / V.I * dt;
   V.w = clamp(V.w, -9, 9);
   V.x += V.vx * dt; V.y += V.vy * dt; V.a += V.w * dt;
-  V.track += fwd * dt;
+  { const tgt = nC ? fwd : gas ? Math.min(180, (V.trkV || 0) + 260 * dt) : brk ? (V.trkV || 0) * Math.max(0, 1 - 6 * dt) : (V.trkV || 0) * Math.max(0, 1 - .5 * dt); V.trkV = (V.trkV || 0) + (tgt - (V.trkV || 0)) * Math.min(1, dt * (nC ? 25 : 6)); V.track += V.trkV * dt }
   // üzemanyag
   const burn = (gas ? 1.45 : .12) * (1 + MG.sv.up.motor * .07);
   V.fuel = Math.max(0, V.fuel - burn * dt);
@@ -1032,6 +1032,63 @@ function disc(c, cx, cy, r, base) { // gömbölyű alkatrész (turbó, tárcsa):
   const k = base + 'd' + r; let g = MV.get(k); if (!g) { g = c.createRadialGradient(-r * .3, -r * .35, r * .1, 0, 0, r); g.addColorStop(0, shade(base, 1.35)); g.addColorStop(.55, shade(base, .9)); g.addColorStop(1, shade(base, .45)); MV.set(k, g) }
   c.save(); c.translate(cx, cy); c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.arc(1.2, 1.6, r, 0, 7); c.fill(); c.fillStyle = g; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = .9; c.stroke(); c.restore();
 }
+
+/* ---------- lánctalp: a kerekek köré feszülő lánc, a talaj fölött átfekszik a kisebb egyenetlenségeken ---------- */
+const TR_N = 5;   // egy futófelület-szakasz mintapontjai
+function trackPath(V, ws, live) {
+  const pts = [], T = 2.6, n = ws.length, P = (x, y) => pts.push(x, y);
+  const A = ws[0], Z = ws[n - 1];
+  // hátsó kerék körül: felülről hátra, lefelé
+  for (let u = 0; u <= 6; u++) { const th = -Math.PI / 2 - u / 6 * Math.PI, r = A.r + T; P(A.cx + Math.cos(th) * r, A.cy + Math.sin(th) * r) }
+  // alsó ág: kerékpáronként külső érintő, a talajra „ráfekvő” közbenső pontokkal
+  for (let i = 0; i < n - 1; i++) {
+    const a = ws[i], b = ws[i + 1], dx = b.cx - a.cx, dy = b.cy - a.cy, L = Math.hypot(dx, dy), phi = Math.atan2(dy, dx), be = Math.asin(clamp((a.r - b.r) / L, -.5, .5)), th = phi + Math.PI / 2 - be, nx = Math.cos(th), ny = Math.sin(th);
+    const x1 = a.cx + nx * (a.r + T), y1 = a.cy + ny * (a.r + T), x2 = b.cx + nx * (b.r + T), y2 = b.cy + ny * (b.r + T);
+    for (let k = 0; k < TR_N; k++) {
+      const f = k / TR_N; let x = x1 + (x2 - x1) * f, y = y1 + (y2 - y1) * f;
+      if (live && k > 0 && !a.s && !b.s) { const [wx, wy] = vPt(V, x, y), gl = vLoc(V, wx, gY(wx))[1] - .6; if (gl < y) y = Math.max(gl, y - 9) }   // a láncot a kiemelkedő talaj fölfelé tolja
+      P(x, y);
+    }
+  }
+  // elülső kerék körül: alulról előre, fölfelé
+  for (let u = 0; u <= 6; u++) { const th = Math.PI / 2 - u / 6 * Math.PI, r = Z.r + T; P(Z.cx + Math.cos(th) * r, Z.cy + Math.sin(th) * r) }
+  // felső ág: lehajló, két támgörgő között megülő lánc
+  const x1 = Z.cx, y1 = Z.cy - Z.r - T, x2 = A.cx, y2 = A.cy - A.r - T;
+  for (let k = 1; k < 12; k++) { const f = k / 12; P(x1 + (x2 - x1) * f, y1 + (y2 - y1) * f + Math.sin(f * Math.PI) * 3.2) }
+  return pts;
+}
+function drawTrack(c, V, ws, tr, up, live) {
+  const pts = trackPath(V, ws, live), N = pts.length / 2;
+  const path = () => { c.beginPath(); c.moveTo(pts[0], pts[1]); for (let i = 1; i < N; i++) c.lineTo(pts[i * 2], pts[i * 2 + 1]); c.closePath() };
+  c.lineJoin = 'round'; c.lineCap = 'butt';
+  path(); c.setLineDash([]); c.lineWidth = 7.6; c.strokeStyle = '#12110e'; c.stroke();
+  c.setLineDash([5.2, 1.8]); c.lineDashOffset = tr;                    // a láncszemek: az alsó ág hátrafelé fut, ha a jármű előre megy
+  path(); c.lineWidth = 6; c.strokeStyle = '#3f3b32'; c.stroke();
+  c.lineWidth = 2.4; c.strokeStyle = 'rgba(190,185,160,.3)'; c.stroke();   // szatén fény a szemek közepén
+  c.lineWidth = 1; c.strokeStyle = 'rgba(0,0,0,.55)'; c.setLineDash([.9, 6.1]); c.lineDashOffset = tr - 2.6; c.stroke();   // csapszegek
+  if (up.futomu >= 1) { c.setLineDash([1.5, 5.5]); c.lineDashOffset = tr + .6; path(); c.lineWidth = up.futomu >= 2 ? 9.4 : 8.2; c.strokeStyle = up.futomu >= 2 ? '#9b9a8d' : '#5d5a50'; c.stroke() }   // tüskék / bordák a lánc külsején
+  c.setLineDash([]);
+  // külső él: a lánc felső síkja enyhén világít (lent a talajnál sötétebb)
+  path(); c.lineWidth = .8; c.strokeStyle = 'rgba(255,240,210,.14)'; c.stroke();
+  // kerekek
+  for (const w of ws) {
+    const rot = tr / w.r;
+    c.save(); c.translate(w.cx, w.cy);
+    c.fillStyle = '#1d1c19'; c.beginPath(); c.arc(0, 0, w.r, 0, 7); c.fill();                    // gumiabroncs
+    c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, w.r - .7, -2.6, -.5); c.stroke();
+    c.rotate(rot);
+    if (w.s) { // hajtó- / feszítőkerék: fogaskerék
+      c.fillStyle = '#3a3935'; for (let i = 0; i < 9; i++) { c.rotate(Math.PI * 2 / 9); c.beginPath(); c.moveTo(w.r - 1, -2.2); c.lineTo(w.r + 2, -1.1); c.lineTo(w.r + 2, 1.1); c.lineTo(w.r - 1, 2.2); c.fill() }
+    }
+    c.fillStyle = shade(up.futomu >= 3 ? '#8a8a78' : '#6d6b60', .9); c.beginPath(); c.arc(0, 0, w.r * .66, 0, 7); c.fill();       // acél tárcsa
+    const g = MV.get('w' + w.r) || (() => { const q = c.createRadialGradient(-w.r * .25, -w.r * .3, 0, 0, 0, w.r * .7); q.addColorStop(0, 'rgba(255,255,240,.28)'); q.addColorStop(.6, 'rgba(0,0,0,0)'); q.addColorStop(1, 'rgba(0,0,0,.45)'); MV.set('w' + w.r, q); return q })();
+    c.rotate(-rot); c.fillStyle = g; c.beginPath(); c.arc(0, 0, w.r * .66, 0, 7); c.fill(); c.rotate(rot);
+    c.fillStyle = '#26251f'; for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.beginPath(); c.arc(w.r * .42, 0, 1, 0, 7); c.fill() }   // csavarok
+    c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = .8; c.beginPath(); c.arc(0, 0, w.r * .66, 0, 7); c.stroke();
+    c.fillStyle = '#2d2c27'; c.beginPath(); c.arc(0, 0, w.r * .2, 0, 7); c.fill();
+    c.restore();
+  }
+}
 function drawVeh(c, V, now, up, live) {
   c.save(); c.translate(V.x, V.y); c.rotate(V.a);
   const k = PK, tr = V.track || 0, gas = live && MG.inp && MG.inp.gas && V.fuel > 0;
@@ -1046,13 +1103,7 @@ function drawVeh(c, V, now, up, live) {
   const ws = WHEELS.map((w, i) => ({...w, cx: w.lx, cy: w.ly + (V.sy && !w.s ? V.sy[i] : 0)}));
   // lengőkarok + lengéscsillapítók (a kerekek mögött, a lánctalp alatt)
   for (const w of ws) if (!w.s) { c.strokeStyle = '#26241f'; c.lineWidth = 3.4; c.beginPath(); c.moveTo(w.cx - 13, 9); c.lineTo(w.cx, w.cy); c.stroke(); c.strokeStyle = '#8a8a7e'; c.lineWidth = 1.7; c.beginPath(); c.moveTo(w.cx + 5, 8); c.lineTo(w.cx + 1, w.cy - 2); c.stroke(); c.strokeStyle = '#c9a227'; c.lineWidth = 2.3; c.beginPath(); c.moveTo(w.cx + 5, 8); c.lineTo(w.cx + 3, 8 + Math.max(2, (w.cy - 10) * .5)); c.stroke() }
-  c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath(); c.moveTo(-100, 12); c.lineTo(ws[0].cx - ws[0].r, ws[0].cy);
-  for (const w of ws) c.lineTo(w.cx, w.cy + w.r);
-  const L = ws[ws.length - 1]; c.lineTo(L.cx + L.r, L.cy); c.lineTo(100, 12); c.closePath();
-  c.lineWidth = 7; c.strokeStyle = '#1d1b18'; c.stroke(); c.setLineDash([3, 3]); c.lineDashOffset = -tr; c.strokeStyle = '#4a463f'; c.stroke(); c.setLineDash([]);
-  for (const w of ws) { c.fillStyle = '#2b2a26'; c.beginPath(); c.arc(w.cx, w.cy, w.r, 0, 7); c.fill(); c.fillStyle = up.futomu >= 3 ? '#6a6a5a' : '#55534a'; c.beginPath(); c.arc(w.cx, w.cy, w.r * .62, 0, 7); c.fill();
-    c.save(); c.translate(w.cx, w.cy); c.rotate(tr / w.r); c.fillStyle = '#1f1e1a'; for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.fillRect(-1, w.r * .2, 2, w.r * .35) }
-    if (up.futomu >= 2 && !w.s) { c.fillStyle = '#bbb'; for (let i = 0; i < 6; i++) { c.rotate(Math.PI / 3); c.fillRect(-1, w.r - 2, 2, 2) } } c.restore() }
+  drawTrack(c, V, ws, tr, up, live);
   // 155 mm cső (eredeti kép), majd a test
   const BI = drBarrelImg(), BO = drBodyImg();
   c.save(); c.translate(PIV[0], PIV[1]); c.rotate(GUN_A); if (BI.complete && BI.naturalWidth) c.drawImage(BI, 6 * k, -28 * k, 466 * k, 61 * k);
