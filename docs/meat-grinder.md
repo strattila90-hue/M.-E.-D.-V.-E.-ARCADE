@@ -171,3 +171,10 @@ csiszolási szálak, szemcse, karcok, rozsda, szegecs, varrat + érintkezési á
 szerint változik, a menetszél hátrafelé fújja a csíkot –, a csík végéről és az alsó élről **csöpög** (a cseppek a talajon tócsát hagynak),
 ~45 mp alatt **megszárad** (sötétedik), majd elhalványul. Több vér kerül rá, ha erősebb az orr-előtét, és nagy ellenfeleknél
 (`ZT.big`). Plafon: 54 folt (gyenge telefonon 24).
+
+## 4.57.0 – új főmenü-poszter
+
+A főmenü Meat Grinder lapja (`ART_SCN.drone` az `app.js`-ben) képregény-poszter lett: égő romváros és füstoszlopok, nap félárnyék-pontozással,
+óriás PzH 2000 hátsó rakétákkal, tetőtüskékkel és véres húsdaráló-dobokkal, szétrepülő húscafatok, lefolyó vér a felső szélről, „HÚSDARÁLÓ!”
+felirat. A horda a Corridor szörnyeiből áll (Hústorony, Polip-Isten, Pókanya, Kopó, Nyurga – `mgmon.js`, az `artAssets` tölti be).
+Az aktív lapon lassú ráközelítés, izzó keret és felszálló parázs fut (`styles.css` vége; `prefers-reduced-motion` mellett kikapcsol).
