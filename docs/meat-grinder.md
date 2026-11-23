@@ -149,3 +149,10 @@ Konzolhiba egyik menetben sem volt; a képkockaszám a fej nélküli böngésző
   `leap` (ugrik), `rng` (`gun`/`acid`: távolról lő), `stand`, `wall` (megállítja a járművet), `big`, `bar`, `mon`.
   Halálukkor a sprite darabokra esik szét (`chunk` húscafatok).
 - **Zene**: `grinder` – csapatos stadion-hard rock (e-moll, taps-stomp, tapsolás, „HEY!” kórus). `rkClap`/`rkGang` az `app.js`-ben.
+
+## 4.55.1 – fémes megjelenés
+
+A fejlesztések (páncéllemezek, ketrec, tüskék, kipufogók, turbó/kompresszor, hordók, tolólap/eke/kombájn/darálódob) tompa, csiszolt,
+rozsdás-hegesztett acélnak néznek ki. Segédek a `mg.js`-ben (`drawVeh` előtt): `metalTile`/`mt` (gyorsítótárazott lemez: színátmenet,
+csiszolási szálak, szemcse, karcok, rozsda, szegecs, varrat + érintkezési árnyék), `mpoly`, `spike`/`spikeH`, `pipe`, `disc`.
+Új alkatrésznél ezekkel rajzolj, a szín `#rrggbb` legyen.

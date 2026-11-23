@@ -961,16 +961,87 @@ function zMon(c, z, clinging) {
 }
 
 /* ---------- jármű: PzH 2000, „Mad Max” fejlesztésekkel ---------- */
+
+/* ---------- fém-megjelenés: tompa, csiszolt acél (Mad Max roncs-barkács), árnyékolással ----------
+   A lemezek egyszer, kétszeres felbontásban egy gyorsítótárba készülnek (színátmenet, csiszolási szálak, szemcse, pereme-fény,
+   rozsda, szegecs, hegesztési varrat); rajzoláskor csak kirakjuk őket + lágy érintkezési árnyék kerül alájuk. */
+const MT = new Map(), MV = new Map();
+function shade(h, f) { const n = parseInt(h.slice(1), 16); const r = Math.min(255, ((n >> 16) & 255) * f | 0), g = Math.min(255, ((n >> 8) & 255) * f | 0), b = Math.min(255, (n & 255) * f | 0); return `rgb(${r},${g},${b})` }
+function metalTile(w, h, base, o) {
+  o = o || {}; w = Math.max(2, Math.round(w)); h = Math.max(2, Math.round(h));
+  const key = base + '|' + w + '|' + h + '|' + (o.rust ? 1 : 0) + (o.rv ? 1 : 0) + (o.hz ? 1 : 0) + (o.weld ? 1 : 0);
+  let t = MT.get(key); if (t) return t;
+  const S = 2, cv = document.createElement('canvas'); cv.width = w * S; cv.height = h * S;
+  const x = cv.getContext('2d'); x.scale(S, S);
+  let sd = (w * 73 + h * 31 + parseInt(base.slice(1), 16)) | 0; const rn = () => { sd = (sd * 1664525 + 1013904223) | 0; return ((sd >>> 8) & 0xffff) / 65536 };
+  const g = o.hz ? x.createLinearGradient(0, 0, w, 0) : x.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, shade(base, 1.22)); g.addColorStop(.14, shade(base, 1.08)); g.addColorStop(.5, shade(base, .88)); g.addColorStop(.86, shade(base, .68)); g.addColorStop(1, shade(base, .5));
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  // lágy, tompa fényfolt (nem tükör: szatén csillogás)
+  const sp = o.hz ? x.createLinearGradient(0, 0, w, 0) : x.createLinearGradient(0, 0, 0, h);
+  sp.addColorStop(.1, 'rgba(255,255,255,0)'); sp.addColorStop(.24, 'rgba(255,255,240,.13)'); sp.addColorStop(.4, 'rgba(255,255,255,0)'); x.fillStyle = sp; x.fillRect(0, 0, w, h);
+  // csiszolási szálak
+  for (let yy = .6; yy < h; yy += 1.25) { x.fillStyle = rn() < .5 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)'; const l = w * (.3 + rn() * .7); x.fillRect(rn() * (w - l), yy, l, .45) }
+  // szemcse
+  for (let i = 0, n = w * h / 5 | 0; i < n; i++) { x.fillStyle = rn() < .5 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.1)'; x.fillRect(rn() * w, rn() * h, .7, .7) }
+  // kopás: világosabb karcok a peremeken
+  for (let i = 0, n = Math.max(2, w * h / 90 | 0); i < n; i++) { const px = rn() * w, py = rn() * h; x.strokeStyle = 'rgba(225,225,210,.3)'; x.lineWidth = .4; x.beginPath(); x.moveTo(px, py); x.lineTo(px + 2 + rn() * 5, py + (rn() - .5) * 2); x.stroke() }
+  if (o.rust) { // rozsda-foltok és csíkok (a lemezen belül marad)
+    for (let i = 0, n = Math.max(2, w * h / 150 | 0); i < n; i++) { const px = rn() * w, py = rn() * h, r = 1.5 + rn() * Math.min(7, h * .4); const rg = x.createRadialGradient(px, py, 0, px, py, r); rg.addColorStop(0, 'rgba(140,72,30,.5)'); rg.addColorStop(1, 'rgba(140,72,30,0)'); x.fillStyle = rg; x.fillRect(px - r, py - r, r * 2, r * 2) }
+    for (let i = 0, n = Math.max(1, w / 14 | 0); i < n; i++) { const px = rn() * w; x.fillStyle = 'rgba(90,46,20,.3)'; x.fillRect(px, 0, .8, h * (.3 + rn() * .6)) }
+  }
+  // lekerekített perem: fény fent/balra, árnyék lent/jobbra
+  x.fillStyle = 'rgba(255,255,255,.3)'; x.fillRect(0, 0, w, .8); x.fillRect(0, 0, .8, h);
+  x.fillStyle = 'rgba(0,0,0,.5)'; x.fillRect(0, h - .9, w, .9); x.fillRect(w - .9, 0, .9, h);
+  if (o.weld) { x.fillStyle = 'rgba(210,200,170,.35)'; for (let px = 1.5; px < w; px += 2.2) x.fillRect(px, 1.4, 1.2, .8); x.fillStyle = 'rgba(0,0,0,.25)'; for (let px = 1.5; px < w; px += 2.2) x.fillRect(px, 2.2, 1.2, .5) }
+  if (o.rv && h > 6) for (let px = 3.5; px < w - 2; px += 7) for (const py of [3, h - 3]) { x.fillStyle = 'rgba(0,0,0,.55)'; x.beginPath(); x.arc(px, py, 1.25, 0, 7); x.fill(); x.fillStyle = 'rgba(235,235,220,.55)'; x.beginPath(); x.arc(px - .35, py - .4, .55, 0, 7); x.fill() }
+  MT.set(key, cv); return cv;
+}
+function mt(c, x, y, w, h, base, o) { // lemez árnyékkal (érintkezési árnyék a test felé)
+  if (!o || o.sh !== 0) { c.fillStyle = 'rgba(0,0,0,.34)'; c.fillRect(x + 1.2, y + 1.8, w, h); c.fillStyle = 'rgba(0,0,0,.16)'; c.fillRect(x + 2.4, y + 3.4, w, h) }
+  c.drawImage(metalTile(w, h, base, o), x, y, w, h);
+}
+function vg(c, base, y0, y1) { const k = base + y0 + '|' + y1; let g = MV.get(k); if (!g) { g = c.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, shade(base, 1.2)); g.addColorStop(.2, shade(base, 1.06)); g.addColorStop(.55, shade(base, .84)); g.addColorStop(1, shade(base, .52)); MV.set(k, g) } return g }
+function mpoly(c, pts, base, y0, y1, noShadow) { // sokszög-lemez: színátmenet + szálak (a körvonalra maszkolva) + perem
+  const path = () => { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath() };
+  if (!noShadow) { c.save(); c.translate(1.3, 1.9); path(); c.fillStyle = 'rgba(0,0,0,.34)'; c.fill(); c.restore() }
+  path(); c.fillStyle = vg(c, base, y0, y1); c.fill();
+  c.save(); path(); c.clip(); c.fillStyle = 'rgba(255,255,255,.06)'; for (let yy = y0; yy < y1; yy += 2.4) c.fillRect(-200, yy, 600, .55); c.fillStyle = 'rgba(0,0,0,.09)'; for (let yy = y0 + 1.2; yy < y1; yy += 2.4) c.fillRect(-200, yy, 600, .5); c.restore();
+  path(); c.lineJoin = 'round'; c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 1.1; c.stroke();
+}
+function spike(c, bx, by, bw, hgt, base) { // kétszínű (élszerű) tüske – bal oldala fénylik, jobb sötét
+  const tx = bx + bw / 2, ty = by - hgt;
+  c.fillStyle = shade(base, 1.18); c.beginPath(); c.moveTo(bx, by); c.lineTo(tx, ty); c.lineTo(tx, by); c.fill();
+  c.fillStyle = shade(base, .6); c.beginPath(); c.moveTo(tx, by); c.lineTo(tx, ty); c.lineTo(bx + bw, by); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = .7; c.beginPath(); c.moveTo(bx, by); c.lineTo(tx, ty); c.lineTo(bx + bw, by); c.stroke();
+}
+function spikeH(c, bx, by, len, wid, base) { // vízszintes (előre álló) tüske
+  const ty = by + wid / 2;
+  c.fillStyle = shade(base, 1.18); c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + len, ty); c.lineTo(bx, ty); c.fill();
+  c.fillStyle = shade(base, .6); c.beginPath(); c.moveTo(bx, ty); c.lineTo(bx + len, ty); c.lineTo(bx, by + wid); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = .7; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + len, ty); c.lineTo(bx, by + wid); c.stroke();
+}
+function pipe(c, x1, y1, x2, y2, w, base) { // cső: sötét körvonal, színes mag, keskeny matt fénycsík
+  c.lineCap = 'round';
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, o = -w * .2;
+  c.strokeStyle = '#14130f'; c.lineWidth = w + 1.6; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+  c.strokeStyle = shade(base, .85); c.lineWidth = w; c.stroke();
+  c.strokeStyle = shade(base, 1.35); c.lineWidth = Math.max(.8, w * .32); c.beginPath(); c.moveTo(x1 + nx * o, y1 + ny * o); c.lineTo(x2 + nx * o, y2 + ny * o); c.stroke();
+}
+function disc(c, cx, cy, r, base) { // gömbölyű alkatrész (turbó, tárcsa): excentrikus sugaras színátmenet
+  const k = base + 'd' + r; let g = MV.get(k); if (!g) { g = c.createRadialGradient(-r * .3, -r * .35, r * .1, 0, 0, r); g.addColorStop(0, shade(base, 1.35)); g.addColorStop(.55, shade(base, .9)); g.addColorStop(1, shade(base, .45)); MV.set(k, g) }
+  c.save(); c.translate(cx, cy); c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.arc(1.2, 1.6, r, 0, 7); c.fill(); c.fillStyle = g; c.beginPath(); c.arc(0, 0, r, 0, 7); c.fill(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = .9; c.stroke(); c.restore();
+}
 function drawVeh(c, V, now, up, live) {
   c.save(); c.translate(V.x, V.y); c.rotate(V.a);
   const k = PK, tr = V.track || 0, gas = live && MG.inp && MG.inp.gas && V.fuel > 0;
   // rakéták (hátul)
   if (up.boost) {
-    for (let i = 0; i < Math.min(3, up.boost); i++) { const y = -44 + i * 10; c.fillStyle = '#5a5a52'; c.fillRect(-150, y, 30, 8); c.fillStyle = '#b22'; c.fillRect(-126, y, 4, 8); c.fillStyle = '#222'; c.fillRect(-154, y + 1, 4, 6);
+    for (let i = 0; i < Math.min(3, up.boost); i++) { const y = -44 + i * 10; mt(c, -150, y, 30, 8, '#7a7b75', {rv: 1}); mt(c, -126, y, 4, 8, '#a8352b', {sh: 0}); mt(c, -154, y + 1, 4, 6, '#3c3c39', {sh: 0});
       if (V.boosting) { const L = 34 + Math.random() * 34; const fg = c.createLinearGradient(-154, 0, -154 - L, 0); fg.addColorStop(0, 'rgba(255,255,220,1)'); fg.addColorStop(.4, 'rgba(255,160,40,.9)'); fg.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = fg; c.beginPath(); c.moveTo(-154, y); c.lineTo(-154 - L, y + 4); c.lineTo(-154, y + 8); c.fill() } }
   }
   // kannák a farokon
-  if (up.tank >= 1) { c.fillStyle = '#4a5a2a'; c.fillRect(-133, -22, 11, 15); c.fillRect(-133, -5, 11, 14); c.fillStyle = '#2a3418'; c.fillRect(-131, -24, 6, 3) }
+  if (up.tank >= 1) { mt(c, -133, -22, 11, 15, '#5e6d3e', {rust: 1}); mt(c, -133, -5, 11, 14, '#5e6d3e', {rust: 1}); mt(c, -131, -25, 6, 3, '#3a4426', {sh: 0}) }
   // lánctalp + kerekek (az eredeti rajzolás szerint)
   const ws = WHEELS.map((w, i) => ({...w, cx: w.lx, cy: w.ly + (V.sy && !w.s ? V.sy[i] : 0)}));
   // lengőkarok + lengéscsillapítók (a kerekek mögött, a lánctalp alatt)
@@ -994,23 +1065,23 @@ function drawVeh(c, V, now, up, live) {
   // rozsda
   c.fillStyle = '#7a4a2a'; c.globalAlpha = .35; c.beginPath(); c.arc(-90, -4, 7, 0, 7); c.arc(40, -6, 5, 0, 7); c.arc(-30, -40, 5, 0, 7); c.fill(); c.globalAlpha = 1;
   // páncélzat
-  if (up.pancel >= 1) { c.fillStyle = '#6a5a44'; c.fillRect(-100, -14, 40, 16); c.fillStyle = '#7a6040'; c.fillRect(-40, -14, 46, 16); c.fillRect(30, -12, 40, 14); c.fillStyle = '#2a2018'; for (const [a, b] of [[-98, -12], [-63, -12], [-98, -1], [-63, -1], [-38, -12], [3, -12], [-38, -1], [3, -1], [32, -10], [67, -10]]) c.fillRect(a, b, 2, 2) }
-  if (up.pancel >= 2) { c.strokeStyle = '#2e2e28'; c.lineWidth = 1.8; c.beginPath(); for (let i = -114; i <= 0; i += 7) { c.moveTo(i, -50); c.lineTo(i, -18) } c.moveTo(-116, -48); c.lineTo(2, -48); c.moveTo(-116, -20); c.lineTo(2, -20); c.stroke() }
-  if (up.pancel >= 3) { c.fillStyle = '#4a4a44'; c.beginPath(); c.moveTo(70, -20); c.lineTo(108, -10); c.lineTo(110, 8); c.lineTo(102, 8); c.lineTo(100, -4); c.lineTo(68, -13); c.fill(); c.fillStyle = '#1a1a18'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(-96 + i * 36, 9, 4, 0, 7); c.fill() } }
-  if (up.pancel >= 4) { c.fillStyle = '#d0d0c8'; for (let i = -112; i < -4; i += 9) { c.beginPath(); c.moveTo(i, -52); c.lineTo(i + 3.5, -63); c.lineTo(i + 7, -52); c.fill() } c.fillStyle = '#eee'; c.beginPath(); c.arc(92, -8, 5, 0, 7); c.fill(); c.fillStyle = '#111'; c.fillRect(89.5, -9, 1.6, 1.6); c.fillRect(92.5, -9, 1.6, 1.6) }
+  if (up.pancel >= 1) { mt(c, -100, -14, 40, 16, '#7b6a52', {rust: 1, rv: 1, weld: 1}); mt(c, -40, -14, 46, 16, '#6f5e47', {rust: 1, rv: 1, weld: 1}); mt(c, 30, -12, 40, 14, '#7d6d55', {rust: 1, rv: 1, weld: 1}) }
+  if (up.pancel >= 2) { c.lineCap = 'butt'; for (const [lw, col, off] of [[3.4, '#14130f', 0], [2, '#555650', 0], [.7, 'rgba(225,225,210,.4)', -.5]]) { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); for (let i = -114; i <= 0; i += 7) { c.moveTo(i + off, -50); c.lineTo(i + off, -18) } c.moveTo(-116, -48 + off); c.lineTo(2, -48 + off); c.moveTo(-116, -20 + off); c.lineTo(2, -20 + off); c.stroke() } }
+  if (up.pancel >= 3) { mpoly(c, [[70, -20], [108, -10], [110, 8], [102, 8], [100, -4], [68, -13]], '#62635e', -20, 8); for (let i = 0; i < 6; i++) disc(c, -96 + i * 36, 9, 4, '#33332e') }
+  if (up.pancel >= 4) { for (let i = -112; i < -4; i += 9) spike(c, i, -52, 7, 11, '#b8b9af'); disc(c, 92, -8, 5, '#d9d6c6'); c.fillStyle = '#111'; c.fillRect(89.5, -9, 1.6, 1.6); c.fillRect(92.5, -9, 1.6, 1.6) }
   // tartályok
-  if (up.tank >= 2) { c.fillStyle = '#6a2a1a'; c.beginPath(); c.ellipse(-104, -60, 11, 6, 0, 0, 7); c.fill(); c.fillStyle = '#3a1a10'; c.fillRect(-106, -66, 4, 12) }
-  if (up.tank >= 3) { c.fillStyle = '#2a4a6a'; c.fillRect(16, -34, 30, 13); c.fillStyle = '#1a2a3a'; c.fillRect(16, -29, 30, 2); c.strokeStyle = '#111'; c.lineWidth = 1; c.beginPath(); c.moveTo(24, -34); c.lineTo(24, -21); c.moveTo(38, -34); c.lineTo(38, -21); c.stroke() }
-  if (up.tank >= 4) { c.fillStyle = '#7a7a6a'; c.beginPath(); c.ellipse(-60, 0, 26, 7, 0, 0, 7); c.fill(); c.fillStyle = '#c9a227'; c.fillRect(-66, -3, 4, 4) }
+  if (up.tank >= 2) { mt(c, -115, -66, 22, 12, '#84442b', {rust: 1}); c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(-111, -66, 1.3, 12); c.fillRect(-97, -66, 1.3, 12); mt(c, -106, -70, 5, 4, '#a89d70', {sh: 0}) }
+  if (up.tank >= 3) { mt(c, 16, -34, 30, 13, '#4b6a86', {rv: 1}); c.fillStyle = 'rgba(18,30,42,.8)'; c.fillRect(16, -29, 30, 2); c.strokeStyle = '#14130f'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(24, -34); c.lineTo(24, -21); c.moveTo(38, -34); c.lineTo(38, -21); c.stroke() }
+  if (up.tank >= 4) { c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(-58.8, 1.8, 26, 7, 0, 0, 7); c.fill(); c.save(); c.beginPath(); c.ellipse(-60, 0, 26, 7, 0, 0, 7); c.clip(); c.drawImage(metalTile(52, 14, '#8e9089', {}), -86, -7, 52, 14); c.restore(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 1; c.beginPath(); c.ellipse(-60, 0, 26, 7, 0, 0, 7); c.stroke(); mt(c, -66, -3, 4, 4, '#c9a227', {sh: 0}) }
   // oldalvédelem a lánctalp fölött
-  if (up.oldal === 1) { c.strokeStyle = '#9a9a9a'; c.lineWidth = 1; c.beginPath(); for (let i = -110; i < 98; i += 7) { c.moveTo(i + 4, 6); c.arc(i, 6, 4, 0, 7) } c.stroke() }
-  if (up.oldal >= 2) { c.fillStyle = '#c8c8c0'; for (let i = -112; i < 98; i += 9) { c.beginPath(); c.moveTo(i, 10); c.lineTo(i + 4, -2); c.lineTo(i + 8, 10); c.fill() } }
-  if (up.oldal >= 3) { c.fillStyle = '#5a5a5a'; c.fillRect(-112, 32, 214, 5); c.fillStyle = '#ddd'; for (let i = 0; i < 28; i++) { const xx = -112 + ((i * 7.6 + tr * 2) % 214 + 214) % 214; c.beginPath(); c.moveTo(xx, 37); c.lineTo(xx + 3, 41); c.lineTo(xx + 6, 37); c.fill() } }
+  if (up.oldal === 1) { for (const [lw, col] of [[2.4, '#17160f'], [1, '#a9aaa1']]) { c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); for (let i = -110; i < 98; i += 7) { c.moveTo(i + 4, 6); c.arc(i, 6, 4, 0, 7) } c.stroke() } }
+  if (up.oldal >= 2) { for (let i = -112; i < 98; i += 9) spike(c, i, 10, 8, 12, '#b6b7ad') }
+  if (up.oldal >= 3) { mt(c, -112, 32, 214, 5, '#64655f', {rv: 1}); for (let i = 0; i < 28; i++) { const xx = -112 + ((i * 7.6 + tr * 2) % 214 + 214) % 214; spike(c, xx, 37, 6, -4, '#d2d3c8') } }
   // kipufogók (a motortér a teknő elején van)
   const exN = [0, 2, 2, 3, 3][up.motor] || 0;
-  for (let i = 0; i < exN; i++) { const ex = 50 + i * 7; c.strokeStyle = '#3a3430'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(ex, -20); c.lineTo(ex, -54 - i * 4); c.stroke(); if (gas && Math.random() < .6) { c.fillStyle = Math.random() < .3 ? 'rgba(255,140,40,.9)' : 'rgba(40,36,30,.6)'; c.beginPath(); c.arc(ex + rnd(-2, 2), -58 - i * 4 - rnd(0, 6), rnd(2, 4), 0, 7); c.fill() } }
-  if (up.motor >= 4) { c.fillStyle = '#8a8a80'; c.fillRect(20, -42, 20, 18); c.fillStyle = '#c0392b'; c.fillRect(18, -46, 24, 5); c.strokeStyle = '#222'; c.lineWidth = 1; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(24 + i * 4, -42); c.lineTo(24 + i * 4, -26); c.stroke() } }
-  else if (up.motor >= 3) { c.fillStyle = '#6a6a60'; c.beginPath(); c.arc(28, -28, 6, 0, 7); c.arc(40, -28, 6, 0, 7); c.fill() }
+  for (let i = 0; i < exN; i++) { const ex = 50 + i * 7; pipe(c, ex, -20, ex, -54 - i * 4, 3.8, '#58534b'); mt(c, ex - 2.8, -28, 5.6, 3, '#8c8c82', {sh: 0}); c.fillStyle = '#1a1814'; c.beginPath(); c.ellipse(ex, -54 - i * 4, 2.3, 1.1, 0, 0, 7); c.fill(); if (gas && Math.random() < .6) { c.fillStyle = Math.random() < .3 ? 'rgba(255,140,40,.9)' : 'rgba(40,36,30,.6)'; c.beginPath(); c.arc(ex + rnd(-2, 2), -58 - i * 4 - rnd(0, 6), rnd(2, 4), 0, 7); c.fill() } }
+  if (up.motor >= 4) { mt(c, 20, -42, 20, 18, '#92948c', {rv: 1}); mt(c, 18, -46, 24, 5, '#a8392b', {sh: 0}); c.strokeStyle = 'rgba(10,10,8,.7)'; c.lineWidth = 1; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(24 + i * 4, -42); c.lineTo(24 + i * 4, -26); c.stroke() } }
+  else if (up.motor >= 3) { disc(c, 28, -28, 6, '#7f8079'); disc(c, 40, -28, 6, '#7f8079'); c.fillStyle = 'rgba(0,0,0,.45)'; c.beginPath(); c.arc(28, -28, 2, 0, 7); c.arc(40, -28, 2, 0, 7); c.fill() }
   // kiegészítő géppuska a tornyon
   if (up.gepp) { c.save(); c.translate(MGP[0], MGP[1]); c.fillStyle = '#2a2a26'; c.fillRect(-4, 0, 8, 6); c.rotate(V.mgA || 0); c.fillStyle = '#1a1a18'; c.fillRect(-4, -3, 14, 5); c.fillRect(8, -1.5, up.gepp >= 3 ? 20 : 15, 2.4); if (up.gepp === 2 || up.gepp === 4) c.fillRect(8, -4.5, up.gepp === 4 ? 17 : 15, 2.4); c.fillStyle = '#4a4a3a'; c.fillRect(-2, -8, 6, 6); if (V.mgF) { c.fillStyle = 'rgba(255,220,120,.9)'; c.beginPath(); c.arc(30, -1, 4, 0, 7); c.fill() } c.restore() }
   // orr-előtét
@@ -1025,17 +1096,30 @@ function drawFront(c, lv, now, V) {
 }
 function drawFront0(c, lv, now, V) {
   const sp = (V.grind || 0) * 20 + 4, t = now / 1000;
-  if (lv === 1) { c.fillStyle = '#6a6a5e'; c.beginPath(); c.moveTo(64, -26); c.quadraticCurveTo(84, 0, 74, 26); c.lineTo(66, 26); c.quadraticCurveTo(74, 0, 60, -20); c.fill(); c.fillStyle = '#3a3a34'; c.fillRect(56, -6, 12, 4) }
-  else if (lv === 2) { c.fillStyle = '#5a5a50'; c.beginPath(); c.moveTo(62, -28); c.lineTo(80, -8); c.lineTo(80, 24); c.lineTo(66, 24); c.lineTo(66, -10); c.fill(); c.fillStyle = '#d8d8d0'; for (let y = -20; y < 24; y += 7) { c.beginPath(); c.moveTo(80, y); c.lineTo(92, y + 3); c.lineTo(80, y + 6); c.fill() } }
-  else if (lv === 3) { // kombájn-tálca: forgó motolla
-    c.fillStyle = '#7a6a2a'; c.fillRect(62, 14, 34, 10); c.fillStyle = '#c9a227'; c.fillRect(62, 14, 34, 3);
-    c.strokeStyle = '#4a4a40'; c.lineWidth = 3; c.beginPath(); c.moveTo(60, -14); c.lineTo(84, -4); c.moveTo(60, 8); c.lineTo(84, -4); c.stroke();
-    c.save(); c.translate(84, -4); c.rotate(t * sp); c.strokeStyle = '#8a8a7e'; c.lineWidth = 2.4; for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.beginPath(); c.moveTo(0, 0); c.lineTo(20, 0); c.stroke(); c.fillStyle = '#ccc'; c.fillRect(18, -4, 3, 8) } c.fillStyle = '#333'; c.beginPath(); c.arc(0, 0, 4, 0, 7); c.fill(); c.restore();
-    c.fillStyle = '#ddd'; for (let x = 66; x < 96; x += 5) { c.beginPath(); c.moveTo(x, 24); c.lineTo(x + 2.5, 28); c.lineTo(x + 5, 24); c.fill() }
+  if (lv === 1) { // tolólap: ívelt, hegesztett acéllemez
+    mpoly(c, [[64, -26], [76, -14], [80, 0], [76, 14], [74, 26], [66, 26], [70, 14], [72, 0], [68, -12], [60, -20]], '#7e7f78', -26, 26);
+    mt(c, 56, -6, 12, 4, '#4a4b46', {sh: 0}); c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(58, -2, 10, 1.4);
+  } else if (lv === 2) { // tüskés eke
+    mpoly(c, [[62, -28], [80, -8], [80, 24], [66, 24], [66, -10]], '#6c6d67', -28, 24);
+    for (let y = -20; y < 24; y += 7) spikeH(c, 80, y, 12, 6, '#d2d3c8');
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(66, -9, 14, 1.4);
+  } else if (lv === 3) { // kombájn-tálca: forgó motolla
+    mt(c, 62, 14, 34, 10, '#8b7836', {rv: 1, weld: 1}); mt(c, 62, 14, 34, 3, '#c9a22a', {sh: 0});
+    pipe(c, 60, -14, 84, -4, 3.2, '#5c5d56'); pipe(c, 60, 8, 84, -4, 3.2, '#5c5d56');
+    c.save(); c.translate(84, -4); c.rotate(t * sp); for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); pipe(c, 0, 0, 20, 0, 2.4, '#8f9089'); mt(c, 18, -4, 3, 8, '#d3d4c9', {sh: 0}) } disc(c, 0, 0, 4.5, '#3a3a36'); c.restore();
+    for (let x = 66; x < 96; x += 5) spike(c, x, 24, 5, -4, '#d4d5cb');
   } else if (lv >= 4) { // húsdaráló: két fogas dob
-    c.fillStyle = '#3a3a34'; c.beginPath(); c.moveTo(60, -32); c.lineTo(86, -30); c.lineTo(98, -18); c.lineTo(66, -18); c.fill(); c.fillRect(60, -18, 8, 44);
-    for (const [cy, dir] of [[-6, 1], [16, -1]]) { c.save(); c.translate(84, cy); c.rotate(t * sp * dir); c.fillStyle = '#6a6a60'; c.beginPath(); c.arc(0, 0, 12, 0, 7); c.fill(); c.fillStyle = '#d0d0c8'; for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); c.beginPath(); c.moveTo(11, -3); c.lineTo(17, 0); c.lineTo(11, 3); c.fill() } c.fillStyle = '#7a1010'; c.globalAlpha = Math.min(.8, (V.blood || []).length / 20); c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fill(); c.globalAlpha = 1; c.fillStyle = '#222'; c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fill(); c.restore() }
-    c.fillStyle = '#c0392b'; c.fillRect(62, -30, 4, 3); c.fillStyle = '#ffd24a'; c.fillRect(70, -29, 10, 2);
+    mpoly(c, [[60, -32], [86, -30], [98, -18], [66, -18]], '#5a5b56', -32, -18); mt(c, 60, -18, 8, 44, '#53544f', {rv: 1});
+    for (const [cy, dir] of [[-6, 1], [16, -1]]) {
+      c.save(); c.translate(84, cy); c.rotate(t * sp * dir);
+      c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.arc(1.2, 1.6, 12, 0, 7); c.fill();
+      c.fillStyle = '#6d6e67'; c.beginPath(); c.arc(0, 0, 12, 0, 7); c.fill();
+      for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); spikeH(c, 10, -3.2, 7, 6.4, '#d8d9ce') }
+      const gg = c.createRadialGradient(-3, -3, 1, 0, 0, 12); gg.addColorStop(0, 'rgba(255,255,240,.22)'); gg.addColorStop(.6, 'rgba(0,0,0,0)'); gg.addColorStop(1, 'rgba(0,0,0,.45)'); c.fillStyle = gg; c.beginPath(); c.arc(0, 0, 12, 0, 7); c.fill();
+      c.fillStyle = '#7a1010'; c.globalAlpha = Math.min(.8, (V.blood || []).length / 20); c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fill(); c.globalAlpha = 1;
+      disc(c, 0, 0, 3.4, '#2c2c29'); c.restore();
+    }
+    mt(c, 62, -31, 4, 3, '#a8352b', {sh: 0}); mt(c, 70, -30, 10, 2, '#d9ab2c', {sh: 0});
   }
 }
 /* ============================================================================
