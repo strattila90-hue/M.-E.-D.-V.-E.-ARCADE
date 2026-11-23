@@ -50,7 +50,7 @@ const budDayN=t=>{const p=budParts(t);return Math.round(Date.UTC(p.y,p.m-1,p.d)/
 function budMonthEnd(){const t=srvNow(),p=budParts(t),off=Date.UTC(p.y,p.m-1,p.d,p.h,p.mi)-Math.floor(t/6e4)*6e4;return Date.UTC(p.y,p.m,1)-off}
 
 /* ===== M.E.D.V.E. Arcade – játékgyűjtemény becenév+jelszó fiókkal és élő közös ranglistával (Firebase). ===== */
-const APP_VER='4.51.0',APP_DATE='2026.11.23.';
+const APP_VER='4.52.0',APP_DATE='2026.11.23.';
 let MODE='local',DB=null,UID=null,USERDOC=null,FS=null,ROLE=null,REALROLE=null,VIEWAS=null;
 const S={users:{}};const arr=c=>Object.values(S[c]||{});const V={};const STATUS={ok:['','ok']};
 function render(){}function scheduleRender(){}function isTech(){return false}const gamesOn=()=>true;
@@ -2566,7 +2566,7 @@ function tkOpen(){const el=$('#harc');el.hidden=false;document.body.classList.ad
     <nav class="tknav"><button type="button" data-tk="upg">🔧<b>Fejlesztés</b></button><button type="button" data-tk="gear">🛒<b>Piac</b></button><button type="button" data-tk="den">💵<b>Bankók</b></button><button type="button" data-tk="gift">🎁<b>Ajándék</b></button><button type="button" data-tk="ach">🎖️<b>Érdemek</b></button><button type="button" data-tk="uteg">🏆<b>Ütegek</b></button></nav>
     <div class="tksheet" id="tkSheet" hidden></div></div>
    <div class="hstart" id="tkStart"></div>
-   <div class="tkulock" id="tkULock" hidden><div class="tkuhd"><b>👶 ULTRA KOPPINTÁS</b><span>Koppints bárhová!</span></div><button type="button" class="tkuhold" id="tkUHold" aria-label="Gyerekzár feloldása: tartsd nyomva 15 másodpercig"><i>🔒</i><em id="tkUHt">15</em></button><div class="tkuhint"><b>🔒 GYEREKZÁR BEKAPCSOLVA</b><span>Feloldás: tartsd nyomva a lakatot (jobb fent) 15 mp-ig</span></div></div>`;
+   <div class="tkulock" id="tkULock" hidden><div class="tkuhd"><b>👶 ULTRA KOPPINTÁS</b><span>Koppints bárhová!</span></div><button type="button" class="tkuhold" id="tkUHold" aria-label="Gyerekzár feloldása: tartsd nyomva 15 másodpercig"><i>🔒</i><em id="tkUHt">15</em></button><div class="tkuhint"><b>🔒 GYEREKZÁR BEKAPCSOLVA</b><span>Feloldás: tartsd nyomva a lakatot (jobb fent) 15 mp-ig</span></div><div class="tkupin"></div></div>`;
   $('#tkClose').onclick=tkClose;$('#tkPush').onclick=()=>tkPush();$('#tkMint').onclick=tkMint;TK.ultra=false;el.classList.remove('tkul');tkUltraInit();
   el.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>tkSheet(b.dataset.tk));
   Object.assign(TK,gCanvas('#tkCv'));TK.pop=[];TK.fx=[];TK.bump=0;TK.combo=0;TK.lastTap=0;TK.rush=0;TK.gold=null;TK.goldT=110+Math.random()*90;TK.drop=null;TK.dropT=35+Math.random()*30;TK.conf=[];TK.spin=null;TK.tapsSec=[];TK.run=true;TK.ptr={};TK.bgc=null;TK.pc={};TK.ctx=null;TK.lay=null;TK.stc=null;TK.bsc=null;TK.nsc=null;TK.rpos={};TK.pkV=-1;TK.hudT=0;TK.rings=[];TK.sp=[];TK.bs=0;TK.bv=0;TK.shake=0;TK.flash=0;TK.pkB=0;TK.pileB=0;TK.thr=[];TK.land=[];TK.stB=0;TK.stX=0;TK.skc=null;TK.gnc=null;TK.mgHold=null;TK.mgS=0;TK.mgAcc=0;TK.mgSum=0;TK.mgSumT=9;TK.mgBan=null;TK.mgOut=null;TK.mgA=null;if(!TK.mg)TK.mg={n:srvNow()+(2+Math.random()*4)*6e4,have:0,fuel:0};TK.mgIn=TK.mg.have?0:1;TK.el={pocket:$('#tkPocket'),given:$('#tkGiven'),un:$('#tkUN'),chip:$('#tkUChip'),info:$('#tkInfo'),mint:$('#tkMint'),month:$('#tkMonth'),sheet:$('#tkSheet'),navAch:el.querySelector('.tknav [data-tk=ach]'),navGift:el.querySelector('.tknav [data-tk=gift]')};
@@ -2595,16 +2595,38 @@ function tkUltraInit(){const tr=$('#tkUTrack'),kn=$('#tkUKnob'),lk=$('#tkULock')
   kn.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;drag.d=Math.max(0,Math.min(max(),e.clientX-drag.x));kn.style.transform=`translateX(${drag.d}px)`;tr.style.setProperty('--u',(drag.d/max()).toFixed(2))});
   const end=()=>{if(!drag)return;const ok=drag.d>=max()*.9;drag=null;kn.style.transform='';tr.style.setProperty('--u',0);tr.classList.remove('on');if(ok)tkUltraOn()};
   kn.addEventListener('pointerup',end);kn.addEventListener('pointercancel',end);
-  lk.addEventListener('pointerdown',e=>{if(e.target.closest('#tkUHold'))return;e.preventDefault();if(typeof GP!=='undefined'&&GP){gpSet(false);return}if(!TK.run)return;
+  lk.addEventListener('pointerdown',e=>{tkUltraKeep();if(e.target.closest('#tkUHold'))return;e.preventDefault();if(typeof GP!=='undefined'&&GP){gpSet(false);return}if(!TK.run)return;
     const r=TK.cv.getBoundingClientRect();tkPress(Math.max(0,Math.min(r.width,e.clientX-r.left)),Math.max(0,Math.min(r.height,e.clientY-r.top)))});
   lk.addEventListener('contextmenu',e=>e.preventDefault());
   let hi=null,h0=0;const stop=()=>{if(hi){clearInterval(hi);hi=null}hb.style.setProperty('--p',0);ht.textContent='15';hb.classList.remove('on')};
-  hb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{hb.setPointerCapture(e.pointerId)}catch(_){}stop();h0=performance.now();hb.classList.add('on');
+  hb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();tkUltraKeep();try{hb.setPointerCapture(e.pointerId)}catch(_){}stop();h0=performance.now();hb.classList.add('on');
     hi=setInterval(()=>{const t=(performance.now()-h0)/1000;hb.style.setProperty('--p',Math.min(1,t/15).toFixed(3));ht.textContent=String(Math.max(0,Math.ceil(15-t)));if(t>=15){stop();tkUltraOff()}},100)});
   ['pointerup','pointercancel','lostpointercapture'].forEach(t=>hb.addEventListener(t,stop));hb.addEventListener('contextmenu',e=>e.preventDefault())}
+/* ===== v4.52: GYEREKZÁR-ŐR (ULTRA koppintás alatt) =====
+   - Android „vissza”: több előzmény-bejegyzés („csapda”), mindig érintés közben beszúrva – a Chrome az érintés nélkül
+     beszúrt bejegyzéseket a vissza gombnál átugorja, ezért a gyerek koppintásai közben folyamatosan pótoljuk őket.
+   - Teljes képernyő (Androidon a rendszer navigációs sávja is eltűnik; ha mégis kilép belőle, a következő koppintás visszaviszi),
+     álló tájolás rögzítése, a lap nem görgethető/frissíthető lehúzással.
+   - A Főképernyő gombot/mozdulatot weboldal nem tilthatja le (iOS, Android) – ehhez a rendszer saját zára kell:
+     iPhone: Irányított hozzáférés, Android: Alkalmazásrögzítés; a bekapcsoláskor ezt platform szerint kiírjuk. */
+const tkIOS=()=>/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const tkAndroid=()=>/Android/i.test(navigator.userAgent);
+function tkGuardPush(){try{while((TK.ug||0)<4){history.pushState({medveGame:1,tkGuard:1},'');TK.ug=(TK.ug||0)+1}}catch(e){}}
+function tkFsOn(){const d=document.documentElement,rq=d.requestFullscreen||d.webkitRequestFullscreen;if(!rq||document.fullscreenElement||document.webkitFullscreenElement)return;
+  try{const p=rq.call(d,{navigationUI:'hide'});TK.ufs=1;if(p&&p.then)p.then(()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}}).catch(()=>{})}catch(e){}}
+function tkFsOff(){if(!TK.ufs)return;TK.ufs=0;try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}try{const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex&&(document.fullscreenElement||document.webkitFullscreenElement)){const p=ex.call(document);if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
+// a zár alatti minden koppintás (érintés = felhasználói művelet) frissíti az őrt
+function tkUltraKeep(){if(!TK.ultra)return;tkGuardPush();const n=performance.now();if(n-(TK.ufsT||0)>1200){TK.ufsT=n;tkFsOn()}}
+function tkPinHint(){return tkIOS()?'🔐 Teljes zár iPhone-on: Beállítások › Kisegítő lehetőségek › Irányított hozzáférés – utána az oldalgomb háromszori megnyomásával indítsd. Így a Főképernyő-mozdulat sem működik.'
+  :tkAndroid()?'🔐 Teljes zár Androidon: Beállítások › Biztonság › Alkalmazásrögzítés (App pinning) – utána az Áttekintés gombnál rögzítsd az appot. Így a Kezdőképernyő gomb sem működik.'
+  :'🔐 A Főképernyő gombot a böngésző nem tilthatja le – telefonon a rendszer gyerekzárát (iPhone: Irányított hozzáférés, Android: Alkalmazásrögzítés) is kapcsold be.'}
+// iOS: csípés-nagyítás és rugalmas görgetés letiltása a zár alatt
+document.addEventListener('gesturestart',e=>{if(typeof TK!=='undefined'&&TK.ultra)e.preventDefault()},{passive:false});
+document.addEventListener('touchmove',e=>{if(typeof TK!=='undefined'&&TK.ultra)e.preventDefault()},{passive:false});
 function tkUltraOn(){if(!TK.run)return;if(!TK.uteg){tkStartScreen();return}TK.ultra=true;const sh=$('#tkSheet');if(sh&&!sh.hidden){sh.hidden=true;TK.sheet=null}TK.ptr={};
-  const lk=$('#tkULock'),hb=$('#harc .hbar'),nv=$('#harc .tknav');if(lk){/* a felső sávot és az alsó füleket teljesen letakarjuk */lk.style.setProperty('--uh',Math.round(hb?hb.getBoundingClientRect().bottom:60)+'px');lk.style.setProperty('--un',Math.round(nv?nv.getBoundingClientRect().height:64)+'px');lk.hidden=false}$('#harc').classList.add('tkul');if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}toast('👶 Ultra koppintás + gyerekzár bekapcsolva. Feloldás: a lakat 15 mp-es nyomva tartása.')}
-function tkUltraOff(){TK.ultra=false;const lk=$('#tkULock');if(lk)lk.hidden=true;$('#harc').classList.remove('tkul');if(navigator.vibrate)try{navigator.vibrate([30,60,30])}catch(e){}toast('🔓 Gyerekzár feloldva')}
+  const lk=$('#tkULock'),hb=$('#harc .hbar'),nv=$('#harc .tknav');if(lk){/* a felső sávot és az alsó füleket teljesen letakarjuk */lk.style.setProperty('--uh',Math.round(hb?hb.getBoundingClientRect().bottom:60)+'px');lk.style.setProperty('--un',Math.round(nv?nv.getBoundingClientRect().height:64)+'px');lk.hidden=false;const ph=lk.querySelector('.tkupin');if(ph){ph.textContent=tkPinHint();ph.classList.remove('go');void ph.offsetWidth;ph.classList.add('go')}}$('#harc').classList.add('tkul');document.documentElement.classList.add('tkulr');TK.ufsT=performance.now();tkGuardPush();tkFsOn();if(navigator.vibrate)try{navigator.vibrate(30)}catch(e){}toast('👶 Ultra koppintás + gyerekzár bekapcsolva. Feloldás: a lakat 15 mp-es nyomva tartása.')}
+function tkUltraOff(){TK.ultra=false;const lk=$('#tkULock');if(lk)lk.hidden=true;$('#harc').classList.remove('tkul');document.documentElement.classList.remove('tkulr');tkFsOff();
+  /* a megmaradt csapda-bejegyzések eltávolítása (egy popstate jön, azt a vissza-kezelő átugorja) */{const n=TK.ug||0;TK.ug=0;if(n>0){TK.ugSkip=1;try{history.go(-n)}catch(e){TK.ugSkip=0}}}if(navigator.vibrate)try{navigator.vibrate([30,60,30])}catch(e){}toast('🔓 Gyerekzár feloldva')}
 function tkTap(x,y){const now=performance.now();TK.tapsSec=TK.tapsSec.filter(t=>now-t<1000);if(TK.tapsSec.length>=15)return;TK.tapsSec.push(now);
   TK.combo=now-TK.lastTap<330?Math.min(10+TK.upg.combo*4,TK.combo+1):Math.max(0,TK.combo-3);TK.lastTap=now;TK.taps++;
   const crit=Math.random()<Math.min(.2,TK.upg.crit*.01);if(crit)TK.crits=(TK.crits||0)+1;TK.bestCombo=Math.max(TK.bestCombo||0,TK.combo);const v=tkTapV()*(1+TK.combo*(.01+TK.upg.combo*.005))*(crit?5:1);tkEarn(v);
@@ -4117,7 +4139,7 @@ applySet();arcRender();
   const unlock=()=>{try{if(wl)wl.release()}catch(e){}wl=null};
   new MutationObserver(()=>{if(!el.hidden){lock();if(!pushed){try{history.pushState({medveGame:1},'');pushed=true}catch(e){}}}
     else{unlock();if(pushed){pushed=false;try{if(history.state&&history.state.medveGame)history.back()}catch(e){}}}}).observe(el,{attributes:true,attributeFilter:['hidden']});
-  addEventListener('popstate',()=>{if(pushed&&!el.hidden&&typeof TK!=='undefined'&&TK.ultra){try{history.pushState({medveGame:1},'')}catch(e){}return}/* gyerekzár: a vissza gomb nem zárja be */if(pushed&&!el.hidden){pushed=false;const x=el.querySelector('.hx[id$="Close"]')||el.querySelector('.hx:last-of-type');if(x)x.click()}});
+  addEventListener('popstate',()=>{if(typeof TK!=='undefined'&&TK.ugSkip){TK.ugSkip=0;return}if(pushed&&!el.hidden&&typeof TK!=='undefined'&&TK.ultra){TK.ug=Math.max(0,(TK.ug||0)-1);try{history.pushState({medveGame:1,tkGuard:1},'');TK.ug++}catch(e){}if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}return}/* gyerekzár: a vissza gomb nem zárja be */if(pushed&&!el.hidden){pushed=false;const x=el.querySelector('.hx[id$="Close"]')||el.querySelector('.hx:last-of-type');if(x)x.click()}});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!el.hidden)lock()})})();
 /* ===== Offline mód: magától átvált, ha nincs net ===== */
 function netBadge(){const b=document.getElementById('netBadge');if(b)b.hidden=navigator.onLine}

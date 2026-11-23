@@ -1896,3 +1896,9 @@ body.harcon .toast{pointer-events:none}
 @media (prefers-reduced-motion:reduce){.tksheet,.tkday.now,.tkbig::after,.tknav button.badge::before,.tkmint,.btn.zsc{animation:none!important}}
 /* a nyitott lap takarja a játéktér lebegő gombjait (ULTRA-csúszka, ÜTEGBE TOL, pénzverde) – eddig rálógtak a lap aljára */
 #harc .tksheet{z-index:8}
+/* v4.52: gyerekzár – platform-tipp a Főképernyő-gombhoz (10 mp után elhalványul, átengedi a koppintást), a lap nem görgethető/frissíthető */
+#harc .tkupin{position:absolute;left:12px;right:12px;top:calc(var(--uh,60px) + 10px);padding:10px 12px;border-radius:14px;background:rgba(12,16,8,.88);border:1.5px solid rgba(242,201,76,.6);color:#f3ecd4;font:600 12px/1.4 system-ui,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45);pointer-events:none;opacity:0}
+#harc .tkupin.go{animation:tkpin 12s ease forwards}
+@keyframes tkpin{0%{opacity:0;transform:translateY(-6px)}4%,80%{opacity:1;transform:none}100%{opacity:0}}
+html.tkulr,html.tkulr body{overscroll-behavior:none;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
