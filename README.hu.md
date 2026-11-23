@@ -13,10 +13,19 @@
 
 # M.E.D.V.E. Arcade
 
-**Aktuális verzió: 4.53.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
+**Aktuális verzió: 4.54.0** (az app `APP_VER` és a `sw.js` `CACHE` értéke ugyanez; verziónál mindkettőt együtt emeld.)
 
 Telepíthető (PWA) játékgyűjtemény katonai témájú mini-játékokkal:
-M.E.D.V.E. H.A.R.C., DroneRun, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+M.E.D.V.E. H.A.R.C., Meat Grinder, Gidrán Terep, Gidrán Konvoj, Rába Rakodó, SERE Kitörés, Tüzér Kassza, Shot&Run, Tüzér Derby.
+
+**v4.54.0:** **MEAT GRINDER (Húsdaráló) – a DroneRun helyén teljesen új játék.** Poszt-apokaliptikus, oldalnézetes „juss el a végéig” autós játék a PzH 2000-rel, zombihordákon át.
+- **Cél:** a pálya végi menedékig eljutni; 3 pálya (1200 / 2000 / 3000 m), mindegyik teljesítése nyitja a következőt. A menet véget ér, ha elfogy az üzemanyag, szétszedik a járművet, felborulsz vagy elakadsz.
+- **Műhely, 9 kategória, 4–5 szint:** motor, futómű/lánctalp, üzemanyagtartály, páncélzat, orr-előtét (dózerlap → tüskés eke → kombájn-tálca → iker-dobos húsdaráló), oldalvédelem (szögesdrót → tüskék → láncfűrész), 155 mm-es ágyú, géppuska (MAG → iker MAG → M2HB → minigun), rakétahajtás. A fejlesztések a legnagyobb megtett távhoz kötöttek, és mind látszanak a járművön.
+- **Ellenfelek:** csoszogó, futó, puffadt (savas robbanás), köpködő, martalóc katona, pajzsos rohamzombi, óriás; 15–40 fős hordák. Nehéz megölni őket: lassú ütközésnél nekifeszülnek, felmásznak, a kapaszkodók sebeznek.
+- **Fizika:** rugós futógörgők, tapadás, levegőben billentés, rámpák, kráterek, roncsautó-halmok, barikádok, robbanó hordók.
+- **Gore:** folyadékszerű vér- és nyálkacseppek, szétterülő tócsák, húscafatok, csontok, leszakadó végtagok, Verlet-belek, véres, csöpögő jármű.
+- **Pontozás:** megtett táv + ledarált zombik (+ kombó, + menedék-bónusz); a ranglista a régi DroneRun-mezőt használja. Fekvő tájolásban is játszható.
+- Leírás és bővítési útmutató: [docs/meat-grinder.md](docs/meat-grinder.md).
 
 **v4.53.0:** **Tüzér Kassza – látványos gyerekzár-feloldás.** A 15 mp-es visszaszámláló eddig a lakat gombján volt, amit a nyomva tartó ujj eltakart. Most a lakat lenyomásakor a képernyő elsötétül, és középen nagy, körkörös haladásjelző jelenik meg óriási, másodpercenként „pattanó” számmal (rövid rezgéssel). Az utolsó 3 mp-ben zöldre vált („Mindjárt…”), a végén kinyílik a lakat („Feloldva!”). A fejléc alján haladássáv is fut, a lakat körül fénygyűrű lüktet. Ha korán elengedik, piros „Elengedted – kezdd újra!” üzenet jelenik meg.
 

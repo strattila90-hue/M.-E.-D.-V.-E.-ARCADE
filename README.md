@@ -19,7 +19,7 @@
 
 ## Features
 
-- **9 mini-games** in one installable app: M.E.D.V.E. H.A.R.C. (grenade-storm defence with waves and bosses), DroneRun, Gidrán Terep (4x4 off-road with tyre pressure, cruise control and an expedition mode), Gidrán Konvoj, Rába Rakodó (tower stacking), SERE Kitörés (survival and evasion), Tüzér Kassza (tap-tap idle game), Shot&Run (artillery duel) and Tüzér Derby (betting on races).
+- **9 mini-games** in one installable app: M.E.D.V.E. H.A.R.C. (grenade-storm defence with waves and bosses), Meat Grinder (post-apocalyptic drive-to-the-end game: plough a PzH 2000 through zombie hordes and upgrade it in the workshop), Gidrán Terep (4x4 off-road with tyre pressure, cruise control and an expedition mode), Gidrán Konvoj, Rába Rakodó (tower stacking), SERE Kitörés (survival and evasion), Tüzér Kassza (tap-tap idle game), Shot&Run (artillery duel) and Tüzér Derby (betting on races).
 - **Live leaderboard and chat** (Firebase, nickname and password only; works without an account, records then stay on the device).
 - **Hall of Fame** with rank medals across all games, and an in-game chip wallet.
 - **Installable PWA:** offline cache, in-app update button, install guide for Android and iPhone.

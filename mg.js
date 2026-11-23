@@ -1,0 +1,1169 @@
+// M.E.D.V.E. Arcade – mg.js modul: MEAT GRINDER (Húsdaráló).
+// Az app.js tölti be lustán (lazyMod('mg')), a közös segédeket onnan veszi át.
+// Részletes leírás, hangolási táblák és bővítési útmutató: docs/meat-grinder.md
+import {$,AC,MASTER,NOISE,SOUND,LOWFX,ac,boom,snare,esc,n0,toast,medveWrap,rockStart,rockStop,playCount,gSave,gBoard} from './app.js';
+
+/* ============================================================================
+   1. ALAPÁLLANDÓK
+   1 m = 10 világegység. A képernyő y lefelé nő, a talaj magassága így negatív = magasabb.
+   ============================================================================ */
+const UM = 10;              // egység / méter
+const STEP = 16;            // talaj-mintavétel (egység)
+const GRAV = 300;           // gravitáció (egység/s²)
+const SAVE_KEY = 'medve-mg-v1';
+const VER = 1;
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+function mulberry(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
+
+/* ============================================================================
+   2. FEJLESZTÉSEK – minden kategória szintenként: név, leírás, ár (kupak), feltétel (legnagyobb táv, m)
+   és a hozzá tartozó számértékek (s: stat). Új szint = új elem a lv tömbben, ennyi.
+   ============================================================================ */
+const UPG = [
+  {k: 'motor', n: 'Motor', ic: '⚙️', lv: [
+    {n: 'MTU MT 881 (gyári)', d: 'Fáradt, 1000 LE-s dízel.', s: {f: 1, v: 150}},
+    {n: 'Egyenes kipufogók', d: 'Levágott dobok, hangos és dühös. +18% erő.', c: 160, s: {f: 1.18, v: 172}},
+    {n: 'Turbófeltöltő', d: 'Roncstelepi turbó, drótozva. +40% erő.', c: 520, r: 350, s: {f: 1.4, v: 200}},
+    {n: 'Iker-turbó + intercooler', d: 'Két turbó, hűtőrács a tornyon.', c: 1500, r: 900, s: {f: 1.68, v: 235}},
+    {n: 'Kompresszoros szörny', d: 'Tetőből kiálló feltöltő, ékszíjjal.', c: 4200, r: 2000, s: {f: 2.05, v: 280}}]},
+  {k: 'futomu', n: 'Futómű', ic: '🛞', lv: [
+    {n: 'Kopott lánctalp', d: 'Gyári felfüggesztés, csúszik.', s: {g: .85, cr: 0, tl: 1}},
+    {n: 'Új lánctagok', d: 'Jobb tapadás emelkedőn.', c: 140, s: {g: 1, cr: .15, tl: 1.12}},
+    {n: 'Tüskés lánctalp', d: 'Acéltüskék a tagokon. Nagy tapadás.', c: 480, r: 300, s: {g: 1.15, cr: .28, tl: 1.25}},
+    {n: 'Megerősített torziós rudak', d: 'Bírja az ugratásokat.', c: 1300, r: 800, s: {g: 1.28, cr: .42, tl: 1.38}},
+    {n: 'Versenyfutómű', d: 'Gázrugók, tökéletes levegő-irányítás.', c: 3600, r: 1800, s: {g: 1.42, cr: .55, tl: 1.55}}]},
+  {k: 'tank', n: 'Üzemanyag', ic: '⛽', lv: [
+    {n: 'Gyári tartály (maradék)', d: 'Alig valami lötyög benne.', s: {l: 60}},
+    {n: '2 kanna a farokon', d: '+30 liter.', c: 120, s: {l: 90}},
+    {n: 'Hordó + kannák', d: '+70 liter.', c: 420, r: 250, s: {l: 130}},
+    {n: 'Tetőre szíjazott hordók', d: '+120 liter.', c: 1150, r: 700, s: {l: 180}},
+    {n: 'Külső póttartály', d: 'Hegesztett, ronda, hatalmas. +190 liter.', c: 3200, r: 1600, s: {l: 250}}]},
+  {k: 'pancel', n: 'Páncélzat', ic: '🛡️', lv: [
+    {n: 'Gyári páncél (rozsdás)', d: '100 szerkezeti pont.', s: {hp: 100, dr: 0}},
+    {n: 'Hegesztett lemezek', d: '150 pont, -10% sérülés.', c: 180, s: {hp: 150, dr: .1}},
+    {n: 'Rácspáncél-ketrec', d: '210 pont, -20% sérülés.', c: 600, r: 400, s: {hp: 210, dr: .2}},
+    {n: 'Sínacél + gumiköpeny', d: '280 pont, -30% sérülés.', c: 1700, r: 1000, s: {hp: 280, dr: .3}},
+    {n: 'Guruló erőd', d: '360 pont, -40% sérülés, tetőtüskék.', c: 4600, r: 2200, s: {hp: 360, dr: .4}}]},
+  {k: 'elol', n: 'Orr-előtét', ic: '🔪', lv: [
+    {n: 'Csupasz orr', d: 'A test maga üt. Kicsi sebzés, nagy fékeződés.', s: {m: 1, dps: 0, sr: 0, ext: 0, fp: 0}},
+    {n: 'Tolólap (dózer)', d: '×1,4 ütés, -25% lassulás.', c: 220, s: {m: 1.4, dps: 15, sr: .25, ext: 12, fp: .2}},
+    {n: 'Tüskés eke', d: '×1,8 ütés, folyamatos szúrás.', c: 700, r: 450, s: {m: 1.8, dps: 55, sr: .38, ext: 16, fp: .3}},
+    {n: 'Kombájn-tálca', d: '×2,4 ütés, forgó motolla – behúzza őket.', c: 1900, r: 1100, s: {m: 2.4, dps: 140, sr: .52, ext: 26, fp: .4}},
+    {n: 'HÚSDARÁLÓ (iker-dob)', d: '×3 ütés, két fűrészdob. Ledarál mindent.', c: 5200, r: 2300, s: {m: 3, dps: 300, sr: .68, ext: 30, fp: .55}}]},
+  {k: 'oldal', n: 'Oldalvédelem', ic: '🌵', lv: [
+    {n: 'Nincs', d: 'A zombik könnyen felkapaszkodnak.', s: {dps: 0, gr: 0}},
+    {n: 'Szögesdrót-tekercs', d: 'Sebzi a kapaszkodókat, -30% felmászás.', c: 150, s: {dps: 14, gr: .3}},
+    {n: 'Oldaltüskék', d: 'Hegyes vasak a lánctalp-kötényen.', c: 560, r: 350, s: {dps: 42, gr: .5}},
+    {n: 'Láncfűrész-sor', d: 'Körbefutó fűrészlánc. Senki nem marad rajta.', c: 1800, r: 1200, s: {dps: 110, gr: .75}}]},
+  {k: 'agyu', n: 'Fő fegyver', ic: '💥', lv: [
+    {n: '155 mm – lőszer nélkül', d: 'A cső be van dugva. Dísznek szép.', s: {am: 0, rl: 9, dm: 0, rad: 0}},
+    {n: '2 db DM121 gránát', d: 'TŰZ gomb: hordákat tép szét.', c: 260, s: {am: 2, rl: 8, dm: 320, rad: 115}},
+    {n: '3 gránát, kézi töltés', d: 'Gyorsabb töltés.', c: 800, r: 500, s: {am: 3, rl: 6.5, dm: 400, rad: 130}},
+    {n: '5 gránát, automata töltő', d: 'Nagyobb robbanás.', c: 2100, r: 1200, s: {am: 5, rl: 5, dm: 480, rad: 150}},
+    {n: '8 gránát, MRSI-sorozat', d: 'Szőnyeg-tűz a horda közepébe.', c: 5000, r: 2400, s: {am: 8, rl: 3.5, dm: 600, rad: 180}}]},
+  {k: 'gepp', n: 'Kiegészítő fegyver', ic: '🔫', lv: [
+    {n: 'Nincs', d: 'A parancsnoki kupola üres.', s: {rt: 0, dm: 0, rg: 0}},
+    {n: 'FN MAG géppuska', d: 'Automatikusan lő az elöl lévőkre.', c: 240, s: {rt: 7, dm: 7, rg: 480}},
+    {n: 'Iker MAG', d: 'Két cső, dupla tűzgyorsaság.', c: 760, r: 450, s: {rt: 13, dm: 7, rg: 500}},
+    {n: 'M2HB 12,7 mm', d: 'Nehézgéppuska, átüti a páncélosokat.', c: 2000, r: 1200, s: {rt: 8, dm: 17, rg: 620}},
+    {n: 'Forgócsöves minigun', d: 'Fémeső.', c: 4800, r: 2200, s: {rt: 24, dm: 10, rg: 640}}]},
+  {k: 'boost', n: 'Rakétahajtás', ic: '🚀', lv: [
+    {n: 'Nincs', d: 'Csak a motor tol.', s: {cap: 0, th: 0}},
+    {n: 'JATO rakéta', d: '3 mp tolóerő, ugratáshoz.', c: 380, r: 200, s: {cap: 3, th: 1}},
+    {n: 'Iker rakéta', d: '5 mp, erősebb.', c: 1300, r: 800, s: {cap: 5, th: 1.25}},
+    {n: 'Utánégető-köteg', d: '7,5 mp, repülés majdnem.', c: 3800, r: 1900, s: {cap: 7.5, th: 1.5}}]}
+];
+const UPK = Object.fromEntries(UPG.map(u => [u.k, u]));
+
+/* ============================================================================
+   3. PÁLYÁK – hossz (m), mag, színek és ellenség-keverék. Az ellenség-súlyok a távval nőnek.
+   ============================================================================ */
+const STAGES = [
+  {n: 'Kiürített külváros', s: 'A város széle. Csoszogók és futók.', len: 1200, seed: 1101, amp: [36, 16, 6],
+    sky: ['#2b0d0a', '#7a2a12', '#d9772f', '#f2b45a'], far: '#3a1a14', mid: '#24130f', gr: ['#4a3a2a', '#2a2018'], road: '#2e2a26',
+    feat: 1.0, horde: [320, 640, 950, 1120], hsz: [14, 22], mix: [['walker', 6], ['runner', 2], ['bloater', .6], ['spitter', .3]], bonus: 400},
+  {n: 'Rozsdaövezet', s: 'Gyárak, martalóc katonák, puffadtak.', len: 2000, seed: 2207, amp: [62, 24, 8],
+    sky: ['#14110c', '#3b3a1c', '#8a7a34', '#c9b45e'], far: '#26261a', mid: '#18180f', gr: ['#47402e', '#25221a'], road: '#2a2924',
+    feat: 1.3, horde: [300, 700, 1050, 1400, 1700, 1900], hsz: [18, 30], mix: [['walker', 5], ['runner', 3], ['bloater', 1.4], ['spitter', 1], ['soldier', 1.3], ['riot', .8]], brute: [1500], bonus: 900},
+  {n: 'Fertőzött laktanya', s: 'A menedék a laktanya mögött. Óriások.', len: 3000, seed: 3313, amp: [95, 34, 10],
+    sky: ['#05060c', '#1c1630', '#5a2a4a', '#b8484a'], far: '#1a1424', mid: '#100c16', gr: ['#3a3434', '#1c1a1c'], road: '#262428',
+    feat: 1.6, horde: [350, 800, 1200, 1600, 2000, 2350, 2700, 2900], hsz: [24, 40], mix: [['walker', 4], ['runner', 4], ['bloater', 1.6], ['spitter', 1.4], ['soldier', 1.6], ['riot', 1.4], ['brute', .25]], brute: [1300, 2200, 2800], bonus: 2000}
+];
+
+/* ============================================================================
+   4. ELLENSÉGEK – hp: életerő, spd: sebesség (egység/s), m: tömeg (lassítás), h: magasság,
+   dps: kapaszkodva sebzés/s, gb: felmászási hajlam, p: pont, c: kupak, bl: vér színe.
+   ============================================================================ */
+const ZT = {
+  walker: {n: 'Csoszogó', hp: 62, spd: [12, 24], m: 70, h: 44, w: 14, dps: 2.4, gb: .35, p: 10, c: 4, bl: '#7a0606'},
+  runner: {n: 'Futó', hp: 44, spd: [80, 115], m: 60, h: 42, w: 12, dps: 3.4, gb: .75, p: 15, c: 6, bl: '#8a0808'},
+  bloater: {n: 'Puffadt', hp: 120, spd: [8, 14], m: 150, h: 50, w: 26, dps: 0, gb: 0, p: 25, c: 10, bl: '#6f8a12'},
+  spitter: {n: 'Köpködő', hp: 70, spd: [14, 22], m: 70, h: 46, w: 14, dps: 3, gb: .2, p: 22, c: 9, bl: '#5a7a08'},
+  soldier: {n: 'Martalóc katona', hp: 75, spd: [0, 0], m: 85, h: 46, w: 14, dps: 0, gb: 0, p: 30, c: 14, bl: '#8a0808'},
+  riot: {n: 'Rohamzombi', hp: 230, spd: [16, 26], m: 120, h: 48, w: 18, dps: 4, gb: .2, p: 40, c: 20, bl: '#6a0505'},
+  brute: {n: 'Óriás', hp: 800, spd: [18, 26], m: 700, h: 92, w: 40, dps: 0, gb: 0, p: 160, c: 80, bl: '#5a0404'}
+};
+
+/* ============================================================================
+   5. ÁLLAPOT, MENTÉS
+   ============================================================================ */
+const MG = {raf: 0, run: false};
+function blankSave() { return {v: VER, cash: 0, up: Object.fromEntries(UPG.map(u => [u.k, 0])), best: [0, 0, 0], done: [0, 0, 0], unl: 1, tot: 0, runs: 0, kills: 0, stage: 0} }
+function load() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') } catch (e) {}
+  const b = blankSave(); if (!s || typeof s !== 'object') return b;
+  const o = Object.assign(b, s); o.up = Object.assign(blankSave().up, s.up || {});
+  for (const u of UPG) o.up[u.k] = clamp(o.up[u.k] | 0, 0, u.lv.length - 1);
+  o.cash = Math.max(0, Math.floor(+o.cash || 0)); o.unl = clamp(o.unl | 0, 1, STAGES.length); o.stage = clamp(o.stage | 0, 0, o.unl - 1);
+  for (const k of ['best', 'done']) if (!Array.isArray(o[k])) o[k] = [0, 0, 0];
+  return o;
+}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(MG.sv)) } catch (e) {} }
+const ST = k => UPK[k].lv[MG.sv.up[k]].s;   // aktuális stat
+const bestAll = () => Math.max(...MG.sv.best);
+
+/* ============================================================================
+   6. PÁLYAÉPÍTÉS: talaj, akadályok, ellenség-ütemterv
+   ============================================================================ */
+function buildStage(si) {
+  const S = STAGES[si], R = mulberry(S.seed), L = S.len * UM + 1400, N = Math.ceil(L / STEP) + 4;
+  const g = new Float32Array(N), P = [R() * 6, R() * 6, R() * 6];
+  for (let i = 0; i < N; i++) {
+    const x = i * STEP, k = clamp((x - 400) / 900, 0, 1);
+    g[i] = -k * (S.amp[0] * Math.sin(x * .0011 + P[0]) + S.amp[1] * Math.sin(x * .0037 + P[1]) + S.amp[2] * Math.sin(x * .011 + P[2]));
+  }
+  const wrecks = [], props = [], spawns = [], deco = [];
+  // domborzati elemek: rámpa, kráter, roncshalom, betonpad
+  let x = 900;
+  while (x < S.len * UM - 300) {
+    const t = R(), i0 = Math.floor(x / STEP);
+    if (t < .32) { // rámpa: lassú emelkedő, majd hirtelen leszakad
+      const H = 40 + R() * 60 * S.feat, n = Math.max(14 + Math.floor(R() * 10), Math.ceil(H / (STEP * .42)));
+      for (let k = 0; k <= n; k++) g[i0 + k] -= H * k / n;
+      deco.push({k: 'ramp', x: (i0 + n) * STEP, h: H});
+    } else if (t < .52) { // kráter
+      const n = 14 + Math.floor(R() * 8), D = 22 + R() * 26 * S.feat;
+      for (let k = 0; k <= n; k++) g[i0 + k] += D * Math.sin(Math.PI * k / n);
+      deco.push({k: 'crater', x: x + n * STEP / 2});
+    } else if (t < .78) { // roncsautó-halom: rá lehet hajtani
+      const cars = 1 + Math.floor(R() * (si + 2)), w = 50 + cars * 16, n = Math.ceil(w / STEP) + 2, H = 16 + cars * 12;
+      for (let k = 0; k <= n; k++) g[i0 + k] -= H * Math.pow(Math.sin(Math.PI * k / n), .6);
+      wrecks.push({x: x + n * STEP / 2, w, cars, seed: Math.floor(R() * 1e6), c: ['#6a2f22', '#3d4a52', '#7a6a3a', '#4a4a44', '#5a1f1f'][Math.floor(R() * 5)]});
+    } else { // barikád / hordók / kannák – nem domborzat, hanem tárgy
+      const kk = R();
+      props.push(kk < .45 ? {k: 'barr', x, hp: 120 + si * 90, w: 26, h: 34, kind: R() < .5 ? 'sand' : 'wood'} : kk < .75 ? {k: 'boom', x, w: 14, h: 20} : {k: 'fuel', x, w: 14, h: 18});
+    }
+    x += (900 + R() * 1300) / S.feat;
+  }
+  // kupakládák és kannák elszórva
+  for (let m = 220; m < S.len; m += 160 + R() * 180) props.push(R() < .55 ? {k: 'fuel', x: m * UM, w: 14, h: 18} : {k: 'cash', x: m * UM, w: 16, h: 14, v: 20 + Math.floor(R() * 25) + si * 15});
+  // ellenség-ütemterv
+  const wsum = S.mix.reduce((a, b) => a + b[1], 0);
+  const pickT = (dm) => { let r = R() * wsum; for (const [k, w] of S.mix) { const ww = k === 'brute' && dm < 900 ? 0 : w; if ((r -= ww) <= 0) return k } return 'walker' };
+  for (let m = 45; m < S.len; m += 14 + R() * 26 / (1 + si * .25)) {
+    const n = 1 + Math.floor(R() * (2 + si + m / 600));
+    for (let j = 0; j < n; j++) spawns.push({x: m * UM + j * rnd(12, 30), t: pickT(m)});
+  }
+  for (const hm of S.horde) { // horda: sűrű tömeg, előtte figyelmeztetés
+    const n = Math.floor(lerp(S.hsz[0], S.hsz[1], R())), w = n * 9;
+    for (let j = 0; j < n; j++) spawns.push({x: hm * UM + R() * w, t: R() < .7 ? (R() < .6 ? 'walker' : 'runner') : pickT(hm), horde: 1});
+    deco.push({k: 'warn', x: hm * UM - 650});
+  }
+  for (const bm of S.brute || []) spawns.push({x: bm * UM, t: 'brute'});
+  // katonák barikád mögött
+  if (si >= 1) for (let m = 500; m < S.len - 100; m += 380 + R() * 300) { props.push({k: 'barr', x: m * UM, hp: 260, w: 30, h: 38, kind: 'sand'}); spawns.push({x: m * UM + 40, t: 'soldier'}, {x: m * UM + 70, t: 'soldier'}) }
+  spawns.sort((a, b) => a.x - b.x); props.sort((a, b) => a.x - b.x);
+  // háttér: város-sziluett
+  const sky = [], mids = [];
+  for (let bx = -200; bx < L * .3 + 2000; bx += 30 + R() * 70) sky.push({x: bx, w: 30 + R() * 60, h: 60 + R() * 170, br: R() < .45 ? R() * .5 : 0, win: R() < .5});
+  for (let bx = 0; bx < L * .6 + 2000; bx += 60 + R() * 160) mids.push({x: bx, k: R() < .45 ? 'tree' : R() < .6 ? 'pole' : 'house', h: 40 + R() * 70, s: R()});
+  return {si, S, g, N, L, fin: S.len * UM + 200, wrecks, props, spawns, sp: 0, deco, sky, mids};
+}
+function gY(x) { const T = MG.trk, f = x / STEP, i = Math.floor(f); if (i < 0) return T.g[0]; if (i >= T.N - 1) return T.g[T.N - 1]; const t = f - i; return T.g[i] * (1 - t) + T.g[i + 1] * t }
+function gSl(x) { const T = MG.trk, i = clamp(Math.floor(x / STEP), 0, T.N - 2); return (T.g[i + 1] - T.g[i]) / STEP }
+
+/* ============================================================================
+   7. JÁRMŰ – merev test, 6 futógörgő rugós-csillapított kontakttal, a test sarkai ütköznek.
+   ============================================================================ */
+// 6 futógörgő + elöl a hajtókerék, hátul a feszítőkerék (a lánc ezeken is körbefut, így peremen sem „ül fel”)
+const WHEELS = [-50, -33, -16, 1, 18, 35].map(lx => ({lx, ly: 17, r: 9})).concat([{lx: 54, ly: 8, r: 8, s: 1}, {lx: -60, ly: 7, r: 7, s: 1}]);
+const HULL = [[-66, -20], [-46, -50], [-30, -56], [18, -56], [62, -12], [70, 2], [-70, 4]];
+function makeVeh() {
+  const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), el = ST('elol'), ag = ST('agyu'), bo = ST('boost'), tk = ST('tank');
+  const mass = 1 + MG.sv.up.pancel * .04 + MG.sv.up.elol * .03;
+  return {x: 220, y: gY(220) - 44, a: 0, vx: 0, vy: 0, w: 0, mass, I: 1500 * mass,
+    F: 95 * mo.f, vmax: mo.v, grip: fu.g, cr: fu.cr, tilt: 3.4 * fu.tl, hp: pa.hp, hp0: pa.hp, dr: pa.dr,
+    fm: el.m, fdps: el.dps, fsr: el.sr, fext: el.ext, fprot: el.fp, fuel: tk.l, fuel0: tk.l,
+    ammo: ag.am, rl: 0, rl0: ag.rl, boost: bo.cap, boost0: bo.cap, bth: bo.th,
+    track: 0, contact: 0, air: 0, flipT: 0, stuckT: 0, noFuelT: 0, grind: 0, mgA: 0, mgT: 0, mgCd: 0, boosting: 0, blood: [], lastLand: 0};
+}
+function vPt(V, lx, ly) { const c = Math.cos(V.a), s = Math.sin(V.a); return [V.x + lx * c - ly * s, V.y + lx * s + ly * c] }
+function vLoc(V, x, y) { const c = Math.cos(V.a), s = Math.sin(V.a), dx = x - V.x, dy = y - V.y; return [dx * c + dy * s, -dx * s + dy * c] }
+function vehStep(V, dt, inp) {
+  let fx = 0, fy = GRAV * V.mass, tq = 0, nC = 0;
+  const loadK = 1 - Math.min(.45, MG.grab.length * .05);  // a kapaszkodók lefogják
+  const gas = inp.gas && V.fuel > 0, brk = inp.brk;
+  const fwd = V.vx * Math.cos(V.a) + V.vy * Math.sin(V.a);
+  // futógörgők
+  for (const W of WHEELS) {
+    const [px, py] = vPt(V, W.lx, W.ly), h = gY(px), d = py + W.r - h;
+    if (d <= 0) continue;
+    nC++;
+    const sl = gSl(px), il = 1 / Math.hypot(1, sl), tx = il, ty = sl * il, nx = sl * il, ny = -il;
+    const rx = px - V.x, ry = py - V.y, pvx = V.vx - V.w * ry, pvy = V.vy + V.w * rx;
+    const vn = pvx * nx + pvy * ny, vt = pvx * tx + pvy * ty;
+    if (-vn > 260 && MG.t - V.lastLand > .4) { V.lastLand = MG.t; const dmg = (-vn - 260) * .05 * (1 - V.cr); if (dmg > .5) hurt(dmg, 'land'); shakeOff(.35); MG.shake = Math.max(MG.shake, Math.min(1, -vn / 600)) }
+    const Fn = Math.max(0, 22 * d * V.mass - 2.4 * vn * V.mass);
+    let Ft = 0;
+    const lim = V.grip * Fn;
+    if (gas) { const k = clamp(1 - vt / V.vmax, 0, 1); Ft = Math.min(lim, V.F * V.mass * loadK / 6 * Math.sqrt(k) * 1.0) }
+    else if (brk) { Ft = vt > 6 ? -Math.min(lim, 60 * V.mass / 6 * 4) : vt > -55 ? -Math.min(lim, 40 * V.mass / 6) : 0 }
+    else Ft = clamp(-vt * .22 * V.mass / 6, -lim, lim);
+    Ft = clamp(Ft - vt * .02, -lim, lim);
+    const Fx = nx * Fn + tx * Ft, Fy = ny * Fn + ty * Ft;
+    fx += Fx; fy += Fy; tq += rx * Fy - ry * Fx;
+  }
+  V.contact = nC;
+  // test-sarkok
+  let hullHit = 0;
+  for (const [lx, ly] of HULL) {
+    const [px, py] = vPt(V, lx, ly), h = gY(px), d = py - h;
+    if (d <= 0) continue;
+    hullHit++;
+    const sl = gSl(px), il = 1 / Math.hypot(1, sl), tx = il, ty = sl * il, nx = sl * il, ny = -il;
+    const rx = px - V.x, ry = py - V.y, pvx = V.vx - V.w * ry, pvy = V.vy + V.w * rx, vn = pvx * nx + pvy * ny, vt = pvx * tx + pvy * ty;
+    if (-vn > 140 && ly < 0) { hurt((-vn - 140) * .12 * (1 - V.cr), 'roof'); MG.shake = Math.max(MG.shake, .6); sparks(px, py, 8) }
+    const Fn = Math.max(0, 70 * d * V.mass - 5 * vn * V.mass), Ft = clamp(-vt * 2 * V.mass, -.6 * Fn, .6 * Fn);
+    const Fx = nx * Fn + tx * Ft, Fy = ny * Fn + ty * Ft;
+    fx += Fx; fy += Fy; tq += rx * Fy - ry * Fx;
+  }
+  V.hullHit = hullHit;
+  // levegő-irányítás (földön is billent egy kicsit)
+  const tIn = (inp.tr ? 1 : 0) - (inp.tl ? 1 : 0);
+  if (tIn) tq += tIn * V.tilt * V.I * (nC ? .3 : 1);
+  if (!nC) { V.air += dt; tq -= V.w * V.I * .4 } else V.air = 0;
+  // rakéta
+  V.boosting = 0;
+  if (inp.boost && V.boost > 0) { V.boost = Math.max(0, V.boost - dt); V.boosting = 1; fx += Math.cos(V.a) * 330 * V.bth * V.mass; fy += Math.sin(V.a) * 330 * V.bth * V.mass }
+  // légellenállás
+  const sp = Math.hypot(V.vx, V.vy), xd = sp > V.vmax * 1.3 ? (sp - V.vmax * 1.3) * 1.4 / sp : 0; fx -= V.vx * (sp * .0007 + xd) * V.mass; fy -= V.vy * (sp * .0007 + xd) * V.mass;
+  V.vx += fx / V.mass * dt; V.vy += fy / V.mass * dt; V.w += tq / V.I * dt;
+  V.w = clamp(V.w, -9, 9);
+  V.x += V.vx * dt; V.y += V.vy * dt; V.a += V.w * dt;
+  V.track += fwd * dt;
+  // üzemanyag
+  const burn = (gas ? 1.45 : .12) * (1 + MG.sv.up.motor * .07);
+  V.fuel = Math.max(0, V.fuel - burn * dt);
+}
+
+/* ============================================================================
+   8. JÁTÉKMENET
+   ============================================================================ */
+function newRun(si) {
+  MG.trk = buildStage(si);
+  MG.V = makeVeh();
+  Object.assign(MG, {t: 0, z: [], grab: [], parts: [], gibs: [], guts: [], dec: [], corpses: [], fx: [], shells: [], ebul: [], txt: [], tracers: [],
+    kills: 0, kt: {}, hurtBy: {}, pts: 0, cash: 0, combo: 0, comboT: 0, bestCombo: 0, shake: 0, slow: 1, end: null, endT: 0, maxX: 220, hordeMsg: 0, sndT: {}});
+  MG.cam = {x: MG.V.x - 200, y: MG.V.y - 260, s: 1};
+  MG.inp = {gas: 0, brk: 0, tl: 0, tr: 0, boost: 0, fire: 0};
+  MG.trk.props.forEach(p => { p.y = gY(p.x); p.dead = 0 });
+  for (let i = 0; i < 6; i++) driftDecal(rnd(300, 2000));
+}
+function driftDecal(x) { MG.dec.push({x, w: rnd(10, 28), c: '#3a0808', a: .5, g: 1, tw: 0}) }
+
+function spawnZ(s) {
+  const D = ZT[s.t], z = {t: s.t, D, x: s.x, y: gY(s.x), vx: 0, vy: 0, hp: D.hp * (1 + MG.trk.si * .15), st: 'walk', ph: Math.random() * 6, spd: rnd(D.spd[0], D.spd[1]),
+    dir: -1, hitT: 0, hitCd: 0, cd: rnd(1, 3), armL: 1, armR: 1, head: 1, down: 0, bleed: 0, sc: rnd(.92, 1.1), sk: Math.floor(Math.random() * 4), horde: s.horde};
+  z.hp0 = z.hp; MG.z.push(z);
+}
+
+function hurt(dmg, why) {
+  const V = MG.V; if (MG.end) return;
+  const d = dmg * (1 - V.dr); V.hp -= d;
+  MG.hurtBy[why] = (MG.hurtBy[why] || 0) + d;
+  MG.hurtT = Math.max(MG.hurtT || 0, Math.min(.35, .08 + d * .03));
+  if (V.hp <= 0) { V.hp = 0; finish('dead', why) }
+}
+function addKill(z, how) {
+  MG.kills++; MG.kt[z.t] = (MG.kt[z.t] || 0) + 1;
+  MG.combo = MG.comboT > 0 ? MG.combo + 1 : 1; MG.comboT = 1.3; MG.bestCombo = Math.max(MG.bestCombo, MG.combo);
+  const bonus = MG.combo > 2 ? MG.combo * 2 : 0;
+  MG.pts += z.D.p + bonus; MG.cash += z.D.c;
+  if (MG.combo >= 3 && MG.combo % 1 === 0) MG.comboShow = {n: MG.combo, t: 1.2};
+  if (how) floatTxt(z.x, z.y - z.D.h * z.sc - 10, '+' + (z.D.p + bonus), '#ffd24a');
+}
+
+function killZ(z, vx, vy, how, power) {
+  if (z.st === 'dead') return;
+  z.st = 'dead';
+  addKill(z, how);
+  gore(z, vx, vy, power || 1, how);
+  if (z.t === 'bloater') bloat(z);
+  sndSplat(power);
+  try { if (power > 1.4 && navigator.vibrate) navigator.vibrate(18) } catch (e) {}
+}
+
+function damageZ(z, dmg, vx, vy, how) {
+  if (z.st === 'dead') return false;
+  z.hp -= dmg; z.hitT = .12; z.bleed = Math.min(1, z.bleed + dmg / z.hp0);
+  // részleges szétesés: a kar leszakad, ha már sérült
+  if (z.hp > 0 && z.hp < z.hp0 * .6 && Math.random() < .35 && z.t !== 'brute') {
+    if (z.armR) { z.armR = 0; limbGib(z, 'arm', vx, vy) } else if (z.armL && z.hp < z.hp0 * .35) { z.armL = 0; limbGib(z, 'arm', vx, vy) }
+  }
+  if (dmg > 3) bloodBurst(z.x, z.y - z.D.h * z.sc * .6, vx * .3, vy * .3 - 40, Math.min(14, 3 + dmg / 8), z.D.bl);
+  if (z.hp <= 0) { killZ(z, vx, vy, how, Math.min(2.4, .8 + dmg / 80)); return true }
+  return false;
+}
+
+function bloat(z) { // puffadt: savas robbanás
+  const y = z.y - 25;
+  for (let i = 0; i < (LOWFX ? 25 : 55); i++) { const a = rnd(-Math.PI, 0), s = rnd(80, 420); part(z.x, y, Math.cos(a) * s, Math.sin(a) * s, rnd(.8, 1.8), rnd(2, 5), Math.random() < .7 ? '#9acd32' : '#c8e04a', 1) }
+  for (let i = 0; i < 6; i++) MG.fx.push({k: 'puff', x: z.x + rnd(-20, 20), y: y + rnd(-20, 10), r: rnd(14, 26), t: 0, d: rnd(.6, 1.1), c: '154,205,50'});
+  for (const o of MG.z) if (o !== z && o.st !== 'dead' && Math.abs(o.x - z.x) < 95) damageZ(o, 90, (o.x - z.x) * 3, -200, 'acid');
+  const V = MG.V; if (Math.hypot(V.x - z.x, V.y - y) < 120) { hurt(4.5 * (1 - V.fprot * .6), 'bloat'); MG.V.blood.push({lx: rnd(20, 60), ly: rnd(-30, 10), r: rnd(5, 10), c: '#7f9a1c'}) }
+  MG.dec.push({x: z.x, w: 4, tw: 46, c: '#6f8a12', a: .75, g: 1});
+}
+
+function shakeOff(chance) {
+  for (let i = MG.grab.length - 1; i >= 0; i--) {
+    if (Math.random() < chance) { const z = MG.grab[i]; MG.grab.splice(i, 1); const [x, y] = vPt(MG.V, z.gx, z.gy); z.x = x; z.y = y; z.st = 'air'; z.vx = MG.V.vx + rnd(-80, 80); z.vy = MG.V.vy - rnd(120, 220); z.spin = rnd(-6, 6); MG.z.push(z) }
+  }
+}
+
+function finish(kind, why) {
+  if (MG.end) return;
+  MG.end = {kind, why}; MG.endT = kind === 'win' ? 3.2 : 2.4; MG.slow = .35;
+  MG.inp.gas = MG.inp.brk = MG.inp.boost = 0;
+  if (kind === 'win') { MG.shake = .4; toast('🏁 Elérted a menedéket!') }
+  if (kind === 'dead') { const V = MG.V; boomFx(V.x, V.y - 20, 1.3); for (let i = 0; i < 26; i++) sparks(V.x + rnd(-50, 50), V.y + rnd(-40, 10), 1) }
+}
+
+function update(dt) {
+  const V = MG.V, T = MG.trk, inp = MG.inp;
+  MG.t += dt;
+  // spawn a kamera előtt
+  const camR = MG.cam.x + MG.viewW + 350;
+  while (T.sp < T.spawns.length && T.spawns[T.sp].x < camR) { const s = T.spawns[T.sp++]; if (s.x > V.x - 100) spawnZ(s) }
+  if (MG.z.length > (LOWFX ? 90 : 150)) MG.z.splice(0, MG.z.length - (LOWFX ? 90 : 150));
+  // horda-figyelmeztetés
+  for (const d of T.deco) if (d.k === 'warn' && !d.done && V.x > d.x) { d.done = 1; MG.hordeMsg = 2.2; sndHorde() }
+  // jármű (al-lépésekben a merev rugók miatt)
+  const sub = Math.max(2, Math.ceil(dt / (1 / 240)));
+  for (let i = 0; i < sub; i++) vehStep(V, dt / sub, MG.end ? {} : inp);
+  if (!Number.isFinite(V.x + V.y + V.a)) { V.x = MG.maxX; V.y = gY(V.x) - 60; V.vx = V.vy = V.w = 0; V.a = 0 }
+  MG.maxX = Math.max(MG.maxX, V.x);
+  // fő ágyú
+  V.rl = Math.max(0, V.rl - dt);
+  if (inp.fire && !MG.end) { inp.fire = 0; fireGun() }
+  // géppuska
+  mgStep(dt);
+  // ellenségek
+  zStep(dt);
+  grabStep(dt);
+  propStep(dt);
+  shellStep(dt);
+  ebulStep(dt);
+  goreStep(dt);
+  fxStep(dt);
+  MG.comboT = Math.max(0, MG.comboT - dt); if (MG.comboShow) { MG.comboShow.t -= dt; if (MG.comboShow.t <= 0) MG.comboShow = null }
+  MG.hordeMsg = Math.max(0, MG.hordeMsg - dt); MG.hurtT = Math.max(0, (MG.hurtT || 0) - dt);
+  MG.shake = Math.max(0, MG.shake - dt * 1.8);
+  // vége-feltételek
+  if (!MG.end) {
+    const sp = Math.hypot(V.vx, V.vy);
+    if (V.x >= T.fin) finish('win');
+    if (Math.cos(V.a) < -.25 && V.hullHit) { V.flipT += dt; if (V.flipT > 2.4) finish('flip') } else V.flipT = Math.max(0, V.flipT - dt);
+    if (V.fuel <= 0) { if (sp < 6) V.noFuelT += dt; if (V.noFuelT > 1.6) finish('fuel') }
+    if (sp < 5 && V.fuel > 0) { V.stuckT += dt; const lim = MG.grab.length || MG.z.some(z => z.st !== 'dead' && Math.abs(z.x - V.x) < 120) ? 9 : 6; if (V.stuckT > lim) finish('stuck') } else V.stuckT = Math.max(0, V.stuckT - dt * 2);
+    if (V.y > 3000) finish('flip');
+  } else { MG.endT -= dt / MG.slow; if (MG.endT <= 0 && !MG.endShown) { MG.endShown = 1; showResult() } }
+}
+
+/* ---------- ellenségek ---------- */
+function zStep(dt) {
+  const V = MG.V, fext = 66 + V.fext, cA = Math.cos(V.a), sA = Math.sin(V.a);
+  const fwd = V.vx * cA + V.vy * sA;
+  let grinding = 0;
+  for (const z of MG.z) {
+    if (z.st === 'dead') continue;
+    z.hitT = Math.max(0, z.hitT - dt); z.hitCd = Math.max(0, z.hitCd - dt);
+    if (z.bleed > .15 && Math.random() < z.bleed * dt * 6) part(z.x + rnd(-4, 4), z.y - z.D.h * z.sc * .5, rnd(-20, 20), rnd(-10, 20), 1.2, 1.6, z.D.bl, 0);
+    const dx = V.x - z.x, ad = Math.abs(dx);
+    if (z.st === 'air') {
+      z.vy += GRAV * 1.4 * dt; z.x += z.vx * dt; z.y += z.vy * dt; z.rot = (z.rot || 0) + (z.spin || 0) * dt;
+      const h = gY(z.x);
+      if (z.y >= h) {
+        z.y = h;
+        if (z.vy > 300) { if (damageZ(z, (z.vy - 300) * .35, z.vx, -z.vy * .3, 'fall')) continue }
+        if (z.vy > 120) { bloodBurst(z.x, z.y - 4, z.vx * .2, -60, 5, z.D.bl); splatDecal(z.x, 18, z.D.bl) }
+        z.vy = 0; z.vx *= .4; z.st = 'down'; z.down = rnd(.8, 1.6); z.rot = Math.sign(z.vx || 1) * Math.PI / 2;
+      }
+      continue;
+    }
+    if (z.st === 'down') { z.down -= dt; z.x += z.vx * dt; z.vx *= Math.pow(.05, dt); z.y = gY(z.x); if (z.down <= 0) { z.st = 'walk'; z.rot = 0 } }
+    else {
+      // mozgás a jármű felé (aki mögötte van, utána fut)
+      z.dir = dx < 0 ? -1 : 1;
+      let v = ad < 900 ? z.spd : z.spd * .3;
+      if (z.t === 'soldier' || z.t === 'spitter') v = ad > 500 ? z.spd : 0;
+      if (z.t === 'runner' && ad < 110 && ad > 30 && dx < 0 && Math.random() < dt * 3 && z.cd <= 0) { z.st = 'leap'; z.vx = -z.spd * 1.3 + (V.vx * .6); z.vy = -rnd(160, 230); z.cd = 2 }
+      z.x += z.dir * v * dt; z.y = gY(z.x); z.ph += dt * (2 + v * .07);
+      z.cd -= dt;
+      if (z.t === 'soldier' && z.cd <= 0 && dx < 0 && ad < 650 && ad > 60) { z.cd = rnd(1.6, 2.6); const tx = V.x + rnd(-70, 70), ty = V.y - 20 + rnd(-60, 30), sx = z.x - 10, sy = z.y - 34, L = Math.hypot(tx - sx, ty - sy); MG.ebul.push({x: sx, y: sy, vx: (tx - sx) / L * 950, vy: (ty - sy) / L * 950, t: 1.2, k: 'b'}); MG.fx.push({k: 'flash', x: sx - 6, y: sy, t: 0, d: .06}); sndShot(.03) }
+      if (z.t === 'spitter' && z.cd <= 0 && dx < 0 && ad < 480 && ad > 70) { z.cd = rnd(3.2, 4.6); const tt = rnd(.8, 1.1), sx = z.x - 4, sy = z.y - 40; MG.ebul.push({x: sx, y: sy, vx: (V.x + V.vx * tt * rnd(.6, 1.1) + rnd(-50, 50) - sx) / tt, vy: ((V.y - 30) - sy) / tt - GRAV * .5 * tt, t: 2, k: 'acid', g: 1}) }
+      if (z.t === 'brute' && ad < 90 && z.cd <= 0) { z.cd = 1.4; z.punch = .3; hurt(9 * (1 - V.fprot), 'brute'); V.vx += -dx > 0 ? -60 : 60; MG.shake = Math.max(MG.shake, .5); sndThud(.4) }
+      z.punch = Math.max(0, (z.punch || 0) - dt);
+    }
+    if (z.st === 'leap') { z.vy += GRAV * 1.4 * dt; z.x += z.vx * dt; z.y += z.vy * dt; if (z.y >= gY(z.x)) { z.y = gY(z.x); z.st = 'walk' } }
+    // ütközés a járművel: 3 pont a zombi testén, a jármű saját koordinátáiban
+    if (z.hitCd > 0) continue;
+    const H = z.D.h * z.sc * (z.st === 'down' ? .3 : 1);
+    let hit = null;
+    for (const fy of [.15, .55, .9]) {
+      const [lx, ly] = vLoc(V, z.x, z.y - H * fy);
+      if (lx > -70 && lx < fext + z.D.w * .5 && ly > -60 && ly < 30) { if (!hit || lx > hit[0]) hit = [lx, ly] }
+    }
+    if (!hit) continue;
+    const [lx, ly] = hit, zv = z.st === 'air' || z.st === 'leap' ? z.vx * cA + z.vy * sA : z.dir * (z.st === 'walk' ? z.spd : 0);
+    const vrel = fwd - zv;
+    if (z.st === 'down') { // a földön fekvőt a lánctalp eltapossa
+      damageZ(z, 26 + Math.abs(fwd) * .35 + Math.max(0, V.vy) * .4, V.vx, -90, 'crush'); z.hitCd = .22;
+      if (Math.abs(fwd) > 20) { V.vy -= 14; V.w += (Math.random() - .5) * .3 }
+      if (z.st !== 'dead') { z.down = Math.max(z.down, .6); z.x -= 4 }
+    } else if (lx > fext - 22 && ly > -46) { // ELÖL: ütés / darálás
+      grinding = 1;
+      const impact = vrel > 15 ? Math.pow(vrel / 10, 1.35) * 2.4 * V.fm : 0;
+      let dmg = impact + V.fdps * dt;
+      if (z.t === 'riot' && vrel < 190) dmg *= .45;
+      if (V.fdps > 0 && Math.random() < dt * 8) grindSpray(z, V);
+      const died = damageZ(z, dmg, V.vx * 1.1, -Math.abs(vrel) * .6 - 80, V.fdps > 0 && impact < 20 ? 'grind' : 'hit');
+      const mr = z.D.m / (z.D.m + 2200 * V.mass);
+      if (died) { V.vx -= cA * vrel * mr * (1 - V.fsr) * 1.2; V.vy -= sA * vrel * mr * (1 - V.fsr) * 1.2 }
+      else if (z.t === 'brute' && vrel > 150) { // nagy sebességnél az óriás is elesik
+        z.st = 'down'; z.down = 1.8; z.rot = Math.PI / 2; z.x += 40; z.hitCd = 1; damageZ(z, 60, V.vx, -60, 'hit');
+        V.vx -= cA * vrel * .45 * (1 - V.fsr * .5); V.vy -= sA * vrel * .45 * (1 - V.fsr * .5); hurt(8 * (1 - V.fprot), 'brute'); MG.shake = Math.max(MG.shake, .9); sndThud(.7);
+      } else if (z.t === 'brute') { // óriás: falnak ütközöl
+        const bk = Math.max(0, fwd) * (1 - V.fsr * .5);
+        V.vx -= cA * (bk + 40); V.vy -= sA * (bk + 40); z.x += 10; z.hitCd = .35; hurt((6 + vrel * .05) * (1 - V.fprot), 'brute'); MG.shake = Math.max(MG.shake, .7); sndThud(.6); sparks(...vPt(V, fext, -10), 6);
+      } else if (vrel > 55) { // feldobja
+        z.st = 'air'; z.vx = fwd * cA * 1.15 + rnd(0, 40); z.vy = -rnd(140, 240) - vrel * .4; z.spin = rnd(-12, -4); z.hitCd = .35;
+        V.vx -= cA * vrel * mr * (1 - V.fsr) * 2; V.vy -= sA * vrel * mr * (1 - V.fsr) * 2;
+      } else { // nekifeszül: lassít, és talán felmászik
+        z.x = Math.max(z.x, vPt(V, fext + z.D.w * .5, 0)[0]); z.hitCd = .12;
+        const push = (1 - V.fsr) * z.D.m / 70; V.vx -= cA * push * 26 * dt * 10; V.vy -= sA * push * 26 * dt * 10;
+        if (z.D.gb && Math.random() < z.D.gb * (1 - ST('oldal').gr) * .3) grabOn(z, rnd(10, 50), rnd(-30, -8));
+        else if (z.t !== 'brute' && Math.random() < (z.t === 'riot' ? .06 : .22) * (1 + V.fm * .3)) { z.st = 'down'; z.down = 1.4; z.rot = Math.PI / 2; z.vx = Math.max(0, fwd) * .5 }
+      }
+    } else if (ly > 8) { // ALUL: a lánctalp eltapossa
+      damageZ(z, 30 + Math.abs(V.vy) * .5 + Math.abs(fwd) * .3, V.vx, -120, 'crush'); z.hitCd = .2;
+      if (z.st !== 'dead') { z.st = 'down'; z.down = 1.5; z.rot = Math.PI / 2 }
+    } else if (ly < -30) { // TETŐN landolt
+      if (z.D.gb) grabOn(z, clamp(lx, -50, 20), -55); else { z.st = 'air'; z.vx = V.vx - 60; z.vy = -120; z.hitCd = .3 }
+    } else { // OLDALT: rákapaszkodik vagy lecsúszik
+      if (z.D.gb && Math.random() < z.D.gb * (1 - ST('oldal').gr)) grabOn(z, clamp(lx, -60, 55), clamp(ly, -40, -4));
+      else { z.st = 'down'; z.down = 1; z.rot = -Math.PI / 2; z.x -= 20; z.hitCd = .3; damageZ(z, 8 + ST('oldal').dps * .2, V.vx, -40, 'side') }
+    }
+  }
+  V.grind = grinding ? Math.min(1, V.grind + dt * 6) : Math.max(0, V.grind - dt * 3);
+  MG.z = MG.z.filter(z => z.st !== 'dead' && z.st !== 'grab' && z.x > V.x - 1100 && z.y < 4000);
+}
+function grabOn(z, gx, gy) {
+  if (MG.grab.length >= 6) { z.st = 'down'; z.down = 1; z.hitCd = .5; return }
+  z.st = 'grab'; z.gx = gx; z.gy = gy; z.ph = Math.random() * 6; MG.grab.push(z); z.hitCd = 0;
+  floatTxt(z.x, z.y - 50, 'FELMÁSZOTT!', '#ff6b5e');
+}
+function grabStep(dt) {
+  const V = MG.V, side = ST('oldal'), roofSp = MG.sv.up.pancel >= 4 ? 30 : 0;
+  for (let i = MG.grab.length - 1; i >= 0; i--) {
+    const z = MG.grab[i]; z.ph += dt * 5; z.hitT = Math.max(0, z.hitT - dt);
+    hurt(z.D.dps * dt, 'grab');
+    const d = (side.dps + (z.gy < -45 ? roofSp : 0)) * dt;
+    if (d > 0) { z.hp -= d; z.bleed = 1; z.hitT = .05; if (Math.random() < dt * 10) { const [x, y] = vPt(V, z.gx, z.gy); bloodBurst(x, y, V.vx * .5, -40, 2, z.D.bl) } }
+    if (z.hp <= 0) { MG.grab.splice(i, 1); const [x, y] = vPt(V, z.gx, z.gy); z.x = x; z.y = y + 20; killZ(z, V.vx, -100, 'side', 1.1); continue }
+    if (Math.abs(V.w) > 2.2 && Math.random() < dt * 4) shakeOff(.5);
+  }
+}
+
+/* ---------- akadályok ---------- */
+function propStep(dt) {
+  const V = MG.V, cA = Math.cos(V.a), sA = Math.sin(V.a), fwd = V.vx * cA + V.vy * sA, fext = 66 + V.fext;
+  for (const p of MG.trk.props) {
+    if (p.dead || p.x < V.x - 200) continue; if (p.x > V.x + 300) break;
+    const [lx, ly] = vLoc(V, p.x, p.y - p.h * .5);
+    if (lx < -72 || lx > fext + p.w * .5 || ly < -64 || ly > 34) continue;
+    if (p.k === 'fuel') { p.dead = 1; V.fuel = Math.min(V.fuel0, V.fuel + V.fuel0 * .18 + 6); floatTxt(p.x, p.y - 30, '+ÜZEMANYAG', '#ffd24a'); sndPick(); continue }
+    if (p.k === 'cash') { p.dead = 1; MG.cash += p.v; floatTxt(p.x, p.y - 30, '+' + p.v + ' kupak', '#9dff7a'); sndPick(); continue }
+    if (p.k === 'boom') { p.dead = 1; explode(p.x, p.y - 10, 120, 220, 'barrel'); hurt(7 * (1 - V.fprot), 'barrel'); V.vy -= 120; V.w -= .6; continue }
+    if (p.k === 'barr') {
+      const e = Math.max(0, fwd) * V.fm * (1 + V.fprot);
+      if (e > p.hp) { p.dead = 1; V.vx -= cA * fwd * .22 * (1 - V.fsr * .5); debris(p); hurt(3 * (1 - V.fprot), 'barr'); MG.shake = Math.max(MG.shake, .4); MG.pts += 15; sndThud(.5) }
+      else { p.hp -= e * .5 + V.fdps * dt; if (p.hp <= 0) { p.dead = 1; debris(p); continue } const bk = Math.max(0, fwd); V.vx -= cA * (bk * 1.3 + 10); V.vy -= sA * (bk * 1.3 + 10); if (bk > 80) { hurt(bk * .04, 'barr'); MG.shake = .5; sndThud(.5) } }
+    }
+  }
+}
+function debris(p) {
+  const wood = p.kind === 'wood';
+  for (let i = 0; i < (LOWFX ? 8 : 16); i++) MG.gibs.push({x: p.x + rnd(-10, 10), y: p.y - rnd(5, p.h), vx: MG.V.vx * rnd(.6, 1.3) + rnd(-50, 80), vy: -rnd(80, 280), a: rnd(0, 6), w: rnd(-12, 12), k: wood ? 'plank' : 'sand', s: rnd(4, 9), life: rnd(3, 5), c: wood ? '#7a5a34' : '#a8956a'});
+  for (let i = 0; i < 5; i++) MG.fx.push({k: 'puff', x: p.x + rnd(-14, 14), y: p.y - rnd(4, 30), r: rnd(10, 22), t: 0, d: rnd(.5, 1), c: wood ? '120,100,80' : '170,150,110'});
+}
+
+/* ---------- fegyverek ---------- */
+function fireGun() {
+  const V = MG.V;
+  if (V.ammo <= 0) { if (MG.sv.up.agyu === 0) toast('A cső be van dugva – a Műhelyben vehetsz lőszert.'); return }
+  if (V.rl > 0) return;
+  V.ammo--; V.rl = V.rl0;
+  const ea = V.a - .06, [x, y] = vPt(V, 128, -47), sp = 950;
+  MG.shells.push({x, y, vx: V.vx + Math.cos(ea) * sp, vy: V.vy + Math.sin(ea) * sp, t: 3});
+  V.vx -= Math.cos(V.a) * 30; V.w -= .35;
+  for (let i = 0; i < 8; i++) MG.fx.push({k: 'puff', x: x + rnd(0, 30), y: y + rnd(-8, 8), r: rnd(8, 18), t: 0, d: rnd(.4, .9), c: '200,190,170'});
+  MG.fx.push({k: 'flash', x, y, t: 0, d: .09, big: 1});
+  MG.shake = Math.max(MG.shake, .6); sndGun();
+}
+function shellStep(dt) {
+  for (const s of MG.shells) {
+    s.vy += GRAV * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.t -= dt;
+    let hit = s.y >= gY(s.x) || s.t <= 0;
+    if (!hit) for (const z of MG.z) if (z.st !== 'dead' && Math.abs(z.x - s.x) < z.D.w && s.y > z.y - z.D.h * z.sc && s.y < z.y + 4) { hit = true; break }
+    if (hit) { s.dead = 1; const ag = ST('agyu'); explode(s.x, Math.min(s.y, gY(s.x)), ag.rad, ag.dm, 'shell') }
+  }
+  MG.shells = MG.shells.filter(s => !s.dead);
+}
+function explode(x, y, R, dm, how) {
+  boomFx(x, y, R / 110);
+  for (const z of MG.z) {
+    if (z.st === 'dead') continue; const d = Math.hypot(z.x - x, z.y - 20 - y); if (d > R) continue;
+    const k = 1 - d / R, dir = Math.sign(z.x - x) || 1;
+    if (!damageZ(z, dm * (.35 + .65 * k), dir * 420 * k, -380 * k - 100, 'boom')) { z.st = 'air'; z.vx = dir * (200 + 300 * k); z.vy = -200 - 300 * k; z.spin = dir * rnd(4, 12) }
+  }
+  for (const p of MG.trk.props) if (!p.dead && Math.abs(p.x - x) < R) { if (p.k === 'barr') { p.dead = 1; debris(p) } else if (p.k === 'boom') { p.dead = 1; setTimeout(() => { if (MG.trk) explode(p.x, p.y - 10, 120, 220, 'barrel') }, 120) } }
+  MG.dec.push({x, w: 6, tw: R * .45, c: '#1a1410', a: .8, g: 1});
+  const V = MG.V, vd = Math.hypot(V.x - x, V.y - y); if (vd < R * .9) { const k = 1 - vd / R; V.vy -= 260 * k; V.vx += Math.sign(V.x - x) * 140 * k }
+  MG.shake = Math.max(MG.shake, Math.min(1.2, R / 140)); sndBoom(R / 120);
+}
+function mgStep(dt) {
+  const V = MG.V, g = ST('gepp'); if (!g.rt || MG.end) { V.mgF = 0; return }
+  V.mgCd -= dt;
+  const [mx, my] = vPt(V, -18, -66);
+  let tg = null, bd = 1e9;
+  for (const z of MG.z) { if (z.st === 'dead' || z.x < V.x + 10) continue; const d = Math.hypot(z.x - mx, z.y - 25 - my); if (d < g.rg && d < bd) { bd = d; tg = z } }
+  V.mgF = 0;
+  if (!tg) { V.mgA += (-V.a * 0 - V.mgA) * dt * 3; return }
+  const ta = Math.atan2(tg.y - tg.D.h * tg.sc * .6 - my, tg.x - mx) - V.a;
+  V.mgA += (ta - V.mgA) * Math.min(1, dt * 10);
+  if (V.mgCd <= 0) {
+    V.mgCd = 1 / g.rt; V.mgF = 1;
+    const aa = V.mgA + V.a + rnd(-.03, .03), ex = mx + Math.cos(aa) * bd, ey = my + Math.sin(aa) * bd;
+    MG.tracers.push({x0: mx + Math.cos(aa) * 14, y0: my + Math.sin(aa) * 14, x1: ex, y1: ey, t: .06});
+    if (Math.random() < .85) { let d = g.dm; if (tg.t === 'riot' && MG.sv.up.gepp < 3) d *= .4; damageZ(tg, d, Math.cos(aa) * 160, -60, 'mg') }
+    MG.fx.push({k: 'flash', x: mx + Math.cos(aa) * 16, y: my + Math.sin(aa) * 16, t: 0, d: .04});
+    if (Math.random() < .5) MG.gibs.push({x: mx, y: my, vx: -40 + V.vx, vy: -rnd(60, 120), a: 0, w: 14, k: 'brass', s: 2.4, life: 1.4, c: '#d4a64a'});
+    sndShot(.022);
+  }
+}
+function ebulStep(dt) {
+  const V = MG.V;
+  for (const b of MG.ebul) {
+    if (b.g) b.vy += GRAV * dt;
+    b.x += b.vx * dt; b.y += b.vy * dt; b.t -= dt;
+    const [lx, ly] = vLoc(V, b.x, b.y);
+    if (lx > -68 && lx < 70 && ly > -58 && ly < 26) { b.t = 0; if (b.k === 'acid') { hurt(3.5, 'acid'); for (let i = 0; i < 10; i++) part(b.x, b.y, rnd(-100, 100), rnd(-160, 0), 1, rnd(2, 3.5), '#a8d02a', 1); V.blood.push({lx, ly, r: rnd(4, 8), c: '#7f9a1c'}) } else { hurt(2.6, 'shot'); sparks(b.x, b.y, 3) } }
+    else if (b.y > gY(b.x)) { b.t = 0; if (b.k === 'acid') MG.dec.push({x: b.x, w: 3, tw: 16, c: '#7f9a1c', a: .7, g: 1}) }
+  }
+  MG.ebul = MG.ebul.filter(b => b.t > 0);
+  if (V.blood.length > 34) V.blood.splice(0, V.blood.length - 34);
+}
+
+/* ============================================================================
+   9. VÉR, BÉL, HÚSCAFAT, NYÁLKA
+   ============================================================================ */
+const PMAX = () => LOWFX ? 260 : 650;
+function part(x, y, vx, vy, life, s, c, slime) { if (MG.parts.length > PMAX()) MG.parts.shift(); MG.parts.push({x, y, vx, vy, life, l0: life, s, c, sl: slime ? 1 : 0}) }
+function bloodBurst(x, y, vx, vy, n, c) { n = LOWFX ? Math.ceil(n / 2) : n; for (let i = 0; i < n; i++) part(x, y, vx + rnd(-130, 130), vy + rnd(-170, 40), rnd(.6, 1.4), rnd(1.4, 3.6), c || '#8a0808', 0) }
+function splatDecal(x, w, c) { MG.dec.push({x: x + rnd(-6, 6), w: 3, tw: w * rnd(.7, 1.3), c, a: rnd(.55, .85), g: 1}); if (MG.dec.length > (LOWFX ? 120 : 260)) MG.dec.shift() }
+function limbGib(z, k, vx, vy) { const H = z.D.h * z.sc; MG.gibs.push({x: z.x, y: z.y - H * .7, vx: vx * .5 + rnd(-60, 60), vy: -rnd(120, 260), a: rnd(0, 6), w: rnd(-14, 14), k, s: H / 44, life: rnd(6, 9), c: skin(z), bl: z.D.bl}); bloodBurst(z.x, z.y - H * .7, vx * .2, -60, 10, z.D.bl) }
+function gore(z, vx, vy, pw, how) {
+  const H = z.D.h * z.sc, cx = z.x, cy = z.y - H * .55, big = z.t === 'brute' ? 2.2 : z.t === 'bloater' ? 1.5 : 1, n = (LOWFX ? 14 : 34) * big * pw, bl = z.D.bl;
+  // vérsugár
+  for (let i = 0; i < n; i++) part(cx + rnd(-6, 6), cy + rnd(-H * .3, H * .3), vx * rnd(.3, 1) + rnd(-160, 160), Math.min(vy, -40) * rnd(.4, 1.1) + rnd(-200, 40), rnd(.7, 1.8), rnd(1.6, 4.4), Math.random() < .2 ? '#4a0000' : bl, z.t === 'bloater' || z.t === 'spitter' ? 1 : 0);
+  // vérköd
+  for (let i = 0; i < (LOWFX ? 2 : 5) * big; i++) MG.fx.push({k: 'puff', x: cx + rnd(-10, 10), y: cy + rnd(-12, 12), r: rnd(8, 18) * big, t: 0, d: rnd(.35, .7), c: z.t === 'bloater' ? '130,170,40' : '120,8,8'});
+  // húscafatok + csont
+  const ng = Math.round((LOWFX ? 4 : 8) * big * Math.min(1.6, pw));
+  for (let i = 0; i < ng; i++) MG.gibs.push({x: cx + rnd(-8, 8), y: cy + rnd(-H * .3, H * .3), vx: vx * rnd(.4, 1.2) + rnd(-140, 140), vy: Math.min(vy, -60) * rnd(.5, 1.3) - rnd(40, 160), a: rnd(0, 6), w: rnd(-16, 16), k: Math.random() < .2 ? 'bone' : 'meat', s: rnd(3, 7) * Math.sqrt(big), life: rnd(5, 9), c: Math.random() < .5 ? '#9a2020' : '#c0505a', bl, pts: Array.from({length: 6}, () => rnd(.6, 1.2))});
+  if (z.head && Math.random() < .55) MG.gibs.push({x: cx, y: z.y - H * .92, vx: vx * .8 + rnd(-60, 60), vy: -rnd(180, 340), a: 0, w: rnd(-14, 14), k: 'head', s: H / 44, life: 8, c: skin(z), bl, hel: z.t === 'soldier' || z.t === 'riot'});
+  if (z.armL) limbGib(z, 'arm', vx, vy); if (z.armR && Math.random() < .6) limbGib(z, 'arm', vx, vy);
+  if (Math.random() < .7) MG.gibs.push({x: cx, y: z.y - H * .3, vx: vx * .5 + rnd(-40, 40), vy: -rnd(100, 200), a: rnd(0, 6), w: rnd(-10, 10), k: 'leg', s: H / 44, life: 8, c: z.t === 'soldier' ? '#4a5434' : '#3a3a4a', bl});
+  // belek: verlet-lánc
+  const ngu = (LOWFX ? 1 : 2) * (big > 1 ? 2 : 1) * (pw > 1.2 ? 1.5 : 1);
+  for (let j = 0; j < ngu; j++) { const n2 = 7 + Math.floor(Math.random() * 5), gx = vx * rnd(.3, .9) + rnd(-80, 80), gy = -rnd(140, 300); const P = []; for (let i = 0; i < n2; i++) { const x = cx + i * 2, y = cy; P.push({x, y, px: x - gx / 60, py: y - gy / 60}) } MG.guts.push({P, life: rnd(8, 12), w: rnd(3.2, 4.6) * Math.sqrt(big), c: Math.random() < .5 ? '#c86a72' : '#b45560'}) }
+  if (MG.guts.length > (LOWFX ? 10 : 26)) MG.guts.splice(0, MG.guts.length - (LOWFX ? 10 : 26));
+  if (MG.gibs.length > (LOWFX ? 90 : 220)) MG.gibs.splice(0, MG.gibs.length - (LOWFX ? 90 : 220));
+  // tetem és vértócsa
+  splatDecal(z.x + vx * .08, 22 * big, bl);
+  if (Math.random() < .45) { MG.corpses.push({x: z.x + vx * .12 + rnd(0, 30), t: z.t, s: z.sc * (z.D.h / 44), c: skin(z), sk: z.sk, f: Math.random() < .5 ? 1 : -1}); if (MG.corpses.length > (LOWFX ? 30 : 70)) MG.corpses.shift() }
+  // a jármű orra véres lesz
+  if (how === 'hit' || how === 'grind' || how === 'crush') for (let i = 0; i < 2; i++) MG.V.blood.push({lx: 50 + MG.V.fext * rnd(.3, 1) + rnd(-6, 8), ly: rnd(-34, 18), r: rnd(3, 8), c: Math.random() < .5 ? bl : '#5a0000'});
+  if (how === 'grind') grindSpray(z, MG.V, 3);
+}
+function grindSpray(z, V, mult) { // a dob felfelé-előre köpi a darált húst
+  const [x, y] = vPt(V, 66 + V.fext, -6), n = (LOWFX ? 3 : 7) * (mult || 1);
+  for (let i = 0; i < n; i++) part(x + rnd(-4, 4), y + rnd(-12, 12), V.vx + rnd(20, 180), -rnd(120, 330), rnd(.6, 1.3), rnd(1.8, 3.6), Math.random() < .3 ? '#c0505a' : z.D.bl, 0);
+  if (Math.random() < .5) MG.gibs.push({x, y, vx: V.vx + rnd(30, 150), vy: -rnd(160, 320), a: 0, w: rnd(-20, 20), k: 'meat', s: rnd(2, 4), life: 4, c: '#a83040', bl: z.D.bl, pts: Array.from({length: 6}, () => rnd(.6, 1.2))});
+}
+function sparks(x, y, n) { for (let i = 0; i < n; i++) part(x, y, rnd(-220, 220), rnd(-260, 20), rnd(.2, .5), rnd(1, 2), '#ffd27a', 0) }
+function goreStep(dt) {
+  const V = MG.V;
+  // folyadék-cseppek: gravitáció, a földön tócsát hagynak
+  for (const p of MG.parts) {
+    p.vy += GRAV * 1.6 * dt; p.vx *= 1 - dt * .4; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
+    const h = gY(p.x);
+    if (p.y >= h) { p.life = 0; if (Math.random() < (p.sl ? .5 : .28)) splatDecal(p.x, p.s * (p.sl ? 4 : 3), p.c) }
+  }
+  MG.parts = MG.parts.filter(p => p.life > 0);
+  // húscafatok: pattognak, gurulnak, vércsíkot húznak
+  for (const g of MG.gibs) {
+    g.vy += GRAV * 1.5 * dt; g.x += g.vx * dt; g.y += g.vy * dt; g.a += g.w * dt; g.life -= dt;
+    const h = gY(g.x);
+    if (g.y > h - g.s * .5) { g.y = h - g.s * .5; if (g.vy > 60 && g.bl) { splatDecal(g.x, g.s * 2.4, g.bl); if (g.vy > 200) bloodBurst(g.x, g.y, g.vx * .2, -40, 2, g.bl) } g.vy *= -.32; g.vx *= .7; g.w *= .6; if (Math.abs(g.vy) < 20) g.vy = 0 }
+    if (g.bl && g.k !== 'brass' && Math.random() < dt * 4 && Math.abs(g.vx) + Math.abs(g.vy) > 60) part(g.x, g.y, 0, 0, .8, 1.4, g.bl, 0);
+  }
+  MG.gibs = MG.gibs.filter(g => g.life > 0 && g.x > V.x - 1200);
+  // belek: verlet + távolság-kényszer
+  for (const G of MG.guts) {
+    G.life -= dt;
+    for (const p of G.P) { const vx = (p.x - p.px) * .985, vy = (p.y - p.py) * .985; p.px = p.x; p.py = p.y; p.x += vx; p.y += vy + GRAV * 1.3 * dt * dt; const h = gY(p.x); if (p.y > h - 1.5) { p.y = h - 1.5; p.px = p.x - vx * .5 } }
+    for (let it = 0; it < 3; it++) for (let i = 1; i < G.P.length; i++) { const a = G.P[i - 1], b = G.P[i], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, k = (d - 6) / d * .5; a.x += dx * k; a.y += dy * k; b.x -= dx * k; b.y -= dy * k }
+  }
+  MG.guts = MG.guts.filter(G => G.life > 0);
+  // tócsák szétterülnek
+  for (const d of MG.dec) if (d.tw && d.w < d.tw) d.w = Math.min(d.tw, d.w + dt * 40);
+  if (MG.dec.length && MG.dec[0].x < V.x - 1400) MG.dec.shift();
+  // csöpög a vér a véres orrból
+  if (V.blood.length > 3 && Math.random() < dt * Math.min(6, V.blood.length * .3)) { const b = V.blood[Math.floor(Math.random() * V.blood.length)]; const [x, y] = vPt(V, b.lx, b.ly + b.r); part(x, y, V.vx * .9, V.vy, 1, 1.6, b.c, 0) }
+}
+function fxStep(dt) {
+  for (const f of MG.fx) f.t += dt; MG.fx = MG.fx.filter(f => f.t < f.d);
+  for (const t of MG.tracers) t.t -= dt; MG.tracers = MG.tracers.filter(t => t.t > 0);
+  for (const t of MG.txt) { t.t -= dt; t.y -= 40 * dt } MG.txt = MG.txt.filter(t => t.t > 0);
+  if (MG.txt.length > 20) MG.txt.shift();
+}
+function floatTxt(x, y, s, c) { MG.txt.push({x, y, s, c, t: 1}) }
+function boomFx(x, y, k) {
+  MG.fx.push({k: 'ball', x, y, r: 60 * k, t: 0, d: .5});
+  for (let i = 0; i < 10 * k; i++) MG.fx.push({k: 'puff', x: x + rnd(-40, 40) * k, y: y - rnd(0, 50) * k, r: rnd(16, 34) * k, t: 0, d: rnd(.8, 1.8), c: '60,50,45'});
+  for (let i = 0; i < 14 * k; i++) MG.gibs.push({x, y: y - 6, vx: rnd(-300, 300) * k, vy: -rnd(150, 420) * k, a: 0, w: rnd(-10, 10), k: 'rock', s: rnd(2, 5), life: rnd(1.5, 3), c: '#3a3028'});
+  sparks(x, y, 14);
+}
+
+/* ============================================================================
+   10. RAJZOLÁS
+   ============================================================================ */
+const SKINS = ['#7d9a6a', '#8a9a7a', '#6f8a6a', '#9aa27e'];
+function skin(z) { return z.t === 'bloater' ? '#8aa05a' : z.t === 'brute' ? '#7a8a6a' : z.t === 'soldier' ? '#c9a27e' : SKINS[z.sk] }
+const SHIRT = ['#5a3a3a', '#3a4a5a', '#6a5a3a', '#4a4a4a'];
+
+function draw(now) {
+  const c = MG.ctx, W = MG.W, H = MG.H, T = MG.trk, V = MG.V, S = T.S;
+  // kamera: a jármű bal harmadban, sebességgel előre néz és kizoomol
+  const sp = Math.hypot(V.vx, V.vy);
+  const s0 = clamp(Math.min(W / (W < H ? 600 : 760), H / 520), .45, 1.35) * (1 - Math.min(.2, sp / 1600));
+  MG.cam.s += (s0 - MG.cam.s) * .05;
+  const sc = MG.cam.s; MG.viewW = W / sc;
+  const tx = V.x - W / sc * .26 + clamp(V.vx, -100, 300) * .3, ty = V.y - H / sc * .6;
+  MG.cam.x += (tx - MG.cam.x) * .12; MG.cam.y += (ty - MG.cam.y) * .1;
+  const sh = MG.shake * 9, ox = (Math.random() - .5) * sh, oy = (Math.random() - .5) * sh;
+  c.setTransform(MG.dpr, 0, 0, MG.dpr, 0, 0);
+  // ég
+  const sg = c.createLinearGradient(0, 0, 0, H); S.sky.forEach((col, i) => sg.addColorStop(i / (S.sky.length - 1), col)); c.fillStyle = sg; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(255,220,160,.35)'; c.beginPath(); c.arc(W * .72, H * .3, Math.min(W, H) * .09, 0, 7); c.fill();
+  // távoli rom-város (parallax)
+  const px1 = MG.cam.x * .15, hor = H * .62 - (MG.cam.y + 300) * sc * .08;
+  c.fillStyle = S.far;
+  for (const b of T.sky) { const x = (b.x - px1) * sc * .8; if (x < -100 || x > W + 100) continue; const w = b.w * sc * .8, h = b.h * sc * .8; c.beginPath(); c.moveTo(x, hor); c.lineTo(x, hor - h); if (b.br) { c.lineTo(x + w * .3, hor - h * (1 - b.br * .4)); c.lineTo(x + w * .55, hor - h * .8); c.lineTo(x + w * .7, hor - h * (1 - b.br)); } c.lineTo(x + w, hor - h * (b.br ? .6 : 1)); c.lineTo(x + w, hor); c.fill() }
+  c.fillRect(0, hor, W, H - hor);
+  // füstoszlopok
+  c.fillStyle = 'rgba(20,10,8,.25)'; for (let i = 0; i < 3; i++) { const x = ((i * 700 + 300 - px1 * .6) % 2100 + 2100) % 2100 * sc * .8 - 100; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x + k * 14 * sc + Math.sin(now / 900 + k) * 6, hor - k * 26 * sc, (14 + k * 7) * sc, 0, 7); c.fill() } }
+  // közeli réteg
+  const px2 = MG.cam.x * .45, hor2 = H * .74 - (MG.cam.y + 300) * sc * .25;
+  c.fillStyle = S.mid;
+  for (const m of T.mids) { const x = (m.x - px2) * sc, h = m.h * sc; if (x < -80 || x > W + 80) continue;
+    if (m.k === 'tree') { c.fillRect(x - 2 * sc, hor2 - h, 4 * sc, h); c.strokeStyle = S.mid; c.lineWidth = 2 * sc; c.beginPath(); c.moveTo(x, hor2 - h * .7); c.lineTo(x - 14 * sc, hor2 - h * .95); c.moveTo(x, hor2 - h * .55); c.lineTo(x + 16 * sc, hor2 - h * .8); c.stroke() }
+    else if (m.k === 'pole') { c.fillRect(x - 1.5 * sc, hor2 - h * 1.2, 3 * sc, h * 1.2); c.fillRect(x - 12 * sc, hor2 - h * 1.15, 24 * sc, 2.5 * sc); c.strokeStyle = S.mid; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 12 * sc, hor2 - h * 1.13); c.quadraticCurveTo(x + 60 * sc, hor2 - h, x + 140 * sc, hor2 - h * 1.13); c.stroke() }
+    else { c.fillRect(x, hor2 - h * .7, 60 * sc, h * .7); c.beginPath(); c.moveTo(x - 4 * sc, hor2 - h * .7); c.lineTo(x + 30 * sc, hor2 - h); c.lineTo(x + 50 * sc, hor2 - h * .82); c.lineTo(x + 64 * sc, hor2 - h * .7); c.fill() } }
+  c.fillRect(0, hor2, W, H - hor2);
+  // világ-transzformáció
+  c.setTransform(MG.dpr * sc, 0, 0, MG.dpr * sc, (-MG.cam.x * sc + ox) * MG.dpr, (-MG.cam.y * sc + oy) * MG.dpr);
+  const x0 = MG.cam.x - 60, x1 = MG.cam.x + W / sc + 60, yB = MG.cam.y + H / sc + 60;
+  // célkapu
+  if (T.fin > x0 - 200 && T.fin < x1 + 200) drawFinish(c, T.fin, gY(T.fin), now);
+  // talaj
+  const i0 = Math.max(0, Math.floor(x0 / STEP)), i1 = Math.min(T.N - 1, Math.ceil(x1 / STEP));
+  const gg = c.createLinearGradient(0, MG.cam.y, 0, yB); gg.addColorStop(0, S.gr[0]); gg.addColorStop(1, S.gr[1]);
+  c.fillStyle = gg; c.beginPath(); c.moveTo(i0 * STEP, yB);
+  for (let i = i0; i <= i1; i++) c.lineTo(i * STEP, T.g[i]);
+  c.lineTo(i1 * STEP, yB); c.closePath(); c.fill();
+  c.strokeStyle = S.road; c.lineWidth = 7; c.beginPath(); for (let i = i0; i <= i1; i++) { if (i === i0) c.moveTo(i * STEP, T.g[i] + 3); else c.lineTo(i * STEP, T.g[i] + 3) } c.stroke();
+  c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.5; c.stroke();
+  // kavicsok
+  c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = i0; i <= i1; i += 2) { const h = (i * 7919) % 13; c.fillRect(i * STEP + h, T.g[i] + 10 + h, 3, 2) }
+  // tócsák (vér, sav, korom)
+  for (const d of MG.dec) { if (d.x < x0 || d.x > x1) continue; const y = gY(d.x), sl = gSl(d.x); c.save(); c.translate(d.x, y + 1); c.rotate(Math.atan(sl)); c.globalAlpha = d.a; c.fillStyle = d.c; c.beginPath(); c.ellipse(0, 0, d.w, Math.max(1.2, d.w * .16), 0, 0, 7); c.fill(); c.restore() }
+  c.globalAlpha = 1;
+  // tetemek
+  for (const k of MG.corpses) if (k.x > x0 && k.x < x1) drawCorpse(c, k);
+  // roncsok, figyelmeztető táblák
+  for (const w of T.wrecks) if (w.x > x0 - 100 && w.x < x1 + 100) drawWreck(c, w);
+  for (const d of T.deco) if (d.k === 'warn' && d.x > x0 - 40 && d.x < x1 + 40) drawSign(c, d.x, gY(d.x));
+  for (const p of T.props) if (!p.dead && p.x > x0 - 40 && p.x < x1 + 40) drawProp(c, p, now);
+  // ellenségek
+  for (const z of MG.z) if (z.x > x0 - 60 && z.x < x1 + 60) drawZ(c, z, now);
+  // jármű + kapaszkodók
+  drawVeh(c, V, now, MG.sv.up, true);
+  c.save(); c.translate(V.x, V.y); c.rotate(V.a); for (const z of MG.grab) drawZLocal(c, z, now, z.gx, z.gy); c.restore();
+  // lövedékek
+  c.fillStyle = '#2a2a2a'; for (const s of MG.shells) { c.save(); c.translate(s.x, s.y); c.rotate(Math.atan2(s.vy, s.vx)); c.fillRect(-8, -2.5, 16, 5); c.restore(); c.fillStyle = 'rgba(220,210,190,.35)'; c.beginPath(); c.arc(s.x - s.vx * .02, s.y - s.vy * .02, 4, 0, 7); c.fill(); c.fillStyle = '#2a2a2a' }
+  for (const b of MG.ebul) { if (b.k === 'acid') { c.fillStyle = '#a8d02a'; c.beginPath(); c.arc(b.x, b.y, 4, 0, 7); c.fill() } else { c.strokeStyle = 'rgba(255,220,120,.9)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(b.x, b.y); c.lineTo(b.x - b.vx * .02, b.y - b.vy * .02); c.stroke() } }
+  c.strokeStyle = 'rgba(255,230,140,.85)'; c.lineWidth = 1.4; c.beginPath(); for (const t of MG.tracers) { c.moveTo(t.x0, t.y0); c.lineTo(t.x1, t.y1) } c.stroke();
+  // belek
+  c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const G of MG.guts) { c.globalAlpha = Math.min(1, G.life / 2); c.strokeStyle = '#5a1a1e'; c.lineWidth = G.w + 2; c.beginPath(); G.P.forEach((p, i) => i ? c.lineTo(p.x, p.y) : c.moveTo(p.x, p.y)); c.stroke(); c.strokeStyle = G.c; c.lineWidth = G.w; c.stroke(); c.strokeStyle = 'rgba(255,200,200,.35)'; c.lineWidth = 1; c.stroke() }
+  c.globalAlpha = 1;
+  // húscafatok
+  for (const g of MG.gibs) if (g.x > x0 && g.x < x1) drawGib(c, g);
+  // cseppek (folyadék: sebesség irányába nyúlnak)
+  for (const p of MG.parts) { if (p.x < x0 || p.x > x1) continue; c.globalAlpha = Math.min(1, p.life / p.l0 * 2); c.fillStyle = p.c; const v = Math.hypot(p.vx, p.vy), st = Math.min(3.2, 1 + v / 260); c.save(); c.translate(p.x, p.y); c.rotate(Math.atan2(p.vy, p.vx)); c.beginPath(); c.ellipse(0, 0, p.s * st, p.s * (p.sl ? .9 : .7), 0, 0, 7); c.fill(); c.restore() }
+  c.globalAlpha = 1;
+  // effektek
+  for (const f of MG.fx) { const k = f.t / f.d;
+    if (f.k === 'puff') { c.fillStyle = `rgba(${f.c},${(1 - k) * .55})`; c.beginPath(); c.arc(f.x, f.y - k * 16, f.r * (.6 + k * .8), 0, 7); c.fill() }
+    else if (f.k === 'flash') { c.fillStyle = `rgba(255,220,120,${1 - k})`; c.beginPath(); c.arc(f.x, f.y, f.big ? 22 : 6, 0, 7); c.fill() }
+    else if (f.k === 'ball') { const r = f.r * (.4 + k); const gr = c.createRadialGradient(f.x, f.y, 0, f.x, f.y, r); gr.addColorStop(0, `rgba(255,250,200,${1 - k})`); gr.addColorStop(.4, `rgba(255,150,40,${(1 - k) * .9})`); gr.addColorStop(1, 'rgba(120,30,10,0)'); c.fillStyle = gr; c.beginPath(); c.arc(f.x, f.y, r, 0, 7); c.fill() } }
+  c.font = 'bold 15px sans-serif'; c.textAlign = 'center';
+  for (const t of MG.txt) { c.globalAlpha = Math.min(1, t.t * 2); c.fillStyle = '#000'; c.fillText(t.s, t.x + 1, t.y + 1); c.fillStyle = t.c; c.fillText(t.s, t.x, t.y) }
+  c.globalAlpha = 1;
+  // képernyő-rétegek
+  c.setTransform(MG.dpr, 0, 0, MG.dpr, 0, 0);
+  if (MG.hurtT > 0) { const vg = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .7); vg.addColorStop(0, 'rgba(160,0,0,0)'); vg.addColorStop(1, `rgba(160,0,0,${MG.hurtT * 1.4})`); c.fillStyle = vg; c.fillRect(0, 0, W, H) }
+  if (V.hp / V.hp0 < .25 && !MG.end) { c.fillStyle = `rgba(200,0,0,${.08 + .06 * Math.sin(now / 120)})`; c.fillRect(0, 0, W, H) }
+  if (MG.comboShow) { const k = MG.comboShow.t; c.save(); c.translate(W / 2, H * .3); const s = 1 + Math.max(0, k - 1) * 2; c.scale(s, s); c.font = `900 ${Math.min(42, 22 + MG.comboShow.n)}px Anton, Impact, sans-serif`; c.textAlign = 'center'; c.globalAlpha = Math.min(1, k * 2); c.fillStyle = '#000'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 2, 2); c.fillStyle = MG.comboShow.n >= 12 ? '#ff3b30' : '#ffd24a'; c.fillText(`×${MG.comboShow.n} ${MG.comboShow.n >= 12 ? 'HÚSDARÁLÓ!' : MG.comboShow.n >= 7 ? 'VÉRFÜRDŐ!' : 'KOMBÓ!'}`, 0, 0); c.restore() }
+  if (MG.hordeMsg > 0 && Math.sin(now / 110) > -.3) { c.font = '900 26px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#000'; c.fillText('⚠ HORDA ELŐTTED ⚠', W / 2 + 2, H * .2 + 2); c.fillStyle = '#ff5a3a'; c.fillText('⚠ HORDA ELŐTTED ⚠', W / 2, H * .2) }
+  if (V.flipT > .3 && !MG.end) { c.font = '900 20px Anton, Impact, sans-serif'; c.textAlign = 'center'; c.fillStyle = '#ffd24a'; c.fillText('FELBORULTÁL! BILLENTS VISSZA! ' + Math.max(0, 2.4 - V.flipT).toFixed(1), W / 2, H * .42) }
+}
+
+function drawFinish(c, x, y, now) {
+  c.fillStyle = '#3a3a34'; c.fillRect(x - 6, y - 150, 12, 150); c.fillRect(x + 150, y - 150, 12, 150);
+  c.fillStyle = '#5a4a2a'; c.fillRect(x - 10, y - 160, 176, 22);
+  c.fillStyle = '#ffd24a'; c.font = 'bold 16px sans-serif'; c.textAlign = 'center'; c.fillText('MENEDÉK', x + 78, y - 143);
+  for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#111' : '#eee'; c.fillRect(x - 6 + i * 21, y - 138, 21, 8) }
+  c.fillStyle = '#c0392b'; c.beginPath(); const fw = Math.sin(now / 200) * 4; c.moveTo(x, y - 200); c.lineTo(x + 34, y - 192 + fw); c.lineTo(x, y - 180); c.fill(); c.fillStyle = '#222'; c.fillRect(x - 1.5, y - 202, 3, 50);
+  // szögesdrót-fal
+  c.strokeStyle = '#777'; c.lineWidth = 1.2; c.beginPath(); for (let i = 0; i < 20; i++) { c.moveTo(x + 170 + i * 10, y - 40); c.arc(x + 170 + i * 10, y - 40, 6, 0, 7) } c.stroke();
+  c.fillStyle = '#4a4a3a'; c.fillRect(x + 170, y - 34, 220, 34);
+}
+function drawSign(c, x, y) { c.fillStyle = '#3a2a1a'; c.fillRect(x - 2, y - 46, 4, 46); c.fillStyle = '#e8b21a'; c.beginPath(); c.moveTo(x, y - 74); c.lineTo(x + 20, y - 42); c.lineTo(x - 20, y - 42); c.closePath(); c.fill(); c.fillStyle = '#111'; c.font = 'bold 18px sans-serif'; c.textAlign = 'center'; c.fillText('!', x, y - 47); c.font = 'bold 9px sans-serif'; c.fillStyle = '#e8b21a'; c.fillText('HORDA', x, y - 30) }
+function drawWreck(c, w) {
+  const R = mulberry(w.seed);
+  for (let i = 0; i < w.cars; i++) {
+    const cx = w.x + (R() - .5) * w.w * .5, y = gY(cx) + 4 - i * 2, a = (R() - .5) * .5, up = R() < .25;
+    c.save(); c.translate(cx, y - 8 - (w.cars - 1 - i) * 0); c.rotate(a + (up ? Math.PI : 0) * 0);
+    const L = 46, H = 14; c.fillStyle = i % 2 ? '#3a2a22' : w.c; c.fillRect(-L / 2, -H, L, H);
+    c.beginPath(); c.moveTo(-L * .3, -H); c.lineTo(-L * .18, -H - 10); c.lineTo(L * .2, -H - 10); c.lineTo(L * .32, -H); c.fill();
+    c.fillStyle = '#111'; c.fillRect(-L * .14, -H - 8, L * .14, 7); c.fillRect(L * .03, -H - 8, L * .14, 7);
+    c.fillStyle = '#6a3a1a'; c.fillRect(-L / 2 + 4, -H + 3, 8, 4); c.fillRect(L * .1, -H + 5, 10, 3);
+    c.fillStyle = '#181818'; c.beginPath(); c.arc(-L * .3, 0, 5, 0, 7); c.arc(L * .3, 0, 5, 0, 7); c.fill();
+    c.restore();
+  }
+}
+function drawProp(c, p, now) {
+  const x = p.x, y = p.y;
+  if (p.k === 'barr') {
+    if (p.kind === 'wood') { c.fillStyle = '#6a4a2a'; for (let i = 0; i < 4; i++) c.fillRect(x - p.w / 2, y - p.h + i * 9, p.w, 6); c.fillStyle = '#3a2a1a'; c.fillRect(x - p.w / 2 + 3, y - p.h, 4, p.h); c.fillRect(x + p.w / 2 - 7, y - p.h, 4, p.h); c.strokeStyle = '#8a8a8a'; c.lineWidth = 1; c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(x - p.w / 2 + i * 8, y - p.h - 4); c.arc(x - p.w / 2 + i * 8, y - p.h - 4, 4, 0, 7) } c.stroke() }
+    else { for (let r = 0; r < 4; r++) for (let i = 0; i < 3 - (r > 2 ? 1 : 0); i++) { c.fillStyle = (r + i) % 2 ? '#8a7a52' : '#9a8a60'; c.beginPath(); c.ellipse(x - p.w / 2 + 6 + i * 10 + (r % 2) * 4, y - 5 - r * 9, 6.5, 5, 0, 0, 7); c.fill() } }
+  } else if (p.k === 'boom') { c.fillStyle = '#a01e14'; c.fillRect(x - 7, y - 20, 14, 20); c.fillStyle = '#5a0e08'; c.fillRect(x - 7, y - 15, 14, 2); c.fillRect(x - 7, y - 7, 14, 2); c.fillStyle = '#ffd24a'; c.font = 'bold 8px sans-serif'; c.textAlign = 'center'; c.fillText('☢', x, y - 9) }
+  else if (p.k === 'fuel') { const b = Math.sin(now / 250 + x) * 2; c.fillStyle = '#c0392b'; c.fillRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = '#7a1e14'; c.fillRect(x - 3, y - 22 + b, 6, 4); c.strokeStyle = '#ffd24a'; c.lineWidth = 1; c.strokeRect(x - 7, y - 18 + b, 14, 18); c.fillStyle = 'rgba(255,210,74,.25)'; c.beginPath(); c.arc(x, y - 10 + b, 16, 0, 7); c.fill() }
+  else if (p.k === 'cash') { const b = Math.sin(now / 250 + x) * 2; c.fillStyle = '#5a4a2a'; c.fillRect(x - 8, y - 14 + b, 16, 14); c.fillStyle = '#c9a227'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(x - 5 + i * 3.5, y - 15 + b, 2.4, 0, 7); c.fill() } c.fillStyle = 'rgba(157,255,122,.2)'; c.beginPath(); c.arc(x, y - 8 + b, 16, 0, 7); c.fill() }
+}
+function drawCorpse(c, k) {
+  const y = gY(k.x); c.save(); c.translate(k.x, y - 3); c.rotate(Math.atan(gSl(k.x))); c.scale(k.f * k.s, k.s);
+  c.fillStyle = '#4a0505'; c.beginPath(); c.ellipse(0, 3, 20, 3, 0, 0, 7); c.fill();
+  c.fillStyle = k.t === 'soldier' ? '#4a5434' : SHIRT[k.sk]; c.fillRect(-12, -5, 16, 7);
+  c.fillStyle = k.c; c.beginPath(); c.arc(9, -2, 4.5, 0, 7); c.fill();
+  c.fillStyle = '#8a1a1a'; c.beginPath(); c.arc(-12, -1, 3.5, 0, 7); c.fill();
+  c.restore();
+}
+function drawGib(c, g) {
+  c.save(); c.translate(g.x, g.y); c.rotate(g.a); c.globalAlpha = Math.min(1, g.life);
+  if (g.k === 'meat') { c.fillStyle = g.c; c.beginPath(); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, r = g.s * (g.pts ? g.pts[i] : 1); i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r) } c.fill(); c.fillStyle = 'rgba(255,190,190,.4)'; c.fillRect(-g.s * .3, -g.s * .3, g.s * .4, g.s * .3) }
+  else if (g.k === 'bone') { c.fillStyle = '#eee6d0'; c.fillRect(-g.s, -1.2, g.s * 2, 2.4); c.beginPath(); c.arc(-g.s, 0, 2, 0, 7); c.arc(g.s, 0, 2, 0, 7); c.fill() }
+  else if (g.k === 'head') { c.scale(g.s, g.s); c.fillStyle = g.c; c.beginPath(); c.arc(0, 0, 6, 0, 7); c.fill(); c.fillStyle = '#2a0000'; c.fillRect(-3.5, -1.5, 2.5, 2); c.fillRect(1, -1.5, 2.5, 2); c.fillStyle = '#8a0808'; c.fillRect(-3, 5, 6, 2.5); if (g.hel) { c.fillStyle = '#3a4228'; c.beginPath(); c.arc(0, -1, 6.8, Math.PI, 0); c.fill() } }
+  else if (g.k === 'arm' || g.k === 'leg') { c.scale(g.s, g.s); c.strokeStyle = g.c; c.lineWidth = g.k === 'leg' ? 5 : 3.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(-8, 0); c.lineTo(8, 0); c.stroke(); c.fillStyle = '#9a1010'; c.beginPath(); c.arc(-8, 0, 2.6, 0, 7); c.fill(); c.fillStyle = '#eee6d0'; c.fillRect(-10, -.8, 3, 1.6) }
+  else if (g.k === 'plank') { c.fillStyle = g.c; c.fillRect(-g.s, -1.5, g.s * 2, 3) }
+  else if (g.k === 'brass') { c.fillStyle = g.c; c.fillRect(-1.5, -.8, 3, 1.6) }
+  else { c.fillStyle = g.c; c.fillRect(-g.s / 2, -g.s / 2, g.s, g.s) }
+  c.restore();
+}
+
+/* ---------- zombik ---------- */
+function drawZ(c, z, now) {
+  c.save(); c.translate(z.x, z.y);
+  if (z.rot) { c.translate(0, -z.D.h * z.sc * .25); c.rotate(z.rot); c.translate(0, z.D.h * z.sc * .25) }
+  zBody(c, z, now); c.restore();
+}
+function drawZLocal(c, z, now, gx, gy) { c.save(); c.translate(gx, gy); c.rotate(-.2 + Math.sin(z.ph) * .1); zBody(c, z, now, 1); c.restore() }
+function zBody(c, z, now, clinging) {
+  const s = z.sc * (z.D.h / 44), t = z.t, ph = z.ph, walk = z.st === 'walk' && z.spd > 0;
+  c.scale(s * (z.dir < 0 ? 1 : -1), s);
+  const sk = z.hitT > 0 ? '#fff' : skin(z), shirt = z.hitT > 0 ? '#fff' : t === 'soldier' ? '#4a5434' : t === 'riot' ? '#1e2228' : SHIRT[z.sk];
+  const sw = walk ? Math.sin(ph) * .6 : clinging ? Math.sin(ph) * .3 : 0, lean = t === 'runner' ? .45 : t === 'brute' ? .2 : .15;
+  c.lineCap = 'round';
+  // lábak
+  c.strokeStyle = t === 'soldier' ? '#3a4228' : t === 'riot' ? '#14161a' : '#2e2e3a'; c.lineWidth = t === 'brute' ? 7 : 4.2;
+  c.beginPath(); c.moveTo(0, -20); c.lineTo(Math.sin(sw) * 10, 0); c.moveTo(0, -20); c.lineTo(-Math.sin(sw) * 10, 0); c.stroke();
+  c.save(); c.translate(0, -20); c.rotate(-lean);
+  // test
+  if (t === 'bloater') { c.fillStyle = sk; c.beginPath(); c.ellipse(-2, -10, 15, 14, 0, 0, 7); c.fill(); c.fillStyle = '#b4c84a'; [[-8, -14], [4, -6], [-2, -2], [6, -16]].forEach(([a, b]) => { c.beginPath(); c.arc(a, b, 2.6, 0, 7); c.fill() }); c.strokeStyle = '#5a6a2a'; c.lineWidth = .8; c.beginPath(); c.moveTo(-12, -6); c.quadraticCurveTo(-4, -10, 2, -20); c.stroke() }
+  else if (t === 'brute') { c.fillStyle = sk; c.fillRect(-11, -26, 22, 28); c.fillStyle = '#5a2a2a'; c.fillRect(-11, -8, 22, 10); c.strokeStyle = '#8a2020'; c.lineWidth = .8; c.beginPath(); c.moveTo(-6, -24); c.lineTo(-2, -14); c.lineTo(-7, -6); c.stroke() }
+  else { c.fillStyle = shirt; c.fillRect(-5, -22, 10, 23); if (t !== 'riot' && t !== 'soldier') { c.fillStyle = sk; c.fillRect(-5, -6, 4, 3); c.fillStyle = '#5a0a0a'; c.fillRect(1, -14, 3, 4) } }
+  if (z.bleed > .2) { c.fillStyle = 'rgba(120,0,0,.7)'; c.fillRect(-4, -16, 6, 10 * z.bleed) }
+  // karok (zombi-póz: előre nyújtva)
+  const armW = t === 'brute' ? 7 : 3.4, ay = t === 'bloater' ? -18 : t === 'brute' ? -22 : -19, reach = t === 'brute' ? 20 : 13, pu = z.punch ? -8 : 0;
+  c.strokeStyle = sk; c.lineWidth = armW;
+  if (z.armL) { c.beginPath(); c.moveTo(0, ay); c.lineTo(-reach + Math.sin(ph + 1) * 2 + pu, ay + 2 + Math.sin(ph * 1.3) * 2); c.stroke() } else { c.fillStyle = '#8a0808'; c.beginPath(); c.arc(0, ay, 2.4, 0, 7); c.fill() }
+  if (t === 'soldier') { c.strokeStyle = '#1a1a1a'; c.lineWidth = 2.6; c.beginPath(); c.moveTo(4, ay + 1); c.lineTo(-18, ay - 1); c.stroke() }
+  if (t === 'riot') { c.fillStyle = 'rgba(160,180,200,.55)'; c.fillRect(-15, -30, 5, 30); c.strokeStyle = '#2a2e34'; c.lineWidth = 1; c.strokeRect(-15, -30, 5, 30) }
+  if (z.armR) { c.strokeStyle = sk; c.lineWidth = armW; c.beginPath(); c.moveTo(0, ay + 1); c.lineTo(-reach + 2 + Math.sin(ph) * 2 + pu, ay + 4); c.stroke() } else { c.fillStyle = '#8a0808'; c.beginPath(); c.arc(1, ay + 1, 2.4, 0, 7); c.fill() }
+  // fej
+  if (z.head) {
+    const hy = t === 'bloater' ? -27 : t === 'brute' ? -33 : -27, hr = t === 'brute' ? 6.5 : 5.4;
+    c.fillStyle = sk; c.beginPath(); c.arc(-1, hy, hr, 0, 7); c.fill();
+    c.fillStyle = '#ff2a1a'; c.fillRect(-5, hy - 1.5, 2, 1.6);
+    c.fillStyle = '#3a0000'; c.fillRect(-5, hy + 2, 4, 1.4);
+    if (t === 'soldier') { c.fillStyle = '#3a4228'; c.beginPath(); c.arc(-1, hy - 1, hr + 1.2, Math.PI, 0); c.fill(); c.fillRect(-7, hy - 1.5, 12, 1.6) }
+    if (t === 'riot') { c.fillStyle = '#20242a'; c.beginPath(); c.arc(-1, hy, hr + 1.4, Math.PI * .9, Math.PI * 2.1); c.fill(); c.fillStyle = 'rgba(120,160,200,.5)'; c.fillRect(-7, hy - 2, 4, 4) }
+    if (t === 'spitter') { c.fillStyle = '#b4d03a'; c.beginPath(); c.arc(-3, hy + 6, 4.2, 0, 7); c.fill() }
+    if (t !== 'soldier' && t !== 'riot' && t !== 'brute') { c.strokeStyle = '#2a2a1a'; c.lineWidth = 1; c.beginPath(); c.moveTo(1, hy - hr); c.lineTo(4, hy - hr - 3); c.moveTo(-1, hy - hr); c.lineTo(-1, hy - hr - 4); c.stroke() }
+  }
+  c.restore();
+  // életerő-csík (erős ellenfeleknél)
+  if ((t === 'brute' || t === 'riot') && z.hp < z.hp0) { c.scale(z.dir < 0 ? 1 : -1, 1); c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(-14, -z.D.h - 10, 28, 3.5); c.fillStyle = '#ff3b30'; c.fillRect(-14, -z.D.h - 10, 28 * z.hp / z.hp0, 3.5) }
+}
+
+/* ---------- jármű: PzH 2000, „Mad Max” fejlesztésekkel ---------- */
+function drawVeh(c, V, now, up, live) {
+  c.save(); c.translate(V.x, V.y); c.rotate(V.a);
+  const tr = V.track || 0, gas = live && MG.inp && MG.inp.gas && V.fuel > 0;
+  // rakéták (hátul)
+  if (up.boost) {
+    for (let i = 0; i < Math.min(3, up.boost); i++) { const y = -30 + i * 9; c.fillStyle = '#5a5a52'; c.fillRect(-92, y, 28, 7); c.fillStyle = '#b22'; c.fillRect(-70, y, 4, 7); c.fillStyle = '#222'; c.fillRect(-96, y + 1, 4, 5);
+      if (V.boosting) { const L = 30 + Math.random() * 30; const fg = c.createLinearGradient(-96, 0, -96 - L, 0); fg.addColorStop(0, 'rgba(255,255,220,1)'); fg.addColorStop(.4, 'rgba(255,160,40,.9)'); fg.addColorStop(1, 'rgba(255,60,0,0)'); c.fillStyle = fg; c.beginPath(); c.moveTo(-96, y); c.lineTo(-96 - L, y + 3.5); c.lineTo(-96, y + 7); c.fill() } }
+  }
+  // tartályok (hátul / tetőn)
+  if (up.tank >= 1) { c.fillStyle = '#4a5a2a'; c.fillRect(-76, -18, 10, 16); c.fillRect(-76, -2, 10, 14); c.fillStyle = '#2a3418'; c.fillRect(-74, -20, 6, 3) }
+  if (up.tank >= 2) { c.fillStyle = '#6a2a1a'; c.beginPath(); c.ellipse(-71, -30, 7, 11, 0, 0, 7); c.fill(); c.fillStyle = '#3a1a10'; c.fillRect(-78, -33, 14, 2) }
+  if (up.tank >= 3) { c.fillStyle = '#2a4a6a'; c.fillRect(-42, -66, 26, 12); c.fillStyle = '#1a2a3a'; c.fillRect(-42, -61, 26, 2); c.strokeStyle = '#111'; c.lineWidth = 1; c.beginPath(); c.moveTo(-36, -66); c.lineTo(-36, -54); c.moveTo(-24, -66); c.lineTo(-24, -54); c.stroke() }
+  if (up.tank >= 4) { c.fillStyle = '#7a7a6a'; c.beginPath(); c.ellipse(-50, -28, 18, 7, 0, 0, 7); c.fill(); c.fillStyle = '#c9a227'; c.fillRect(-56, -30, 4, 4) }
+  // lánctalp
+  c.fillStyle = '#1b1b19'; rr(c, -70, -2, 134, 30, 14); c.fill();
+  c.strokeStyle = '#3a3a34'; c.lineWidth = 3; c.setLineDash([4, 3]); c.lineDashOffset = -tr; rr(c, -70, -2, 134, 30, 14); c.stroke(); c.setLineDash([]);
+  const wa = tr / 9;
+  for (const W of WHEELS) wheel(c, W.lx, W.ly, W.r, wa, up.futomu, W.s && W.lx > 0);
+  // oldalvédelem a köténynél
+  if (up.oldal === 1) { c.strokeStyle = '#9a9a9a'; c.lineWidth = 1; c.beginPath(); for (let i = -62; i < 58; i += 7) { c.moveTo(i + 4, -4); c.arc(i, -4, 4, 0, 7) } c.stroke() }
+  if (up.oldal >= 2) { c.fillStyle = '#c8c8c0'; for (let i = -64; i < 58; i += 9) { c.beginPath(); c.moveTo(i, -2); c.lineTo(i + 4, 8 - 12); c.lineTo(i + 8, -2); c.fill() } }
+  if (up.oldal >= 3) { c.fillStyle = '#5a5a5a'; c.fillRect(-66, 22, 128, 6); c.fillStyle = '#ddd'; for (let i = 0; i < 18; i++) { const xx = -66 + ((i * 7.5 + tr * 2) % 128 + 128) % 128; c.beginPath(); c.moveTo(xx, 28); c.lineTo(xx + 3, 32); c.lineTo(xx + 6, 28); c.fill() } }
+  // teknő
+  c.fillStyle = '#5b6136'; c.beginPath(); c.moveTo(-68, 2); c.lineTo(-68, -20); c.lineTo(-52, -25); c.lineTo(38, -25); c.lineTo(66, -10); c.lineTo(66, 2); c.closePath(); c.fill();
+  c.fillStyle = '#4a5030'; c.fillRect(-66, -4, 128, 6);
+  c.fillStyle = '#7a4a2a'; c.globalAlpha = .55; c.beginPath(); c.arc(-40, -12, 6, 0, 7); c.arc(20, -16, 4, 0, 7); c.arc(50, -8, 5, 0, 7); c.fill(); c.globalAlpha = 1;
+  if (up.pancel >= 1) { c.fillStyle = '#6a5a44'; c.fillRect(-60, -22, 30, 16); c.fillStyle = '#7a6040'; c.fillRect(-20, -22, 34, 16); c.fillStyle = '#2a2018'; for (const [a, b] of [[-58, -20], [-32, -20], [-58, -8], [-32, -8], [-18, -20], [12, -20], [-18, -8], [12, -8]]) c.fillRect(a, b, 2, 2) }
+  if (up.pancel >= 3) { c.fillStyle = '#4a4a44'; c.beginPath(); c.moveTo(40, -25); c.lineTo(70, -8); c.lineTo(70, 4); c.lineTo(64, 4); c.lineTo(64, -6); c.lineTo(38, -20); c.fill(); c.fillStyle = '#1a1a18'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(-56 + i * 30, 6, 3.5, 0, 7); c.fill() } }
+  // torony
+  c.fillStyle = '#626a3a'; c.beginPath(); c.moveTo(-48, -24); c.lineTo(-48, -48); c.lineTo(-32, -55); c.lineTo(16, -55); c.lineTo(30, -44); c.lineTo(30, -24); c.closePath(); c.fill();
+  c.fillStyle = '#4e5530'; c.fillRect(-44, -36, 70, 3); c.fillStyle = '#353a20'; c.fillRect(-26, -59, 16, 5); c.fillRect(2, -58, 8, 4);
+  for (let i = 0; i < 3; i++) { c.fillStyle = '#2a2e1a'; c.fillRect(20 + i * 3, -52 + i * 2, 2.5, 6) }
+  if (up.pancel >= 2) { c.strokeStyle = '#3a3a34'; c.lineWidth = 1.6; c.beginPath(); for (let i = -46; i <= 26; i += 6) { c.moveTo(i, -52); c.lineTo(i, -26) } c.moveTo(-48, -50); c.lineTo(28, -50); c.moveTo(-48, -28); c.lineTo(28, -28); c.stroke() }
+  if (up.pancel >= 4) { c.fillStyle = '#d0d0c8'; for (let i = -40; i < 16; i += 8) { c.beginPath(); c.moveTo(i, -55); c.lineTo(i + 3, -65); c.lineTo(i + 6, -55); c.fill() } c.fillStyle = '#eee'; c.beginPath(); c.arc(-56, -10, 5, 0, 7); c.fill(); c.fillStyle = '#111'; c.fillRect(-58, -11, 1.6, 1.6); c.fillRect(-55, -11, 1.6, 1.6) }
+  // kipufogók
+  const exN = [0, 2, 2, 3, 3][up.motor] || 0;
+  for (let i = 0; i < exN; i++) { const ex = -46 - i * 6; c.strokeStyle = '#3a3430'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(ex, -22); c.lineTo(ex, -62 - i * 4); c.stroke(); if (gas && Math.random() < .6) { c.fillStyle = Math.random() < .3 ? 'rgba(255,140,40,.9)' : 'rgba(40,36,30,.6)'; c.beginPath(); c.arc(ex + rnd(-2, 2), -66 - i * 4 - rnd(0, 6), rnd(2, 4), 0, 7); c.fill() } }
+  if (up.motor >= 4) { c.fillStyle = '#8a8a80'; c.fillRect(-8, -70, 18, 16); c.fillStyle = '#c0392b'; c.fillRect(-10, -74, 22, 5); c.strokeStyle = '#222'; c.lineWidth = 1; for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-6 + i * 4, -70); c.lineTo(-6 + i * 4, -56); c.stroke() } }
+  else if (up.motor >= 3) { c.fillStyle = '#6a6a60'; c.beginPath(); c.arc(-4, -59, 5, 0, 7); c.arc(8, -59, 5, 0, 7); c.fill() }
+  // 155 mm cső
+  c.save(); c.translate(26, -46); c.rotate(-.06);
+  c.fillStyle = '#4e5530'; c.fillRect(0, -4, 20, 8); c.fillStyle = '#5b6136'; c.fillRect(18, -3, 84, 6);
+  c.fillStyle = '#3a3e24'; c.fillRect(46, -4, 8, 8); c.fillStyle = '#2e321c'; c.fillRect(98, -5, 10, 10);
+  if (!up.agyu) { c.fillStyle = '#b22'; c.fillRect(107, -3, 3, 6) }
+  c.restore();
+  // géppuska
+  if (up.gepp) { c.save(); c.translate(-18, -62); c.fillStyle = '#2a2a26'; c.fillRect(-4, 0, 8, 6); c.rotate(V.mgA || 0); c.fillStyle = '#1a1a18'; c.fillRect(-4, -3, 14, 5); c.fillRect(8, -1.5, up.gepp >= 3 ? 18 : 14, 2.4); if (up.gepp === 2 || up.gepp === 4) c.fillRect(8, -4.5, up.gepp === 4 ? 16 : 14, 2.4); c.fillStyle = '#4a4a3a'; c.fillRect(-2, -8, 6, 6); if (V.mgF) { c.fillStyle = 'rgba(255,220,120,.9)'; c.beginPath(); c.arc(28, -1, 4, 0, 7); c.fill() } c.restore() }
+  // orr-előtét
+  drawFront(c, up.elol, now, V);
+  // vérfoltok a járművön
+  for (const b of V.blood || []) { c.fillStyle = b.c; c.globalAlpha = .85; c.beginPath(); c.arc(b.lx, b.ly, b.r, 0, 7); c.fill(); c.fillRect(b.lx - 1, b.ly, 2, b.r * 2) }
+  c.globalAlpha = 1;
+  c.restore();
+}
+function drawFront(c, lv, now, V) {
+  const sp = (V.grind || 0) * 20 + 4, t = now / 1000;
+  if (lv === 1) { c.fillStyle = '#6a6a5e'; c.beginPath(); c.moveTo(64, -26); c.quadraticCurveTo(84, 0, 74, 26); c.lineTo(66, 26); c.quadraticCurveTo(74, 0, 60, -20); c.fill(); c.fillStyle = '#3a3a34'; c.fillRect(56, -6, 12, 4) }
+  else if (lv === 2) { c.fillStyle = '#5a5a50'; c.beginPath(); c.moveTo(62, -28); c.lineTo(80, -8); c.lineTo(80, 24); c.lineTo(66, 24); c.lineTo(66, -10); c.fill(); c.fillStyle = '#d8d8d0'; for (let y = -20; y < 24; y += 7) { c.beginPath(); c.moveTo(80, y); c.lineTo(92, y + 3); c.lineTo(80, y + 6); c.fill() } }
+  else if (lv === 3) { // kombájn-tálca: forgó motolla
+    c.fillStyle = '#7a6a2a'; c.fillRect(62, 14, 34, 10); c.fillStyle = '#c9a227'; c.fillRect(62, 14, 34, 3);
+    c.strokeStyle = '#4a4a40'; c.lineWidth = 3; c.beginPath(); c.moveTo(60, -14); c.lineTo(84, -4); c.moveTo(60, 8); c.lineTo(84, -4); c.stroke();
+    c.save(); c.translate(84, -4); c.rotate(t * sp); c.strokeStyle = '#8a8a7e'; c.lineWidth = 2.4; for (let i = 0; i < 5; i++) { c.rotate(Math.PI * 2 / 5); c.beginPath(); c.moveTo(0, 0); c.lineTo(20, 0); c.stroke(); c.fillStyle = '#ccc'; c.fillRect(18, -4, 3, 8) } c.fillStyle = '#333'; c.beginPath(); c.arc(0, 0, 4, 0, 7); c.fill(); c.restore();
+    c.fillStyle = '#ddd'; for (let x = 66; x < 96; x += 5) { c.beginPath(); c.moveTo(x, 24); c.lineTo(x + 2.5, 28); c.lineTo(x + 5, 24); c.fill() }
+  } else if (lv >= 4) { // húsdaráló: két fogas dob
+    c.fillStyle = '#3a3a34'; c.beginPath(); c.moveTo(60, -32); c.lineTo(86, -30); c.lineTo(98, -18); c.lineTo(66, -18); c.fill(); c.fillRect(60, -18, 8, 44);
+    for (const [cy, dir] of [[-6, 1], [16, -1]]) { c.save(); c.translate(84, cy); c.rotate(t * sp * dir); c.fillStyle = '#6a6a60'; c.beginPath(); c.arc(0, 0, 12, 0, 7); c.fill(); c.fillStyle = '#d0d0c8'; for (let i = 0; i < 10; i++) { c.rotate(Math.PI / 5); c.beginPath(); c.moveTo(11, -3); c.lineTo(17, 0); c.lineTo(11, 3); c.fill() } c.fillStyle = '#7a1010'; c.globalAlpha = Math.min(.8, (V.blood || []).length / 20); c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fill(); c.globalAlpha = 1; c.fillStyle = '#222'; c.beginPath(); c.arc(0, 0, 3, 0, 7); c.fill(); c.restore() }
+    c.fillStyle = '#c0392b'; c.fillRect(62, -30, 4, 3); c.fillStyle = '#ffd24a'; c.fillRect(70, -29, 10, 2);
+  }
+}
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arc(x + w - r, y + r, r, -Math.PI / 2, 0); c.lineTo(x + w, y + h - r); c.arc(x + w - r, y + h - r, r, 0, Math.PI / 2); c.lineTo(x + r, y + h); c.arc(x + r, y + h - r, r, Math.PI / 2, Math.PI); c.lineTo(x, y + r); c.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5); c.closePath() }
+function wheel(c, x, y, r, a, lv, sprocket) {
+  c.fillStyle = '#2a2a26'; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.fillStyle = lv >= 3 ? '#6a6a5a' : '#4a4e34'; c.beginPath(); c.arc(x, y, r * .62, 0, 7); c.fill();
+  c.strokeStyle = '#1a1a16'; c.lineWidth = 1.4; c.beginPath();
+  for (let i = 0; i < (sprocket ? 8 : 5); i++) { const q = a + i * Math.PI * 2 / (sprocket ? 8 : 5); c.moveTo(x, y); c.lineTo(x + Math.cos(q) * r * .6, y + Math.sin(q) * r * .6) } c.stroke();
+  if (lv >= 2 && !sprocket) { c.fillStyle = '#bbb'; for (let i = 0; i < 6; i++) { const q = a + i * Math.PI / 3; c.fillRect(x + Math.cos(q) * r - 1, y + Math.sin(q) * r - 1, 2, 2) } }
+}
+
+/* ============================================================================
+   11. HANG – saját motorzúgás + darálás, a közös hangszórón (MASTER)
+   ============================================================================ */
+function sOk() { return SOUND && ac() && AC && MASTER }
+function thr(k, ms) { const n = performance.now(); if ((MG.sndT[k] || 0) > n) return false; MG.sndT[k] = n + ms; return true }
+function engStart() {
+  if (!sOk() || MG.eng) return;
+  try {
+    const a = AC, out = a.createGain(); out.gain.value = 0; out.connect(MASTER);
+    const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; lp.connect(out);
+    const o1 = a.createOscillator(); o1.type = 'sawtooth'; o1.frequency.value = 40; const g1 = a.createGain(); g1.gain.value = .5; o1.connect(g1).connect(lp);
+    const o2 = a.createOscillator(); o2.type = 'square'; o2.frequency.value = 20; const g2 = a.createGain(); g2.gain.value = .3; o2.connect(g2).connect(lp);
+    const nz = a.createBufferSource(); nz.buffer = NOISE; nz.loop = true; const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .8; const gn = a.createGain(); gn.gain.value = 0; nz.connect(bp).connect(gn).connect(MASTER);
+    o1.start(); o2.start(); nz.start();
+    MG.eng = {out, lp, o1, o2, nz, gn};
+  } catch (e) { MG.eng = null }
+}
+function engUpd() {
+  const E = MG.eng; if (!E || !AC) return; const V = MG.V, t = AC.currentTime, sp = Math.hypot(V.vx, V.vy) / V.vmax;
+  const on = MG.run && !MG.paused && MG.phase === 'play' && V.fuel > 0;
+  const rpm = (MG.inp.gas ? .45 : .15) + sp * .6 + (V.boosting ? .3 : 0);
+  E.o1.frequency.setTargetAtTime(32 + rpm * 70, t, .08); E.o2.frequency.setTargetAtTime(16 + rpm * 35, t, .08); E.lp.frequency.setTargetAtTime(300 + rpm * 900, t, .1);
+  E.out.gain.setTargetAtTime(on ? .05 + rpm * .05 : 0, t, .1);
+  E.gn.gain.setTargetAtTime(on ? V.grind * (V.fdps ? .16 : .06) : 0, t, .05);
+}
+function engStop() { const E = MG.eng; if (!E) return; MG.eng = null; try { E.out.gain.setTargetAtTime(0, AC.currentTime, .05); E.gn.gain.setTargetAtTime(0, AC.currentTime, .05); setTimeout(() => { try { E.o1.stop(); E.o2.stop(); E.nz.stop() } catch (e) {} }, 300) } catch (e) {} }
+function noiseHit(f, q, vol, dur, type) { const a = AC, t = a.currentTime, n = a.createBufferSource(); n.buffer = NOISE; const b = a.createBiquadFilter(); b.type = type || 'bandpass'; b.frequency.value = f; b.Q.value = q; const g = a.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); n.connect(b).connect(g).connect(MASTER); n.start(t, Math.random() * .5); n.stop(t + dur + .05) }
+function sndSplat(p) { if (!sOk() || !thr('splat', 45)) return; try { noiseHit(rnd(280, 520), 1.4, .22 * Math.min(1.5, p || 1), .16); boom(AC.currentTime, .12, 60) } catch (e) {} }
+function sndThud(v) { if (!sOk() || !thr('thud', 80)) return; try { boom(AC.currentTime, v || .3, 45) } catch (e) {} }
+function sndShot(v) { if (!sOk() || !thr('shot', 55)) return; try { snare(AC.currentTime, v || .03) } catch (e) {} }
+function sndGun() { if (!sOk()) return; try { const t = AC.currentTime; boom(t, .9, 38); boom(t + .05, .5, 70); noiseHit(1200, .5, .3, .35, 'lowpass') } catch (e) {} }
+function sndBoom(k) { if (!sOk() || !thr('boom', 90)) return; try { boom(AC.currentTime, .6 * Math.min(1.4, k), 40); noiseHit(600, .4, .25 * k, .6, 'lowpass') } catch (e) {} }
+function sndPick() { if (!sOk()) return; try { const a = AC, t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = 'square'; o.frequency.setValueAtTime(660, t); o.frequency.setValueAtTime(990, t + .07); g.gain.setValueAtTime(.06, t); g.gain.exponentialRampToValueAtTime(.001, t + .2); o.connect(g).connect(MASTER); o.start(t); o.stop(t + .22) } catch (e) {} }
+function sndHorde() { if (!sOk()) return; try { const a = AC, t = a.currentTime; for (let i = 0; i < 3; i++) { const o = a.createOscillator(), g = a.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(110 + i * 7, t); o.frequency.linearRampToValueAtTime(70, t + 1.2); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.05, t + .3); g.gain.exponentialRampToValueAtTime(.001, t + 1.4); o.connect(g).connect(MASTER); o.start(t); o.stop(t + 1.5) } } catch (e) {} }
+
+/* ============================================================================
+   12. FELÜLET: kezdőlap, műhely, eredmény, HUD, irányítás
+   ============================================================================ */
+const BTN = [['mgBrk', 'brk', '◀', 'FÉK'], ['mgTl', 'tl', '↺', 'BILLENT'], ['mgTr', 'tr', '↻', 'BILLENT'], ['mgGas', 'gas', '▶', 'GÁZ'], ['mgBoost', 'boost', '🚀', 'RAKÉTA']];
+function mgOpen() {
+  const el = $('#harc'); el.hidden = false; el.classList.add('mgon'); document.body.classList.add('harcon');
+  MG.sv = load();
+  el.innerHTML = `<div class="hbar mgbar"><div class="htitle">MEAT <b>GRINDER</b></div><div class="hstat"><span>🪙 Kupak <b id="mgCash">0</b></span><span class="mgdst">Táv <b id="mgDst">0</b> m</span></div><button type="button" class="hx mgp" id="mgPause" aria-label="Szünet" hidden>❚❚</button><button type="button" class="hx" id="mgClose" aria-label="Bezárás">✕</button></div>
+  <div class="mgwrap" id="mgWrap"><canvas id="mgCv" aria-label="Meat Grinder játéktér"></canvas>
+   <div class="mghud" id="mgHud" hidden>
+    <div class="mgprog"><i id="mgProg"></i><em id="mgBestM"></em><span>🏁</span></div>
+    <div class="mggau"><div><small>⛽ ÜZEMANYAG</small><div class="mgbarr fuel"><i id="mgFuel"></i></div></div><div><small>🛡️ PÁNCÉL</small><div class="mgbarr hp"><i id="mgHp"></i></div></div><div id="mgBoW"><small>🚀 RAKÉTA</small><div class="mgbarr bo"><i id="mgBo"></i></div></div></div>
+    <div class="mginfo"><span><b id="mgKmh">0</b> km/h</span><span>☠ <b id="mgKills">0</b></span><span>🪙 <b id="mgRunCash">0</b></span><span id="mgAmmoW">💥 <b id="mgAmmo">0</b></span><span id="mgGrab" class="mggrab" hidden></span></div>
+   </div>
+   <div class="mgctl" id="mgCtl" hidden>
+    ${BTN.map(([id, k, ic, lb]) => `<button type="button" class="mgb mg-${k}" id="${id}" data-k="${k}"><b>${ic}</b><small>${lb}</small></button>`).join('')}
+    <button type="button" class="mgb mg-fire" id="mgFire"><b>💥</b><small>TŰZ</small><i id="mgRl"></i></button>
+   </div>
+   <div class="mgscr" id="mgScr"></div>
+  </div>`;
+  $('#mgClose').onclick = mgClose; $('#mgPause').onclick = () => pause(!MG.paused);
+  const cv = $('#mgCv'); MG.cv = cv; MG.ctx = cv.getContext('2d');
+  fit(); MG.onRes = () => fit(); addEventListener('resize', MG.onRes);
+  for (const [id, k] of BTN) hold($('#' + id), k);
+  const fb = $('#mgFire'); fb.addEventListener('pointerdown', e => { e.preventDefault(); MG.inp.fire = 1 });
+  MG.key = e => keys(e); addEventListener('keydown', MG.key); addEventListener('keyup', MG.key);
+  MG.vis = () => { if (document.hidden && MG.phase === 'play') pause(true) }; document.addEventListener('visibilitychange', MG.vis);
+  $('#mgScr').addEventListener('click', onScr);
+  MG.run = true; MG.phase = 'menu'; MG.paused = false; MG.last = performance.now();
+  newRun(MG.sv.stage); // háttérnek
+  showTitle();
+  cancelAnimationFrame(MG.raf); MG.raf = requestAnimationFrame(loop);
+}
+function mgClose() {
+  MG.run = false; cancelAnimationFrame(MG.raf); engStop(); try { rockStop(.3) } catch (e) {}
+  if (MG.key) { removeEventListener('keydown', MG.key); removeEventListener('keyup', MG.key); MG.key = null }
+  if (MG.onRes) removeEventListener('resize', MG.onRes); if (MG.vis) document.removeEventListener('visibilitychange', MG.vis);
+  if (MG.sv) save();
+  const el = $('#harc'); el.hidden = true; el.innerHTML = ''; el.classList.remove('mgon'); document.body.classList.remove('harcon');
+  MG.trk = null;
+}
+function fit() { const cv = MG.cv; if (!cv) return; const r = cv.getBoundingClientRect(), dpr = LOWFX ? 1 : Math.min(2, devicePixelRatio || 1); cv.width = Math.max(1, r.width * dpr); cv.height = Math.max(1, r.height * dpr); MG.W = r.width || 1; MG.H = r.height || 1; MG.dpr = dpr; MG.viewW = MG.W }
+function hold(b, k) {
+  if (!b) return;
+  const on = e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId) } catch (x) {} MG.inp[k] = 1; b.classList.add('on'); ac() }, off = () => { MG.inp[k] = 0; b.classList.remove('on') };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('lostpointercapture', off);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
+function keys(e) {
+  if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+  const d = e.type === 'keydown' ? 1 : 0, k = e.key;
+  const map = {ArrowRight: 'gas', d: 'gas', D: 'gas', ArrowLeft: 'brk', a: 'brk', A: 'brk', ArrowUp: 'tl', w: 'tl', W: 'tl', ArrowDown: 'tr', s: 'tr', S: 'tr', Shift: 'boost'};
+  if (map[k]) { MG.inp[map[k]] = d; e.preventDefault(); return }
+  if ((k === ' ' || k === 'f' || k === 'F') && d) { MG.inp.fire = 1; e.preventDefault() }
+  if ((k === 'p' || k === 'P' || k === 'Escape') && d && MG.phase === 'play') pause(!MG.paused);
+}
+function pause(on) {
+  MG.paused = !!on && MG.phase === 'play';
+  const scr = $('#mgScr'); if (!scr) return;
+  if (MG.paused) { scr.innerHTML = `<div class="mgcard mgpause"><h3>⏸ SZÜNET</h3><p>Táv: <b>${n0(Math.floor((MG.V.x - 220) / UM))} m</b> · ☠ ${MG.kills}</p><button type="button" class="btn pri" data-act="resume">▶ Folytatás</button> <button type="button" class="btn line" data-act="giveup">🏳 Feladom</button></div>`; scr.hidden = false }
+  else if (MG.phase === 'play') { scr.innerHTML = ''; scr.hidden = true; MG.last = performance.now() }
+  for (const [, k] of BTN) MG.inp[k] = 0;
+}
+function onScr(e) {
+  const b = e.target.closest('[data-act]'); if (!b) return; const a = b.dataset.act; ac();
+  if (a === 'shop') showShop();
+  else if (a === 'title') showTitle();
+  else if (a === 'go') startRun();
+  else if (a === 'resume') pause(false);
+  else if (a === 'giveup') { pause(false); finish('quit') }
+  else if (a === 'quit') mgClose();
+  else if (a === 'stage') { const i = +b.dataset.i; if (i < MG.sv.unl) { MG.sv.stage = i; save(); newRun(i); showShop() } }
+  else if (a === 'buy') buy(b.dataset.k);
+  else if (a === 'reset') { if (confirm('Biztosan törlöd a mentést? Minden fejlesztés és kupak elvész.')) { MG.sv = blankSave(); save(); newRun(0); showShop() } }
+}
+function setPhase(p) {
+  MG.phase = p; const play = p === 'play' || p === 'end';
+  $('#mgHud').hidden = !play; $('#mgCtl').hidden = p !== 'play'; $('#mgPause').hidden = p !== 'play';
+  const scr = $('#mgScr'); scr.hidden = play; if (play) scr.innerHTML = '';
+  $('#harc').classList.toggle('mgplay', play);
+}
+function showTitle() {
+  setPhase('menu'); const sv = MG.sv;
+  $('#mgScr').innerHTML = `<div class="mgcard mgtitle">
+   <div class="mglogo"><span>MEAT</span><b>GRINDER</b><small>HÚSDARÁLÓ · PzH 2000 a zombi-apokalipszisben</small></div>
+   <p>Juss el a <b>pálya végén lévő menedékig</b>! A PzH 2000-esed gyárilag egy rozsdás roncs – minden menet után a megtett távért és a ledarált zombikért <b>kupakot</b> kapsz, ebből a <b>Műhelyben</b> barkácsolsz rá motort, lánctalpat, páncélt, tartályt, ekét, kombájn-tálcát, húsdarálót, tüskéket, ágyúlőszert és géppuskát.</p>
+   <ul class="mghelp"><li><b>▶ GÁZ / ◀ FÉK</b> – gyorsítás, fék, tolatás</li><li><b>↺ ↻ BILLENT</b> – a levegőben forgatod a járművet (ugratásnál!)</li><li><b>💥 TŰZ</b> – 155 mm-es gránát a horda közepébe</li><li><b>🚀 RAKÉTA</b> – tolóerő, ha megvan a fejlesztés</li><li>Billentyűzet: ←/→, ↑/↓, Space, Shift, P</li></ul>
+   <div class="mgstats"><span>Legjobb táv<b>${n0(bestAll())} m</b></span><span>Ledarálva<b>${n0(sv.kills)}</b></span><span>Menetek<b>${n0(sv.runs)}</b></span></div>
+   <button type="button" class="btn pri mgbig" data-act="shop">🔧 MŰHELY ÉS INDULÁS</button>
+   <button type="button" class="btn line rkstart" data-rank="drone">🏆 Rekordjaim</button>
+   ${gBoard('droneBest', false, v => n0(v) + ' p')}
+  </div>`;
+}
+function statRow(lb, v, mx) { return `<div class="mgst"><span>${lb}</span><div><i data-st="width:${clamp(v / mx * 100, 2, 100).toFixed(0)}%"></i></div></div>` }
+function showShop() {
+  setPhase('menu'); const sv = MG.sv, b = bestAll();
+  const mo = ST('motor'), fu = ST('futomu'), pa = ST('pancel'), tk = ST('tank'), el = ST('elol'), ag = ST('agyu'), gp = ST('gepp'), od = ST('oldal');
+  const cards = UPG.map(u => {
+    const L = sv.up[u.k], cur = u.lv[L], nx = u.lv[L + 1], max = !nx, lock = nx && nx.r && b < nx.r, poor = nx && sv.cash < nx.c;
+    return `<div class="mgup${max ? ' max' : ''}${lock ? ' lock' : ''}"><div class="mguh"><span class="mgic">${u.ic}</span><div><small>${esc(u.n)}</small><b>${esc(cur.n)}</b></div></div>
+     <div class="mgpips">${u.lv.slice(1).map((_, i) => `<i class="${i < L ? 'on' : ''}"></i>`).join('')}</div>
+     ${max ? '<div class="mgnx">✔ Maximális szint</div>' : `<div class="mgnx"><b>${esc(nx.n)}</b><span>${esc(nx.d)}</span></div>
+     ${lock ? `<button type="button" class="mgbuy" disabled>🔒 ${n0(nx.r)} m után</button>` : `<button type="button" class="mgbuy${poor ? ' poor' : ''}" data-act="buy" data-k="${u.k}">🪙 ${n0(nx.c)}</button>`}`}</div>`;
+  }).join('');
+  const stg = STAGES.map((s, i) => { const lk = i >= sv.unl, on = i === sv.stage, pct = clamp(sv.best[i] / s.len * 100, 0, 100);
+    return `<button type="button" class="mgstg${on ? ' on' : ''}${lk ? ' lock' : ''}" data-act="stage" data-i="${i}" ${lk ? 'disabled' : ''}><small>${i + 1}. PÁLYA · ${n0(s.len)} m</small><b>${lk ? '🔒 ' : ''}${esc(s.n)}</b><span>${esc(s.s)}</span><div class="mgsp"><i data-st="width:${pct.toFixed(0)}%"></i></div><em>${sv.done[i] ? '🏁 Teljesítve' : 'Legjobb: ' + n0(sv.best[i]) + ' m'}</em></button>` }).join('');
+  $('#mgScr').innerHTML = `<div class="mgcard mgshop">
+   <div class="mgshh"><h3>🔧 MŰHELY</h3><div class="mgcash">🪙 <b>${n0(sv.cash)}</b> kupak</div></div>
+   <canvas class="mgprev" id="mgPrev" aria-label="A jármű a fejlesztésekkel"></canvas>
+   <div class="mgsts">${statRow('Végsebesség', mo.v, 280)}${statRow('Húzóerő', mo.f * fu.g, 2.05 * 1.42)}${statRow('Üzemanyag', tk.l, 250)}${statRow('Páncél', pa.hp * (1 + pa.dr), 360 * 1.4)}${statRow('Darálás', el.m * 40 + el.dps / 3 + od.dps / 4, 3 * 40 + 100 + 28)}${statRow('Tűzerő', ag.am * ag.dm / 30 + gp.rt * gp.dm / 3, 8 * 600 / 30 + 24 * 10 / 3)}</div>
+   <div class="mglbl">PÁLYA</div><div class="mgstgs">${stg}</div>
+   <button type="button" class="btn pri mgbig" data-act="go">▶ INDULÁS – ${esc(STAGES[sv.stage].n)}</button>
+   <div class="mglbl">FEJLESZTÉSEK <small>– a feltételek a legnagyobb megtett távhoz kötöttek</small></div>
+   <div class="mgups">${cards}</div>
+   <div class="mgfoot"><button type="button" class="btn line" data-act="title">◀ Vissza</button> <button type="button" class="btn line" data-act="quit">Kilépés</button> <button type="button" class="btn line mgrst" data-act="reset">Mentés törlése</button></div>
+  </div>`;
+  $('#mgCash').textContent = n0(sv.cash);
+  const pc = $('#mgPrev'); if (pc) { const r = pc.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); pc.width = r.width * d; pc.height = r.height * d; MG.prev = {c: pc.getContext('2d'), W: r.width, H: r.height, d} }
+}
+function buy(k) {
+  const u = UPK[k], sv = MG.sv, nx = u.lv[sv.up[k] + 1]; if (!nx) return;
+  if (nx.r && bestAll() < nx.r) { toast(`🔒 Ehhez legalább ${n0(nx.r)} m-t kell megtenned egy menetben.`); return }
+  if (sv.cash < nx.c) { toast(`🪙 Ehhez ${n0(nx.c)} kupak kell – most ${n0(sv.cash)} van.`); return }
+  sv.cash -= nx.c; sv.up[k]++; save(); sndPick(); try { if (sOk()) boom(AC.currentTime, .25, 90) } catch (e) {}
+  const sc = $('#mgScr .mgshop'), top = sc ? sc.scrollTop : 0; showShop(); const s2 = $('#mgScr .mgshop'); if (s2) s2.scrollTop = top;
+  toast(`${u.ic} ${nx.n} felszerelve!`);
+}
+function startRun() {
+  const si = MG.sv.stage; newRun(si); setPhase('play'); MG.paused = false; MG.endShown = 0; MG.last = performance.now();
+  $('#mgBoW').hidden = !MG.V.boost0; $('#mgAmmoW').hidden = !MG.V.ammo; $('#mgFire').hidden = !MG.V.ammo; $('#mgBoost').hidden = !MG.V.boost0;
+  const bm = MG.sv.best[si] / STAGES[si].len; const be = $('#mgBestM'); if (be) { be.hidden = !(bm > 0 && bm < 1); be.style.left = (clamp(bm, 0, 1) * 100).toFixed(1) + '%' }
+  engStart(); try { rockStart('drone') } catch (e) {}
+  playCount('drone');
+}
+function showResult() {
+  const V = MG.V, T = MG.trk, si = T.si, S = T.S, sv = MG.sv, E = MG.end;
+  const dist = Math.max(0, Math.floor((Math.min(MG.maxX, T.fin) - 220) / UM)), win = E.kind === 'win';
+  const distCash = Math.floor(dist * .55), winCash = win ? S.bonus : 0, total = MG.cash + distCash + winCash;
+  const score = dist + MG.pts + (win ? 1000 * (si + 1) : 0);
+  sv.cash += total; sv.runs++; sv.kills += MG.kills; sv.tot += dist;
+  const newBest = dist > sv.best[si]; if (newBest) sv.best[si] = dist;
+  let unlocked = false; if (win) { if (!sv.done[si]) sv.done[si] = 1; if (si + 1 < STAGES.length && sv.unl < si + 2) { sv.unl = si + 2; unlocked = true } }
+  save();
+  let rec = {best: score, rec: false}; try { rec = gSave('droneBest', score, 'medve-drone-best') } catch (e) {}
+  setPhase('menu'); engStop(); try { rockStop(1.5) } catch (e) {}
+  const why = {win: '🏁 ELÉRTED A MENEDÉKET!', dead: '💥 SZÉTSZEDTÉK A PzH-T', flip: '🙃 FELBORULTÁL', fuel: '⛽ KIFOGYOTT AZ ÜZEMANYAG', stuck: '🧟 ELAKADTÁL A HORDÁBAN', quit: '🏳 FELADTAD'}[E.kind] || 'VÉGE';
+  const kl = Object.entries(MG.kt).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span>${esc(ZT[k].n)} <b>×${n}</b></span>`).join('');
+  $('#mgScr').innerHTML = `<div class="mgcard mgres${win ? ' win' : ''}"><h3>${why}</h3>
+   <div class="mgrd"><div class="mgprog sm"><i data-st="width:${clamp(dist / S.len * 100, 0, 100).toFixed(1)}%"></i><span>🏁</span></div><b>${n0(dist)} m</b> / ${n0(S.len)} m ${newBest ? '<em class="hrec">ÚJ TÁVREKORD!</em>' : ''}</div>
+   <div class="mgkl">${kl || '<span>Egy zombit sem daráltál le.</span>'}</div>
+   <table class="mgtab"><tr><td>Megtett táv (${n0(dist)} m)</td><td>+${n0(distCash)}</td></tr><tr><td>Zombik, ládák (${MG.kills} ☠)</td><td>+${n0(MG.cash)}</td></tr>${win ? `<tr><td>Menedék-jutalom</td><td>+${n0(winCash)}</td></tr>` : ''}<tr class="tot"><td>Kupak összesen</td><td>🪙 +${n0(total)}</td></tr></table>
+   <p class="mgsc">Pontszám: <b class="hred">${n0(score)}</b> ${rec.rec ? '<b class="hrec">🏆 ÚJ REKORD!</b>' : '· Rekord: <b>' + n0(rec.best) + '</b>'}<br><small>táv + zombik pontja${MG.bestCombo > 2 ? ' + kombó (legjobb ×' + MG.bestCombo + ')' : ''}${win ? ' + menedék-bónusz' : ''}</small></p>
+   ${unlocked ? `<p class="mgunl">🔓 Új pálya nyílt: <b>${esc(STAGES[si + 1].n)}</b></p>` : ''}
+   <button type="button" class="btn pri mgbig" data-act="shop">🔧 MŰHELY</button> <button type="button" class="btn line" data-act="go">↻ Újra</button> <button type="button" class="btn line" data-act="quit">Kilépés</button>
+  </div>`;
+  $('#mgCash').textContent = n0(sv.cash);
+}
+function hudUpd() {
+  const V = MG.V, T = MG.trk, dist = Math.max(0, Math.floor((V.x - 220) / UM));
+  const q = (id, v) => { const e = document.getElementById(id); if (e && e.textContent !== String(v)) e.textContent = v };
+  const w = (id, p) => { const e = document.getElementById(id); if (e) e.style.width = clamp(p * 100, 0, 100).toFixed(1) + '%' };
+  q('mgDst', n0(dist)); q('mgKmh', Math.round(Math.hypot(V.vx, V.vy) / UM * 3.6)); q('mgKills', MG.kills); q('mgRunCash', n0(MG.cash)); q('mgAmmo', V.ammo);
+  w('mgProg', (V.x - 220) / (T.fin - 220)); w('mgFuel', V.fuel / V.fuel0); w('mgHp', V.hp / V.hp0); w('mgBo', V.boost0 ? V.boost / V.boost0 : 0); w('mgRl', V.rl0 ? V.rl / V.rl0 : 0);
+  const fe = $('#mgFuel'); if (fe) fe.parentNode.classList.toggle('low', V.fuel / V.fuel0 < .2);
+  const he = $('#mgHp'); if (he) he.parentNode.classList.toggle('low', V.hp / V.hp0 < .3);
+  const gr = $('#mgGrab'); if (gr) { gr.hidden = !MG.grab.length; if (MG.grab.length) gr.textContent = `🧟 ${MG.grab.length} rajtad!` }
+  const fb = $('#mgFire'); if (fb) fb.classList.toggle('cd', V.rl > 0 || V.ammo <= 0);
+}
+
+/* ============================================================================
+   13. FŐ CIKLUS
+   ============================================================================ */
+let loop = function (now) {
+  if (!MG.run) return;
+  MG.raf = requestAnimationFrame(loop);
+  let dt = Math.min(.05, (now - MG.last) / 1000 || 0); MG.last = now;
+  if (MG.phase === 'play' || MG.phase === 'end') {
+    if (!MG.paused) { update(dt * MG.slow); if (MG.end) MG.slow = Math.min(1, MG.slow + dt * .25) }
+    draw(now);
+    MG.hudT = (MG.hudT || 0) - dt; if (MG.hudT <= 0) { MG.hudT = .1; hudUpd() }
+    engUpd();
+  } else {
+    // menüben: a háttér a jármű körül lassan él, a műhely előnézete forog
+    if (MG.trk) { for (let i = 0; i < 4; i++) vehStep(MG.V, dt / 4, {}); MG.t += dt; draw(now) }
+    if (MG.prev && document.getElementById('mgPrev')) drawPrev(now); else MG.prev = null;
+  }
+};
+loop = medveWrap(loop, MG, 'GRINDER');
+function drawPrev(now) {
+  const P = MG.prev, c = P.c; c.setTransform(P.d, 0, 0, P.d, 0, 0);
+  const g = c.createLinearGradient(0, 0, 0, P.H); g.addColorStop(0, '#2a1a12'); g.addColorStop(1, '#0e0806'); c.fillStyle = g; c.fillRect(0, 0, P.W, P.H);
+  c.fillStyle = 'rgba(255,190,90,.12)'; c.beginPath(); c.moveTo(P.W * .3, 0); c.lineTo(P.W * .7, 0); c.lineTo(P.W * .85, P.H); c.lineTo(P.W * .15, P.H); c.fill();
+  c.fillStyle = '#1a120c'; c.fillRect(0, P.H * .8, P.W, P.H * .2);
+  const s = Math.min(P.W / 230, P.H / 120);
+  c.save(); c.translate(P.W / 2 - 6 * s, P.H * .8 - 26 * s); c.scale(s, s);
+  const fake = {x: 0, y: 0, a: Math.sin(now / 1400) * .015, track: now / 40, mgA: Math.sin(now / 900) * .3, blood: [], grind: .4, fuel: 1, boosting: 0};
+  drawVeh(c, fake, now, MG.sv.up, false);
+  c.restore();
+}
+
+export {MG, mgOpen, mgClose, UPG, STAGES, ZT};
